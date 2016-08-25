@@ -1,10 +1,11 @@
 ;;;; cl-code.asd
 
 (asdf:defsystem #:cl-code
-  :description "Describe cl-code here"
-  :author "Your Name <your.name@example.com>"
-  :license "Specify license here"
+  :description "Common lisp Implementation of _NAME_"
+  :author "d4ryus <d4ryus.openmailbox.org>"
+  :license "none yet"
   :serial t
+  :depends-on (:ironclad)
   :components ((:file "package")
                (:file "cl-code")))
 
