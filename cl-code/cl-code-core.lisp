@@ -1,6 +1,6 @@
 ;;;; cl-code.lisp
 
-(in-package #:cl-code)
+(in-package #:cl-code-core)
 
 ;;; "cl-code" goes here. Hacks and glory await!
 

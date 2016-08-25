@@ -7,5 +7,6 @@
   :serial t
   :depends-on (:ironclad)
   :components ((:file "package")
-               (:file "cl-code")))
+               (:file "cl-code-core")
+               (:file "cl-code-low-level-api")))
 
