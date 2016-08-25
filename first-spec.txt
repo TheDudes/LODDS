@@ -2,18 +2,18 @@
 
 1. Introduction
 
-  _NAME_ is a decentral (local) network file-sharing protocoll.
+  _NAME_ is a decentral (local) network file-sharing protocol.
   Broadcast communication is used to find other clients inside the
   local network. Direct Communication is used to transfer information
   about the client and its shared files. The whole communication is
   ascii based to increase the readability and ease of implementation.
-  The protocoll only works on files and has no information about
+  The protocol only works on files and has no information about
   directories. But since files are specified with relative pathnames a
   directory structure can be build.
 
   1.1 Goals
 
-    The goal of the protocoll is to remain as simple as possible
+    The goal of the protocol is to remain as simple as possible
     allowing the following features:
 
       - dezentral communication (no server)
@@ -216,7 +216,7 @@
 
   3.2 Responses
 
-    On error or simliar the connection will be closed and no response
+    On error or similar the connection will be closed and no response
     will be sent. The following response may be returned on 'get info
     up' or 'get info all'.
 
