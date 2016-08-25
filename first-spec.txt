@@ -188,15 +188,12 @@
         "get info load\n"
           Will request current load status.
 
-    'get send-permission checksum size filename timeout\n'
+    'get send-permission size filename timeout\n'
        Requests a permission to send a specific file, identified by the
-       filename as well as the checksum and size. The request can be
-       accepted till the timeout expires.
+       filename and size. The request can be accepted till the timeout
+       expires.
 
        Arguments:
-         checksum
-           The checksum of the file to be sent.
-
          size
            The size of the file in byte.
 
