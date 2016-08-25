@@ -1,20 +1,30 @@
 package studyproject.API.LowLvl;
 
+import java.io.BufferedInputStream;
 import java.io.FileInputStream;
-import java.net.Socket;
 import java.util.ArrayList;
 
 import studyproject.API.Core.FileInfo;
 
-public interface Handles {
+public class Handles {
 
-	public int handleInfoUp(Socket socket, ArrayList<FileInfo> fileInfos);
+	public static int handleInfoUp(BufferedInputStream socketStream, ArrayList<FileInfo> fileInfos) {
+		return 0;
+	}
 
-	public int handleInfoAll(Socket socket, ArrayList<FileInfo> fileInfos);
+	public static int handleInfoAll(BufferedInputStream socketStream, ArrayList<FileInfo> fileInfos) {
+		return 0;
+	}
 
-	public int handleFile(Socket socket, FileInputStream fileStream, long size);
+	public static int handleFile(BufferedInputStream socketStream, FileInputStream fileStream, long size) {
+		return 0;
+	}
 
-	public int handleInfoLoad(Socket socket, long byteToSend);
+	public static int handleInfoLoad(BufferedInputStream socketStream, long byteToSend) {
+		return 0;
+	}
 
-	public int handleSendPermission(Socket socket, long timout, FileInputStream fileStream);
+	public static int handleSendPermission(BufferedInputStream socketStream, long timout, FileInputStream fileStream) {
+		return 0;
+	}
 }
