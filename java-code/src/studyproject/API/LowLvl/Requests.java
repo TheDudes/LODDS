@@ -1,17 +1,64 @@
 package studyproject.API.LowLvl;
 
-import java.net.Socket;
+import java.io.BufferedOutputStream;
+import java.io.IOException;
 
-public interface Requests {
+public class Requests {
+	
+	private static final String GET_INFO_UP = "get info up ";
+	private static final String GET_INFO_ALL = "get info all\n";
+	private static final String GET_INFO_LOAD = "get info load\n";
+	private static final String GET_FILE = "get file ";
+	private static final String GET_SEND_PERMISSION = "get send-permission ";
 
-	public int getInfoUp(Socket socket, long timestamp);
+	public static int getInfoUp(BufferedOutputStream socketStream, long timestamp) {
+		try{
+			socketStream.write((GET_INFO_UP + timestamp + "\n").getBytes());
+		} catch(IOException e){
+			//TODO insert real error code
+			return -1;
+		}
+		return 0;
+	}
 
-	public int getInfoAll(Socket socket);
+	public static int getInfoAll(BufferedOutputStream socketStream) {
+		try{
+			socketStream.write((GET_INFO_ALL).getBytes());
+		} catch(IOException e){
+			//TODO insert real error code
+			return -1;
+		}
+		return 0;
+	}
 
-	public int getFile(Socket socket, String checksum, long startIndex, long endIndex);
+	public static int getFile(BufferedOutputStream socketStream, String checksum, long startIndex, long endIndex) {
+		try{
+			socketStream.write((GET_FILE + checksum + " " + startIndex + " " + endIndex + "\n").getBytes());
+		} catch(IOException e){
+			//TODO insert real error code
+			return -1;
+		}
+		return 0;
+	}
 
-	public int getInfoLoad(Socket socket);
+	public static int getInfoLoad(BufferedOutputStream socketStream) {
+		try{
+			socketStream.write((GET_INFO_LOAD).getBytes());
+		} catch(IOException e){
+			//TODO insert real error code
+			return -1;
+		}
+		return 0;
+	}
 
-	public int getSendPermission(Socket socket, long size, String fileName, long timeout);
+	public static int getSendPermission(BufferedOutputStream socketStream, long size, String fileName, long timeout) {
+		try{
+			socketStream.write((GET_SEND_PERMISSION + size + " " + fileName + " " + timeout + "\n").getBytes());
+		} catch(IOException e){
+			//TODO insert real error code
+			return -1;
+		}
+		return 0;
+	}
 
 }
