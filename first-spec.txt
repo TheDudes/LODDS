@@ -1,0 +1,285 @@
+                     First Specification of _NAME_
+
+1. Introduction
+
+  _NAME_ is a decentral (local) network file-sharing protocoll.
+  Broadcast communication is used to find other clients inside the
+  local network. Direct Communication is used to transfer information
+  about the client and its shared files. The whole communication is
+  ascii based to increase the readability and ease of implementation.
+  The protocoll only works on files and has no information about
+  directories. But since files are specified with relative pathnames a
+  directory structure can be build.
+
+  1.1 Goals
+
+    The goal of the protocoll is to remain as simple as possible
+    allowing the following features:
+
+      - dezentral communication (no server)
+      - clients can find other clients inside the local network
+      - identify files by their content indepented of their name or
+        path
+      - request/transfer a file from multiple clients in parallel
+      - load balancing
+      - push files to other clients
+
+  1.2 Checksums
+
+    Every file is identified via a checksum. The checksum is
+    calculated by hashing (sha256) the files content. This will allow
+    the recognition of files independend of their origin or path.
+    Files with the same checksum will be 'seen' as equal.
+
+2. Broadcast Communication
+
+  To be seen by other clients the following broadcast message has to be
+  sent periotically. Each client who wants to communicate with others
+  has to listen for other clients advertisements. The broadcast
+  communication will also serve as a way to tell others that a file has
+  changed and they have to request a update.
+
+  'ip-address port timestamp_lastChange name\n'
+    Every client who wants to be visible for others will broadcast a
+    message with information about himself.
+
+    Arguments:
+      ip-address
+        The clients ip address.
+
+      port
+        Port number where the client is listening for connections.
+
+      timestamp_lastChange
+        Timestamp of last change. If something changed this timestamp
+        will be updated, so others can request a update if wanted.
+
+      name
+        Is the client's nickname to be seen in the client list.
+
+    Response:
+      -
+
+    Example:
+      "192.168.0.15 1050 1464269857 Nintinugga\n"
+      Will tell others the clients ip-address (192.168.0.15), port
+      (1050), my last change timestamp (1464269857) and the name
+      (Nintinugga).
+
+3. Direct Communication
+
+  The direct communication is tcp based and always starts with a
+  request (get cmd). The request is then answered with a response. In
+  case of an error or something similar the connection is closed.
+
+  Here is a example where Client A will request something from Client
+  B:
+
+  step | Client A        | Client B
+  -----+-----------------+----------------------------
+     1 | open connection |
+     2 |                 | accepting connection
+     3 | get request     |
+     4 |                 | response or connection close
+     5 | connection end  | connection end
+
+  step 1: Client A opens a TCP connection to Client B.
+  step 2: Client B accepts the connection from Client A. B may also
+          refuse the connection.
+  step 3: Client A sends a get request (see section 3.1 Requests).
+  step 4: Client B either sends a response or closes the connection.
+          Closing the connection could be due to an internal error,
+          request error or something else.
+  setp 5: Clients A and B close the connection.
+
+  The only get command which is not following this communication type
+  is 'get send-permission'. Instead of a connection close, the Client
+  A will start transfering a file, in case B has responded with a
+  accept.
+
+  3.1 Requests (get cmds)
+
+    Requests always start with a 'get'. 'get' is followed by one of
+    'file', 'info' or 'send-permission'. 'get info' can be followed by
+    one of 'up', 'all' or 'load', which is a total of five commands.
+    Some commands may also have arguments. All commands end with a
+    '\n' (newline).
+
+    Overview of get command tree:
+
+    get --- file
+         |- info --- up
+         |        |- all
+         |        `- load
+         `- send-permission
+
+    'get file checksum start end\n'
+      Will request a part of a file with 'checksum', starting from
+      byte 'start' till 'end'. The 'end' byte is excluded, so 'end' -
+      'start' bytes will be transferd.
+
+      Arguments:
+        checksum
+          the checksum specifing the file.
+
+        start
+          first byte from file to be transferd.
+
+        end
+          end - 1 is the last byte transfered, so it's transfering from
+          start till end, excluding the end byte.
+
+      Response:
+          On success the file transfer is started, on error the
+          connection is closed.
+
+      Example:
+        "get file 35171af2... 0 2048\n"
+          This will Request file 35171... from byte 0 till 2048, so it
+          will transfer 2048 bytes total.
+
+    'get info up timestamp\n'
+      Will request an update about his files from a client. Timestamp
+      is specifying the last known state. So if client A changes his
+      files the timestamp he broadcasts will update. If client B sees
+      the change he will send 'get info up timestamp' to A, specifying
+      the last timestamp of A he saw. So A will respond with all his
+      updates since the given timestamp.
+
+      Arguments:
+        timestamp
+          The last known UNIX timestamp.
+
+      Response:
+        Update message to revise the state. This update message could
+        be empty if there are no new shared files. See section
+        Responses below.
+
+      Example:
+        "get info up 1464269498\n"
+          Will request all updates since 1464269498.
+
+    'get info all\n'
+      Request a complete list of shared files from a specific client.
+
+      Arguments:
+        -
+
+      Response:
+        List of all files shared by another client. See section
+        Responses below.
+
+      Example:
+        "get info all\n"
+          Will request the full shared file list.
+
+    'get info load\n'
+      Request information about the current load status of a specific
+      client.
+
+      Arguments:
+        -
+
+      Response:
+        Amount of outstanding bytes the requested client still needs
+        to transfer.
+
+      Example:
+        "get info load\n"
+          Will request current load status.
+
+    'get send-permission checksum size filename timeout\n'
+       Requests a permission to send a specific file, identified by the
+       filename as well as the checksum and size. The request can be
+       accepted till the timeout expires.
+
+       Arguments:
+         checksum
+           The checksum of the file to be sent.
+
+         size
+           The size of the file in byte.
+
+         filename
+           The name of the file.
+
+         timeout
+           The time to accept the request in seconds.
+
+       Response:
+         'OK' on accept or connection close on decline. If timeout is
+         exceeded the requesting client may close the connection.
+
+       Example:
+         "get send-permission 38e80faf7... 300 /sample.txt 15\n"
+           Asks to transfer file with checksum 38e80faf7... with 300
+           byte size and path /sample.txt to be transfered. The User
+           receiving this request may change the file location on his
+           side. He has 15 seconds to accept the request.
+
+  3.2 Responses
+
+    On error or simliar the connection will be closed and no response
+    will be sent. The following response may be returned on 'get info
+    up' or 'get info all'.
+
+    '(upd|all) timestamp count\n'
+    '((del|add) checksum size relative_filename\n)*'
+
+    Examples:
+      upd 1464269498 6\n
+      del 1d8107fd9... 23411123 /some-file.txt\n
+      add adf8c94cf... 421341231 /some-file.txt\n
+      del 8fc1c149a... 99344121 /some/directory/file.pdf\n
+      del b42e80cfd... 843418123 /some/other/directory/foo.bar\n
+      add a29b6e315... 123123 /bar.foo\n
+      add 28ad16dcd... 3214178546 /new-file.zip\n
+        This will be a response from a 'get info up timestamp'
+        request. The first line tells the client that an update
+        instead of a full list of files will follow. The sent
+        timestamp will tell the client what state we will get. Each
+        followed line describes a file, 'del' means that the file does
+        no longer exist, 'add' will describe a new added file. If a
+        file changed its a combination of 'del' and 'add'.
+
+      all 1464269498 4\n
+      add 38e80faf7... 421341231 /first-file.txt\n
+      add 20178863f... 23411123 /second-file.txt\n
+      add e3b0c4429... 12344121 /third-file.txt\n
+      add f21292d0d... 423418123 /last-file.txt\n
+        This may be returned from a 'get info all' request. The first
+        line tells what kind of response is following. 'all' specifies
+        that a full list of files is sent. Each line after the first
+        specifies a new file. This response tells the client that the
+        server is hosting 4 files where each is described by a line.
+
+    3.2.1 Relative_filename
+
+      Each filename is given as a path beginning with / (root). Each
+      shared folder will be inside (root). So if user A decides to
+      share his folder /tmp/some/path/share-me/ which contains files
+      a.txt, b.txt and c.txt. These filenames will be given:
+        /share-me/a.txt
+        /share-me/b.txt
+        /share-me/c.txt
+      If the folder share-me contains another folder named inner-folder
+      which contains files d.txt, e.txt and f.txt, the filenames are:
+        /share-me/a.txt
+        /share-me/b.txt
+        /share-me/c.txt
+        /share-me/inner-folder/d.txt
+        /share-me/inner-folder/e.txt
+        /share-me/inner-folder/f.txt
+      In case user A wants to share /tmp/another-share/ with files
+      g.txt, h.txt and i.txt, the list will be:
+        /share-me/a.txt
+        /share-me/b.txt
+        /share-me/c.txt
+        /share-me/inner-folder/d.txt
+        /share-me/inner-folder/e.txt
+        /share-me/inner-folder/f.txt
+        /another-share/g.txt
+        /another-share/h.txt
+        /another-share/i.txt
+      This representation will allow the construction of a tree-like
+      view with folders.

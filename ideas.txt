@@ -1,0 +1,25 @@
+General Ideas:
+     - on 'get file checksum start end\n' a 0 as 'end' is the same as 'size'
+       of requested file
+     - get_advertisements() needs to return in order to not force the user to
+       use threads, maybe a timeout or an amount would do it
+       (we should enable both, for example if TIMEOUT 0 is specified it wont
+       return. since in between 2 calls to function information could
+       get lost, and if the time window fits the time window of a client,
+       he wont show up)
+     - get_multiple() to send a couple of files with only one open connection
+     - sha256sum specified like on git (only the first)
+
+Build and Test:
+     - automated tests and build
+     - one Makefile for everything (non-recursive make)
+     - one tree for every platform, seperation between platform
+       and normal code
+     - figure out how to do this on Windows without the need for a cygwin
+       installation (nmake and mingw?)
+     - build Windows version on Linux with mingw and wine
+
+Client Implementation Ideas:
+     - ncurses
+     - qt
+     - oneshot/shell program to advertise/get/send/...
