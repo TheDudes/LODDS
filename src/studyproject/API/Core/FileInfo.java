@@ -1,4 +1,4 @@
-package studyproject.API;
+package studyproject.API.Core;
 
 public class FileInfo {
 	public String checksum;

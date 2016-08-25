@@ -4,7 +4,7 @@ import java.io.FileInputStream;
 import java.net.Socket;
 import java.util.ArrayList;
 
-import studyproject.API.FileInfo;
+import studyproject.API.Core.FileInfo;
 
 public interface Responses {
 
