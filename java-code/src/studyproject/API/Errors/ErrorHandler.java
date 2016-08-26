@@ -1,27 +1,22 @@
 package studyproject.API.Errors;
 
-import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-
 import studyproject.logging.LogKey;
-import studyproject.logging.LogRecFormatter;
 import studyproject.logging.APILvl;
 
 public class ErrorHandler {
 
-	private static Logger logger = Logger.getGlobal();
+	private Logger logger;
 
-	public static void init() {
-
-		for (Handler handler : logger.getHandlers()) {
-			handler.setFormatter(new LogRecFormatter());
-		}
+	public ErrorHandler(Logger logger) {
+		this.logger = logger;
 	}
 
-	public static Error logError(Level level, LogKey logKey, APILvl apiLvl, ErrorTypes errorType, String functionName) {
-		Error error = new Error(level, logKey, apiLvl, getErrorMsg(errorType, getErrorMsgPrefix(logKey, apiLvl)));
+	public Error logError(Level level, LogKey logKey, APILvl apiLvl, ErrorTypes errorType, String functionName) {
+		Error error = new Error(level, logKey, apiLvl,
+				getErrorMsg(errorType, getErrorMsgPrefix(logKey, apiLvl, functionName)));
 		logger.log(error);
 		return error;
 	}
@@ -43,7 +38,9 @@ public class ErrorHandler {
 
 	}
 
-	private static String getErrorMsgPrefix(LogKey logKey, APILvl apiLvl) {
-		return logKey.toString() + ": " + apiLvl.toString();
+	private static String getErrorMsgPrefix(LogKey logKey, APILvl apiLvl, String functionName) {
+		return logKey.toString() + ": " + apiLvl.toString() + ": Thrown By '" + functionName + "'";
 	}
+
+
 }
