@@ -101,6 +101,7 @@ public class Handles {
 	 * @return integer representing the result. Negative value if function fails
 	 */
 	public static int handleSendPermission(BufferedReader socketStream) {
+		//TODO read until timeout is exceeded!!!
 		try {
 			String s = socketStream.readLine();
 			if (!s.equals("OK")) {
