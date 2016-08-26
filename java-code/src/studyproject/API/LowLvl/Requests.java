@@ -40,9 +40,9 @@ public class Requests {
 		return 0;
 	}
 
-	public static int getSendPermission(BufferedOutputStream socketStream, long size, String fileName, long timeout) {
+	public static int getSendPermission(BufferedOutputStream socketStream, long size, long timeout, String fileName) {
 		try{
-			socketStream.write((GET_SEND_PERMISSION + size + " " + fileName + " " + timeout + "\n").getBytes());
+			socketStream.write((GET_SEND_PERMISSION + size + " " + timeout + " " + fileName + "\n").getBytes());
 		} catch(IOException e){
 			//TODO insert real error code
 			return -1;
