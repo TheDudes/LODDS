@@ -9,24 +9,26 @@
            #:copy-stream))
 
 (defpackage #:cl-code-low-level-api
-  (:use #:cl #:cl-code-core)
-  (:export
+  (:use #:cl
+        #:cl-code-core)
 
+  (:export
+   ;; broadcast
    #:send-advertise
    #:read-advertise
-
+   ;; get family
    #:get-info-all
    #:get-info-up
    #:get-info-load
    #:get-file
    #:get-send-permission
-
+   ;; respond family
    #:respond-info-all
    #:respond-info-up
    #:respond-info-load
    #:respond-file
    #:respond-send-permission
-
+   ;; handle family
    #:handle-info-all
    #:handle-info-up
    #:handle-info-load
