@@ -26,5 +26,20 @@ public class Utils {
 		}
 		return readBytes;
 	}
+	
+	/**
+	 * 
+	 * @param source the array containing the wanted bytes
+	 * @param startIndex the first index, included in the returned byte array
+	 * @param endIndex the last index, included in the returned byte array
+	 * @return a byte array containing the specified bytes
+	 */
+	public static byte[] getBytesFromTo(byte[] source, int startIndex, int endIndex){
+		byte[] returnValue = new byte[endIndex - startIndex];
+		for(int index = 0; index < endIndex - startIndex; index++){
+			returnValue[index] = source[index + startIndex];
+		}
+		return returnValue;
+	}
 
 }
