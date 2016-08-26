@@ -157,22 +157,10 @@
         Responses below. This update message could be empty if 
         there are no new shared files. 
 
-      Example:
+      Examples:
         "get info up 1464269498\n"
           Will request all updates since 1464269498.
-
-    'get info all\n'
-      Request a complete list of shared files from a specific client.
-
-      Arguments:
-        -
-
-      Response:
-        List of all files shared by another client. See section
-        Responses below.
-
-      Example:
-        "get info all\n"
+        "get info up 0\n"
           Will request the full shared file list.
 
     'get info load\n'
@@ -219,7 +207,7 @@
 
     On error or similar the connection will be closed and no response
     will be sent. The following response may be returned on 'get info
-    up' or 'get info all'.
+    up'.
 
     '(upd|all) timestamp count\n'
     '((del|add) checksum size relative_filename\n)*'
@@ -245,7 +233,7 @@
       add 20178863f... 23411123 /second-file.txt\n
       add e3b0c4429... 12344121 /third-file.txt\n
       add f21292d0d... 423418123 /last-file.txt\n
-        This may be returned from a 'get info all' request. The first
+        This may be returned from a 'get info up 0' request. The first
         line tells what kind of response is following. 'all' specifies
         that a full list of files is sent. Each line after the first
         specifies a new file. This response tells the client that the
