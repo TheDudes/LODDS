@@ -193,7 +193,7 @@
            The name of the file.
          
        Response:
-         'OK' on accept or connection close on decline. If timeout is
+         'OK\n' on accept or connection close on decline. If timeout is
          exceeded the requesting client may close the connection.
 
        Example:
