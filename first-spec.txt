@@ -172,7 +172,7 @@
 
       Response:
         Amount of outstanding bytes the requested client still needs
-        to transfer.
+        to transfer terminated by \n.
 
       Example:
         "get info load\n"
