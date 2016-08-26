@@ -34,7 +34,7 @@ public class Broadcast {
 		return 0;
 	}
 	
-	public static int sendBroadcast(String broadcastAddress, String networkAddress, int ipPort, long timestamp, String name){
+	public static int sendAdvertise(String broadcastAddress, String networkAddress, int ipPort, long timestamp, String name){
 	    DatagramPacket packet;
 	    try(DatagramSocket socket = new DatagramSocket(PORT_SENDING, InetAddress.getByName(networkAddress))){
 	    	socket.setBroadcast(true);
@@ -51,7 +51,7 @@ public class Broadcast {
 	}
 	
 	
-	public static int receiveBroadcast(String broadcastAddress, BroadcastInfo broadcastInfo){
+	public static int readAdvertise(String broadcastAddress, BroadcastInfo broadcastInfo){
 		try(DatagramSocket socket = new DatagramSocket(PORT, InetAddress.getByName(broadcastAddress))){
 			DatagramPacket packet = new DatagramPacket(new byte[BUFFERSIZE], BUFFERSIZE);
 			socket.receive(packet);
