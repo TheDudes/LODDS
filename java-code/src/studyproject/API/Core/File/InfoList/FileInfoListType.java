@@ -1,4 +1,4 @@
-package studyproject.API.Core.FileInfoList;
+package studyproject.API.Core.File.InfoList;
 
 public class FileInfoListType {
 	public InfoType type;

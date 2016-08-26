@@ -10,8 +10,8 @@ import studyproject.API.Core.FileAction;
 import studyproject.API.Core.FileInfo;
 import studyproject.API.Core.Timestamp;
 import studyproject.API.Core.Utils;
-import studyproject.API.Core.FileInfoList.FileInfoListType;
-import studyproject.API.Core.FileInfoList.InfoType;
+import studyproject.API.Core.File.InfoList.FileInfoListType;
+import studyproject.API.Core.File.InfoList.InfoType;
 
 public class Handles {
 	
