@@ -5,7 +5,8 @@
 
 (defpackage #:cl-code-core
   (:use #:cl)
-  (:export #:sha-256))
+  (:export #:sha-256
+           #:copy-stream))
 
 (defpackage #:cl-code-low-level-api
   (:use #:cl #:cl-code-core)

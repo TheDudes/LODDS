@@ -7,7 +7,9 @@
   :serial t
   :depends-on (:ironclad
                :usocket
-               :ip-interfaces)
+               :ip-interfaces
+               :flexi-streams
+               :cl-strings)
   :components ((:file "package")
                (:file "cl-code-core")
                (:file "cl-code-low-level-api")))
