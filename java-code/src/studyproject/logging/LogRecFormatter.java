@@ -1,4 +1,4 @@
-package studyproject.API.Errors;
+package studyproject.logging;
 
 import java.util.logging.Formatter;
 import java.util.logging.LogRecord;

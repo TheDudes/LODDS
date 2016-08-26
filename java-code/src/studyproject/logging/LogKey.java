@@ -1,4 +1,4 @@
-package studyproject.API.Errors;
+package studyproject.logging;
 
 public enum LogKey {
 	warning, error, filetransferComplete, filetransferInit, debug
