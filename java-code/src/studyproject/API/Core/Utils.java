@@ -7,7 +7,7 @@ import java.util.Date;
 import java.util.TimeZone;
 
 public class Utils {
-	public static SimpleDateFormat sdf = new SimpleDateFormat("HH:mm:ss");
+	
 
 	/**
 	 * reads the exact number of bytes specified from a InputStream to the
@@ -67,6 +67,7 @@ public class Utils {
 	public static String formatUnixTimestamp(long unixSeconds) {
 		// *1000 is to convert seconds to milliseconds
 		Date date = new Date(unixSeconds * 1000L);
+		SimpleDateFormat sdf = new SimpleDateFormat("HH:mm:ss a");
 		// give a timezone reference
 		sdf.setTimeZone(TimeZone.getDefault());
 
