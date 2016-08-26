@@ -16,6 +16,9 @@ import java.nio.file.WatchService;
 
 
 public class FileWatcher {
+	
+	// Directories that are currently watched
+	private String[] watchedDirectories;
 
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub
@@ -25,6 +28,10 @@ public class FileWatcher {
 
 		myWatchService.watchDirectory("/Users/robinhood/Desktop");
 	}
+	
+	// TODO watchFile(String path):
+	// - adds parent directory to watchedDirectories
+	// - initiates new watcher if directory is not in current watchedDirectories list
 
 	public void watchDirectory(String path) {
 		try {
@@ -53,6 +60,8 @@ public class FileWatcher {
 				        Path fileName = ev.context();
 				        
 				        System.out.println(kind.name() + ": " + fileName);
+				        
+				        // TODO Check if file is in list
 
 				        if (kind == OVERFLOW) {
 				            
