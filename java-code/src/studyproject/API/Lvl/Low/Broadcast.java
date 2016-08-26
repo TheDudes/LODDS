@@ -1,4 +1,4 @@
-package studyproject.API.LowLvl;
+package studyproject.API.Lvl.Low;
 
 import java.io.IOException;
 import java.net.DatagramPacket;

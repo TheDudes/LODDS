@@ -1,4 +1,4 @@
-package studyproject.API.LowLvl;
+package studyproject.API.Lvl.Low;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedReader;
@@ -6,10 +6,10 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 
-import studyproject.API.Core.FileAction;
-import studyproject.API.Core.FileInfo;
 import studyproject.API.Core.Timestamp;
 import studyproject.API.Core.Utils;
+import studyproject.API.Core.File.FileAction;
+import studyproject.API.Core.File.FileInfo;
 import studyproject.API.Core.File.InfoList.FileInfoListType;
 import studyproject.API.Core.File.InfoList.InfoType;
 

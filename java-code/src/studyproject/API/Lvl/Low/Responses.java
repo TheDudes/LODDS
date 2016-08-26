@@ -1,4 +1,4 @@
-package studyproject.API.LowLvl;
+package studyproject.API.Lvl.Low;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
@@ -8,8 +8,8 @@ import java.io.IOException;
 import java.net.Socket;
 import java.util.ArrayList;
 
-import studyproject.API.Core.FileInfo;
 import studyproject.API.Core.Utils;
+import studyproject.API.Core.File.FileInfo;
 
 public class Responses {
 	

@@ -1,4 +1,4 @@
-package studyproject.API.Core;
+package studyproject.API.Core.File;
 
 import java.io.File;
 import java.io.FileInputStream;
