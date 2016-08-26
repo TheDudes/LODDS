@@ -11,27 +11,12 @@ import studyproject.API.Core.Utils;
 public class Responses {
 	
 	private static final String UPDATE_FLAG = "upd ";
-	private static final String ALL_FLAG = "all ";
 	private static final String OK_FLAG = "OK";
 	private static final int BUFFERSIZE = 4096;
 
 	public static int respondInfoUp(BufferedOutputStream socketStream, long timestamp, ArrayList<FileInfo> fileInfos) {
 		try{
 			socketStream.write((UPDATE_FLAG + timestamp + " " + fileInfos.size() + "\n").getBytes());
-			for(FileInfo fileInfo: fileInfos){
-				socketStream.write((fileInfo.fileAction.toString() + " " + fileInfo.checksum + " " + fileInfo.size
-						+ " " + fileInfo.fileName + "\n").getBytes());
-			}
-		} catch(IOException e){
-			//TODO real error codes
-			return -1;
-		}
-		return 0;
-	}
-
-	public static int respondInfoAll(BufferedOutputStream socketStream, long timestamp, ArrayList<FileInfo> fileInfos) {
-		try{
-			socketStream.write((ALL_FLAG + timestamp + " " + fileInfos.size() + "\n").getBytes());
 			for(FileInfo fileInfo: fileInfos){
 				socketStream.write((fileInfo.fileAction.toString() + " " + fileInfo.checksum + " " + fileInfo.size
 						+ " " + fileInfo.fileName + "\n").getBytes());

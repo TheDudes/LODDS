@@ -144,16 +144,18 @@
       files the timestamp he broadcasts will update. If client B sees
       the change he will send 'get info up timestamp' to A, specifying
       the last timestamp of A he saw. So A will respond with all his
-      updates since the given timestamp.
+      updates since the given timestamp. If timestamp is 0, a complete 
+      list of shared files from the specific client is requested.
 
       Arguments:
         timestamp
-          The last known UNIX timestamp.
+          The last known UNIX timestamp or 0.
 
       Response:
-        Update message to revise the state. This update message could
-        be empty if there are no new shared files. See section
-        Responses below.
+        Update message to revise the state or a list of all files 
+        shared by another client if timestamp was 0. See section
+        Responses below. This update message could be empty if 
+        there are no new shared files. 
 
       Example:
         "get info up 1464269498\n"
@@ -188,7 +190,7 @@
         "get info load\n"
           Will request current load status.
 
-    'get send-permission size filename timeout\n'
+    'get send-permission size timeout filename\n'
        Requests a permission to send a specific file, identified by the
        filename and size. The request can be accepted till the timeout
        expires.
@@ -196,13 +198,12 @@
        Arguments:
          size
            The size of the file in byte.
-
+		 timeout
+           The time to accept the request in seconds.
+           
          filename
            The name of the file.
-
-         timeout
-           The time to accept the request in seconds.
-
+         
        Response:
          'OK' on accept or connection close on decline. If timeout is
          exceeded the requesting client may close the connection.
