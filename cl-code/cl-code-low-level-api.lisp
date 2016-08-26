@@ -11,8 +11,8 @@
 (defun get-file (socket-stream))
 (defun get-send-permission (socket-stream checksum start end))
 
-(defun respond-info-all (socket-stream file-infos))
-(defun respond-info-up (socket-stream file-infos))
+(defun respond-info-all (socket-stream timestamp file-infos))
+(defun respond-info-up (socket-stream timestamp file-infos))
 (defun respond-info-load (socket-stream load))
 (defun respond-file (socket-stream file-stream start end))
 (defun respond-send-permission (socket-stream file-stream size))
