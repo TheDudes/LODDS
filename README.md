@@ -6,8 +6,8 @@ Following, list your changes made to the code in some short phrases.
 
 *List of Commit Tags and their specific Sub-Tags:*
 - java:
--   doc
--   debug
++ doc
++ debug
 - lisp:
 -   doc
 -   debug
