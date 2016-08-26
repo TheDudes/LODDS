@@ -2,24 +2,22 @@ package studyproject.API.LowLvl;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedReader;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 
 import studyproject.API.Core.FileAction;
 import studyproject.API.Core.FileInfo;
+import studyproject.API.Core.Utils;
 
 public class Handles {
 
 	public static int handleInfoUp(BufferedReader socketStream, ArrayList<FileInfo> fileInfos, long timestamp) {
 		FileInfo fileInfo;
-		int listSize;
 		String[] params;
 		try {
 			params = socketStream.readLine().split(" ");
 			timestamp = Long.valueOf(params[1]);
-			listSize = Integer.valueOf(params[2]);
-			for (int i = 0; i < listSize; i++) {
+			for (int i = 0; i < Integer.valueOf(params[2]); i++) {
 				params = socketStream.readLine().split(" ");
 				fileInfo = new FileInfo();
 				if (params[0].equals(FileAction.add.toString())) {
@@ -42,13 +40,11 @@ public class Handles {
 
 	public static int handleInfoAll(BufferedReader socketStream, ArrayList<FileInfo> fileInfos, long timestamp) {
 		FileInfo fileInfo;
-		int listSize;
 		String[] params;
 		try {
 			params = socketStream.readLine().split(" ");
 			timestamp = Long.valueOf(params[1]);
-			listSize = Integer.valueOf(params[2]);
-			for (int i = 0; i < listSize; i++) {
+			for (int i = 0; i < Integer.valueOf(params[2]); i++) {
 				params = socketStream.readLine().split(" ");
 				fileInfo = new FileInfo();
 				if (params[0].equals(FileAction.add.toString())) {
@@ -69,15 +65,38 @@ public class Handles {
 		return 0;
 	}
 
-	public static int handleFile(BufferedInputStream socketStream, FileInputStream fileStream, long size) {
+	public static int handleFile(BufferedInputStream socketStream, byte[] fileStream, int size) {
+		try {
+			int readSize = Utils.readThisLength(socketStream, fileStream, 0, size);
+			if (readSize != size) {
+				return -1;
+			}
+		} catch (IOException e) {
+			return -2;
+		}
 		return 0;
 	}
 
-	public static int handleInfoLoad(BufferedInputStream socketStream, long byteToSend) {
+	public static int handleInfoLoad(BufferedReader socketStream, long byteToSend) {
+		try {
+			byteToSend =  Long.valueOf(socketStream.readLine());
+		} catch (NumberFormatException e) {
+			return -1;
+		} catch (IOException e) {
+			return -2;
+		}
 		return 0;
 	}
 
-	public static int handleSendPermission(BufferedInputStream socketStream, long timout, FileInputStream fileStream) {
+	public static int handleSendPermission(BufferedReader socketStream) { //, long timout, FileInputStream fileStream) {
+		try {
+			String s = socketStream.readLine();
+			if (!s.equals("OK")) {
+				return -1;
+			}
+		} catch (IOException e) {
+			return -2;
+		}
 		return 0;
 	}
 }
