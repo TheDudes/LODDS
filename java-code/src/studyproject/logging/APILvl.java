@@ -1,5 +1,5 @@
 package studyproject.logging;
 
-public enum LogTag {
+public enum APILvl {
 	low, mid, high, gui
 }
