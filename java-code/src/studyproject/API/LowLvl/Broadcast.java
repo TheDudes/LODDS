@@ -18,6 +18,15 @@ public class Broadcast {
 	private static final int PORT_SENDING = 9003;
 	private static final int BUFFERSIZE = 2048;
 
+	/**
+	 * retrieves a list with all network addresses the local machine has
+	 * 
+	 * @param networkAddresses
+	 * 			the list in which the addresses are put into
+	 * 
+	 * @return
+	 * 			a list with all network addresses the local machine has
+	 */
 	public static int getNetworkAddresses(ArrayList<String> networkAddresses){
 		try{
 			Enumeration<NetworkInterface> networkInterfaces = NetworkInterface.getNetworkInterfaces();
@@ -34,6 +43,29 @@ public class Broadcast {
 		return 0;
 	}
 	
+	/**
+	 * sends out an UDP broadcast to all machines in the local network. This broadcast contains the
+	 * network address of the current machine, the port other machines should contact it from, the timestamp
+	 * of the last change in the tracked filesystem and the name under which this machine shall be displayed
+	 * 
+	 * @param broadcastAddress
+	 * 			the address the UDP socket has to broadcast to
+	 * 
+	 * @param networkAddress
+	 * 			the network address of this machine (TCP address)
+	 * 
+	 * @param ipPort
+	 * 			the port other machines should contact this machine from
+	 * 
+	 * @param timestamp
+	 * 			the time of the last change in the tracked filesystem of this machine
+	 * 
+	 * @param name
+	 * 			the name that other machines should display this machine as
+	 * 
+	 * @return
+	 * 			0 or an error code
+	 */
 	public static int sendAdvertise(String broadcastAddress, String networkAddress, int ipPort, long timestamp, String name){
 	    DatagramPacket packet;
 	    try(DatagramSocket socket = new DatagramSocket(PORT_SENDING, InetAddress.getByName(networkAddress))){
@@ -51,6 +83,19 @@ public class Broadcast {
 	}
 	
 	
+	/**
+	 * listens on given UPD address for the next UDP packet and then puts the given information in the
+	 * broadcastInfo if the given data matches the specification
+	 * 
+	 * @param broadcastAddress
+	 * 			the address to listen to
+	 * 
+	 * @param broadcastInfo
+	 * 			the broadcastInfo to put the read info in
+	 * 
+	 * @return
+	 * 			0 or an error value
+	 */	
 	public static int readAdvertise(String broadcastAddress, BroadcastInfo broadcastInfo){
 		try(DatagramSocket socket = new DatagramSocket(PORT, InetAddress.getByName(broadcastAddress))){
 			DatagramPacket packet = new DatagramPacket(new byte[BUFFERSIZE], BUFFERSIZE);
