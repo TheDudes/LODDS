@@ -2,7 +2,7 @@
 
 (asdf:defsystem #:cl-code
   :description "Common lisp Implementation of _NAME_"
-  :author "d4ryus <d4ryus.openmailbox.org>"
+  :author "d4ryus <d4ryus@openmailbox.org>"
   :license "none yet"
   :serial t
   :depends-on (:ironclad
