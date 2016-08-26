@@ -6,7 +6,6 @@ import java.io.IOException;
 public class Requests {
 	
 	private static final String GET_INFO_UP = "get info up ";
-	private static final String GET_INFO_ALL = "get info all\n";
 	private static final String GET_INFO_LOAD = "get info load\n";
 	private static final String GET_FILE = "get file ";
 	private static final String GET_SEND_PERMISSION = "get send-permission ";
@@ -14,16 +13,6 @@ public class Requests {
 	public static int getInfoUp(BufferedOutputStream socketStream, long timestamp) {
 		try{
 			socketStream.write((GET_INFO_UP + timestamp + "\n").getBytes());
-		} catch(IOException e){
-			//TODO insert real error code
-			return -1;
-		}
-		return 0;
-	}
-
-	public static int getInfoAll(BufferedOutputStream socketStream) {
-		try{
-			socketStream.write((GET_INFO_ALL).getBytes());
 		} catch(IOException e){
 			//TODO insert real error code
 			return -1;
@@ -51,9 +40,9 @@ public class Requests {
 		return 0;
 	}
 
-	public static int getSendPermission(BufferedOutputStream socketStream, long size, String fileName, long timeout) {
+	public static int getSendPermission(BufferedOutputStream socketStream, long size, long timeout, String fileName) {
 		try{
-			socketStream.write((GET_SEND_PERMISSION + size + " " + fileName + " " + timeout + "\n").getBytes());
+			socketStream.write((GET_SEND_PERMISSION + size + " " + timeout + " " + fileName + "\n").getBytes());
 		} catch(IOException e){
 			//TODO insert real error code
 			return -1;
