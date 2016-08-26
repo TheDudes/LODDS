@@ -10,6 +10,8 @@ import studyproject.API.Core.FileAction;
 import studyproject.API.Core.FileInfo;
 import studyproject.API.Core.Timestamp;
 import studyproject.API.Core.Utils;
+import studyproject.API.Core.FileInfoList.FileInfoListType;
+import studyproject.API.Core.FileInfoList.InfoType;
 
 public class Handles {
 	
@@ -17,16 +19,22 @@ public class Handles {
 
 	/**
 	 * Handles incoming info responses to the getInfoUp request
-	 * @param socketStream
-	 * @param fileInfos
-	 * @param timestamp
+	 * @param socketStream BufferedReader to read from
+	 * @param fileInfos ArrayList with information to the changed files
+	 * @param timestamp Timestamp object holding the timestamp of the last requester filesystem update
+	 * @param infoType FileInfoListType object containing the info type 
 	 * @return integer representing the result. Negative value if function fails
 	 */
-	public static int handleInfoUp(BufferedReader socketStream, ArrayList<FileInfo> fileInfos, Timestamp timestamp) {
+	public static int handleInfoUp(BufferedReader socketStream, ArrayList<FileInfo> fileInfos, Timestamp timestamp, FileInfoListType infoType) {
 		FileInfo fileInfo;
 		String[] params;
 		try {
 			params = socketStream.readLine().split(" ");
+			if (params[0].equals("upd")) {
+				infoType.type = InfoType.upd;
+			} else {
+				infoType.type = InfoType.all;
+			}
 			timestamp.value = Long.valueOf(params[1]);
 			for (int i = 0; i < Integer.valueOf(params[2]); i++) {
 				params = socketStream.readLine().split(" ");
