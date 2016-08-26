@@ -15,6 +15,13 @@ public class Handles {
 	
 	private static final int BUFFERSIZE = 4096;
 
+	/**
+	 * Handles incoming info responses to the getInfoUp request
+	 * @param socketStream
+	 * @param fileInfos
+	 * @param timestamp
+	 * @return integer representing the result. Negative value if function fails
+	 */
 	public static int handleInfoUp(BufferedReader socketStream, ArrayList<FileInfo> fileInfos, Timestamp timestamp) {
 		FileInfo fileInfo;
 		String[] params;
@@ -42,33 +49,13 @@ public class Handles {
 		return 0;
 	}
 
-	public static int handleInfoAll(BufferedReader socketStream, ArrayList<FileInfo> fileInfos, long timestamp) {
-		FileInfo fileInfo;
-		String[] params;
-		try {
-			params = socketStream.readLine().split(" ");
-			timestamp = Long.valueOf(params[1]);
-			for (int i = 0; i < Integer.valueOf(params[2]); i++) {
-				params = socketStream.readLine().split(" ");
-				fileInfo = new FileInfo();
-				if (params[0].equals(FileAction.add.toString())) {
-					fileInfo.fileAction = FileAction.add;
-				} else {
-					fileInfo.fileAction = FileAction.del;
-				}
-				fileInfo.checksum = params[1];
-				fileInfo.size = Long.valueOf(params[2]);
-				fileInfo.fileName = params[3];
-				fileInfos.add(fileInfo);
-			}
-		} catch (IOException e) {
-			return -1;
-		} catch (NumberFormatException e) {
-			return -2;
-		}
-		return 0;
-	}
-
+	/**
+	 * Writes incoming files from a BufferedInputStream to an output file
+	 * @param socketStream the BufferedInputStream to read from
+	 * @param fileStream the FileOutputStream to write read bytes to
+	 * @param size in bytes to read from BufferedInputStream
+	 * @return integer representing the result. Negative value if function fails
+	 */
 	public static int handleFile(BufferedInputStream socketStream, FileOutputStream fileStream, long size) {
 		try {
 			byte[] byteArray = new byte[BUFFERSIZE];
@@ -83,6 +70,11 @@ public class Handles {
 		return 0;
 	}
 
+	/**
+	 * Handles the response to the getInfoLoad request and filters the answer
+	 * @param socketStream the BufferedReader to read from
+	 * @return the number outstanding bytes to send. Negative value if fails
+	 */
 	public static long handleInfoLoad(BufferedReader socketStream) {
 		long byteToSend;
 		try {
@@ -95,7 +87,12 @@ public class Handles {
 		return byteToSend;
 	}
 
-	public static int handleSendPermission(BufferedReader socketStream) { //, long timout, FileInputStream fileStream) {
+	/**
+	 * Check if permission to send is permitted
+	 * @param socketStream the BufferedReader to read from
+	 * @return integer representing the result. Negative value if function fails
+	 */
+	public static int handleSendPermission(BufferedReader socketStream) {
 		try {
 			String s = socketStream.readLine();
 			if (!s.equals("OK")) {
