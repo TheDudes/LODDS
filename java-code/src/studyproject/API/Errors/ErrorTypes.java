@@ -12,6 +12,7 @@ import java.util.Map;
  *
  */
 public enum ErrorTypes {
+	noError,
 	denied, 
 	timeout,
 	bufferedReader,
