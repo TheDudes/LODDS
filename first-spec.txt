@@ -39,7 +39,7 @@
   communication will also serve as a way to tell others that a file has
   changed and they have to request a update.
 
-  'ip-address port timestamp_lastChange name\n'
+  'ip-address port timestamp_lastChange load name\n'
     Every client who wants to be visible for others will broadcast a
     message with information about himself.
 
@@ -53,7 +53,12 @@
       timestamp_lastChange
         Timestamp of last change. If something changed this timestamp
         will be updated, so others can request a update if wanted.
-
+	
+	  load
+	  	Amount of outstanding bytes the broadcasting client still needs
+        to transfer. This information can be used for laod balancing 
+        purposes. 
+	
       name
         Is the client's nickname to be seen in the client list.
 
@@ -163,22 +168,7 @@
         "get info up 0\n"
           Will request the full shared file list.
 
-    'get info load\n'
-      Request information about the current load status of a specific
-      client.
-
-      Arguments:
-        -
-
-      Response:
-        Amount of outstanding bytes the requested client still needs
-        to transfer terminated by \n.
-
-      Example:
-        "get info load\n"
-          Will request current load status.
-
-    'get send-permission size timeout filename\n'
+   'get send-permission size timeout filename\n'
        Requests a permission to send a specific file, identified by the
        filename and size. The request can be accepted till the timeout
        expires.
