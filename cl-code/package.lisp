@@ -19,18 +19,15 @@
    ;; get family
    #:get-info-all
    #:get-info-up
-   #:get-info-load
    #:get-file
    #:get-send-permission
    ;; respond family
    #:respond-info-all
    #:respond-info-up
-   #:respond-info-load
    #:respond-file
    #:respond-send-permission
    ;; handle family
    #:handle-info-all
    #:handle-info-up
-   #:handle-info-load
    #:handle-file
    #:handle-send-permission))

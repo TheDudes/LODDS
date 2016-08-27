@@ -26,14 +26,15 @@ multiple-value-bind.
 (defun send-advertise (broadcast-host broadcast-port ad-info)
   "will format ad-info and write it to a udp-broadcast socket
 with given broadcast-host and broadcast-port.
-ad-info is a list containing ip port timestamp and name, in that order.
-for example: '(#(192 168 2 255) 12345 87654321 \"username\")"
-  (destructuring-bind (ip port timestamp name) ad-info
+ad-info is a list containing ip, port, timestamp, load and name,
+in that order. for example:
+'(#(192 168 2 255) 12345 87654321 9999 \"username\")"
+  (destructuring-bind (ip port timestamp load name) ad-info
     (let ((sock (usocket:socket-connect nil nil :protocol :datagram))
           (data (flexi-streams:string-to-octets
-                 (format nil "~a ~a ~a ~a~%"
+                 (format nil "~a ~a ~a ~a ~a~%"
                          (usocket:vector-quad-to-dotted-quad ip)
-                         port timestamp name))))
+                         port timestamp load name))))
       (setf (usocket:socket-option sock :broadcast) t)
       (usocket:socket-send sock data (length data)
                            :host broadcast-host
@@ -42,15 +43,16 @@ for example: '(#(192 168 2 255) 12345 87654321 \"username\")"
 
 (defun read-advertise (message)
   "counter-part to send-advertise, will parse the given message (byte
-vector) and return a list out of ip port timestamp and name.
-for example: '(#(192 168 2 255) 12345 87654321 \"username\")"
-  (destructuring-bind (ip port timestamp . name)
+vector) and return a list out of ip, port, timestamp, load and name.
+for example: '(#(192 168 2 255) 12345 9999 87654321 \"username\")"
+  (destructuring-bind (ip port timestamp load . name)
       (cl-strings:split
        (flexi-streams:octets-to-string message))
     (values 0
             (list (usocket:dotted-quad-to-vector-quad ip)
                   (parse-integer port)
                   (parse-integer timestamp)
+                  (parse-integer load)
                   (cl-strings:join name)))))
 
 ;; get family
@@ -66,13 +68,6 @@ the specified (checksum) file's content from start till end"
 a information update. timestamp describes the last requested information the
 client currently holds. timestamp should be a fixnum"
   (format socket-stream "get info up ~a~%" timestamp)
-  0)
-
-(defun get-info-load (socket-stream)
-  "will format and write a 'get-info-load' request onto socket-stream requesting
-information about the current load (given in outstanding bytes)
-DEPRECATED"
-  (format socket-stream "get info load~%")
   0)
 
 (defun get-send-permission (socket-stream size timeout filename)
@@ -121,12 +116,6 @@ TODO: relative pathname link to spec"
                  name))
   0)
 
-(defun respond-info-load (socket-stream load)
-  "response to a 'get info load' request, writes the given load onto
-socket-stream."
-  (format socket-stream "~a~%" load)
-  0)
-
 (defun respond-send-permission (socket-stream file-stream size)
   "response to a 'get send-permission', will send a OK and copy the
 socket-stream content (max size bytes) to file-stream."
@@ -167,13 +156,6 @@ as 'file-infos' argument from respond-info-up function"
                                 checksum
                                 (parse-integer size)
                                 (cl-strings:join name :separator " ")))))))
-
-(defun handle-info-load (socket-stream)
-  "handles a successfull 'get info load' request and returns (as second
-value) a number describing the parsed load"
-  (values
-   0
-   (parse-integer (read-line socket-stream))))
 
 (defun handle-send-permission (socket timeout file-stream)
   "handles a successfull 'get send-permission' request and waits
