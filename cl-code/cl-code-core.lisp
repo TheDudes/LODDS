@@ -32,3 +32,13 @@
                  (incf written read)))
            ;; TODO: error handling
            (when (< read buffer-size) (return)))))
+
+;; got code from lisptips http://lisptips.com/page/4 modified it to my needs :)
+
+(defvar *unix-epoch-difference*
+  (encode-universal-time 0 0 0 1 1 1970 0)
+  "used by get-timestamp to convert universal-time to unix")
+
+(defun get-timestamp ()
+  "returns a number representing the unix-timestamp"
+  (- (get-universal-time) *unix-epoch-difference*))

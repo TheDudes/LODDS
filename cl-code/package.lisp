@@ -6,7 +6,8 @@
 (defpackage #:cl-code-core
   (:use #:cl)
   (:export #:sha-256
-           #:copy-stream))
+           #:copy-stream
+           #:get-timestamp))
 
 (defpackage #:cl-code-low-level-api
   (:use #:cl
