@@ -14,18 +14,25 @@ import studyproject.API.Core.File.InfoList.FileInfoListType;
 import studyproject.API.Core.File.InfoList.InfoType;
 
 public class Handles {
-	
+
 	private static final int BUFFERSIZE = 4096;
 
 	/**
 	 * Handles incoming info responses to the getInfoUp request
-	 * @param socketStream BufferedReader to read from
-	 * @param fileInfos ArrayList with information to the changed files
-	 * @param timestamp Timestamp object holding the timestamp of the last requester filesystem update
-	 * @param infoType FileInfoListType object containing the info type 
+	 * 
+	 * @param socketStream
+	 *            BufferedReader to read from
+	 * @param fileInfos
+	 *            ArrayList with information to the changed files
+	 * @param timestamp
+	 *            Timestamp object holding the timestamp of the last requester
+	 *            filesystem update
+	 * @param infoType
+	 *            FileInfoListType object containing the info type
 	 * @return integer representing the result. Negative value if function fails
 	 */
-	public static int handleInfoUp(BufferedReader socketStream, ArrayList<FileInfo> fileInfos, Timestamp timestamp, FileInfoListType infoType) {
+	public static int handleInfo(BufferedReader socketStream, ArrayList<FileInfo> fileInfos, Timestamp timestamp,
+			FileInfoListType infoType) {
 		FileInfo fileInfo;
 		String[] params;
 		try {
@@ -59,15 +66,19 @@ public class Handles {
 
 	/**
 	 * Writes incoming files from a BufferedInputStream to an output file
-	 * @param socketStream the BufferedInputStream to read from
-	 * @param fileStream the FileOutputStream to write read bytes to
-	 * @param size in bytes to read from BufferedInputStream
+	 * 
+	 * @param socketStream
+	 *            the BufferedInputStream to read from
+	 * @param fileStream
+	 *            the FileOutputStream to write read bytes to
+	 * @param size
+	 *            in bytes to read from BufferedInputStream
 	 * @return integer representing the result. Negative value if function fails
 	 */
 	public static int handleFile(BufferedInputStream socketStream, FileOutputStream fileStream, long size) {
 		try {
 			byte[] byteArray = new byte[BUFFERSIZE];
-			while(size > 0) {
+			while (size > 0) {
 				int readSize = Utils.readThisLength(socketStream, byteArray, 0, byteArray.length);
 				fileStream.write(byteArray);
 				size -= readSize;
@@ -79,29 +90,14 @@ public class Handles {
 	}
 
 	/**
-	 * Handles the response to the getInfoLoad request and filters the answer
-	 * @param socketStream the BufferedReader to read from
-	 * @return the number outstanding bytes to send. Negative value if fails
-	 */
-	public static long handleInfoLoad(BufferedReader socketStream) {
-		long byteToSend;
-		try {
-			byteToSend =  Long.valueOf(socketStream.readLine());
-		} catch (NumberFormatException e) {
-			return -1;
-		} catch (IOException e) {
-			return -2;
-		}
-		return byteToSend;
-	}
-
-	/**
 	 * Check if permission to send is permitted
-	 * @param socketStream the BufferedReader to read from
+	 * 
+	 * @param socketStream
+	 *            the BufferedReader to read from
 	 * @return integer representing the result. Negative value if function fails
 	 */
 	public static int handleSendPermission(BufferedReader socketStream) {
-		//TODO read until timeout is exceeded!!!
+		// TODO read until timeout is exceeded!!!
 		try {
 			String s = socketStream.readLine();
 			if (!s.equals("OK")) {
