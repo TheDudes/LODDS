@@ -54,6 +54,35 @@ for example: '(#(192 168 2 255) 12345 9999 87654321 \"username\")"
                   (parse-integer load)
                   (cl-strings:join name)))))
 
+(defun parse-request (socket-stream)
+  "parses a direct communication request. returns multiple values,
+the first is a number describing the error (or 0 on success) and
+one of the following lists, depending on request:
+(:file checksum start end)
+(:info timestamp)
+(:send-permission size timeout filename)"
+  (destructuring-bind (get type . args)
+             (cl-strings:split (read-line socket-stream))
+    (unless (string= get "get")
+      ;; TODO: Error code
+      (error "direct communication request does not start with a 'get'~%"))
+    (let ((requ-type (str-case type
+                       ("file" :file)
+                       ("info" :info)
+                       ("send-permission" :send-permission))))
+      (case requ-type
+        (:file (values 0 (list :file
+                               (car args)
+                               (parse-integer (nth 1 args))
+                               (parse-integer (nth 2 args)))))
+        (:info (values 0 (list :info (car args))))
+        (:send-permission (values 0 (destructuring-bind (size timeout . filename)
+                                               args
+                                      (list :send-permission
+                                            (parse-integer size)
+                                            (parse-integer timeout)
+                                            (cl-strings:join filename :separator " ")))))))))
+
 ;; get family
 
 (defun get-file (socket-stream checksum start end)

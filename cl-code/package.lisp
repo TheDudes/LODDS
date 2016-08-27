@@ -18,6 +18,8 @@
    ;; broadcast
    #:send-advertise
    #:read-advertise
+   ;; parses incomming requests
+   #:parse-request
    ;; get family
    #:get-info
    #:get-file
