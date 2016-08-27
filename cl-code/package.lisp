@@ -7,7 +7,8 @@
   (:use #:cl)
   (:export #:sha-256
            #:copy-stream
-           #:get-timestamp))
+           #:get-timestamp
+           #:str-case))
 
 (defpackage #:cl-code-low-level-api
   (:use #:cl

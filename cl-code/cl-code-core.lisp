@@ -42,3 +42,13 @@
 (defun get-timestamp ()
   "returns a number representing the unix-timestamp"
   (- (get-universal-time) *unix-epoch-difference*))
+
+(defmacro str-case (string-form &body cases)
+  "'case' for strings, expands to cond clause with string=
+as compare function"
+  (let ((result (gensym "result")))
+    `(let ((,result ,stringform))
+       (declare (ignorable ,result))
+       (cond
+         ,@(loop :for (str form) :in cases
+                 :collect `((string= ,result ,str) ,form))))))
