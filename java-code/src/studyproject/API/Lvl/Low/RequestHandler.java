@@ -14,6 +14,7 @@ import studyproject.API.Core.Request.Request;
 public class RequestHandler {
 	
 	public static int parseRequest(InputStream socketStream, Request request){
+		//TODO matching via Regex
 		String currentLine;
 		String[] lineParts;
 		try(BufferedReader reader = new BufferedReader(new InputStreamReader(socketStream))){
