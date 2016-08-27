@@ -16,6 +16,7 @@ import studyproject.API.Core.File.InfoList.InfoType;
 public class Handles {
 
 	private static final int BUFFERSIZE = 4096;
+	private static final int TIMEOUT = 10000;
 
 	/**
 	 * Handles incoming info responses to the getInfoUp request
@@ -97,14 +98,20 @@ public class Handles {
 	 * @return integer representing the result. Negative value if function fails
 	 */
 	public static int handleSendPermission(BufferedReader socketStream) {
-		// TODO read until timeout is exceeded!!!
-		try {
-			String s = socketStream.readLine();
-			if (!s.equals("OK")) {
-				return -1;
-			}
-		} catch (IOException e) {
-			return -2;
+		long endTime = System.currentTimeMillis() + TIMEOUT;
+		while(System.currentTimeMillis() < endTime) {
+			try {
+				String s = socketStream.readLine();
+				if (s == null) {
+					Thread.sleep(1);
+					continue;
+				} else if (!s.equals("OK")) {
+					return -1;
+				}
+				break;
+			} catch (IOException | InterruptedException e) {
+				return -2;
+			}	
 		}
 		return 0;
 	}
