@@ -30,7 +30,8 @@ public class Utils {
 	 * @throws IOException
 	 */
 
-	public static int readThisLength(InputStream inStream, byte[] destination, int off, int len) throws IOException {
+	public static int readThisLength(InputStream inStream, byte[] destination, int off, int len)
+			throws IOException, IndexOutOfBoundsException {
 		int readBytes = 0;
 		if (off + len > destination.length) {
 			throw new IndexOutOfBoundsException(
