@@ -34,7 +34,7 @@ public class Responses {
 	 * @return 
 	 * 			0 or an error value
 	 */
-	public static int respondInfoUp(BufferedOutputStream socketStream, long timestamp, ArrayList<FileInfo> fileInfos) {
+	public static int respondInfo(BufferedOutputStream socketStream, long timestamp, ArrayList<FileInfo> fileInfos) {
 		try{
 			if(timestamp == 0){
 				socketStream.write((ALL_FLAG + timestamp + " " + fileInfos.size() + "\n").getBytes());
@@ -106,28 +106,6 @@ public class Responses {
 		return 0;
 	}
 
-	/**
-	 * responds to the getInfoLoad call and writes the number of bytes this machine has left
-	 * to send to the provided outputStream according to the specification
-	 * 
-	 * @param socketStream 
-	 * 			the stream to write to
-	 * 
-	 * @param byteToSend 
-	 * 			the number of bytes still to send
-	 * 
-	 * @return 
-	 * 			0 or an error value
-	 */
-	public static int respondInfoLoad(BufferedOutputStream socketStream, long byteToSend) {
-		try{
-			socketStream.write((byteToSend + "\n").getBytes());
-		} catch(IOException e){
-			//TODO real error codes
-			return -1;
-		}
-		return 0;
-	}
 
 	/**
 	 * responds to the getSendPermission call by sending OK and then waiting to receive the bytes of
