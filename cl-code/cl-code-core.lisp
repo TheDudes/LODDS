@@ -10,6 +10,7 @@
     (ironclad:digest-stream :sha256 stream)))
 
 (defun copy-stream (stream-from stream-to &optional size)
+  "will read from stream-from and write to stream-to size bytes"
   (loop
      ;; TODO: buffer-size to config
      :with written = 0
