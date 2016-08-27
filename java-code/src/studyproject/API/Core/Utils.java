@@ -7,7 +7,6 @@ import java.util.Date;
 import java.util.TimeZone;
 
 public class Utils {
-	
 
 	/**
 	 * reads the exact number of bytes specified from a InputStream to the
@@ -63,7 +62,14 @@ public class Utils {
 		return returnValue;
 	}
 
-	
+	/**
+	 * This function formats a given unix timestamp to the format "HH:mm:ss a"
+	 * and returns it as String
+	 * 
+	 * @param unixSeconds
+	 *            The Unix Timestamp you want to format
+	 * @return the formatted unix timestamp as string e.g. "10:30:41 PM"
+	 */
 	public static String formatUnixTimestamp(long unixSeconds) {
 		// *1000 is to convert seconds to milliseconds
 		Date date = new Date(unixSeconds * 1000L);
