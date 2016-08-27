@@ -66,10 +66,10 @@
       -
 
     Example:
-      "192.168.0.15 1050 1464269857 Nintinugga\n"
+      "192.168.0.15 1050 1464269857 9999 Nintinugga\n"
       Will tell others the clients ip-address (192.168.0.15), port
-      (1050), my last change timestamp (1464269857) and the name
-      (Nintinugga).
+      (1050), my last change timestamp (1464269857), the oustanding
+      bytes (9999) and the name (Nintinugga).
 
 3. Direct Communication
 
@@ -105,17 +105,13 @@
   3.1 Requests (get cmds)
 
     Requests always start with a 'get'. 'get' is followed by one of
-    'file', 'info' or 'send-permission'. 'get info' can be followed by
-    one of 'up', 'all' or 'load', which is a total of five commands.
-    Some commands may also have arguments. All commands end with a
-    '\n' (newline).
+    'file', 'info' or 'send-permission'. Some commands may also have 
+    arguments. All commands end with a '\n' (newline).
 
     Overview of get command tree:
 
     get --- file
-         |- info --- up
-         |        |- all
-         |        `- load
+         |- info
          `- send-permission
 
     'get file checksum start end\n'
@@ -143,11 +139,11 @@
           This will Request file 35171... from byte 0 till 2048, so it
           will transfer 2048 bytes total.
 
-    'get info up timestamp\n'
+    'get info timestamp\n'
       Will request an update about his files from a client. Timestamp
       is specifying the last known state. So if client A changes his
       files the timestamp he broadcasts will update. If client B sees
-      the change he will send 'get info up timestamp' to A, specifying
+      the change he will send 'get info timestamp' to A, specifying
       the last timestamp of A he saw. So A will respond with all his
       updates since the given timestamp. If timestamp is 0, a complete 
       list of shared files from the specific client is requested.
@@ -163,9 +159,9 @@
         there are no new shared files. 
 
       Examples:
-        "get info up 1464269498\n"
+        "get info 1464269498\n"
           Will request all updates since 1464269498.
-        "get info up 0\n"
+        "get info 0\n"
           Will request the full shared file list.
 
    'get send-permission size timeout filename\n'
@@ -196,8 +192,8 @@
   3.2 Responses
 
     On error or similar the connection will be closed and no response
-    will be sent. The following response may be returned on 'get info
-    up'.
+    will be sent. The following response may be returned on 
+    'get info'.
 
     '(upd|all) timestamp count\n'
     '((del|add) checksum size relative_filename\n)*'
@@ -210,7 +206,7 @@
       del b42e80cfd... 843418123 /some/other/directory/foo.bar\n
       add a29b6e315... 123123 /bar.foo\n
       add 28ad16dcd... 3214178546 /new-file.zip\n
-        This will be a response from a 'get info up timestamp'
+        This will be a response from a 'get info timestamp'
         request. The first line tells the client that an update
         instead of a full list of files will follow. The sent
         timestamp will tell the client what state we will get. Each
@@ -223,7 +219,7 @@
       add 20178863f... 23411123 /second-file.txt\n
       add e3b0c4429... 12344121 /third-file.txt\n
       add f21292d0d... 423418123 /last-file.txt\n
-        This may be returned from a 'get info up 0' request. The first
+        This may be returned from a 'get info 0' request. The first
         line tells what kind of response is following. 'all' specifies
         that a full list of files is sent. Each line after the first
         specifies a new file. This response tells the client that the
