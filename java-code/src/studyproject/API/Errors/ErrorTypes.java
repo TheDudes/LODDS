@@ -12,18 +12,12 @@ import java.util.Map;
  *
  */
 public enum ErrorTypes {
-	noError,
-	denied, 
-	timeout,
-	bufferedReader,
-	bufferedInputStream,
-	fileOutputStream,
-	fileInputStream,
-	indexOutOfBound,
-	numberFormat,
-	socket,
-	noSuchAlgorithm;
-
+	oK,
+	connectionClosed, 
+	malformedData,
+	timoutReached,
+	fileNotFound;
+	
 	private static Map<Integer, ErrorTypes> map = new HashMap<Integer, ErrorTypes>();
 
 	static {

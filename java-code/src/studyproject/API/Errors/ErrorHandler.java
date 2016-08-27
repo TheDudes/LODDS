@@ -64,44 +64,25 @@ public class ErrorHandler {
 	 * @return a string formatted like '{@link LogKey}: {@link APILvl} :Thrown
 	 *         By 'functionName': ErrorMessage'
 	 */
-	private static String getErrorMsg(ErrorTypes errorType, LogKey logKey, APILvl apiLvl, String functionName) {
+	public static String getErrorMsg(ErrorTypes errorType, LogKey logKey, APILvl apiLvl, String functionName) {
 		String errorMsg = "";
 		switch (errorType) {
-		case noError:
-			errorMsg = "Tried to log no error";
+		case oK:
+			errorMsg = "";
 			break;
-		case bufferedInputStream:
-			errorMsg = "Error occured while reading from " + errorType.toString();
+		case connectionClosed:
+			errorMsg = "Connection to client closed unexpectedly";
 			break;
-		case bufferedReader:
-			errorMsg = "Error occured while reading from " + errorType.toString();
+		case fileNotFound:
+			errorMsg = "The specified File(via Checksum or Pathname) could not be found";
 			break;
-		case denied:
-			errorMsg = "Other user denied the Request";
+		case malformedData:
+			errorMsg = "Data could not be parsed, since it's not conforment the specification _NAME_";
 			break;
-		case fileInputStream:
-			errorMsg = "Error occured while reading from " + errorType.toString();
-			break;
-		case fileOutputStream:
-			errorMsg = "Error occured while writing to " + errorType.toString();
-			break;
-		case indexOutOfBound:
-			errorMsg = errorType.toString();
-			break;
-		case noSuchAlgorithm:
-			errorMsg = errorType.toString();
-			break;
-		case numberFormat:
-			errorMsg = "NumberFormatException";
-			break;
-		case socket:
-			errorMsg = "SocketError";
-			break;
-		case timeout:
-			errorMsg = "Timeout";
+		case timoutReached:
+			errorMsg = "Timeout has been reached whithout a response";
 			break;
 		
-
 		}
 		return getErrorMsgPrefix(logKey, apiLvl, functionName) + ": " + errorMsg;
 
