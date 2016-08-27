@@ -5,6 +5,14 @@ import java.util.logging.LogRecord;
 
 import studyproject.API.Core.Utils;
 
+/**
+ * A Formatter which is used to format logRecords to the format "Timestamp:
+ * logMessage" where Timestamp is currently formatted with
+ * {@link Utils}.formatUnixTimestamp
+ * 
+ * @author ninti
+ *
+ */
 public class LogRecFormatter extends Formatter {
 
 	@Override
