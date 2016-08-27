@@ -16,7 +16,8 @@ import studyproject.API.Core.File.InfoList.InfoType;
 public class Handles {
 
 	private static final int BUFFERSIZE = 4096;
-	private static final int TIMEOUT = 10000;
+	private static final int TIMEOUT = 10000; // Timeout in milliseconds
+	private static final int TIMEINTERVAL = 1000; // Timeoutinterval
 
 	/**
 	 * Handles incoming info responses to the getInfoUp request
@@ -77,10 +78,11 @@ public class Handles {
 	 * @return integer representing the result. Negative value if function fails
 	 */
 	public static int handleFile(BufferedInputStream socketStream, FileOutputStream fileStream, long size) {
+		int readSize;
 		try {
 			byte[] byteArray = new byte[BUFFERSIZE];
 			while (size > 0) {
-				int readSize = Utils.readThisLength(socketStream, byteArray, 0, byteArray.length);
+				readSize = Utils.readThisLength(socketStream, byteArray, 0, byteArray.length);
 				fileStream.write(byteArray);
 				size -= readSize;
 			}
@@ -98,21 +100,22 @@ public class Handles {
 	 * @return integer representing the result. Negative value if function fails
 	 */
 	public static int handleSendPermission(BufferedReader socketStream) {
+		String s;
 		long endTime = System.currentTimeMillis() + TIMEOUT;
 		while(System.currentTimeMillis() < endTime) {
 			try {
-				String s = socketStream.readLine();
-				if (s == null) {
-					Thread.sleep(1);
-					continue;
-				} else if (!s.equals("OK")) {
-					return -1;
+				if((s = socketStream.readLine()) != null) {
+					Thread.sleep(TIMEINTERVAL);
+					if (!s.equals("OK")) {
+						return -1;
+					}
+					continue; 
 				}
 				break;
-			} catch (IOException | InterruptedException e) {
+			} catch (IOException e) {
 				return -2;
-			}	
-		}
-		return 0;
-	}
-}
+			} catch (InterruptedException e) {
+				return -3;
+			}
+		}return 0;
+}}
