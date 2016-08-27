@@ -45,7 +45,7 @@
 
 (defmacro str-case (string-form &body cases)
   "'case' for strings, expands to cond clause with string=
-as compare function"
+   as compare function"
   (let ((result (gensym "result")))
     `(let ((,result ,string-form))
        (declare (ignorable ,result))

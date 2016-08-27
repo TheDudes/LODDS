@@ -24,10 +24,10 @@ multiple-value-bind.
 
 (defun send-advertise (broadcast-host broadcast-port ad-info)
   "will format ad-info and write it to a udp-broadcast socket
-with given broadcast-host and broadcast-port.
-ad-info is a list containing ip, port, timestamp, load and name,
-in that order. for example:
-'(#(192 168 2 255) 12345 87654321 9999 \"username\")"
+   with given broadcast-host and broadcast-port.
+   ad-info is a list containing ip, port, timestamp, load and name,
+   in that order. for example:
+   '(#(192 168 2 255) 12345 87654321 9999 \"username\")"
   (destructuring-bind (ip port timestamp load name) ad-info
     (let ((sock (usocket:socket-connect nil nil :protocol :datagram))
           (data (flexi-streams:string-to-octets
@@ -42,8 +42,8 @@ in that order. for example:
 
 (defun read-advertise (message)
   "counter-part to send-advertise, will parse the given message (byte
-vector) and return a list out of ip, port, timestamp, load and name.
-for example: '(#(192 168 2 255) 12345 9999 87654321 \"username\")"
+   vector) and return a list out of ip, port, timestamp, load and name.
+   for example: '(#(192 168 2 255) 12345 9999 87654321 \"username\")"
   (destructuring-bind (ip port timestamp load . name)
       (cl-strings:split
        (flexi-streams:octets-to-string message))
@@ -56,11 +56,11 @@ for example: '(#(192 168 2 255) 12345 9999 87654321 \"username\")"
 
 (defun parse-request (socket-stream)
   "parses a direct communication request. returns multiple values,
-the first is a number describing the error (or 0 on success) and
-one of the following lists, depending on request:
-(:file checksum start end)
-(:info timestamp)
-(:send-permission size timeout filename)"
+   the first is a number describing the error (or 0 on success) and
+   one of the following lists, depending on request:
+   (:file checksum start end)
+   (:info timestamp)
+   (:send-permission size timeout filename)"
   (destructuring-bind (get type . args)
              (cl-strings:split (read-line socket-stream))
     (unless (string= get "get")
@@ -87,24 +87,24 @@ one of the following lists, depending on request:
 
 (defun get-file (socket-stream checksum start end)
   "will format and write a 'get file' request onto socket-stream requesting
-the specified (checksum) file's content from start till end"
+   the specified (checksum) file's content from start till end"
   (format socket-stream "get file ~a ~a ~a~%" checksum start end)
   0)
 
 (defun get-info (socket-stream timestamp)
   "will format and write a 'get info' request onto socket-stream requesting
-information about shared files. timestamp describes the last requested
-information the client currently holds. If timestamp is zero (0) it will
-request a full list of shared files from the client."
+   information about shared files. timestamp describes the last requested
+   information the client currently holds. If timestamp is zero (0) it will
+   request a full list of shared files from the client."
   (format socket-stream "get info ~a~%" timestamp)
   0)
 
 (defun get-send-permission (socket-stream size timeout filename)
   "will format and write a 'get-send-permission' request onto socket-stream
-requesting send permission. size is a fixnum describing the file size of the
-to-be-transfered file. The requested client then has 'timeout' seconds to
-respond with either a OK or a connection close. filename is a string containing
-the filename."
+   requesting send permission. size is a fixnum describing the file size of the
+   to-be-transfered file. The requested client then has 'timeout' seconds to
+   respond with either a OK or a connection close. filename is a string containing
+   the filename."
   (format socket-stream "get send-permission ~a ~a ~a~%"
           size timeout filename)
   0)
@@ -113,7 +113,7 @@ the filename."
 
 (defun respond-file (socket-stream file-stream start end)
   "response to a get-file writing data from file-stream to socket-stream.
-file-stream will be positioned at start, and only transfer till end."
+   file-stream will be positioned at start, and only transfer till end."
   (unless (eql start 0)
     (file-position file-stream start))
   (cl-code-core:copy-stream socket-stream file-stream (- end start))
@@ -121,13 +121,13 @@ file-stream will be positioned at start, and only transfer till end."
 
 (defun respond-info (socket-stream type timestamp file-infos)
   "response to a 'get info' request. Will format type timestamp and
-file-infos and write it onto socket-stream. type can be either :all or :upt.
-timestamp is a fixnum somewhat like a 'revision', describing the current state.
-file-infos a list containing lists with type, checksum, size and name describing
-all files. type will either be :add or :del and checksum is a sha-256 of the
-file's content. size is, as the name suggests, the file size. name is the
-relative pathname.
-TODO: relative pathname link to spec"
+   file-infos and write it onto socket-stream. type can be either :all or :upt.
+   timestamp is a fixnum somewhat like a 'revision', describing the current state.
+   file-infos a list containing lists with type, checksum, size and name describing
+   all files. type will either be :add or :del and checksum is a sha-256 of the
+   file's content. size is, as the name suggests, the file size. name is the
+   relative pathname.
+   TODO: relative pathname link to spec"
   (format socket-stream "~a ~a ~a~%"
           timestamp
           (if (eql type :all)
@@ -147,7 +147,7 @@ TODO: relative pathname link to spec"
 
 (defun respond-send-permission (socket-stream file-stream size)
   "response to a 'get send-permission', will send a OK and copy the
-socket-stream content (max size bytes) to file-stream."
+   socket-stream content (max size bytes) to file-stream."
   (format socket-stream "OK~%")
   (copy-stream socket-stream file-stream size)
   0)
@@ -156,15 +156,15 @@ socket-stream content (max size bytes) to file-stream."
 
 (defun handle-file (socket-stream file-stream size)
   "handles a successfull 'get file' request and writes the incomming
-file content from socket-stream to file-stream. Size describes the
-maximum bytes read/written"
+   file content from socket-stream to file-stream. Size describes the
+   maximum bytes read/written"
   (copy-stream socket-stream file-stream size)
   0)
 
 (defun handle-info (socket-stream)
   "handles a successfull 'get info' request and returns (as second
-value) a list containing the parsed data. The list has the same format
-as 'file-infos' argument from respond-info function"
+   value) a list containing the parsed data. The list has the same format
+   as 'file-infos' argument from respond-info function"
   (destructuring-bind (type timestamp count)
         (cl-strings:split
          (read-line socket-stream))
@@ -188,9 +188,9 @@ as 'file-infos' argument from respond-info function"
 
 (defun handle-send-permission (socket timeout file-stream)
   "handles a successfull 'get send-permission' request and waits
-maximum 'timeout' seconds for a OK. On success it writes data from
-file-stream to socket.
-TODO: implement parse of OK."
+   maximum 'timeout' seconds for a OK. On success it writes data from
+   file-stream to socket.
+   TODO: implement parse of OK."
   (if (usocket:wait-for-input socket :timeout timeout)
       (copy-stream file-stream
                    (usocket:socket-stream socket))
