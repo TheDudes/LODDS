@@ -18,7 +18,6 @@ multiple-value-bind.
 
 |#
 
-(multiple-value-bind)
 (in-package #:cl-code-low-level-api)
 
 ;; broadcast family
@@ -63,11 +62,12 @@ the specified (checksum) file's content from start till end"
   (format socket-stream "get file ~a ~a ~a~%" checksum start end)
   0)
 
-(defun get-info-up (socket-stream timestamp)
-  "will format and write a 'get info up' request onto socket-stream requesting
-a information update. timestamp describes the last requested information the
-client currently holds. timestamp should be a fixnum"
-  (format socket-stream "get info up ~a~%" timestamp)
+(defun get-info (socket-stream timestamp)
+  "will format and write a 'get info' request onto socket-stream requesting
+information about shared files. timestamp describes the last requested
+information the client currently holds. If timestamp is zero (0) it will
+request a full list of shared files from the client."
+  (format socket-stream "get info ~a~%" timestamp)
   0)
 
 (defun get-send-permission (socket-stream size timeout filename)
@@ -90,13 +90,13 @@ file-stream will be positioned at start, and only transfer till end."
   (cl-code-core:copy-stream socket-stream file-stream (- end start))
   0)
 
-(defun respond-info-up (socket-stream type timestamp file-infos)
-  "response to a 'get info up' request. Will format type timestamp and
+(defun respond-info (socket-stream type timestamp file-infos)
+  "response to a 'get info' request. Will format type timestamp and
 file-infos and write it onto socket-stream. type can be either :all or :upt.
-timestamp is a fixnum some like a 'revision', describing the current state.
+timestamp is a fixnum somewhat like a 'revision', describing the current state.
 file-infos a list containing lists with type, checksum, size and name describing
 all files. type will either be :add or :del and checksum is a sha-256 of the
-file's content. size is, as the name suggests, the file size and name the
+file's content. size is, as the name suggests, the file size. name is the
 relative pathname.
 TODO: relative pathname link to spec"
   (format socket-stream "~a ~a ~a~%"
@@ -132,10 +132,10 @@ maximum bytes read/written"
   (copy-stream socket-stream file-stream size)
   0)
 
-(defun handle-info-up (socket-stream)
-  "handles a successfull 'get info up' request and returns (as second
+(defun handle-info (socket-stream)
+  "handles a successfull 'get info' request and returns (as second
 value) a list containing the parsed data. The list has the same format
-as 'file-infos' argument from respond-info-up function"
+as 'file-infos' argument from respond-info function"
   (destructuring-bind (type timestamp count)
         (cl-strings:split
          (read-line socket-stream))
@@ -143,7 +143,7 @@ as 'file-infos' argument from respond-info-up function"
             (cond
               ((equalp type "add") :add)
               ((equalp type "del") :del)
-              (t (error "TODO: handle-info-up add|del error")))
+              (t (error "TODO: handle-info add|del error")))
             (parse-integer timestamp)
             (loop
                :for line = (read-line socket-stream)
@@ -152,7 +152,7 @@ as 'file-infos' argument from respond-info-up function"
                           (list (cond
                                   ((equalp type "add") :add)
                                   ((equalp type "del") :del)
-                                  (t (error "TODO: handle-info-up add|del error")))
+                                  (t (error "TODO: handle-info add|del error")))
                                 checksum
                                 (parse-integer size)
                                 (cl-strings:join name :separator " ")))))))

@@ -17,17 +17,14 @@
    #:send-advertise
    #:read-advertise
    ;; get family
-   #:get-info-all
-   #:get-info-up
+   #:get-info
    #:get-file
    #:get-send-permission
    ;; respond family
-   #:respond-info-all
-   #:respond-info-up
+   #:respond-info
    #:respond-file
    #:respond-send-permission
    ;; handle family
-   #:handle-info-all
-   #:handle-info-up
+   #:handle-info
    #:handle-file
    #:handle-send-permission))
