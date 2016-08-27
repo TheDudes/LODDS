@@ -47,7 +47,7 @@
   "'case' for strings, expands to cond clause with string=
 as compare function"
   (let ((result (gensym "result")))
-    `(let ((,result ,stringform))
+    `(let ((,result ,string-form))
        (declare (ignorable ,result))
        (cond
          ,@(loop :for (str form) :in cases
