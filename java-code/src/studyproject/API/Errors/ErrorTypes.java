@@ -12,7 +12,16 @@ import java.util.Map;
  *
  */
 public enum ErrorTypes {
-	IO, blub, blah;
+	denied, 
+	timeout,
+	bufferedReader,
+	bufferedInputStream,
+	fileOutputStream,
+	fileInputStream,
+	indexOutOfBound,
+	numberFormat,
+	socket,
+	noSuchAlgorithm;
 
 	private static Map<Integer, ErrorTypes> map = new HashMap<Integer, ErrorTypes>();
 

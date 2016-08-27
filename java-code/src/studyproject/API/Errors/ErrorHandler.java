@@ -67,15 +67,34 @@ public class ErrorHandler {
 	private static String getErrorMsg(ErrorTypes errorType, LogKey logKey, APILvl apiLvl, String functionName) {
 		String errorMsg = "";
 		switch (errorType) {
-		case IO:
-			errorMsg = "IO FAIL";
+		case bufferedInputStream:
+			errorMsg = "Error Occured while reading from " + errorType.toString();
 			break;
-		case blah:
+		case bufferedReader:
+			errorMsg = "Error Occured while reading from " + errorType.toString();
 			break;
-		case blub:
+		case denied:
+			errorMsg = "Other user denied the Request";
+			break;
+		case fileInputStream:
+			errorMsg = "Error Occured while reading from " + errorType.toString();
+			break;
+		case fileOutputStream:
+			break;
+		case indexOutOfBound:
+			break;
+		case noSuchAlgorithm:
+			break;
+		case numberFormat:
+			break;
+		case socket:
+			break;
+		case timeout:
 			break;
 		default:
+			errorMsg = "Error Occured";
 			break;
+		
 		}
 		return getErrorMsgPrefix(logKey, apiLvl, functionName) + ": " + errorMsg;
 
