@@ -9,12 +9,20 @@ public class FileInfo {
 	public long size;
 	public String fileName;
 	public FileAction fileAction;
+	public String parentDirectory;
+	
+	public FileInfo() {
+		
+	}
 	
 	public FileInfo(String checksum, long size, String fileName, FileAction fileAction) {
 		this.checksum = checksum;
 		this.size = size;
 		this.fileName = fileName;
 		this.fileAction = fileAction;
+		
+		File file = new File(fileName);
+		this.parentDirectory = file.getParent();
 	}
 	
 	public FileInfo(String fileName) throws NoSuchAlgorithmException, IOException {
@@ -24,6 +32,7 @@ public class FileInfo {
 		this.size = file.length();
 		this.fileName = fileName;
 		this.fileAction = FileAction.add;
+		this.parentDirectory = file.getParent();
 	}
 
 }

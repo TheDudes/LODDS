@@ -5,7 +5,7 @@ import static java.nio.file.StandardWatchEventKinds.ENTRY_DELETE;
 import static java.nio.file.StandardWatchEventKinds.ENTRY_MODIFY;
 import static java.nio.file.StandardWatchEventKinds.OVERFLOW;
 
-
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.FileSystems;
 import java.nio.file.Path;
@@ -13,27 +13,35 @@ import java.nio.file.Paths;
 import java.nio.file.WatchEvent;
 import java.nio.file.WatchKey;
 import java.nio.file.WatchService;
+import java.security.NoSuchAlgorithmException;
 
+import studyproject.API.Core.File.FileInfo;
 
-public class FileWatcher {
+/**
+ * Watches a specific folder for changes and executes handlers for updating the list
+ *
+ */
+public class FileWatcher implements Runnable {
+
+	private String path;
+	private Boolean watchForNewFiles;
+	private FileWatcherController controller;
 	
-	// Directories that are currently watched
-	private String[] watchedDirectories;
-
-	public static void main(String[] args) {
-		// TODO Auto-generated method stub
-		System.out.println("Start");
-
-		FileWatcher myWatchService = new FileWatcher();
-
-		myWatchService.watchDirectory("/Users/robinhood/Desktop");
+	public FileWatcher(String path, Boolean watchForNewFiles, FileWatcherController controller) {
+		super();
+		this.path = path;
+		this.watchForNewFiles = watchForNewFiles;
+		this.controller = controller;
 	}
 	
-	// TODO watchFile(String path):
-	// - adds parent directory to watchedDirectories
-	// - initiates new watcher if directory is not in current watchedDirectories list
-
-	public void watchDirectory(String path) {
+	/**
+	 * Watches a directory for changes and if changes are detected
+	 * it checks if the changed file is in our file list 
+	 * or if its a recursively watched directory it monitors new files as well
+	 * 
+	 * @param path
+	 */
+	public void run() {
 		try {
 				WatchService watcher = FileSystems.getDefault().newWatchService();
 
@@ -52,34 +60,54 @@ public class FileWatcher {
 
 				    for (WatchEvent<?> event : key.pollEvents()) {
 				        // get event type
-				        WatchEvent.Kind<?> kind = event.kind();
+				        WatchEvent.Kind<?> eventType = event.kind();
 
 				        // get file name
 				        @SuppressWarnings("unchecked")
 				        WatchEvent<Path> ev = (WatchEvent<Path>) event;
 				        Path fileName = ev.context();
 				        
-				        System.out.println(kind.name() + ": " + fileName);
+				        System.out.println(eventType.name() + ": " + fileName);
 				        
-				        // TODO Check if file is in list
-
-				        if (kind == OVERFLOW) {
-				            
-				        	// TODO: DEL
-				        	
-				        } else if (kind == ENTRY_CREATE) {
-				        		
-				            // TODO: ADD
-
-				        } else if (kind == ENTRY_DELETE) {
-
-				            // TODO: DEL
-
-				        } else if (kind == ENTRY_MODIFY) {
-
-				            // TODO: DEL & ADD
-
+				        // New file was created -> Add to list
+				        if (watchForNewFiles && eventType == ENTRY_CREATE) {
+				        	String fullFileName = path+"/"+fileName.toString();
+				        	File newFile = new File(fullFileName);
+				        	if (newFile.isDirectory()) {
+				        		controller.watchDirectoryRecursively(fullFileName);
+				        	} else {
+				        		controller.watchFile(path+"/"+fileName.toString(), false);
+				        	}
 				        }
+  		        
+				        // Check if file is in list
+				        FileInfo fileFromList = controller.getWatchedFileFromList(fileName.toString());
+				        
+				        if (fileFromList != null) { // If file is in list
+				        	
+					        if (eventType == OVERFLOW) {
+					            
+					        	// DEL
+					        	controller.addDeletedFile(fileFromList);
+					        	
+					        } else if (eventType == ENTRY_DELETE) {
+
+					        	// DEL
+					        	controller.addDeletedFile(fileFromList);
+					        	
+
+					        } else if (eventType == ENTRY_MODIFY) {
+
+					            // DEL
+					        	controller.addDeletedFile(fileFromList);
+					        	
+					        	// ADD
+					        	controller.addNewFile(fileFromList.fileName);
+
+					        }
+				        }
+
+
 				    }
 
 				    // Reset key
@@ -91,7 +119,10 @@ public class FileWatcher {
 		}
 		catch (IOException ex) {
 	            System.err.println(ex);
-	  }
+	  } catch (NoSuchAlgorithmException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 
 }
