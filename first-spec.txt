@@ -1,8 +1,8 @@
-                     First Specification of _NAME_
+                     First Specification of LODDS-Protocol
 
 1. Introduction
 
-  _NAME_ is a decentral (local) network file-sharing protocol.
+  LODDS is a decentral (local) network file-sharing protocol.
   Broadcast communication is used to find other clients inside the
   local network. Direct Communication is used to transfer information
   about the client and its shared files. The whole communication is
@@ -30,6 +30,10 @@
     calculated by hashing (sha256) the files content. This will allow
     the recognition of files independend of their origin or path.
     Files with the same checksum will be 'seen' as equal.
+
+  1.3 Name
+
+    LODDS stands for Local Open Distributed Data Sharing.
 
 2. Broadcast Communication
 
