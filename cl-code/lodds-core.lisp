@@ -1,8 +1,8 @@
-;;;; cl-code.lisp
+;;;; lodds-core.lisp
 
-(in-package #:cl-code-core)
+(in-package #:lodds-core)
 
-;;; "cl-code" goes here. Hacks and glory await!
+;;; "lodds-core" goes here. Hacks and glory await!
 
 (defun sha-256 (stream)
   "generates sha-256 sum out of given stream"

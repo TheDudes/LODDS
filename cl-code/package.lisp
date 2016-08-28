@@ -1,18 +1,18 @@
 ;;;; package.lisp
 
-(defpackage #:cl-code
+(defpackage #:lodds
   (:use #:cl))
 
-(defpackage #:cl-code-core
+(defpackage #:lodds-core
   (:use #:cl)
   (:export #:sha-256
            #:copy-stream
            #:get-timestamp
            #:str-case))
 
-(defpackage #:cl-code-low-level-api
+(defpackage #:lodds-low-level-api
   (:use #:cl
-        #:cl-code-core)
+        #:lodds-core)
 
   (:export
    ;; broadcast

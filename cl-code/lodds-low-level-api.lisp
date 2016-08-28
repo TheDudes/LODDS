@@ -1,14 +1,14 @@
-;;;; cl-code-low-level-api.lisp
+;;;; lodds-low-level-api.lisp
 
 ;; TODO: replaced parse-integer with cl-strings:parse-number ?
 
 #|
 
-This file contains the low-level-api implementation of _NAME_, functions
-are split into three 'families'. The 'get' family will initiate a
-_NAME_ based communication by requesting data. The 'respond' family
-functions will be the counter-part to them, responding with information.
-The information is then read by the 'handle' family functions.
+This file contains the low-level-api implementation of the LODDS protocol,
+functions are split into three 'families'. The 'get' family will initiate a
+LODDS based communication by requesting data. The 'respond' family functions
+will be the counter-part to them, responding with information. The information
+is then read by the 'handle' family functions.
 
 All functions will return a number. If zero no error occured and
 everything went fine, on error a error code will be returned.
@@ -18,7 +18,7 @@ multiple-value-bind.
 
 |#
 
-(in-package #:cl-code-low-level-api)
+(in-package #:lodds-low-level-api)
 
 ;; broadcast family
 
@@ -116,7 +116,7 @@ multiple-value-bind.
    file-stream will be positioned at start, and only transfer till end."
   (unless (eql start 0)
     (file-position file-stream start))
-  (cl-code-core:copy-stream socket-stream file-stream (- end start))
+  (lodds-core:copy-stream socket-stream file-stream (- end start))
   0)
 
 (defun respond-info (socket-stream type timestamp file-infos)

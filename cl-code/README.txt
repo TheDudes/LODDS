@@ -1,1 +1,1 @@
-This is the stub README.txt for the "cl-code" project.
+This is the stub README.txt for the "lodds" project.

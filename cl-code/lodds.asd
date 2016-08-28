@@ -1,7 +1,7 @@
-;;;; cl-code.asd
+;;;; lodds.asd
 
-(asdf:defsystem #:cl-code
-  :description "Common lisp Implementation of _NAME_"
+(asdf:defsystem #:lodds
+  :description "Common lisp Implementation of LODDS-Protocol"
   :author "d4ryus <d4ryus@openmailbox.org>"
   :license "none yet"
   :serial t
@@ -11,6 +11,6 @@
                :flexi-streams
                :cl-strings)
   :components ((:file "package")
-               (:file "cl-code-core")
-               (:file "cl-code-low-level-api")))
+               (:file "lodds-core")
+               (:file "lodds-low-level-api")))
 
