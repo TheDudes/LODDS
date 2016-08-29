@@ -33,4 +33,9 @@
 (defpackage #:lodds
   (:use #:cl
         #:lodds-core
-        #:lodds-low-level-api))
+        #:lodds-low-level-api)
+  (:export
+   #:get-interfaces
+   #:get-interface-info
+   #:get-broadcast-address
+   #:get-ip-address))
