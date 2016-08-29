@@ -1,8 +1,5 @@
 ;;;; package.lisp
 
-(defpackage #:lodds
-  (:use #:cl))
-
 (defpackage #:lodds-core
   (:use #:cl)
   (:export #:sha-256
@@ -32,3 +29,8 @@
    #:handle-info
    #:handle-file
    #:handle-send-permission))
+
+(defpackage #:lodds
+  (:use #:cl
+        #:lodds-core
+        #:lodds-low-level-api))

@@ -12,5 +12,6 @@
                :cl-strings)
   :components ((:file "package")
                (:file "lodds-core")
-               (:file "lodds-low-level-api")))
+               (:file "lodds-low-level-api")
+               (:file "lodds")))
 
