@@ -13,6 +13,13 @@ import java.util.NoSuchElementException;
 import studyproject.API.Core.BroadcastInfo;
 import studyproject.API.Core.Utils;
 
+/**
+ * Class can send an receive broadcasts that are in
+ * accordance with the LODDS specification
+ * Can also display all currently active network devices of the local machine
+ * @author Michael
+ *
+ */
 public class Broadcast {
 	
 	private static final int DEFAULT_PORT = 9002;
@@ -24,7 +31,7 @@ public class Broadcast {
 	private static int buffersize = DEFAULT_BUFFERSIZE;
 
 	/**
-	 * retrieves a list with all network addresses the local machine has that are running and not virtual
+	 * retrieves a list with all network devices the local machine has that are running and not virtual
 	 * 
 	 * @param networkAddresses
 	 * 			the list in which the addresses are put into
@@ -43,8 +50,7 @@ public class Broadcast {
 				
 			}
 		} catch(SocketException e){
-			//TODO real error codes
-			return -1;
+			return 1;
 		} catch(NoSuchElementException f){
 			//TODO real error codes
 			return -4;
@@ -88,8 +94,7 @@ public class Broadcast {
 	    	socket.send(packet);
 	    	//socket.disconnect();
 	    } catch(IOException e){
-	    	//TODO real error codes
-	    	return -1;
+	    	return 1;
 	    }
 	    return 0;
 	}
@@ -122,8 +127,7 @@ public class Broadcast {
 			String packetContents = new String(Utils.getBytesFromTo(packet.getData(), 0, index), "UTF-8");
 			String[] packetParts = packetContents.split(" ");
 			if(packetParts.length < 5){
-				//TODO real error codes
-				return -2;
+				return 2;
 			}
 			broadcastInfo.networkAddress = packetParts[0];
 			broadcastInfo.ipPort = Integer.parseInt(packetParts[1]);
@@ -136,11 +140,9 @@ public class Broadcast {
 			}
 			broadcastInfo.name = clientName;
 		} catch(IOException e){
-			//TODO real error codes
-			return -1;
+			return 1;
 		} catch(NumberFormatException f){
-			//TODO real error codes
-			return -3;
+			return 2;
 		}
 		return 0;
 	}

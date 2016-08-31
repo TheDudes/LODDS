@@ -7,6 +7,11 @@ import java.security.DigestInputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
+/**
+ * Class used to get the SHA-256 Hash of a file
+ * @author Michael
+ *
+ */
 public class FileHasher {
 	
 	private static final int buffersize = 16384; 

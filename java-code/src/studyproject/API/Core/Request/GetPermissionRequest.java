@@ -1,5 +1,10 @@
 package studyproject.API.Core.Request;
 
+/**
+ * class to store the information of a get send permission request in
+ * @author Michael
+ *
+ */
 public class GetPermissionRequest implements Request {
 
 	public long fileSize;

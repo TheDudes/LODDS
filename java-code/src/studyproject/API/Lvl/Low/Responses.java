@@ -11,6 +11,13 @@ import java.util.ArrayList;
 import studyproject.API.Core.Utils;
 import studyproject.API.Core.File.FileInfo;
 
+/**
+ * Class that handles sending the responses to
+ * another client, the responses are formatted
+ * according to the LODDS specification
+ * @author Michael
+ *
+ */
 public class Responses {
 	
 	private static final String UPDATE_FLAG = "upd ";
@@ -46,8 +53,7 @@ public class Responses {
 						+ " " + fileInfo.fileName + "\n").getBytes());
 			}
 		} catch(IOException e){
-			//TODO real error codes
-			return -1;
+			return 1;
 		}
 		return 0;
 	}
@@ -100,8 +106,7 @@ public class Responses {
 				sentBytes += toRead;
 			}
 		} catch(IOException e){
-			//TODO real error codes
-			return -1;
+			return 1;
 		}
 		return 0;
 	}
@@ -144,8 +149,7 @@ public class Responses {
 				fileStream.write(buffer, 0, bytesToRead);
 			}
 		} catch(IOException e){
-			//TODO real error codes
-			return -1;
+			return 1;
 		}
 		return 0;
 	}

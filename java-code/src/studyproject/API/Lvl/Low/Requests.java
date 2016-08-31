@@ -3,6 +3,12 @@ package studyproject.API.Lvl.Low;
 import java.io.BufferedOutputStream;
 import java.io.IOException;
 
+/**
+ * Class that sends requests to other clients,
+ * formatted according to the LODDS specification
+ * @author Michael
+ *
+ */
 public class Requests {
 
 	private static final String GET_INFO_UP = "get info ";
@@ -27,8 +33,7 @@ public class Requests {
 		try {
 			socketStream.write((GET_INFO_UP + timestamp + "\n").getBytes());
 		} catch (IOException e) {
-			// TODO insert real error code
-			return -1;
+			return 1;
 		}
 		return 0;
 	}
@@ -58,8 +63,7 @@ public class Requests {
 		try {
 			socketStream.write((GET_FILE + checksum + " " + startIndex + " " + endIndex + "\n").getBytes());
 		} catch (IOException e) {
-			// TODO insert real error code
-			return -1;
+			return 1;
 		}
 		return 0;
 	}
@@ -87,8 +91,7 @@ public class Requests {
 		try {
 			socketStream.write((GET_SEND_PERMISSION + size + " " + timeout + " " + fileName + "\n").getBytes());
 		} catch (IOException e) {
-			// TODO insert real error code
-			return -1;
+			return 1;
 		}
 		return 0;
 	}
