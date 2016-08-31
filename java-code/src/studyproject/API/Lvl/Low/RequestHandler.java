@@ -4,75 +4,147 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.util.regex.Pattern;
 
 import studyproject.API.Core.File.InfoList.InfoType;
 import studyproject.API.Core.Request.GetFileRequest;
 import studyproject.API.Core.Request.GetInfoRequest;
 import studyproject.API.Core.Request.GetPermissionRequest;
-import studyproject.API.Core.Request.Request;
+import studyproject.API.Core.Request.RequestContainer;
 
+/**
+ * Class to parse an incoming request and extract the passed
+ * information
+ * @author Michael
+ *
+ */
 public class RequestHandler {
 	
-	public static int parseRequest(InputStream socketStream, Request request){
-		//TODO matching via Regex
+	private static final String GET_INFO_REGEX = "get info \\d{1,19}";
+	private static final String GET_FILE_REGEX = "get file \\w{64} \\d{1,19} \\d{1,19}";
+	private static final String GET_SEND_PERMISSION_REGEX = "get send-permission \\d{1, 19} \\d{1,19} .*";
+	
+	/**
+	 * Reads the next line from the InputStream, matches it with regular expressions
+	 * and puts the contained information in the Request object if the line is matching
+	 * a valid line from the specification
+	 * 
+	 * @param socketStream 
+	 * 			the stream to read from
+	 * 
+	 * @param request 
+	 * 			the empty request which will be filled
+	 * 
+	 * @return 
+	 * 			0 or an error code
+	 */
+	public static int parseRequest(InputStream socketStream, RequestContainer request){
 		String currentLine;
-		String[] lineParts;
 		try(BufferedReader reader = new BufferedReader(new InputStreamReader(socketStream))){
 			currentLine = reader.readLine();
 			if(currentLine != null){
-				lineParts = currentLine.split(" ");
-				if(lineParts.length < 3){
-					//TODO error codes
-					return -4;
+				if(Pattern.matches(GET_INFO_REGEX, currentLine)){
+					return parseGetInfo(currentLine, request);
+				} else if(Pattern.matches(GET_FILE_REGEX, currentLine)){
+					return parseGetFile(currentLine, request);
+				} else if(Pattern.matches(GET_SEND_PERMISSION_REGEX, currentLine)){
+					return parseGetSendPermission(currentLine, request);
+				} else{
+					return 2;
 				}
-				if(lineParts[0].equals("get")){
-					switch (lineParts[1]) {
-					case "info":
-						GetInfoRequest getInfoRequest = new GetInfoRequest();
-						getInfoRequest.timestamp = Long.parseLong(lineParts[2]);
-						if(getInfoRequest.timestamp == 0){
-							getInfoRequest.infoType = InfoType.all;
-						} else{
-							getInfoRequest.infoType = InfoType.upd;
-						}
-						break;
-					case "file":
-						if(lineParts.length != 5){
-							//TODO return real error code
-							return -2;
-						}
-						GetFileRequest getFileRequest = new GetFileRequest();
-						getFileRequest.checksum = lineParts[2];
-						getFileRequest.startIndex = Long.parseLong(lineParts[3]);
-						getFileRequest.endIndex = Long.parseLong(lineParts[4]);
-						break;
-					case "send-permission":
-						if(lineParts.length < 5){
-							//TODO return real error code
-							return -2;
-						}
-						GetPermissionRequest getPermissionRequest = new GetPermissionRequest();
-						getPermissionRequest.fileSize = Long.parseLong(lineParts[2]);
-						getPermissionRequest.timeout = Long.parseLong(lineParts[3]);
-						String fileName = "";
-						fileName += lineParts[4];
-						for(int packetIndex = 5; packetIndex < lineParts.length; packetIndex++){
-							fileName += " " + lineParts[packetIndex];
-						}
-						getPermissionRequest.fileName = fileName;
-						break;
-					default:
-						break;
-					}
-				}
+			} else{
+				return 2;
 			}
 		} catch(IOException e){
-			//TODO return real error code
-			return -1;
+			return 1;
 		} catch(NumberFormatException e){
-			//TODO return real error code
-			return -3;
+			return 2;
 		}
+	}
+	
+	/**
+	 * extracts the information and puts it in a GetInfoRequest
+	 * 
+	 * @param currentLine 
+	 * 			the read line
+	 * 
+	 * @param requestContainer 
+	 * 			the container to put the extracted information into
+	 * 
+	 * @return 
+	 * 			0
+	 * 
+	 * @throws NumberFormatException 
+	 * 			if the number can not be parsed
+	 */
+	private static int parseGetInfo(String currentLine, RequestContainer requestContainer) throws NumberFormatException{
+		String[] lineParts;
+		lineParts = currentLine.split(" ");
+		GetInfoRequest getInfoRequest = new GetInfoRequest();
+		getInfoRequest.timestamp = Long.parseLong(lineParts[2]);
+		if(getInfoRequest.timestamp == 0){
+			getInfoRequest.infoType = InfoType.all;
+		} else{
+			getInfoRequest.infoType = InfoType.upd;
+		}
+		requestContainer.request = getInfoRequest;
+		return 0;
+	}
+	
+	/**
+	 * extracts the information and puts it in a GetFileRequest
+	 * 
+	 * @param currentLine 
+	 * 			the read line
+	 * 
+	 * @param requestContainer 
+	 * 			the container to put the extracted information into
+	 * 
+	 * @return 
+	 * 			0
+	 * 
+	 * @throws NumberFormatException 
+	 * 			if the number can not be parsed
+	 */
+	private static int parseGetFile(String currentLine, RequestContainer requestContainer) throws NumberFormatException{
+		String[] lineParts;
+		lineParts = currentLine.split(" ");
+		GetFileRequest getFileRequest = new GetFileRequest();
+		getFileRequest.checksum = lineParts[2];
+		getFileRequest.startIndex = Long.parseLong(lineParts[3]);
+		getFileRequest.endIndex = Long.parseLong(lineParts[4]);
+		requestContainer.request = getFileRequest;
+		return 0;
+	}
+	
+	/**
+	 * extracts the information and puts it in a GetPermissionRequest
+	 * 
+	 * @param currentLine 
+	 * 			the read line
+	 * 
+	 * @param requestContainer 
+	 * 			the container to put the extracted information into
+	 * 
+	 * @return 
+	 * 			0
+	 * 
+	 * @throws NumberFormatException 
+	 * 			if the number can not be parsed
+	 */
+	private static int parseGetSendPermission(String currentLine, RequestContainer requestContainer) throws NumberFormatException{
+		String[] lineParts;
+		lineParts = currentLine.split(" ");
+		GetPermissionRequest getPermissionRequest = new GetPermissionRequest();
+		getPermissionRequest.fileSize = Long.parseLong(lineParts[2]);
+		getPermissionRequest.timeout = Long.parseLong(lineParts[3]);
+		String fileName = "";
+		fileName += lineParts[4];
+		for(int packetIndex = 5; packetIndex < lineParts.length; packetIndex++){
+			fileName += " " + lineParts[packetIndex];
+		}
+		getPermissionRequest.fileName = fileName;
+		requestContainer.request = getPermissionRequest;
 		return 0;
 	}
 
