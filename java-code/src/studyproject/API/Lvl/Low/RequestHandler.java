@@ -15,6 +15,8 @@ import studyproject.API.Core.Request.RequestContainer;
 /**
  * Class to parse an incoming request and extract the passed
  * information
+ * Checking if the request matches a format from the specification
+ * is done via regular expressions
  * @author Michael
  *
  */
