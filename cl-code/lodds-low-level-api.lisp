@@ -20,6 +20,33 @@ multiple-value-bind.
 
 (in-package #:lodds-low-level-api)
 
+(defvar *advertise-scanner*
+  (cl-ppcre:create-scanner
+   ;; ip port timestamp load name
+   "^(\\d{1,3}\\.){3}\\d{1,3} \\d{1,5} \\d+ \\d+ [^\\s]+\\n$")
+  "used to scan advertise strings to check if they are correct")
+
+(defvar *get-scanner*
+  (cl-ppcre:create-scanner
+   ;; expects one of:
+   ;; get file checksum start end
+   ;; get info timestamp
+   ;; get send-permission size timeout filename
+   "^get ((file [^\\s]{64} \\d+ \\d+)|(info \\d+)|(send-permission \\d+ \\d+ [^\\n]+))$")
+  "used to scan get requests to check if they are correct")
+
+(defvar *info-head-scanner*
+  (cl-ppcre:create-scanner
+   ;; type timestamp count
+   "^(add|del) \d+ \d+$")
+  "used to scan get info head to check if they are correct")
+
+(defvar *info-body-scanner*
+  (cl-ppcre:create-scanner
+   ;; type timestamp count
+   "^(add|del) [^\\s]{64} \\d+ [^\\n]+$")
+  "used to scan get info body to check if they are correct")
+
 ;; broadcast family
 
 (defun send-advertise (broadcast-host broadcast-port ad-info)
@@ -43,16 +70,21 @@ multiple-value-bind.
 (defun read-advertise (message)
   "counter-part to send-advertise, will parse the given message (byte
    vector) and return a list out of ip, port, timestamp, load and name.
-   for example: '(#(192 168 2 255) 12345 9999 87654321 \"username\")"
-  (destructuring-bind (ip port timestamp load . name)
-      (cl-strings:split
-       (flexi-streams:octets-to-string message))
-    (values 0
-            (list (usocket:dotted-quad-to-vector-quad ip)
-                  (parse-integer port)
-                  (parse-integer timestamp)
-                  (parse-integer load)
-                  (cl-strings:join name)))))
+   for example: '(#(192 168 2 255) 12345 9999 87654321 \"username\")
+   will use *advertise-scanner* to check for syntax errors."
+  (if (cl-ppcre:scan *advertise-scanner*
+                     (flexi-streams:octets-to-string message))
+      (destructuring-bind (ip port timestamp load . name)
+          (cl-strings:split
+           (flexi-streams:octets-to-string message))
+        (values 0
+                (list (usocket:dotted-quad-to-vector-quad ip)
+                      (parse-integer port)
+                      (parse-integer timestamp)
+                      (parse-integer load)
+                      (cl-strings:join name))))
+      ;; TODO: implement error codes
+      -1))
 
 (defun parse-request (socket-stream)
   "parses a direct communication request. returns multiple values,
@@ -60,31 +92,32 @@ multiple-value-bind.
    one of the following lists, depending on request:
    (:file checksum start end)
    (:info timestamp)
-   (:send-permission size timeout filename)"
-  (destructuring-bind (get type . args)
-             (cl-strings:split (read-line socket-stream))
-    (unless (string= get "get")
-      ;; TODO: Error code
-      (error "direct communication request does not start with a 'get'~%"))
-    (let ((requ-type (str-case type
-                       ("file" :file)
-                       ("info" :info)
-                       ("send-permission" :send-permission))))
-      (case requ-type
-        (:file (values 0 (list :file
-                               (car args)
-                               (parse-integer (nth 1 args))
-                               (parse-integer (nth 2 args)))))
-        (:info (values 0 (list :info (car args))))
-        (:send-permission (values 0 (destructuring-bind (size timeout . filename)
-                                               args
-                                      (list :send-permission
-                                            (parse-integer size)
-                                            (parse-integer timeout)
-                                            (cl-strings:join filename :separator " ")))))))))
+   (:send-permission size timeout filename)
+   will use *get-scanner* to to check for syntax errors"
+  (let ((line (read-line socket-stream)))
+    (if (cl-ppcre:scan *get-scanner* line)
+        (destructuring-bind (get type . args)
+            (cl-strings:split line)
+          (let ((requ-type (str-case type
+                             ("file" :file)
+                             ("info" :info)
+                             ("send-permission" :send-permission))))
+            (case requ-type
+              (:file (values 0 (list :file
+                                     (car args)
+                                     (parse-integer (nth 1 args))
+                                     (parse-integer (nth 2 args)))))
+              (:info (values 0 (list :info (car args))))
+              (:send-permission (values 0 (destructuring-bind (size timeout . filename)
+                                              args
+                                            (list :send-permission
+                                                  (parse-integer size)
+                                                  (parse-integer timeout)
+                                                  (cl-strings:join filename :separator " "))))))))
+        ;; TODO: implement error codes
+        -1)))
 
 ;; get family
-
 (defun get-file (socket-stream checksum start end)
   "will format and write a 'get file' request onto socket-stream requesting
    the specified (checksum) file's content from start till end"
@@ -165,34 +198,45 @@ multiple-value-bind.
   "handles a successfull 'get info' request and returns (as second
    value) a list containing the parsed data. The list has the same format
    as 'file-infos' argument from respond-info function"
-  (destructuring-bind (type timestamp count)
-        (cl-strings:split
-         (read-line socket-stream))
-    (values 0
-            (cond
-              ((equalp type "add") :add)
-              ((equalp type "del") :del)
-              (t (error "TODO: handle-info add|del error")))
-            (parse-integer timestamp)
-            (loop
-               :for line = (read-line socket-stream)
-               :repeat (parse-integer count)
-               :collect (destructuring-bind (type checksum size . name) (cl-strings:split line)
-                          (list (cond
-                                  ((equalp type "add") :add)
-                                  ((equalp type "del") :del)
-                                  (t (error "TODO: handle-info add|del error")))
-                                checksum
-                                (parse-integer size)
-                                (cl-strings:join name :separator " ")))))))
+  (let ((line (read-line socket-stream)))
+    (if (cl-ppcre:scan *info-head-scanner* line)
+        (destructuring-bind (type timestamp count) (cl-strings:split line)
+          (values 0
+                  (cond
+                    ((equalp type "add") :add)
+                    ((equalp type "del") :del)
+                    (t (error "TODO: handle-info add|del error")))
+                  (parse-integer timestamp)
+                  (loop
+                     :repeat (parse-integer count)
+                     :collect (progn
+                                (setf line (read-line socket-stream))
+                                (if (cl-ppcre:scan *info-body-scanner* line)
+                                    (destructuring-bind (type checksum size . name) (cl-strings:split line)
+                                      (list (cond
+                                              ((equalp type "add") :add)
+                                              ((equalp type "del") :del)
+                                              (t (error "TODO: handle-info add|del error")))
+                                            checksum
+                                            (parse-integer size)
+                                            (cl-strings:join name :separator " ")))
+                                    ;; TODO error codes
+                                    -1)))))
+        ;; TODO error codes
+        -1))
 
-(defun handle-send-permission (socket timeout file-stream)
-  "handles a successfull 'get send-permission' request and waits
+  (defun handle-send-permission (socket timeout file-stream)
+    "handles a successfull 'get send-permission' request and waits
    maximum 'timeout' seconds for a OK. On success it writes data from
    file-stream to socket.
    TODO: implement parse of OK."
-  (if (usocket:wait-for-input socket :timeout timeout)
-      (copy-stream file-stream
-                   (usocket:socket-stream socket))
-      ;; TODO: error code
-      -1))
+    (if (usocket:wait-for-input socket :timeout timeout)
+        (let ((socket-stream (usocket:socket-stream socket)))
+          (if (string= "OK"
+                       (read-line socket-stream))
+              (copy-stream file-stream
+                           socket-stream)
+              ;; TODO: error code
+              -1)
+          ;; TODO: error code
+          -1))))

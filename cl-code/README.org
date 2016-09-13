@@ -2,8 +2,8 @@
 
 ** Low Level API
 
-*** TODO left to implement [0/5]
-    - [ ] check protocol syntax with regular expressions (cl-ppcre)
+*** TODO left to implement [1/5]
+    - [X] check protocol syntax with regular expressions (cl-ppcre)
     - [ ] replace all parse-integer calls
     - [ ] return correct error codes
     - [ ] add some error-code-to-string functionality

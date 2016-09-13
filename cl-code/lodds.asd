@@ -9,7 +9,8 @@
                :usocket
                :ip-interfaces
                :flexi-streams
-               :cl-strings)
+               :cl-strings
+               :cl-ppcre)
   :components ((:file "package")
                (:file "lodds-core")
                (:file "lodds-low-level-api")
