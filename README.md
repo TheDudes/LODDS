@@ -6,6 +6,10 @@ Repository contains the Protocol and its Implementations.
   - [Java Implementation](java-code)
   - [Common Lisp Implementation](cl-code)
 
+## TODO
+
+- Advertised name Specification (whitespace allowed?)
+
 ## Commit Message Format
 
 For our commit messages, we use a precise format. This should include
