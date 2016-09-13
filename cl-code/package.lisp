@@ -10,7 +10,6 @@
 (defpackage #:lodds-low-level-api
   (:use #:cl
         #:lodds-core)
-
   (:export
    ;; broadcast
    #:send-advertise
