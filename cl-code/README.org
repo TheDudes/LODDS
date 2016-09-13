@@ -1,0 +1,7 @@
+* LODDS (Local Open Distributed Data Sharing)
+
+** TODO Low Level API [0/4]
+- [ ] check protocol syntax with regular expressions (cl-ppcre)
+- [ ] replace all parse-integer calls
+- [ ] return correct error codes
+- [ ] some error-code-to-string functionality
