@@ -57,12 +57,12 @@
       timestamp_lastChange
         Timestamp of last change. If something changed this timestamp
         will be updated, so others can request a update if wanted.
-	
+
 	  load
 	  	Amount of outstanding bytes the broadcasting client still needs
-        to transfer. This information can be used for laod balancing 
-        purposes. 
-	
+        to transfer. This information can be used for laod balancing
+        purposes.
+
       name
         Is the client's nickname to be seen in the client list.
 
@@ -109,7 +109,7 @@
   3.1 Requests (get cmds)
 
     Requests always start with a 'get'. 'get' is followed by one of
-    'file', 'info' or 'send-permission'. Some commands may also have 
+    'file', 'info' or 'send-permission'. Some commands may also have
     arguments. All commands end with a '\n' (newline).
 
     Overview of get command tree:
@@ -149,7 +149,7 @@
       files the timestamp he broadcasts will update. If client B sees
       the change he will send 'get info timestamp' to A, specifying
       the last timestamp of A he saw. So A will respond with all his
-      updates since the given timestamp. If timestamp is 0, a complete 
+      updates since the given timestamp. If timestamp is 0, a complete
       list of shared files from the specific client is requested.
 
       Arguments:
@@ -157,10 +157,10 @@
           The last known UNIX timestamp or 0.
 
       Response:
-        Update message to revise the state or a list of all files 
+        Update message to revise the state or a list of all files
         shared by another client if timestamp was 0. See section
-        Responses below. This update message could be empty if 
-        there are no new shared files. 
+        Responses below. This update message could be empty if
+        there are no new shared files.
 
       Examples:
         "get info 1464269498\n"
@@ -178,10 +178,10 @@
            The size of the file in byte.
 		 timeout
            The time to accept the request in seconds.
-           
+
          filename
            The name of the file.
-         
+
        Response:
          'OK\n' on accept or connection close on decline. If timeout is
          exceeded the requesting client may close the connection.
@@ -196,7 +196,7 @@
   3.2 Responses
 
     On error or similar the connection will be closed and no response
-    will be sent. The following response may be returned on 
+    will be sent. The following response may be returned on
     'get info'.
 
     '(upd|all) timestamp count\n'
