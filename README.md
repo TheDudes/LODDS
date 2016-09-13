@@ -1,19 +1,43 @@
-For our commit messages, we use a precise format.
-This should include a headline before information about specific changes. 
+# LODDS (Local Open Distributed Data Sharing)
 
-The headline should begin with an commit tag (see below) followed by an optional sub-tag (see also below) and finally end with an comprehensive description of what was made.
-Following, list your changes made to the code in some short phrases.
+LODDS is a decentral (local) network file-sharing protocol. This
+Repository contains the Protocol and its Implementations.
+  - [Protocol](first-spec.txt)
+  - [Java Implementation](java-code)
+  - [Common Lisp Implementation](cl-code)
 
-*List of Commit Tags and their specific Sub-Tags:*
-- java:
-  - doc
-  - debug
-- lisp:
-  - doc
-  - debug
-- spec:
+## Commit Message Format
 
+For our commit messages, we use a precise format. This should include
+a headline before information about specific changes.  You can read
+more about it
+[here](http://tbaggery.com/2008/04/19/a-note-about-git-commit-messages.html).
+We also tag our commit message headlines to distinguish between
+certain commits. For example every change to the common lisp code is
+tagged with a `lisp` tag, java code is tagged with `java` etc.
 
-*List of allround Commit Sub-Tags:*
-- style:
-- layout:
+### Commit Tags and Format
+
+#### Format
+
+Headlines begin with a tag. Tags end with a `:`, multiple tags can be
+combined (concatenated with space in between). For example:
+
+```
+lisp: doc: updated function documentation
+
+...
+```
+
+#### List of Tags
+
+ tag   | description
+-------|------------
+java   | commit concerning java code
+lisp   | commit concerning lisp code
+doc    | documentation change (no code changed)
+spec   | specification change
+bugfix | a bug was fixed!
+style  | code style changes (no code changed)
+layout | code layout changes (no code change)
+readme | README was updated
