@@ -5,9 +5,19 @@ import java.util.Vector;
 
 import studyproject.API.Lvl.Mid.Core.ConnectionInfo;
 import studyproject.API.Lvl.Mid.Core.FileChange;
+import studyproject.API.Lvl.Mid.Core.RemoteFileInfo;
 import studyproject.API.Lvl.Mid.Core.UserInfo;
 
 public class LODDS {
+	
+	private Vector<FileChange> localFileChanges;
+	private Vector<UserInfo> clientList;
+	private Vector<RemoteFileInfo> availableFiles;
+	private long load;
+	private String interfaceName;
+	private int advertisePort;
+	private int listenPort;
+	private String userName;
 
 	public void startAdvertising(){
 	}
@@ -19,38 +29,6 @@ public class LODDS {
 	}
 	
 	public void stopListening(){
-	}
-	
-	public ArrayList<UserInfo> getUsers(){
-		return null;
-	}
-	
-	public void setInterface(String interfaceName){
-		
-	}
-	
-	public String getInterface(){
-		return null;
-	}
-	
-	public void setAdvertisePort(int port){
-		
-	}
-	
-	public int getAdvertisePort(){
-		return 0;
-	}
-	
-	public void setListenPort(int port){
-		
-	}
-	
-	public int getListenPort(){
-		return 0;
-	}
-	
-	public void setUserName(String userName){
-		
 	}
 	
 	public void getFile(String user, String checksum, String localPath){
@@ -79,6 +57,38 @@ public class LODDS {
 	
 	public Vector<FileChange> getFileChanges(long timeStamp){
 		return null;
+	}
+	
+	public Vector<UserInfo> getUsers(){
+		return clientList;
+	}
+	
+	public void setInterface(String interfaceName){
+		this.interfaceName = interfaceName;
+	}
+	
+	public String getInterface(){
+		return interfaceName;
+	}
+	
+	public void setAdvertisePort(int port){
+		this.advertisePort = port;
+	}
+	
+	public int getAdvertisePort(){
+		return advertisePort;
+	}
+	
+	public void setListenPort(int port){
+		this.listenPort = port;
+	}
+	
+	public int getListenPort(){
+		return listenPort;
+	}
+	
+	public void setUserName(String userName){
+		this.userName = userName;
 	}
 	
 }
