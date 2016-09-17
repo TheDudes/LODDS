@@ -3,6 +3,7 @@ package studyproject.API.Core.File.Watcher;
 import java.io.File;
 import java.io.IOException;
 import java.security.NoSuchAlgorithmException;
+import java.sql.Timestamp;
 import java.util.Iterator;
 import java.util.Vector;
 
@@ -38,6 +39,41 @@ public class FileWatcherController {
 		FileWatcherController myWatchService = new FileWatcherController();
 
 		myWatchService.watchDirectoryRecursively("/Users/robinhood/Desktop/testDirectory");
+	}
+	
+	/**
+	 *  'get info timestamp\n'
+      Will request an update about his files from a client. Timestamp
+      is specifying the last known state. So if client A changes his
+      files the timestamp he broadcasts will update. If client B sees
+      the change he will send 'get info timestamp' to A, specifying
+      the last timestamp of A he saw. So A will respond with all his
+      updates since the given timestamp. If timestamp is 0, a complete
+      list of shared files from the specific client is requested.
+	 * @param timestamp
+	 */
+	public String getInfo(long timestamp) {
+		String output = "";
+		
+		// Header
+		if (timestamp == 0) {
+		   java.util.Date date= new java.util.Date();
+		   Timestamp timestampNow =  new Timestamp(date.getTime());
+		   output = "all "+timestampNow+" "+fileInfoList.size()+"\n";
+		} else {
+		   output = "upd "+timestamp+" "+fileInfoList.size()+"\n";
+		}
+		
+		// Body
+		for (FileInfo file:fileInfoList) {
+			output = output+this.convertFileInfoToString(file);
+		}
+		
+		return output;
+	}
+	
+	private String convertFileInfoToString(FileInfo file) {
+		return file.fileAction.name()+" "+file.checksum+" "+file.size+" "+file.fileName+"\n";
 	}
 	
 	/**
