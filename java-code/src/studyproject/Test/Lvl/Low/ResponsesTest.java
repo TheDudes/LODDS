@@ -5,15 +5,15 @@ import java.util.ArrayList;
 import studyproject.API.Core.File.FileAction;
 import studyproject.API.Core.File.FileInfo;
 
-public class Responses {
+public class ResponsesTest {
 
 	private String pathToTestFile;
 
-	public Responses(String pathToTestFile) {
+	public ResponsesTest(String pathToTestFile) {
 		this.pathToTestFile = pathToTestFile;
 	}
 
-	public int test() {
+	public int testRespondInfo() {
 
 		try {
 			BufferedOutputStream socketStream = new BufferedOutputStream(new FileOutputStream(pathToTestFile));
@@ -21,6 +21,7 @@ public class Responses {
 			ArrayList<FileInfo> fileInfos = new ArrayList<FileInfo>();
 
 			BufferedReader inputStream = new BufferedReader(new FileReader(pathToTestFile));
+			
 			String str;
 
 			fileInfos.add(new FileInfo("000001", 1000001, "asdf1.txt", FileAction.add));
@@ -32,7 +33,6 @@ public class Responses {
 				while ((str = inputStream.readLine()) != null) {
 					System.out.println(str);
 				}
-				System.out.println("reached end of file");
 			} else {
 				System.out.println("respondInfo failed");
 			}
@@ -56,5 +56,4 @@ public class Responses {
 
 		return 0;
 	}
-
 }

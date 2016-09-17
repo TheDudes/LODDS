@@ -45,12 +45,15 @@ public class Responses {
 		try{
 			if(timestamp == 0){
 				socketStream.write((ALL_FLAG + timestamp + " " + fileInfos.size() + "\n").getBytes());
+				socketStream.flush();
 			} else {
 				socketStream.write((UPDATE_FLAG + timestamp + " " + fileInfos.size() + "\n").getBytes());
+				socketStream.flush();
 			}
 			for(FileInfo fileInfo: fileInfos){
 				socketStream.write((fileInfo.fileAction.toString() + " " + fileInfo.checksum + " " + fileInfo.size
 						+ " " + fileInfo.fileName + "\n").getBytes());
+				socketStream.flush();
 			}
 		} catch(IOException e){
 			return 1;
