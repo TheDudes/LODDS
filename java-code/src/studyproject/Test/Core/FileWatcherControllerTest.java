@@ -73,13 +73,14 @@ public class FileWatcherControllerTest {
 		FileWatcherController controller = new FileWatcherController();
 		controller.watchDirectoryRecursively(testDirectory+"twoFiles");
 		
-		Long lastModTime = (long) 1200092401;
+		Long lastModTime = (long) 1452553201;
 		String actualResponse = controller.getInfo(lastModTime);
 		String expectedResponse = 
 				"upd "+lastModTime+" 1\n"
-				+ "add 736bf95996d40c71307e3727931b721dfb17bd27c441b903a6dd483b37021ac1 8 "+testDirectory+"twoFiles/2.txt\n";
+				+ "add e3cabfc499ba0621a8736b6784c210a4aa7e1cfffc4046405686e53df0772842 9 "+testDirectory+"twoFiles/2.txt\n";
 		
 		assertEquals(expectedResponse,actualResponse);
+		
 	}
 	
 
