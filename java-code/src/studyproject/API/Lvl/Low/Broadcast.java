@@ -9,6 +9,7 @@ import java.net.SocketException;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.NoSuchElementException;
+import java.util.regex.Pattern;
 
 import studyproject.API.Core.BroadcastInfo;
 import studyproject.API.Core.Utils;
@@ -25,6 +26,7 @@ public class Broadcast {
 	private static final int DEFAULT_PORT = 9002;
 	private static final int DEFAULT_PORT_SENDING = 9003;
 	private static final int DEFAULT_BUFFERSIZE = 2048;
+	private static final String ADVERTISE_BROADCAST_REGEX = "(\\d{1,3}\\.){3}\\d{1,3} \\d{1,5} \\d{1,19} \\d{1,19} \\S*";
 	
 	private static int broadcastPort = DEFAULT_PORT;
 	private static int outgoingPort = DEFAULT_PORT_SENDING;
@@ -125,10 +127,10 @@ public class Broadcast {
 				}
 			}
 			String packetContents = new String(Utils.getBytesFromTo(packet.getData(), 0, index), "UTF-8");
-			String[] packetParts = packetContents.split(" ");
-			if(packetParts.length < 5){
+			if(!Pattern.matches(ADVERTISE_BROADCAST_REGEX, packetContents)){
 				return 2;
 			}
+			String[] packetParts = packetContents.split(" ");
 			broadcastInfo.networkAddress = packetParts[0];
 			broadcastInfo.ipPort = Integer.parseInt(packetParts[1]);
 			broadcastInfo.timestamp = Long.parseLong(packetParts[2]);
