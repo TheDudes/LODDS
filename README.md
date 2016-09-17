@@ -11,6 +11,51 @@ Repository contains the Protocol and its Implementations.
 - Advertised name Specification (whitespace allowed?)
 - Regex for relative Filename (/, \, :, *, ?, ", <, >, |, %)
 
+### Mid Lvl API
+
+```
+set-available-interfaces():List<String>interfaces
+get-broadcast-adress(String interface): Broadcast-Adress
+get-ip-adress(String interface): IP-Adress
+watch-directory(dir, Obj): __dead
+getFile(checksum)
+getFiles(List<FileInfo>, User)
+getFile(FileInfo, maxConncetions)
+getFiles(List<FileInfo>, maxConncetions)
+getLoads(checksum):List<user-loads>
+```
+
+#### Lodds-Object
+```
+startAdvertising()
+stopAdvertising()
+startListening()
+stopListening()
+getUsers()
+setInterface()
+getInterface()
+setAdvertisePort()
+getAdvertisePort()
+setListenPort()
+getListenPort()
+setUserName(String Name)
+getFile(String user, String checksum, String localPath)
+getUserConncectionInfo(user): UserInfo[IP, Port]
+shareFolder(path): int
+unshareFolder(path)
+getSharedFolders():List<String>
+getOutstandingBytes():List<IP, Name, File, Bytes>
+getFileChanges(Timestamp)
+```
+
+#### Lists'n'Stuff
+
+- filechanges(Timestamp, name, checksum, size)
+- clients(ip, port, name, timestamp, load, fileList, lastUpd)
+- currentOutstandingBytes(current active transfers)
+- outstanding send permissions you should accept
+- all available files
+
 ## Commit Message Format
 
 For our commit messages, we use a precise format. This should include
