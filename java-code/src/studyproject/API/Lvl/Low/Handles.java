@@ -20,7 +20,7 @@ public class Handles {
 	private static final int TIMEOUT = 10000; // Timeout in milliseconds
 	private static final int TIMEINTERVAL = 1000; // Timeoutinterval
 	private static final String GET_INFO_HEAD_REGEX = "(upd|all) \\d{1,19} \\d{1,19}";
-	private static final String GET_INFO_BODY_LINE_REGEX = "(add|del) \\w{64} \\d{1,19} \\S*";
+	private static final String GET_INFO_BODY_LINE_REGEX = "(add|del) \\w{64} \\d{1,19} [^/\\\\:*?\"<>|%]*";
 
 	/**
 	 * Handles incoming info responses to the getInfoUp request
