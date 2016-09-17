@@ -1,0 +1,5 @@
+Code	Discription			
+1		connectionClosed	
+2		malformedData		
+3		timoutReached		
+4		fileNotFound		
