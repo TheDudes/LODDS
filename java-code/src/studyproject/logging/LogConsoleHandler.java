@@ -1,6 +1,7 @@
 package studyproject.logging;
 
 import java.util.logging.Handler;
+import java.util.logging.Level;
 import java.util.logging.LogRecord;
 
 /**
@@ -11,9 +12,10 @@ import java.util.logging.LogRecord;
  *
  */
 public class LogConsoleHandler extends Handler {
-	public LogConsoleHandler() {
+	public LogConsoleHandler(Level level) {
 		super();
 		this.setFormatter(new LogRecFormatter());
+		this.setLevel(level);
 	}
 
 	@Override
