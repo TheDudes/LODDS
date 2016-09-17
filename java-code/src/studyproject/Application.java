@@ -46,8 +46,8 @@ public class Application {
 			logger.log(new Error(Level.SEVERE, LogKey.error, APILvl.gui, ErrorTypes.valueOf(err).toString()));
 		}
 		if ((Boolean.parseBoolean(properties.getProperty("test"))) == true) {
-			ResponsesTest responses = new ResponsesTest(properties.getProperty("pathToTestFile"));
-			responses.testRespondInfo();
+			ResponsesTest responses = new ResponsesTest();
+			responses.testRespondFile();
 		} else {
 
 		}

@@ -106,6 +106,7 @@ public class Responses {
 				Utils.readThisLength(fileStream, readBuffer, 0, toRead);
 				//write the number of bytes we just read to the socketStream
 				socketStream.write(readBuffer, 0, toRead);
+				socketStream.flush();
 				sentBytes += toRead;
 			}
 		} catch(IOException e){
@@ -139,6 +140,7 @@ public class Responses {
 			
 			BufferedOutputStream outStream = new BufferedOutputStream(socket.getOutputStream());
 			outStream.write(OK_FLAG.getBytes());
+			outStream.close();
 			
 			BufferedInputStream inStream = new BufferedInputStream(socket.getInputStream());
 			while(bytesRead < size){
@@ -150,6 +152,7 @@ public class Responses {
 				Utils.readThisLength(inStream, buffer, 0, bytesToRead);
 				bytesRead += bytesToRead;
 				fileStream.write(buffer, 0, bytesToRead);
+				inStream.close();
 			}
 		} catch(IOException e){
 			return 1;
