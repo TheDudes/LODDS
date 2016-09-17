@@ -8,6 +8,7 @@ import java.util.Iterator;
 import java.util.Vector;
 
 import studyproject.API.Core.File.FileInfo;
+import studyproject.API.Core.File.InfoList.FileInfoListEntry;
 
 /**
  * TODO:
@@ -17,7 +18,7 @@ import studyproject.API.Core.File.FileInfo;
 public class FileWatcherController {
 	
 	// File List of files that are being watched
-	public Vector<FileInfo> fileInfoList = new Vector<FileInfo>();
+	public Vector<FileInfoListEntry> fileInfoList = new Vector<FileInfoListEntry>();
 	
 	// Javas watchService can only watch directories, no single files
 	// In order to watch a file we need to watch the whole directory
@@ -72,7 +73,7 @@ public class FileWatcherController {
 		return output;
 	}
 	
-	private String convertFileInfoToString(FileInfo file) {
+	public String convertFileInfoToString(FileInfo file) {
 		return file.fileAction.name()+" "+file.checksum+" "+file.size+" "+file.fileName+"\n";
 	}
 	
@@ -88,7 +89,7 @@ public class FileWatcherController {
 		System.out.println("watchFile: "+path);
 		
 		// Create new FileInfo object and add it to vector list
-		FileInfo newFile = new FileInfo(path);
+		FileInfoListEntry newFile = new FileInfoListEntry(path);
 		fileInfoList.addElement(newFile);
 		
 		// Add parent directory of file to watchedDirectories if its not already inside
@@ -135,7 +136,7 @@ public class FileWatcherController {
 	 */
 	public FileInfo getWatchedFileFromList(String fileName) {
 		
-	    Iterator<FileInfo> itr = fileInfoList.iterator();
+	    Iterator<FileInfoListEntry> itr = fileInfoList.iterator();
 	    FileInfo currentElement = null;
 	    
 		while(itr.hasNext())
@@ -148,12 +149,13 @@ public class FileWatcherController {
 	}
 	
 	public void addDeletedFile(FileInfo file) {
-    	FileInfo deletedFile = new FileInfo(file.checksum, file.size, file.fileName, file.fileAction);
+		Long timestamp = System.currentTimeMillis() / 1000L;
+    	FileInfoListEntry deletedFile = new FileInfoListEntry(file.checksum, file.size, file.fileName, file.fileAction, timestamp);
     	fileInfoList.add(deletedFile);
 	}
 	
 	public void addNewFile(String fileName) throws NoSuchAlgorithmException, IOException {
-		FileInfo newFile = new FileInfo(fileName);
+		FileInfoListEntry newFile = new FileInfoListEntry(fileName);
 		fileInfoList.add(newFile);
 	}
 	
