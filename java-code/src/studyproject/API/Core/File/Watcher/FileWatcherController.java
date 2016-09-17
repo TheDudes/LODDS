@@ -58,8 +58,7 @@ public class FileWatcherController {
 		
 		// Header
 		if (timestamp == 0) {
-		   java.util.Date date= new java.util.Date();
-		   Timestamp timestampNow =  new Timestamp(date.getTime());
+		   Long timestampNow =  System.currentTimeMillis() / 1000L;
 		   output = "all "+timestampNow+" "+fileInfoList.size()+"\n";
 		} else {
 		   output = "upd "+timestamp+" "+fileInfoList.size()+"\n";
@@ -137,7 +136,7 @@ public class FileWatcherController {
 	public FileInfo getWatchedFileFromList(String fileName) {
 		
 	    Iterator<FileInfoListEntry> itr = fileInfoList.iterator();
-	    FileInfo currentElement = null;
+	    FileInfoListEntry currentElement = null;
 	    
 		while(itr.hasNext())
 		  currentElement = itr.next();

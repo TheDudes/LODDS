@@ -46,9 +46,18 @@ public class FileWatcherControllerTest {
 	public void shouldGetCorrectFileInfoMessageWithTimestampZero() throws NoSuchAlgorithmException, IOException {
 		FileWatcherController controller = new FileWatcherController();
 		controller.watchDirectoryRecursively("/Users/robinhood/Desktop/testDirectory/oneFile");
-		String response = controller.getInfo(0);
 		
-		assertEquals(2,controller.fileInfoList.size());
+		/**
+		 *  example output
+		 *      all 1464269498 1\n
+			    add 38e80faf7... 421341231 /first-file.txt\n 
+		 */
+		String actualResponse = controller.getInfo(0);
+		String expectedResponse = 
+				"all "+System.currentTimeMillis() / 1000L+" 1\n"
+				+ "add 736bf95996d40c71307e3727931b721dfb17bd27c441b903a6dd483b37021ac1 8 /Users/robinhood/Desktop/testDirectory/oneFile/testFile.txt\n";
+		
+		assertEquals(expectedResponse,actualResponse);
 	}
 	
 
