@@ -10,8 +10,8 @@ import java.util.logging.LogRecord;
  * @author ninti
  *
  */
-public class LogHandler extends Handler {
-	public LogHandler() {
+public class LogConsoleHandler extends Handler {
+	public LogConsoleHandler() {
 		super();
 		this.setFormatter(new LogRecFormatter());
 	}
@@ -23,7 +23,6 @@ public class LogHandler extends Handler {
 
 	@Override
 	public void flush() {
-		// TODO Auto-generated method stub
 
 	}
 
