@@ -1,4 +1,4 @@
-package studyproject.API.Core.File.Watcher;
+package studyproject.Test.Core;
 
 import static org.junit.Assert.*;
 
@@ -9,6 +9,7 @@ import org.junit.Test;
 
 import studyproject.API.Core.File.FileAction;
 import studyproject.API.Core.File.FileInfo;
+import studyproject.API.Core.File.Watcher.FileWatcherController;
 
 public class FileWatcherControllerTest {
 
