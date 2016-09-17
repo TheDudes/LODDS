@@ -38,12 +38,12 @@ multiple-value-bind.
 (defvar *info-head-scanner*
   (cl-ppcre:create-scanner
    ;; type timestamp count
-   "^(add|del) \d+ \d+$")
+   "^(upd|all) \d+ \d+$")
   "used to scan get info head to check if they are correct")
 
 (defvar *info-body-scanner*
   (cl-ppcre:create-scanner
-   ;; type timestamp count
+   ;; type checksum size realtive-filename
    "^(add|del) [^\\s]{64} \\d+ [^\\n]+$")
   "used to scan get info body to check if they are correct")
 
