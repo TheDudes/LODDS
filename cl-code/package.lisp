@@ -37,4 +37,5 @@
    #:get-interfaces
    #:get-interface-info
    #:get-broadcast-address
-   #:get-ip-address))
+   #:get-ip-address
+   #:start-listening))

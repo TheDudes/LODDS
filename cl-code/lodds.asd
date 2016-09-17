@@ -10,7 +10,8 @@
                :ip-interfaces
                :flexi-streams
                :cl-strings
-               :cl-ppcre)
+               :cl-ppcre
+               :bordeaux-threads)
   :components ((:file "package")
                (:file "lodds-core")
                (:file "lodds-low-level-api")
