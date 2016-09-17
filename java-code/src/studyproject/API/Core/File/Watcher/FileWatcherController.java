@@ -56,17 +56,25 @@ public class FileWatcherController {
 	public String getInfo(long timestamp) {
 		String output = "";
 		
+		// Body
+		int filesMatched = 0;
+		for (FileInfoListEntry file:fileInfoList) {
+			
+			if (timestamp == 0 || (file.timestamp >= timestamp)) {
+				System.out.println(timestamp);
+				System.out.println(file.timestamp);
+				output = output+this.convertFileInfoToString(file);
+				filesMatched++;
+			}
+
+		}
+		
 		// Header
 		if (timestamp == 0) {
 		   Long timestampNow =  System.currentTimeMillis() / 1000L;
-		   output = "all "+timestampNow+" "+fileInfoList.size()+"\n";
+		   output = "all "+timestampNow+" "+filesMatched+"\n"+output;
 		} else {
-		   output = "upd "+timestamp+" "+fileInfoList.size()+"\n";
-		}
-		
-		// Body
-		for (FileInfo file:fileInfoList) {
-			output = output+this.convertFileInfoToString(file);
+		   output = "upd "+timestamp+" "+filesMatched+"\n"+output;
 		}
 		
 		return output;
@@ -84,9 +92,7 @@ public class FileWatcherController {
 	 * @throws IOException
 	 */
 	public void watchFile(String path, Boolean watchParentFolderForNewFiles) throws NoSuchAlgorithmException, IOException {
-		
-		System.out.println("watchFile: "+path);
-		
+				
 		// Create new FileInfo object and add it to vector list
 		FileInfoListEntry newFile = new FileInfoListEntry(path);
 		fileInfoList.addElement(newFile);

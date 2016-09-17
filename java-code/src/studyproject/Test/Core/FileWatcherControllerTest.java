@@ -46,7 +46,7 @@ public class FileWatcherControllerTest {
 	}	
 	
 	@Test
-	public void shouldGetCorrectFileInfoMessageWithTimestampZero() throws NoSuchAlgorithmException, IOException {
+	public void shouldGetCorrectFileInfoMsgWithTimestampZero() throws NoSuchAlgorithmException, IOException {
 		FileWatcherController controller = new FileWatcherController();
 		controller.watchDirectoryRecursively(testDirectory+"oneFile");
 		
@@ -63,7 +63,24 @@ public class FileWatcherControllerTest {
 		assertEquals(expectedResponse,actualResponse);
 	}
 	
-	
+	@Test
+	/**
+	 * We only want to match one file out of two that was modified after our time stamp
+	 * @throws NoSuchAlgorithmException
+	 * @throws IOException
+	 */
+	public void shouldGetCorrectFileInfoMsgWithTimestampThatMatchesOneOfTwoFiles() throws NoSuchAlgorithmException, IOException {
+		FileWatcherController controller = new FileWatcherController();
+		controller.watchDirectoryRecursively(testDirectory+"twoFiles");
+		
+		Long lastModTime = (long) 1200092401;
+		String actualResponse = controller.getInfo(lastModTime);
+		String expectedResponse = 
+				"upd "+lastModTime+" 1\n"
+				+ "add 736bf95996d40c71307e3727931b721dfb17bd27c441b903a6dd483b37021ac1 8 "+testDirectory+"twoFiles/2.txt\n";
+		
+		assertEquals(expectedResponse,actualResponse);
+	}
 	
 
 }

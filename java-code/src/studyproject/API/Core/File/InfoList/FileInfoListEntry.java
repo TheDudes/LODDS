@@ -12,7 +12,6 @@ public class FileInfoListEntry extends FileInfo {
 	
 	public Long timestamp;
 	
-	
 	public FileInfoListEntry(String fileName) throws NoSuchAlgorithmException, IOException {
 		File file = new File(fileName);
 		
@@ -21,7 +20,7 @@ public class FileInfoListEntry extends FileInfo {
 		this.fileName = fileName;
 		this.fileAction = FileAction.add;
 		this.parentDirectory = file.getParent();
-		this.timestamp = file.lastModified();
+		this.timestamp = file.lastModified() / 1000L;
 	}
 	
 	public FileInfoListEntry(String checksum, long size, String fileName, FileAction fileAction, long timestamp) {
