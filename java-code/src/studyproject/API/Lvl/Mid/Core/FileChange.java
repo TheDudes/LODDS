@@ -2,7 +2,7 @@ package studyproject.API.Lvl.Mid.Core;
 
 import studyproject.API.Core.File.FileAction;
 
-public class FileChange extends FileInfo {
+public class FileChange extends RemoteFileInfo {
 
 	private FileAction fileAction;
 	

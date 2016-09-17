@@ -8,10 +8,10 @@ public class UserConnectionInfo extends UserInfo {
 	private long lastUpdate;
 	private long outstandingBytes;
 	private long load;
-	private Vector<FileInfo> fileList;
+	private Vector<RemoteFileInfo> fileList;
 	
 	public UserConnectionInfo(InetAddress ipAddress, int port, String userName, long lastUpdate,
-			long outstandingBytes, long load, Vector<FileInfo> fileList) {
+			long outstandingBytes, long load, Vector<RemoteFileInfo> fileList) {
 		super(ipAddress, port, userName);
 		this.lastUpdate = lastUpdate;
 		this.outstandingBytes = outstandingBytes;
@@ -43,11 +43,11 @@ public class UserConnectionInfo extends UserInfo {
 		this.load = load;
 	}
 
-	public Vector<FileInfo> getFileList() {
+	public Vector<RemoteFileInfo> getFileList() {
 		return fileList;
 	}
 
-	public void setFileList(Vector<FileInfo> fileList) {
+	public void setFileList(Vector<RemoteFileInfo> fileList) {
 		this.fileList = fileList;
 	}
 	

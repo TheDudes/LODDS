@@ -1,12 +1,12 @@
 package studyproject.API.Lvl.Mid.Core;
 
-public class FileInfo {
+public class RemoteFileInfo {
 
 	private String path;
 	private long size;
 	private String checksum;
 	
-	public FileInfo(String path, long size, String checksum){
+	public RemoteFileInfo(String path, long size, String checksum){
 		this.path = path;
 		this.size = size;
 		this.checksum = checksum;

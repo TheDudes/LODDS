@@ -4,9 +4,9 @@ public class ConnectionInfo {
 
 	private UserInfo userInfo;
 	private long outstandingBytes;
-	private FileInfo fileInfo;
+	private RemoteFileInfo fileInfo;
 	
-	public ConnectionInfo(UserInfo userInfo, long outstandingBytes, FileInfo fileInfo){
+	public ConnectionInfo(UserInfo userInfo, long outstandingBytes, RemoteFileInfo fileInfo){
 		this.userInfo = userInfo;
 		this.outstandingBytes = outstandingBytes;
 		this.fileInfo = fileInfo;
@@ -28,11 +28,11 @@ public class ConnectionInfo {
 		this.outstandingBytes = outstandingBytes;
 	}
 
-	public FileInfo getFileInfo() {
+	public RemoteFileInfo getFileInfo() {
 		return fileInfo;
 	}
 
-	public void setFileInfo(FileInfo fileInfo) {
+	public void setFileInfo(RemoteFileInfo fileInfo) {
 		this.fileInfo = fileInfo;
 	}
 	
