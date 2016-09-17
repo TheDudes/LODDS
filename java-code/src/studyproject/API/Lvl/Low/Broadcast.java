@@ -74,8 +74,10 @@ public class Broadcast {
 	 */
 	public static int getBroadcastAddress(String interfaceName, StringBuilder broadcastAddress){
 		int toReturn = getAddress(interfaceName, broadcastAddress);
-		broadcastAddress.delete(broadcastAddress.length() - 3, broadcastAddress.length());
-		broadcastAddress.append("255");
+		if(toReturn == 0){
+			broadcastAddress.delete(broadcastAddress.length() - 3, broadcastAddress.length());
+			broadcastAddress.append("255");
+		}
 		return toReturn;
 	}
 	
@@ -101,7 +103,8 @@ public class Broadcast {
 			Enumeration<NetworkInterface> networkInterfaces = NetworkInterface.getNetworkInterfaces();
 			while(networkInterfaces.hasMoreElements()){
 				NetworkInterface networkInterface = networkInterfaces.nextElement();
-				if(networkInterface.isUp() && !networkInterface.isVirtual() && networkInterface.getDisplayName().equals(interfaceName)){
+				if(networkInterface.isUp() && !networkInterface.isVirtual() 
+						&& networkInterface.getDisplayName().equals(interfaceName)){
 					Enumeration<InetAddress> inetAddresses = networkInterface.getInetAddresses();
 					while(inetAddresses.hasMoreElements()){
 						broadcastAddress.delete(0, broadcastAddress.length());
@@ -111,13 +114,14 @@ public class Broadcast {
 						}
 					}
 				}
+				broadcastAddress.delete(0, broadcastAddress.length());
 			}
 		} catch(SocketException e){
 			return 1;
 		} catch(NoSuchElementException f){
 			return 2;
 		}
-		return 0;
+		return 2;
 	}
 	
 	/**
