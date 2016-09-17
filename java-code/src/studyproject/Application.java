@@ -9,7 +9,7 @@ import java.util.logging.Logger;
 
 import studyproject.API.Errors.Error;
 import studyproject.API.Errors.ErrorTypes;
-import studyproject.Test.Lvl.Low.Responses;
+import studyproject.Test.Lvl.Low.ResponsesTest;
 import studyproject.logging.APILvl;
 import studyproject.logging.LogConsoleHandler;
 import studyproject.logging.LogKey;
@@ -46,8 +46,8 @@ public class Application {
 			logger.log(new Error(Level.SEVERE, LogKey.error, APILvl.gui, ErrorTypes.valueOf(err).toString()));
 		}
 		if ((Boolean.parseBoolean(properties.getProperty("test"))) == true) {
-			Responses responses = new Responses(properties.getProperty("pathToTestFile"));
-			responses.test();
+			ResponsesTest responses = new ResponsesTest(properties.getProperty("pathToTestFile"));
+			responses.testRespondInfo();
 		} else {
 
 		}
