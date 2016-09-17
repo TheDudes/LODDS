@@ -108,6 +108,7 @@ public class ResponsesTest {
 			SocketInheritor sockInheri = new SocketInheritor(readWritePath, readPath);
 			FileOutputStream fileOutput = new FileOutputStream(writePath);
 			if (Responses.respondSendPermission(sockInheri, fileOutput, 100) == 0) {
+				fileOutput.close();
 				readWriteInStream = new BufferedReader(new FileReader(readWritePath));
 				writeInStream = new BufferedReader(new FileReader(writePath));
 				
@@ -123,8 +124,9 @@ public class ResponsesTest {
 
 				Files.deleteIfExists(Paths.get(writePath));
 				Files.createFile(Paths.get(writePath));
+			} else {
+				fileOutput.close();
 			}
-			fileOutput.close();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
