@@ -9,6 +9,7 @@ Repository contains the Protocol and its Implementations.
 ## TODO
 
 - Advertised name Specification (whitespace allowed?)
+- Regex for relative Filename (/, \, :, *, ?, ", <, >, |, %)
 
 ## Commit Message Format
 
