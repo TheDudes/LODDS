@@ -77,7 +77,7 @@ public class FileWatcherControllerTest {
 		String actualResponse = controller.getInfo(lastModTime);
 		String expectedResponse = 
 				"upd "+lastModTime+" 1\n"
-				+ "add e3cabfc499ba0621a8736b6784c210a4aa7e1cfffc4046405686e53df0772842 9 "+testDirectory+"twoFiles/2.txt\n";
+				+ "add 7c52011daa0bf2983c4687c2ee6a8d7759503a29f64624fa52970516d9ec45b2 9 "+testDirectory+"twoFiles/2.txt\n";
 		
 		assertEquals(expectedResponse,actualResponse);
 		
