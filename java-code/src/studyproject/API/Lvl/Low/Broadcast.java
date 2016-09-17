@@ -204,6 +204,9 @@ public class Broadcast {
 			for(int packetIndex = 5; packetIndex < packetParts.length; packetIndex++){
 				clientName += " " + packetParts[packetIndex];
 			}
+			if(clientName.charAt(clientName.length() - 1) == '\n'){
+				clientName = clientName.substring(0, clientName.length() - 2);
+			}
 			broadcastInfo.name = clientName;
 		} catch(IOException e){
 			return 1;
