@@ -27,6 +27,7 @@ public class Broadcast {
 	private static final int DEFAULT_PORT_SENDING = 9003;
 	private static final int DEFAULT_BUFFERSIZE = 2048;
 	private static final String ADVERTISE_BROADCAST_REGEX = "(\\d{1,3}\\.){3}\\d{1,3} \\d{1,5} \\d{1,19} \\d{1,19} \\S*";
+	private static final String IP_REGEX = "(\\d{1,3}\\.){3}\\d{1,3}";
 	
 	private static int broadcastPort = DEFAULT_PORT;
 	private static int outgoingPort = DEFAULT_PORT_SENDING;
@@ -39,7 +40,7 @@ public class Broadcast {
 	 * 			the list in which the addresses are put into
 	 * 
 	 * @return
-	 * 			a list with all network addresses the local machine has that are running and not virtual
+	 * 			0 or an error code
 	 */
 	public static int getNetworkAddresses(ArrayList<String> networkAddresses){
 		try{
@@ -49,13 +50,72 @@ public class Broadcast {
 				if(networkInterface.isUp() && !networkInterface.isVirtual()){
 					networkAddresses.add(networkInterface.getDisplayName());
 				}
-				
 			}
 		} catch(SocketException e){
 			return 1;
 		} catch(NoSuchElementException f){
-			//TODO real error codes
-			return -4;
+			return 2;
+		}
+		return 0;
+	}
+	
+	
+	/**
+	 * Retrieves the local broadcastAddress, needs an interface for getting the local ip
+	 * 
+	 * @param interfaceName
+	 * 			the name of the interface to which the ip should be retrieved
+	 * 
+	 * @param broadcastAddress
+	 * 			the StringBuilder to store the broadcastAddress in
+	 * 
+	 * @return
+	 * 			0 or an error code
+	 */
+	public static int getBroadcastAddress(String interfaceName, StringBuilder broadcastAddress){
+		int toReturn = getAddress(interfaceName, broadcastAddress);
+		broadcastAddress.delete(broadcastAddress.length() - 3, broadcastAddress.length());
+		broadcastAddress.append("255");
+		return toReturn;
+	}
+	
+	/**
+	 * Retrieves the ip address of the given interface
+	 * 
+	 * @param interfaceName 
+	 * 			the name of the interface to which the ip should be retrieved
+	 * 
+	 * @param broadcastAddress 
+	 * 			the StringBuilder to store the ip in
+	 * 
+	 * @return
+	 * 			0 or an error code
+	 */
+	public static int getLocalIp(String interfaceName, StringBuilder broadcastAddress){
+		return getAddress(interfaceName, broadcastAddress);
+	}
+	
+	
+	private static int getAddress(String interfaceName, StringBuilder broadcastAddress){
+		try{
+			Enumeration<NetworkInterface> networkInterfaces = NetworkInterface.getNetworkInterfaces();
+			while(networkInterfaces.hasMoreElements()){
+				NetworkInterface networkInterface = networkInterfaces.nextElement();
+				if(networkInterface.isUp() && !networkInterface.isVirtual() && networkInterface.getDisplayName().equals(interfaceName)){
+					Enumeration<InetAddress> inetAddresses = networkInterface.getInetAddresses();
+					while(inetAddresses.hasMoreElements()){
+						broadcastAddress.delete(0, broadcastAddress.length());
+						broadcastAddress = broadcastAddress.append(inetAddresses.nextElement().getHostAddress());
+						if(Pattern.matches(IP_REGEX, broadcastAddress)){
+							return 0;
+						}
+					}
+				}
+			}
+		} catch(SocketException e){
+			return 1;
+		} catch(NoSuchElementException f){
+			return 2;
 		}
 		return 0;
 	}
