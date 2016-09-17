@@ -82,7 +82,11 @@ multiple-value-bind.
                       (parse-integer port)
                       (parse-integer timestamp)
                       (parse-integer load)
-                      (cl-strings:join name))))
+                      (let ((name (cl-strings:join name)))
+                        (cl-strings:shorten ;; delete \n
+                         name
+                         (- (length name) 1)
+                         :truncate-string nil)))))
       ;; TODO: implement error codes
       -1))
 
@@ -223,20 +227,20 @@ multiple-value-bind.
                                     ;; TODO error codes
                                     -1)))))
         ;; TODO error codes
-        -1))
+        -1)))
 
-  (defun handle-send-permission (socket timeout file-stream)
-    "handles a successfull 'get send-permission' request and waits
+(defun handle-send-permission (socket timeout file-stream)
+  "handles a successfull 'get send-permission' request and waits
    maximum 'timeout' seconds for a OK. On success it writes data from
    file-stream to socket.
    TODO: implement parse of OK."
-    (if (usocket:wait-for-input socket :timeout timeout)
-        (let ((socket-stream (usocket:socket-stream socket)))
-          (if (string= "OK"
-                       (read-line socket-stream))
-              (copy-stream file-stream
-                           socket-stream)
-              ;; TODO: error code
-              -1)
-          ;; TODO: error code
-          -1))))
+  (if (usocket:wait-for-input socket :timeout timeout)
+      (let ((socket-stream (usocket:socket-stream socket)))
+        (if (string= "OK"
+                     (read-line socket-stream))
+            (copy-stream file-stream
+                         socket-stream)
+            ;; TODO: error code
+            -1)
+        ;; TODO: error code
+        -1)))
