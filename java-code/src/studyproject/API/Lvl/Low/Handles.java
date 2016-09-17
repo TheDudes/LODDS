@@ -43,11 +43,11 @@ public class Handles {
 		String[] params;
 		try {
 			currentLine = socketStream.readLine();
-			if(!Pattern.matches(GET_INFO_HEAD_REGEX, currentLine)){
+			if (!Pattern.matches(GET_INFO_HEAD_REGEX, currentLine)) {
 				return 2;
 			}
 			params = currentLine.split(" ");
-			if (params[0].equals("upd")) {
+			if (params[0].equals(InfoType.upd.toString())) {
 				infoType.type = InfoType.upd;
 			} else {
 				infoType.type = InfoType.all;
@@ -55,7 +55,7 @@ public class Handles {
 			timestamp.value = Long.valueOf(params[1]);
 			for (int i = 0; i < Integer.valueOf(params[2]); i++) {
 				currentLine = socketStream.readLine();
-				if(!Pattern.matches(GET_INFO_BODY_LINE_REGEX, currentLine)){
+				if (!Pattern.matches(GET_INFO_BODY_LINE_REGEX, currentLine)) {
 					return 2;
 				}
 				params = currentLine.split(" ");
@@ -114,14 +114,14 @@ public class Handles {
 	public static int handleSendPermission(BufferedReader socketStream) {
 		String s;
 		long endTime = System.currentTimeMillis() + TIMEOUT;
-		while(System.currentTimeMillis() < endTime) {
+		while (System.currentTimeMillis() < endTime) {
 			try {
-				if((s = socketStream.readLine()) != null) {
+				if ((s = socketStream.readLine()) != null) {
 					Thread.sleep(TIMEINTERVAL);
 					if (!s.equals("OK")) {
 						return -1;
 					}
-					continue; 
+					continue;
 				}
 				break;
 			} catch (IOException e) {
@@ -129,5 +129,7 @@ public class Handles {
 			} catch (InterruptedException e) {
 				return -3;
 			}
-		}return 0;
-}}
+		}
+		return 0;
+	}
+}
