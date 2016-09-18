@@ -11,7 +11,7 @@ import studyproject.API.Lvl.Low.Handles;
 import studyproject.API.Lvl.Low.Requests;
 import studyproject.API.Lvl.Mid.Core.UserInfo;
 
-public class FileConnectionThread extends Thread implements Runnable{
+public class FileConnectionThread extends Thread {
 
 	private UserInfo user;
 	private String checksum;
