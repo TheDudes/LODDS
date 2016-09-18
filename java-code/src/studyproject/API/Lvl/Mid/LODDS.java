@@ -67,6 +67,7 @@ public class LODDS {
 	}
 	
 	public void stopListening(){
+		broadcastListener.setStopThread(true);
 	}
 	
 	public void getFile(String user, String checksum, String localPath, int startIndex, int endIndex){
