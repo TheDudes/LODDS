@@ -17,8 +17,8 @@ public class FileConnectionThread extends Thread {
 	private String checksum;
 	private String localPath;
 	private long size;
-	private int startIndex = 0;
-	private int endIndex = 0;
+	private long startIndex = 0;
+	private long endIndex = 0;
 	
 	public FileConnectionThread(UserInfo user, String checksum, long size, String localPath){
 		this.user = user;
@@ -27,7 +27,8 @@ public class FileConnectionThread extends Thread {
 		this.size = size;
 	}
 	
-	public FileConnectionThread(UserInfo user, String checksum, long size, String localPath, int startIndex, int endIndex){
+	public FileConnectionThread(UserInfo user, String checksum, long size, String localPath, long startIndex,
+			long endIndex){
 		this.user = user;
 		this.checksum = checksum;
 		this.localPath = localPath;
