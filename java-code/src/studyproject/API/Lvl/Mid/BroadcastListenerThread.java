@@ -13,6 +13,7 @@ public class BroadcastListenerThread extends Thread {
 	
 	private LODDS loddsObject;
 	private StringBuilder broadcastAddress;
+	private StringBuilder localAddress;
 	private BroadcastInfo brInfo;
 	private UserInfo userInfo;
 	private InetAddress inetAddress;
@@ -26,6 +27,7 @@ public class BroadcastListenerThread extends Thread {
 	@Override
 	public void run() {
 		broadcastAddress = new StringBuilder();
+		localAddress = new StringBuilder();
 		brInfo = new BroadcastInfo();
 		
 		if (Broadcast.getBroadcastAddress(loddsObject.getInterface(), broadcastAddress) != 0) {
@@ -42,7 +44,12 @@ public class BroadcastListenerThread extends Thread {
 			}
 			System.out.println("BroadcastListenerThread: brInfo.toString(): " + brInfo.toString());
 			try {
-				inetAddress = InetAddress.getByName(brInfo.networkAddress);				
+				inetAddress = InetAddress.getByName(brInfo.networkAddress);
+				Broadcast.getLocalIp(loddsObject.getInterface(), localAddress);
+				if (inetAddress == InetAddress.getByName(localAddress.toString())) {
+					System.out.println("BroadcastListenerThread: This is your f***king own broadcast, dumbass!");
+					continue;
+				}
 				for(UserInfo user: loddsObject.getUsers()) {
 					if (user.getIpAddress().equals(inetAddress)) {
 						user.setPort(brInfo.ipPort);
