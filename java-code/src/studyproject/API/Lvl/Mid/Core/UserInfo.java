@@ -11,6 +11,7 @@ public class UserInfo {
 	private long lastUpdate;
 	private long load;
 	private long fileListTimestamp;
+	private long lastReceivedBroadcast;
 	private Vector<RemoteFileInfo> fileList;
 	
 	public UserInfo(InetAddress ipAddress, int port, String userName, long lastUpdate, long load,
@@ -22,6 +23,12 @@ public class UserInfo {
 		this.load = load;
 		this.fileList = fileList;
 		this.setFileListTimestamp(0);
+	}
+	
+	public UserInfo(InetAddress ipAddress, int port, String userName, long lastUpdate, long load,
+			Vector<RemoteFileInfo> fileList, long lastReceivedBroadcast){
+		this(ipAddress, port, userName, lastUpdate, load, fileList);
+		this.lastReceivedBroadcast = lastReceivedBroadcast;
 	}
 	
 	public InetAddress getIpAddress() {
@@ -84,6 +91,20 @@ public class UserInfo {
 	 */
 	public void setFileListTimestamp(long fileListTimestamp) {
 		this.fileListTimestamp = fileListTimestamp;
+	}
+
+	/**
+	 * @return the lastReceivedBroadcast
+	 */
+	public long getLastReceivedBroadcast() {
+		return lastReceivedBroadcast;
+	}
+
+	/**
+	 * @param lastReceivedBroadcast the lastReceivedBroadcast to set
+	 */
+	public void setLastReceivedBroadcast(long lastReceivedBroadcast) {
+		this.lastReceivedBroadcast = lastReceivedBroadcast;
 	}
 	
 }
