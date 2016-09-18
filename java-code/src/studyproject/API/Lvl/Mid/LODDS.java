@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Vector;
+import java.util.concurrent.ConcurrentHashMap;
 
 import studyproject.API.Core.File.FileAction;
 import studyproject.API.Core.File.FileHasher;
@@ -21,7 +22,7 @@ public class LODDS {
 	private long lastChange;
 	private Vector<FileChange> localFileChanges;
 	private Vector<UserInfo> clientList;
-	private Vector<RemoteFileInfo> availableFiles;
+	private ConcurrentHashMap<String, RemoteFileInfo> availableFiles;
 	private Vector<String> sharedFolders; 
 	private long load;
 	private String interfaceName;
@@ -38,7 +39,7 @@ public class LODDS {
 	public LODDS(String interfaceName, String userName){
 		localFileChanges = new Vector<FileChange>();
 		clientList = new Vector<UserInfo>();
-		availableFiles = new Vector<RemoteFileInfo>();
+		availableFiles = new ConcurrentHashMap<String, RemoteFileInfo>();
 		sharedFolders = new Vector<String>();
 		ipPort = defaultIpPort;
 		advertisePort = defaultAdvertisePort;
@@ -233,10 +234,8 @@ public class LODDS {
 	}
 	
 	private long getFileSize(String checksum){
-		for(RemoteFileInfo fileInfo: availableFiles){
-			if(fileInfo.getChecksum().equals(checksum)){
-				return fileInfo.getSize();
-			}
+		if(availableFiles.containsKey(checksum)){
+			return availableFiles.get(checksum).getSize();
 		}
 		return 0;
 	}
