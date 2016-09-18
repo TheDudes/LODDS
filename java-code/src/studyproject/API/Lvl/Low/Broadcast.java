@@ -93,8 +93,8 @@ public class Broadcast {
 	 * @return
 	 * 			0 or an error code
 	 */
-	public static int getLocalIp(String interfaceName, StringBuilder broadcastAddress){
-		return getAddress(interfaceName, broadcastAddress);
+	public static int getLocalIp(String interfaceName, StringBuilder networkAddress){
+		return getAddress(interfaceName, networkAddress);
 	}
 	
 	
