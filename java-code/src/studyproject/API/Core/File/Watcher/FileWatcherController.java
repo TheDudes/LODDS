@@ -83,7 +83,7 @@ public class FileWatcherController {
 	}
 	
 	public String convertFileInfoToString(FileInfo file) {
-		return file.fileAction.name()+" "+file.checksum+" "+file.size+" "+file.fileName+"\n";
+		return file.fileAction.name()+" "+file.checksum+" "+file.size+" "+file.fileName+"\n";		
 	}
 	
 	/**
@@ -94,12 +94,10 @@ public class FileWatcherController {
 	 * @throws IOException
 	 */
 	public void watchFile(String path, Boolean watchParentFolderForNewFiles) throws NoSuchAlgorithmException, IOException {
-				
+		System.out.println("watchFile: "+path);
 		// Create new FileInfo object and add it to vector list
 		FileInfoListEntry newFile = addNewFile(path);
-		
-		System.out.println("watchFile: "+path);
-		
+				
 		// Add parent directory of file to watchedDirectories if its not already inside
 		if (!watchedInternalDirectories.contains(newFile.parentDirectory)) {
 			watchedInternalDirectories.add(newFile.parentDirectory);

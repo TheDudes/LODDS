@@ -96,7 +96,7 @@ public class FileWatcherControllerTest {
 	}
 	
 	@Test(timeout=20000)
-	public void shouldGetListWithOneFileAddedDuringRuntime() throws NoSuchAlgorithmException, IOException, InterruptedException {
+	public void shouldDetectFileAddedDuringRuntime() throws NoSuchAlgorithmException, IOException, InterruptedException {
 		System.out.println("shouldGetListWithOneFileAddedDuringRuntime");
 		
 		cleanupTempFolder();
@@ -121,7 +121,18 @@ public class FileWatcherControllerTest {
 		
 		assertEquals(1,controller.fileInfoList.size());
 		
+		String actualResponse = controller.getInfo(0);
+		String expectedResponse = 
+				"all "+System.currentTimeMillis() / 1000L+" 1\n"
+				+ "add e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855 0 "+testDirectory+"temp/temp.txt\n";
+		
+		assertEquals(expectedResponse,actualResponse);
+		
 		cleanupTempFolder();
+	}
+	
+	public void shouldGetListWithOneFileAddedDuringRuntime() throws NoSuchAlgorithmException, IOException, InterruptedException {
+		
 	}
 	
 	private void cleanupTempFolder() {

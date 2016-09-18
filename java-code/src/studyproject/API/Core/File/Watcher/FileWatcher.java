@@ -79,7 +79,7 @@ public class FileWatcher implements Runnable {
 				        	if (newFile.isDirectory()) {
 				        		controller.watchDirectoryRecursively(fullFileName);
 				        	} else {
-				        		controller.watchFile(path+"/"+fileName.toString(), false);
+				        		controller.watchFile(path+fileName.toString(), false);
 				        	}
 				        }
   		        
