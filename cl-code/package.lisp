@@ -41,6 +41,8 @@
    ;; lodds-server and his methods
    #:lodds-server
    #:switch-interface
+   #:switch-broadcast-port
+   #:switch-listening-port
    #:start-listening
    #:stop-listening
    #:remove-clients))

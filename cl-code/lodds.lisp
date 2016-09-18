@@ -39,7 +39,9 @@
                 ht)
     :accessor :config
     :documentation "lodds server configuration. do not edit these by
-                   hand. these will be updated by methods.")
+                   hand. these will be updated by methods. See
+                   SWITCH-INTERFACE, SWITCH-LISTENING-PORT and
+                   SWITCH-BROADCAST-PORT")
    (lock
     :initform (bt:make-recursive-lock "lodds-server-lock")
     :accessor :lock
@@ -76,9 +78,28 @@
 
 (defgeneric switch-interface (server interface)
   (:documentation
-   "Switch server interface and set addresses accordingly. Interface
-    is a string, to retrieve a list of available interfaces use
-    GET-INTERFACES."))
+   "Switch server interface and set addresses (ip and broadcast ip)
+    accordingly. Interface is a string, to retrieve a list of
+    available interfaces use GET-INTERFACES. Ports wont be set, use
+    SWITCH-BROADCAST-PORT to set the broadcast port, and
+    SWITCH-LISTENING-PORT to switch the listening port (direct
+    communication). All SWITCH- Methods will check if a server is
+    running and restart them. For example, (SWITCH-INTERFACE
+    \"enp0s25\") will stop the broadcasting listener, switch the
+    interface, and start the listener again. if the Listener was not
+    running it will not start it."))
+
+(defgeneric switch-broadcast-port (server port)
+  (:documentation
+   "Switches the Port where the Server listens for broadcast
+   messages. To Change the Broadcast ip see SWITCH-INTERFACE. Will
+   restart broadcast-listener if running."))
+
+(defgeneric switch-listening-port (server port)
+  (:documentation
+   "Switches the Port where the Server listens for direct
+   connections. This Port is Advertised. To Change the ip see
+   SWITCH-INTERFACE. Will restart broadcast-listener if running."))
 
 (defgeneric start-listening (server)
   (:documentation
@@ -111,6 +132,20 @@
             (when was-listening
               (start-listening server)))))
       interface)))
+
+(defmethod switch-broadcast-port ((server lodds-server) (port fixnum))
+  (bt:with-recursive-lock-held ((:lock server))
+    (let ((was-listening nil))
+      (when (:broadcast-listener server)
+        (stop-listening server)
+        (setf was-listening t))
+      (setf (gethash :broadcast-port (:config server)) port)
+      (when was-listening
+        (start-listening server)))))
+
+(defmethod switch-listening-port ((server lodds-server) (port fixnum))
+  (bt:with-recursive-lock-held ((:lock server))
+    (setf (gethash :listening-port (:config server)) port)))
 
 (defun broadcast-listener (buffer server)
   "handles broadcast received messages. This function is a callback
