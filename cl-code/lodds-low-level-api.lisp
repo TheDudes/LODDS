@@ -1,7 +1,5 @@
 ;;;; lodds-low-level-api.lisp
 
-;; TODO: replaced parse-integer with cl-strings:parse-number ?
-
 #|
 
 This file contains the low-level-api implementation of the LODDS protocol,
@@ -87,8 +85,7 @@ multiple-value-bind.
                          name
                          (- (length name) 1)
                          :truncate-string nil)))))
-      ;; TODO: implement error codes
-      -1))
+      2))
 
 (defun parse-request (socket-stream)
   "parses a direct communication request. returns multiple values,
@@ -107,19 +104,22 @@ multiple-value-bind.
                              ("info" :info)
                              ("send-permission" :send-permission))))
             (case requ-type
-              (:file (values 0 (list :file
-                                     (car args)
-                                     (parse-integer (nth 1 args))
-                                     (parse-integer (nth 2 args)))))
-              (:info (values 0 (list :info (car args))))
-              (:send-permission (values 0 (destructuring-bind (size timeout . filename)
-                                              args
-                                            (list :send-permission
-                                                  (parse-integer size)
-                                                  (parse-integer timeout)
-                                                  (cl-strings:join filename :separator " "))))))))
-        ;; TODO: implement error codes
-        -1)))
+              (:file (values 0
+                             (list :file
+                                   (car args)
+                                   (parse-integer (nth 1 args))
+                                   (parse-integer (nth 2 args)))))
+              (:info (values 0
+                             (list :info
+                                   (car args))))
+              (:send-permission (values 0
+                                        (destructuring-bind (size timeout . filename)
+                                            args
+                                          (list :send-permission
+                                                (parse-integer size)
+                                                (parse-integer timeout)
+                                                (cl-strings:join filename :separator " "))))))))
+        2)))
 
 ;; get family
 (defun get-file (socket-stream checksum start end)
@@ -216,7 +216,8 @@ multiple-value-bind.
                      :collect (progn
                                 (setf line (read-line socket-stream))
                                 (if (cl-ppcre:scan *info-body-scanner* line)
-                                    (destructuring-bind (type checksum size . name) (cl-strings:split line)
+                                    (destructuring-bind (type checksum size . name)
+                                        (cl-strings:split line)
                                       (list (cond
                                               ((equalp type "add") :add)
                                               ((equalp type "del") :del)
@@ -224,10 +225,8 @@ multiple-value-bind.
                                             checksum
                                             (parse-integer size)
                                             (cl-strings:join name :separator " ")))
-                                    ;; TODO error codes
-                                    -1)))))
-        ;; TODO error codes
-        -1)))
+                                    2)))))
+        2)))
 
 (defun handle-send-permission (socket timeout file-stream)
   "handles a successfull 'get send-permission' request and waits
@@ -240,7 +239,5 @@ multiple-value-bind.
                      (read-line socket-stream))
             (copy-stream file-stream
                          socket-stream)
-            ;; TODO: error code
-            -1)
-        ;; TODO: error code
-        -1)))
+            2)
+       2)))

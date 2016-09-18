@@ -2,12 +2,18 @@
 
 ** Low Level API
 
-*** TODO left to implement [1/5]
+*** TODO left to implement [1/4]
     - [X] check protocol syntax with regular expressions (cl-ppcre)
     - [ ] replace all parse-integer calls
-    - [ ] return correct error codes
+    - [1/5] return correct error codes
+      - [ ] 1: connection-closed
+      - [X] 2: malformed-data
+      - [ ] 3: timeout-reached
+      - [ ] 4: file-not-found
+      - [ ] 5: connection denied (needs to be added)
     - [ ] add some error-code-to-string functionality
     - [ ] add tests
 
-*** TODO BUGS [0/1]
+*** TODO BUGS [0/2]
     - [ ] readline on sockets should timeout and stop after specified amount
+    - [ ] replace ~a with fitting format specifier
