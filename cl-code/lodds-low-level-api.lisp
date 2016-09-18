@@ -62,7 +62,8 @@ multiple-value-bind.
       (setf (usocket:socket-option sock :broadcast) t)
       (usocket:socket-send sock data (length data)
                            :host broadcast-host
-                           :port broadcast-port)))
+                           :port broadcast-port)
+      (usocket:socket-close sock)))
   0)
 
 (defun read-advertise (message)
