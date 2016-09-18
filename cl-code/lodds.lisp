@@ -32,8 +32,9 @@
 (defclass lodds-server ()
   ((config
     :initform (let ((ht (make-hash-table)))
-                (setf (gethash :listening-ip ht) nil
-                      (gethash :listening-port ht) nil
+                (setf (gethash :name ht) nil
+                      (gethash :listening-ip ht) nil
+                      (gethash :listening-port ht) 4567
                       (gethash :broadcast-ip ht) nil
                       (gethash :broadcast-port ht) 9002)
                 ht)
@@ -74,7 +75,29 @@
     :documentation "hashtable containing all clients which their
                    broadcast information. This table is updated by
                    BROADCAST-LISTENER.
-                   TODO: implement something to retrieve a copy.")))
+                   TODO: implement something to retrieve a copy.")
+   (load
+    :initform 0
+    :accessor :load
+    :documentation "current load, this variable describes the sum of
+                    all outstanding bytes which need to be
+                    transfered. Do NOT set this variable, retrieving
+                    it should be fine. TODO: who sets this?")
+   (last-change
+    :initform 0
+    :accessor :last-change
+    :documentation "this timestamp describes the last local
+                    timestamp. its advertised to other clients via
+                    START-ADVERTISING. TODO: who sets this?")
+   (advertise-timeout
+    :initform 1
+    :accessor :advertise-timeout
+    :documentation "Specifies timeout between
+                    advertisements. Specified in seconds.")))
+
+(defgeneric switch-name (server name)
+  (:documentation
+   "switch displayed username. TODO: describe username here"))
 
 (defgeneric switch-interface (server interface)
   (:documentation
@@ -101,6 +124,10 @@
    connections. This Port is Advertised. To Change the ip see
    SWITCH-INTERFACE. Will restart broadcast-listener if running."))
 
+(defgeneric switch-advertise-timeout (server timeout)
+  (:documentation
+   "switch ADVERTISE-TIMEOUT, TIMEOUT is given in seconds."))
+
 (defgeneric start-listening (server)
   (:documentation
    "Will start listening for broadcast messages of other clients,
@@ -114,6 +141,21 @@
 (defgeneric remove-clients (server inactive-time)
   (:documentation
    "removes all clients which a longer inactive then INACTIVE-TIME"))
+
+(defgeneric start-advertising (server)
+  (:documentation
+   "Start advertising information about server on BROADCAST-IP and BROADCAST-PORT.
+    set those before with SWITCH-BROADCAST-PORT and
+    SWITCH-INTERFACE. This function will spawn a thread."))
+
+(defgeneric stop-advertising (server)
+  (:documentation
+   "Stop advertising information about server."))
+
+(defmethod switch-name ((server lodds-server) (name string))
+  (bt:with-recursive-lock-held ((:lock server))
+    ;; TODO: check for name errors
+    (setf (gethash :name (:config server)) name)))
 
 (defmethod switch-interface ((server lodds-server) (interface string))
   (let ((interface-info (get-interface-info interface)))
@@ -147,6 +189,10 @@
   (bt:with-recursive-lock-held ((:lock server))
     (setf (gethash :listening-port (:config server)) port)))
 
+(defmethod switch-advertise-timeout ((server lodds-server) (timeout fixnum))
+  (bt:with-recursive-lock-held ((:lock server))
+    (setf (:advertise-timeout server) timeout)))
+
 (defun broadcast-listener (buffer server)
   "handles broadcast received messages. This function is a callback
   for the BROADCAST-LISTENER. It is set by START-LISTENING"
@@ -174,7 +220,7 @@
               (format t "error: broadcast ip or port not set!~%")
               (setf (:broadcast-listener server)
                     (usocket:socket-server
-                     (gethash :broadcast-address (:config server))
+                     (gethash :broadcast-ip (:config server))
                      (gethash :broadcast-port (:config server))
                      (lambda (buffer)
                        (broadcast-listener buffer server))
@@ -202,3 +248,50 @@
       (mapcar (lambda (key)
                 (remhash key (:clients server)))
               remove-me))))
+
+(defun advertiser (server)
+  "handles advertisements, will adversite server on broadcast
+  network. This function is getting called by START-ADVERTISING. Will
+  run inside seperate Thread (spawned by START-ADVERTISING)."
+  (let ((config nil)
+        (last-change nil)
+        (load nil))
+    ;; get new values
+    (bt:with-recursive-lock-held ((:lock server))
+      (setf config (:config server)
+            last-change (:last-change server)
+            load (:load server)))
+    ;; TODO: this could fail
+    (send-advertise
+     (gethash :broadcast-ip config)
+     (gethash :broadcast-port config)
+     (list (gethash :listening-ip config)
+           (gethash :listening-port config)
+           last-change
+           load
+           (gethash :name config)))))
+
+(defmethod start-advertising ((server lodds-server))
+  (bt:with-recursive-lock-held ((:lock server))
+    (if (not (null (:broadcast-advertiser server)))
+        ;; TODO: some kind of error handling here
+        (format t "already advertising!~%")
+        (setf (:broadcast-advertiser server)
+              (bt:make-thread
+               (lambda ()
+                 (loop :while t
+                    :with timeout
+                    :do (progn
+                          (bt:with-recursive-lock-held ((:lock server))
+                            (setf timeout (:advertise-timeout server)))
+                          (advertiser server)
+                          (sleep timeout)))
+                 :name "broadcast-advertiser"))))))
+
+(defmethod stop-advertising ((server lodds-server))
+  (bt:with-recursive-lock-held ((:lock server))
+    (if (not (null (:broadcast-advertiser server)))
+        (bt:destroy-thread (:broadcast-advertiser server))
+        ;; TODO: some error handling here
+        (format t "advertising not running~%"))
+    (setf (:broadcast-advertiser server) nil)))

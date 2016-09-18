@@ -40,9 +40,13 @@
    #:get-ip-address
    ;; lodds-server and his methods
    #:lodds-server
+   #:switch-name
    #:switch-interface
    #:switch-broadcast-port
    #:switch-listening-port
+   #:switch-advertise-timeout
    #:start-listening
    #:stop-listening
-   #:remove-clients))
+   #:remove-clients
+   #:start-advertising
+   #:stop-advertising))
