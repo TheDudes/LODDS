@@ -189,7 +189,7 @@
   (bt:with-recursive-lock-held ((:lock server))
     (setf (gethash :listening-port (:config server)) port)))
 
-(defmethod switch-advertise-timeout ((server lodds-server) (timeout fixnum))
+(defmethod switch-advertise-timeout ((server lodds-server) (timeout real))
   (bt:with-recursive-lock-held ((:lock server))
     (setf (:advertise-timeout server) timeout)))
 
