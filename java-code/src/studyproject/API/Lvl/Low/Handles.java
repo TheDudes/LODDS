@@ -94,8 +94,12 @@ public class Handles {
 		try {
 			byte[] byteArray = new byte[BUFFERSIZE];
 			while (size > 0) {
-				readSize = Utils.readThisLength(socketStream, byteArray, 0, byteArray.length);
-				fileStream.write(byteArray);
+				if(size < byteArray.length){
+					readSize = Utils.readThisLength(socketStream, byteArray, 0, (int)size);
+				} else {
+					readSize = Utils.readThisLength(socketStream, byteArray, 0, byteArray.length);
+				}
+				fileStream.write(byteArray, 0, readSize);
 				size -= readSize;
 			}
 		} catch (IOException e) {
