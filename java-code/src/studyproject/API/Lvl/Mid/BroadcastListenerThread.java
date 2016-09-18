@@ -26,32 +26,23 @@ public class BroadcastListenerThread extends Thread {
 	
 	@Override
 	public void run() {
-		broadcastAddress = new StringBuilder();
 		localAddress = new StringBuilder();
 		brInfo = new BroadcastInfo();
 		
-		if (Broadcast.getBroadcastAddress(loddsObject.getInterface(), broadcastAddress) != 0) {
-			// getBroadcastAddress failed
-			System.out.println("BroadcastListenerThread: Broadcast.getBroadcastAddress failed!!!");
-		}
-		System.out.println("BroadcastListenerThread: broadcastAddress: " + broadcastAddress.toString());
-		
 		while(!stopThread) {
-			
-			if (Broadcast.readAdvertise(broadcastAddress.toString(), brInfo) != 0) {
+			Broadcast.getLocalIp(loddsObject.getInterface(), localAddress);
+			if (Broadcast.readAdvertise(localAddress.toString(), brInfo) != 0) {
 				// readAdvertise failed
 				continue;
 			}
-			System.out.println("BroadcastListenerThread: brInfo.toString(): " + brInfo.toString());
 			try {
 				inetAddress = InetAddress.getByName(brInfo.networkAddress);
-				Broadcast.getLocalIp(loddsObject.getInterface(), localAddress);
-				if (inetAddress == InetAddress.getByName(localAddress.toString())) {
-					System.out.println("BroadcastListenerThread: This is your f***king own broadcast, dumbass!");
+				if (inetAddress.equals(InetAddress.getByName(localAddress.toString()))) {
 					continue;
 				}
 				for(UserInfo user: loddsObject.getUsers()) {
 					if (user.getIpAddress().equals(inetAddress)) {
+						System.out.println("BroadcastListenerThread: Already in Userlist: " + brInfo.toString());
 						user.setPort(brInfo.ipPort);
 						user.setLoad(brInfo.load);
 						user.setUserName(brInfo.name);
@@ -63,8 +54,10 @@ public class BroadcastListenerThread extends Thread {
 					continue;
 				}
 				if (written == false) {
+					System.out.println("BroadcastListenerThread: Added to Userlist: " + brInfo.toString());
 					userInfo = new UserInfo(inetAddress, brInfo.ipPort, brInfo.name, brInfo.timestamp,
 							brInfo.load, new Vector<RemoteFileInfo>(), brInfo.timestamp);
+					
 					loddsObject.getUsers().add(userInfo);	
 				}
 			} catch (UnknownHostException e) {
