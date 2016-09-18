@@ -10,17 +10,19 @@ import studyproject.API.Core.File.FileInfo;
 
 public class FileInfoListEntry extends FileInfo {
 	
-	public Long timestamp;
+	public Long timestampAdded;
+	public File file;
 	
 	public FileInfoListEntry(String fileName) throws NoSuchAlgorithmException, IOException {
-		File file = new File(fileName);
+		file = new File(fileName);
 		
 		this.checksum = FileHasher.getFileHash(fileName);
 		this.size = file.length();
 		this.fileName = fileName;
 		this.fileAction = FileAction.add;
 		this.parentDirectory = file.getParent();
-		this.timestamp = file.lastModified() / 1000L;
+		this.timestampAdded = file.lastModified() / 1000L;
+		
 	}
 	
 	public FileInfoListEntry(String checksum, long size, String fileName, FileAction fileAction, long timestamp) {
@@ -29,9 +31,9 @@ public class FileInfoListEntry extends FileInfo {
 		this.fileName = fileName;
 		this.fileAction = fileAction;
 		
-		File file = new File(fileName);
+		file = new File(fileName);
 		this.parentDirectory = file.getParent();
-		this.timestamp = timestamp;
+		this.timestampAdded = timestamp;
 	}
 	
 }

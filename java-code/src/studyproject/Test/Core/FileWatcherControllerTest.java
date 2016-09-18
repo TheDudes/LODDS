@@ -2,8 +2,10 @@ package studyproject.Test.Core;
 
 import static org.junit.Assert.*;
 
+import java.io.File;
 import java.io.IOException;
 import java.security.NoSuchAlgorithmException;
+import java.util.Date;
 
 import org.junit.Test;
 
@@ -55,6 +57,7 @@ public class FileWatcherControllerTest {
 		 *      all 1464269498 1\n
 			    add 38e80faf7... 421341231 /first-file.txt\n 
 		 */
+
 		String actualResponse = controller.getInfo(0);
 		String expectedResponse = 
 				"all "+System.currentTimeMillis() / 1000L+" 1\n"
@@ -72,8 +75,20 @@ public class FileWatcherControllerTest {
 	public void shouldGetCorrectFileInfoMsgWithTimestampThatMatchesOneOfTwoFiles() throws NoSuchAlgorithmException, IOException {
 		FileWatcherController controller = new FileWatcherController();
 		controller.watchDirectoryRecursively(testDirectory+"twoFiles");
+	     
+		Date dt = new Date();
+		long millisec = dt.getTime();
 		
-		Long lastModTime = (long) 1452553201;
+		System.out.println("ms: "+millisec);
+		
+		File file = new File(testDirectory+"twoFiles/1.txt");
+		file.setLastModified(millisec);
+		
+		File file2 = new File(testDirectory+"twoFiles/2.txt");
+		file2.setLastModified(millisec+5000);
+		
+		Long lastModTime = (millisec+3000) / 1000L;
+		
 		String actualResponse = controller.getInfo(lastModTime);
 		String expectedResponse = 
 				"upd "+lastModTime+" 1\n"

@@ -3,7 +3,6 @@ package studyproject.API.Core.File.Watcher;
 import java.io.File;
 import java.io.IOException;
 import java.security.NoSuchAlgorithmException;
-import java.sql.Timestamp;
 import java.util.Iterator;
 import java.util.Vector;
 
@@ -60,12 +59,15 @@ public class FileWatcherController {
 		int filesMatched = 0;
 		for (FileInfoListEntry file:fileInfoList) {
 			
-			if (timestamp == 0 || (file.timestamp >= timestamp)) {
-				System.out.println(timestamp);
-				System.out.println(file.timestamp);
+			if (timestamp == 0 || (((file.file.lastModified()/ 1000L) >= timestamp) || (file.timestampAdded >= timestamp))) {
+				/*
+				System.out.println("query timestamp: "+timestamp);
+				System.out.println("last modified: "+file.file.lastModified());
+				System.out.println("timestamp added: "+file.timestampAdded);
+				System.out.println();*/
 				output = output+this.convertFileInfoToString(file);
 				filesMatched++;
-			}
+			} 
 
 		}
 		
