@@ -32,6 +32,8 @@ public class FileWatcher implements Runnable {
 		this.path = path;
 		this.watchForNewFiles = watchForNewFiles;
 		this.controller = controller;
+		
+		System.out.println("FileWatcher started for: "+this.path);
 	}
 	
 	/**
@@ -73,6 +75,7 @@ public class FileWatcher implements Runnable {
 				        if (watchForNewFiles && eventType == ENTRY_CREATE) {
 				        	String fullFileName = path+"/"+fileName.toString();
 				        	File newFile = new File(fullFileName);
+				        	
 				        	if (newFile.isDirectory()) {
 				        		controller.watchDirectoryRecursively(fullFileName);
 				        	} else {
@@ -123,6 +126,10 @@ public class FileWatcher implements Runnable {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+	}
+	
+	protected void finalize() throws Throwable {
+		System.out.println("thread finalize");
 	}
 
 }

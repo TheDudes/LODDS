@@ -38,7 +38,7 @@ public class FileWatcherController {
 
 		FileWatcherController myWatchService = new FileWatcherController();
 
-		myWatchService.watchDirectoryRecursively("/Users/robinhood/Desktop/testDirectory");
+		myWatchService.watchDirectoryRecursively("testData/FileWatcherController/");
 	}
 	
 	/**
@@ -96,17 +96,27 @@ public class FileWatcherController {
 	public void watchFile(String path, Boolean watchParentFolderForNewFiles) throws NoSuchAlgorithmException, IOException {
 				
 		// Create new FileInfo object and add it to vector list
-		FileInfoListEntry newFile = new FileInfoListEntry(path);
-		fileInfoList.addElement(newFile);
+		FileInfoListEntry newFile = addNewFile(path);
+		
+		System.out.println("watchFile: "+path);
 		
 		// Add parent directory of file to watchedDirectories if its not already inside
 		if (!watchedInternalDirectories.contains(newFile.parentDirectory)) {
 			watchedInternalDirectories.add(newFile.parentDirectory);
 			
 			// Start to watch directory
-	        (new Thread(new FileWatcher(newFile.parentDirectory, watchParentFolderForNewFiles, this))).start();
+			watchDirectory(newFile.parentDirectory, watchParentFolderForNewFiles);
 		}
 		
+	}
+	
+	/**
+	 * Starts directory listener thread
+	 * @param path
+	 */
+	private void watchDirectory(String path, Boolean watchForNewFiles) {
+        (new Thread(new FileWatcher(path, watchForNewFiles, this))).start();
+
 	}
 	
 	/**
@@ -118,14 +128,15 @@ public class FileWatcherController {
 	public void watchDirectoryRecursively(String fileName) throws NoSuchAlgorithmException, IOException {
 		System.out.println("watchDirectoryRecursively: "+fileName);
 		
-		 File[] files = new File(fileName).listFiles();
+		// Start to watch directory
+		watchDirectory(fileName, true);
+		
+		File[] files = new File(fileName).listFiles();
 
 		 if (files != null) {
 			 for (File file : files) {
 			        if (file.isDirectory()) {
-			            for (File myFile:file.listFiles()) {
-			            	watchDirectoryRecursively(myFile.getPath().toString());
-			            }
+			            	watchDirectoryRecursively(file.getPath().toString());
 					 } else {
 						 	watchFile(file.getPath().toString(), true);
 					 }
@@ -161,9 +172,11 @@ public class FileWatcherController {
     	fileInfoList.add(deletedFile);
 	}
 	
-	public void addNewFile(String fileName) throws NoSuchAlgorithmException, IOException {
+	public FileInfoListEntry addNewFile(String fileName) throws NoSuchAlgorithmException, IOException {
 		FileInfoListEntry newFile = new FileInfoListEntry(fileName);
 		fileInfoList.add(newFile);
+		System.out.println("Add new file: "+fileName);
+		return newFile;
 	}
 	
 }

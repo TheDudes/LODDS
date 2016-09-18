@@ -78,9 +78,7 @@ public class FileWatcherControllerTest {
 	     
 		Date dt = new Date();
 		long millisec = dt.getTime();
-		
-		System.out.println("ms: "+millisec);
-		
+				
 		File file = new File(testDirectory+"twoFiles/1.txt");
 		file.setLastModified(millisec);
 		
@@ -95,7 +93,43 @@ public class FileWatcherControllerTest {
 				+ "add 7c52011daa0bf2983c4687c2ee6a8d7759503a29f64624fa52970516d9ec45b2 9 "+testDirectory+"twoFiles/2.txt\n";
 		
 		assertEquals(expectedResponse,actualResponse);
+	}
+	
+	@Test(timeout=20000)
+	public void shouldGetListWithOneFileAddedDuringRuntime() throws NoSuchAlgorithmException, IOException, InterruptedException {
+		System.out.println("shouldGetListWithOneFileAddedDuringRuntime");
 		
+		cleanupTempFolder();
+		
+		String path = testDirectory+"temp/";
+		
+		FileWatcherController controller = new FileWatcherController();
+		controller.watchDirectoryRecursively(path);
+		
+		assertEquals(0,controller.fileInfoList.size());
+		
+		// Wait short till fileController was initialized
+		Thread.sleep(1000);
+		
+		File f = new File(path+"temp.txt");
+		f.getParentFile().mkdirs(); 
+		f.createNewFile();
+		
+		while (controller.fileInfoList.size() == 0) {
+			
+		}
+		
+		assertEquals(1,controller.fileInfoList.size());
+		
+		cleanupTempFolder();
+	}
+	
+	private void cleanupTempFolder() {
+		File dir = new File(testDirectory+"temp/");
+	
+		for(File file: dir.listFiles()) 
+		    if (!file.isDirectory())
+		    	file.delete(); 
 	}
 	
 
