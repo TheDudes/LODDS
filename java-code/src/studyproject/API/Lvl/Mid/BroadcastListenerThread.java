@@ -11,18 +11,22 @@ import studyproject.API.Lvl.Mid.Core.UserInfo;
 
 public class BroadcastListenerThread extends Thread {
 	
-	LODDS loddsObject;
+	private LODDS loddsObject;
+	private StringBuilder broadcastAddress;
+	private BroadcastInfo brInfo;
+	private UserInfo userInfo;
+	private InetAddress inetAddress;
+	private boolean written = false;
+	private boolean stopThread = false;
 	
 	public BroadcastListenerThread(LODDS loddsObject) {
 		this.loddsObject = loddsObject;
 	}
 	
+	@Override
 	public void run() {
-		StringBuilder broadcastAddress = new StringBuilder();
-		BroadcastInfo brInfo = new BroadcastInfo();
-		UserInfo userInfo;
-		InetAddress inetAddress;
-		boolean written = false;
+		broadcastAddress = new StringBuilder();
+		brInfo = new BroadcastInfo();
 		
 		if (Broadcast.getBroadcastAddress(loddsObject.getInterface(), broadcastAddress) != 0) {
 			// getBroadcastAddress failed
@@ -30,15 +34,7 @@ public class BroadcastListenerThread extends Thread {
 		}
 		System.out.println("BroadcastListenerThread: broadcastAddress: " + broadcastAddress.toString());
 		
-		
-		int i = 0;
-		while(i < 100) {
-			try {
-				Thread.sleep(1000);
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-			}
-			i++;
+		while(!stopThread) {
 			
 			if (Broadcast.readAdvertise(broadcastAddress.toString(), brInfo) != 0) {
 				// readAdvertise failed
@@ -69,5 +65,33 @@ public class BroadcastListenerThread extends Thread {
 			}
 			written = false;
 		}
+	}
+
+	public StringBuilder getBroadcastAddress() {
+		return broadcastAddress;
+	}
+
+	public void setBroadcastAddress(StringBuilder broadcastAddress) {
+		this.broadcastAddress = broadcastAddress;
+	}
+
+	public BroadcastInfo getBrInfo() {
+		return brInfo;
+	}
+
+	public UserInfo getUserInfo() {
+		return userInfo;
+	}
+
+	public InetAddress getInetAddress() {
+		return inetAddress;
+	}
+
+	public void setInetAddress(InetAddress inetAddress) {
+		this.inetAddress = inetAddress;
+	}
+	
+	public void setStopThread(boolean bool) {
+		this.stopThread = bool; 
 	}
 }
