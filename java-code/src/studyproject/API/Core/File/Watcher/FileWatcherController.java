@@ -6,6 +6,7 @@ import java.security.NoSuchAlgorithmException;
 import java.util.Iterator;
 import java.util.Vector;
 
+import studyproject.API.Core.File.FileAction;
 import studyproject.API.Core.File.FileInfo;
 import studyproject.API.Core.File.InfoList.FileInfoListEntry;
 
@@ -53,7 +54,8 @@ public class FileWatcherController {
 	 * @param timestamp
 	 */
 	public String getInfo(long timestamp) {
-		String output = "";
+		String header = "";
+		String body = "";
 		
 		// Body
 		int filesMatched = 0;
@@ -65,7 +67,7 @@ public class FileWatcherController {
 				System.out.println("last modified: "+file.file.lastModified());
 				System.out.println("timestamp added: "+file.timestampAdded);
 				System.out.println();*/
-				output = output+this.convertFileInfoToString(file);
+				body = this.convertFileInfoToString(file)+body;
 				filesMatched++;
 			} 
 
@@ -74,12 +76,12 @@ public class FileWatcherController {
 		// Header
 		if (timestamp == 0) {
 		   Long timestampNow =  System.currentTimeMillis() / 1000L;
-		   output = "all "+timestampNow+" "+filesMatched+"\n"+output;
+		   header = "all "+timestampNow+" "+filesMatched+"\n";
 		} else {
-		   output = "upd "+timestamp+" "+filesMatched+"\n"+output;
+		   header = "upd "+timestamp+" "+filesMatched+"\n";
 		}
 		
-		return output;
+		return header+body;
 	}
 	
 	public String convertFileInfoToString(FileInfo file) {
@@ -94,7 +96,7 @@ public class FileWatcherController {
 	 * @throws IOException
 	 */
 	public void watchFile(String path, Boolean watchParentFolderForNewFiles) throws NoSuchAlgorithmException, IOException {
-		System.out.println("watchFile: "+path);
+		// System.out.println("watchFile: "+path);
 		// Create new FileInfo object and add it to vector list
 		FileInfoListEntry newFile = addNewFile(path);
 				
@@ -165,8 +167,10 @@ public class FileWatcherController {
 	}
 	
 	public void addDeletedFile(FileInfo file) {
+		System.out.println("Add del file: "+file.fileName);
+
 		Long timestamp = System.currentTimeMillis() / 1000L;
-    	FileInfoListEntry deletedFile = new FileInfoListEntry(file.checksum, file.size, file.fileName, file.fileAction, timestamp);
+    	FileInfoListEntry deletedFile = new FileInfoListEntry(file.checksum, file.size, file.fileName, FileAction.del, timestamp);
     	fileInfoList.add(deletedFile);
 	}
 	

@@ -33,7 +33,7 @@ public class FileWatcher implements Runnable {
 		this.watchForNewFiles = watchForNewFiles;
 		this.controller = controller;
 		
-		System.out.println("FileWatcher started for: "+this.path);
+		// System.out.println("FileWatcher started for: "+this.path);
 	}
 	
 	/**
@@ -84,7 +84,7 @@ public class FileWatcher implements Runnable {
 				        }
   		        
 				        // Check if file is in list
-				        FileInfo fileFromList = controller.getWatchedFileFromList(fileName.toString());
+				        FileInfo fileFromList = controller.getWatchedFileFromList(path+"/"+fileName.toString());
 				        
 				        if (fileFromList != null) { // If file is in list
 				        	
@@ -108,9 +108,10 @@ public class FileWatcher implements Runnable {
 					        	controller.addNewFile(fileFromList.fileName);
 
 					        }
+				        } else {
+				        	// System.out.println("File not in list: "+fileName.toString());
 				        }
-
-
+				        
 				    }
 
 				    // Reset key

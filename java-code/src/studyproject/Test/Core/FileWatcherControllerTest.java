@@ -131,8 +131,41 @@ public class FileWatcherControllerTest {
 		cleanupTempFolder();
 	}
 	
-	public void shouldGetListWithOneFileAddedDuringRuntime() throws NoSuchAlgorithmException, IOException, InterruptedException {
+	@Test(timeout=20000)
+	public void shouldDetectFileDeletedDuringRuntime() throws NoSuchAlgorithmException, IOException, InterruptedException {
+		cleanupTempFolder();
 		
+		// Create dummy file
+		String path = testDirectory+"temp/";
+		File f = new File(path+"temp.txt");
+		f.getParentFile().mkdirs(); 
+		f.createNewFile();
+		
+		// Start watching
+		FileWatcherController controller = new FileWatcherController();
+		controller.watchDirectoryRecursively(path);
+		
+		// Wait short till fileController was initialized
+		Thread.sleep(1000);
+		
+		// List should contain one file
+		assertEquals(1,controller.fileInfoList.size());
+		
+		// Delete file
+		cleanupTempFolder();
+		
+		// List should contain two files
+		while (controller.fileInfoList.size() != 2) {
+			// Test will time out if list will not contain zero files
+		}
+		
+		String actualResponse = controller.getInfo(0);
+		String expectedResponse = 
+				"all "+System.currentTimeMillis() / 1000L+" 2\n"
+				+ "del e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855 0 "+testDirectory+"temp/temp.txt\n"
+				+ "add e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855 0 "+testDirectory+"temp/temp.txt\n";
+		
+		assertEquals(expectedResponse,actualResponse);
 	}
 	
 	private void cleanupTempFolder() {
