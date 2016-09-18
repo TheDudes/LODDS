@@ -53,14 +53,15 @@ public class BroadcastListenerThread extends Thread {
 						user.setLoad(brInfo.load);
 						user.setUserName(brInfo.name);
 						user.setLastUpdate(brInfo.timestamp);
+						user.setLastReceivedBroadcast(brInfo.timestamp);
 						written = true;
 						break;
 					}
 					continue;
 				}
 				if (written == false) {
-					userInfo = new UserInfo(inetAddress, brInfo.ipPort,
-							brInfo.name, brInfo.timestamp, brInfo.load, new Vector<RemoteFileInfo>());
+					userInfo = new UserInfo(inetAddress, brInfo.ipPort, brInfo.name, brInfo.timestamp,
+							brInfo.load, new Vector<RemoteFileInfo>(), brInfo.timestamp);
 					loddsObject.getUsers().add(userInfo);	
 				}
 			} catch (UnknownHostException e) {
