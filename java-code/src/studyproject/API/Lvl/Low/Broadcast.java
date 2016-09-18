@@ -179,8 +179,8 @@ public class Broadcast {
 	 * @return
 	 * 			0 or an error value
 	 */	
-	public static int readAdvertise(String broadcastAddress, BroadcastInfo broadcastInfo){
-		try(DatagramSocket socket = new DatagramSocket(broadcastPort, InetAddress.getByName(broadcastAddress))){
+	public static int readAdvertise(String localIPAddress, BroadcastInfo broadcastInfo){
+		try(DatagramSocket socket = new DatagramSocket(broadcastPort, InetAddress.getByName(localIPAddress))){
 			DatagramPacket packet = new DatagramPacket(new byte[buffersize], buffersize);
 			socket.receive(packet);
 			int index = 0;
