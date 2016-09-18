@@ -38,4 +38,9 @@
    #:get-interface-info
    #:get-broadcast-address
    #:get-ip-address
-   #:start-listening))
+   ;; lodds-server and his methods
+   #:lodds-server
+   #:switch-interface
+   #:start-listening
+   #:stop-listening
+   #:remove-clients))
