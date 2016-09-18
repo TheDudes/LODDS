@@ -7,6 +7,7 @@ import java.util.Vector;
 
 import studyproject.API.Core.File.FileAction;
 import studyproject.API.Core.File.FileHasher;
+import studyproject.API.Lvl.Low.Broadcast;
 import studyproject.API.Lvl.Mid.Core.ConnectionInfo;
 import studyproject.API.Lvl.Mid.Core.FileChange;
 import studyproject.API.Lvl.Mid.Core.RemoteFileInfo;
@@ -23,13 +24,30 @@ public class LODDS {
 	private String interfaceName;
 	private int advertisePort;
 	private int listenPort;
-	@SuppressWarnings("unused")
 	private String userName;
+	private BroadcastSenderThread broadcastSender;
+	private String broadcastAddress;
+	private String networkAddress;
+	private int ipPort;
+	private int timeInterval = 1000;
 
 	public void startAdvertising(){
+		if(broadcastAddress == null || networkAddress == null){
+			StringBuilder broadcastAddr = new StringBuilder();
+			Broadcast.getBroadcastAddress(interfaceName, broadcastAddr);
+			broadcastAddress = broadcastAddr.toString();
+			StringBuilder networkAddr = new StringBuilder();
+			Broadcast.getLocalIp(interfaceName, broadcastAddr);
+			networkAddress = networkAddr.toString();
+		}
+		broadcastSender = new BroadcastSenderThread(broadcastAddress, networkAddress, ipPort,
+				userName, this, timeInterval);
+		broadcastSender.run();
 	}
 	
 	public void stopAdvertising(){
+		broadcastSender.interrupt();
+		broadcastSender = null;
 	}
 	
 	public void startListening(){
