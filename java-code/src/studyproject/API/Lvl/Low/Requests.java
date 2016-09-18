@@ -32,6 +32,7 @@ public class Requests {
 	public static int getInfo(BufferedOutputStream socketStream, long timestamp) {
 		try {
 			socketStream.write((GET_INFO_UP + timestamp + "\n").getBytes());
+			socketStream.flush();
 		} catch (IOException e) {
 			return 1;
 		}
@@ -62,6 +63,7 @@ public class Requests {
 	public static int getFile(BufferedOutputStream socketStream, String checksum, long startIndex, long endIndex) {
 		try {
 			socketStream.write((GET_FILE + checksum + " " + startIndex + " " + endIndex + "\n").getBytes());
+			socketStream.flush();
 		} catch (IOException e) {
 			return 1;
 		}
@@ -90,6 +92,7 @@ public class Requests {
 	public static int getSendPermission(BufferedOutputStream socketStream, long size, long timeout, String fileName) {
 		try {
 			socketStream.write((GET_SEND_PERMISSION + size + " " + timeout + " " + fileName + "\n").getBytes());
+			socketStream.flush();
 		} catch (IOException e) {
 			return 1;
 		}
