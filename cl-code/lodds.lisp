@@ -38,47 +38,61 @@
                       (gethash :broadcast-port ht) 9002)
                 ht)
     :accessor :config
-    :documentation "configuration and values")
+    :documentation "lodds server configuration. do not edit these by
+                   hand. these will be updated by methods.")
    (lock
     :initform (bt:make-recursive-lock "lodds-server-lock")
     :accessor :lock
-    :documentation "lock to access the member variables")
+    :documentation "lock to access the member variables. this lock has
+                   to be set if a instance of this class is accessed.")
    (interface
     :initform nil
     :accessor :interface
-    :documentation "currently selected interface, get a list with
-                    'get-interfaces'. switch interface with 'switch-interface'")
+    :documentation "currently selected interface. To get a list of
+                   available interface use GET-INTERFACES. Use
+                   SWITCH-INTERFACE to change, or set, the
+                   interface.")
    (broadcast-listener
     :initform nil
     :accessor :broadcast-listener
-    :documentation "broadcast-listener server object which handles
-                    advertisements of other clients.")
+    :documentation "BROADCAST-LISTENER server object. If this member
+                    variable is nil the Server is not listening to
+                    broadcast messages of other clients. Use
+                    START-LISTEINING and STOP-LISTENING and do not set
+                    this member by hand, since its spawning a thread
+                    and manipulating the CLIENT member.")
    (broadcast-advertiser
     :initform nil
     :accessor :broadcast-advertiser
-    :documentation "broadcast-advertiser broadcasts information to
-                    other clients")
+    :documentation "BROADCAST-ADVERTISER broadcasts information to
+                    other clients. TODO implement")
    (clients
     :initform nil
     :accessor :clients
-    :documentation "hashtable containing all clients which broadcasted themselves")))
+    :documentation "hashtable containing all clients which their
+                   broadcast information. This table is updated by
+                   BROADCAST-LISTENER.
+                   TODO: implement something to retrieve a copy.")))
 
 (defgeneric switch-interface (server interface)
-  (:documentation "Switch interface and set addresses accordingly"))
+  (:documentation
+   "Switch server interface and set addresses accordingly. Interface
+    is a string, to retrieve a list of available interfaces use
+    GET-INTERFACES."))
 
 (defgeneric start-listening (server)
   (:documentation
-   "will start listening for broadcast messages of other clients,
+   "Will start listening for broadcast messages of other clients,
    it will spawn a seperate thread which updates a hashtable inside
    server (accessable through :clients)."))
 
 (defgeneric stop-listening (server)
   (:documentation
-   "stops the given server from listening on broadcast address."))
+   "Stops the given server from listening on broadcast address."))
 
 (defgeneric remove-clients (server inactive-time)
   (:documentation
-   "removes all clients which are longer inactive then 'inactive-time'"))
+   "removes all clients which a longer inactive then INACTIVE-TIME"))
 
 (defmethod switch-interface ((server lodds-server) (interface string))
   (let ((interface-info (get-interface-info interface)))
@@ -99,7 +113,8 @@
       interface)))
 
 (defun broadcast-listener (buffer server)
-  "handles broadcast received messages"
+  "handles broadcast received messages. This function is a callback
+  for the BROADCAST-LISTENER. It is set by START-LISTENING"
   (format t "broadcast: ~a ~a~%"
           (get-timestamp)
           (flexi-streams:octets-to-string buffer))
