@@ -69,7 +69,7 @@
     :documentation "BROADCAST-ADVERTISER broadcasts information to
                     other clients. TODO implement")
    (clients
-    :initform nil
+    :initform (make-hash-table :test #'equalp)
     :accessor :clients
     :documentation "hashtable containing all clients which their
                    broadcast information. This table is updated by
@@ -167,8 +167,7 @@
     (if (not (null (:broadcast-listener server)))
         ;; TODO: error message or something here
         (format t "broadcast listener already running.~%")
-        (setf (:clients server) (make-hash-table :test #'equalp)
-              (:broadcast-listener server)
+        (setf (:broadcast-listener server)
               (usocket:socket-server
                (gethash :broadcast-address (:config server))
                (gethash :broadcast-port (:config server))
