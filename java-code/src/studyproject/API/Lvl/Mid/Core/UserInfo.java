@@ -23,6 +23,7 @@ public class UserInfo {
 		this.load = load;
 		this.fileList = fileList;
 		this.setFileListTimestamp(0);
+		lastReceivedBroadcast = 0;
 	}
 	
 	public UserInfo(InetAddress ipAddress, int port, String userName, long lastUpdate, long load,
