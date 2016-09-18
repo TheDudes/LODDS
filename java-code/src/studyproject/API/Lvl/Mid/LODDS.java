@@ -15,6 +15,9 @@ import studyproject.API.Lvl.Mid.Core.UserInfo;
 
 public class LODDS {
 	
+	private final int defaultIpPort = 9002;
+	private final int defaultAdvertisePort = 9002;
+	
 	private long lastChange;
 	private Vector<FileChange> localFileChanges;
 	private Vector<UserInfo> clientList;
@@ -26,23 +29,31 @@ public class LODDS {
 	private int listenPort;
 	private String userName;
 	private BroadcastSenderThread broadcastSender;
+	private BroadcastListenerThread broadcastListener;
 	private String broadcastAddress;
 	private String networkAddress;
 	private int ipPort;
 	private int timeInterval = 1000;
+	
+	public LODDS(String interfaceName, String userName){
+		localFileChanges = new Vector<FileChange>();
+		clientList = new Vector<UserInfo>();
+		availableFiles = new Vector<RemoteFileInfo>();
+		sharedFolders = new Vector<String>();
+		ipPort = defaultIpPort;
+		advertisePort = defaultAdvertisePort;
+		this.interfaceName = interfaceName;
+		setNetworkAddresses();
+		this.userName = userName;
+		load = 0;
+	}
 
 	public void startAdvertising(){
 		if(broadcastAddress == null || networkAddress == null){
-			StringBuilder broadcastAddr = new StringBuilder();
-			Broadcast.getBroadcastAddress(interfaceName, broadcastAddr);
-			broadcastAddress = broadcastAddr.toString();
-			StringBuilder networkAddr = new StringBuilder();
-			Broadcast.getLocalIp(interfaceName, broadcastAddr);
-			networkAddress = networkAddr.toString();
+			setNetworkAddresses();
 		}
-		broadcastSender = new BroadcastSenderThread(broadcastAddress, networkAddress, ipPort,
-				userName, this, timeInterval);
-		broadcastSender.run();
+		broadcastSender = new BroadcastSenderThread(this);
+		broadcastSender.start();
 	}
 	
 	public void stopAdvertising(){
@@ -51,6 +62,8 @@ public class LODDS {
 	}
 	
 	public void startListening(){
+		broadcastListener = new BroadcastListenerThread(this);
+		broadcastListener.start();
 	}
 	
 	public void stopListening(){
@@ -59,13 +72,13 @@ public class LODDS {
 	public void getFile(String user, String checksum, String localPath, int startIndex, int endIndex){
 		FileConnectionThread fileConnectionThread = new FileConnectionThread(getUserConnectionInfo(user),
 				checksum, getFileSize(checksum), localPath, startIndex, endIndex);
-		fileConnectionThread.run();
+		fileConnectionThread.start();
 	}
 	
 	public void getFile(String user, String checksum, String localPath){
 		FileConnectionThread fileConnectionThread = new FileConnectionThread(getUserConnectionInfo(user),
 				checksum, getFileSize(checksum), localPath);
-		fileConnectionThread.run();
+		fileConnectionThread.start();
 	}
 	
 	public UserInfo getUserConnectionInfo(String user){
@@ -143,6 +156,7 @@ public class LODDS {
 	
 	public void setInterface(String interfaceName){
 		this.interfaceName = interfaceName;
+		setNetworkAddresses();
 	}
 	
 	public String getInterface(){
@@ -197,6 +211,26 @@ public class LODDS {
 		this.load = load;
 	}
 	
+	public String getBroadcastAddress() {
+		return broadcastAddress;
+	}
+
+	public String getUserName() {
+		return userName;
+	}
+
+	public String getNetworkAddress() {
+		return networkAddress;
+	}
+
+	public int getIpPort() {
+		return ipPort;
+	}
+
+	public int getTimeInterval() {
+		return timeInterval;
+	}
+	
 	private long getFileSize(String checksum){
 		for(RemoteFileInfo fileInfo: availableFiles){
 			if(fileInfo.getChecksum().equals(checksum)){
@@ -206,4 +240,13 @@ public class LODDS {
 		return 0;
 	}
 	
+	private void setNetworkAddresses(){
+		StringBuilder broadcastAddr = new StringBuilder();
+		Broadcast.getBroadcastAddress(interfaceName, broadcastAddr);
+		broadcastAddress = broadcastAddr.toString();
+		StringBuilder networkAddr = new StringBuilder();
+		Broadcast.getLocalIp(interfaceName, networkAddr);
+		networkAddress = networkAddr.toString();
+	}
+
 }
