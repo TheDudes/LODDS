@@ -42,7 +42,8 @@ public class RequestHandler {
 	 */
 	public static int parseRequest(InputStream socketStream, RequestContainer request){
 		String currentLine;
-		try(BufferedReader reader = new BufferedReader(new InputStreamReader(socketStream))){
+		try{
+			BufferedReader reader = new BufferedReader(new InputStreamReader(socketStream));
 			currentLine = reader.readLine();
 			if(currentLine != null){
 				if(Pattern.matches(GET_INFO_REGEX, currentLine)){
