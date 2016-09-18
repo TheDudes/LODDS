@@ -70,7 +70,7 @@ public class LODDS {
 		broadcastListener.setStopThread(true);
 	}
 	
-	public void getFile(String user, String checksum, String localPath, int startIndex, int endIndex){
+	public void getFile(String user, String checksum, String localPath, long startIndex, long endIndex){
 		FileConnectionThread fileConnectionThread = new FileConnectionThread(getUserConnectionInfo(user),
 				checksum, getFileSize(checksum), localPath, startIndex, endIndex);
 		fileConnectionThread.start();
