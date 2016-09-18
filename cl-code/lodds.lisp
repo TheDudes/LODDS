@@ -167,15 +167,20 @@
     (if (not (null (:broadcast-listener server)))
         ;; TODO: error message or something here
         (format t "broadcast listener already running.~%")
-        (setf (:broadcast-listener server)
-              (usocket:socket-server
-               (gethash :broadcast-address (:config server))
-               (gethash :broadcast-port (:config server))
-               (lambda (buffer)
-                 (broadcast-listener buffer server))
-               nil
-               :in-new-thread t
-               :protocol :datagram)))))
+        (let ((server-config (:config server)))
+          (if (or (null (gethash :broadcast-ip server-config))
+                  (null (gethash :broadcast-port server-config)))
+              ;; TODO: implement error handling here.
+              (format t "error: broadcast ip or port not set!~%")
+              (setf (:broadcast-listener server)
+                    (usocket:socket-server
+                     (gethash :broadcast-address (:config server))
+                     (gethash :broadcast-port (:config server))
+                     (lambda (buffer)
+                       (broadcast-listener buffer server))
+                     nil
+                     :in-new-thread t
+                     :protocol :datagram)))))))
 
 (defmethod stop-listening ((server lodds-server))
   (bt:with-recursive-lock-held ((:lock server))
