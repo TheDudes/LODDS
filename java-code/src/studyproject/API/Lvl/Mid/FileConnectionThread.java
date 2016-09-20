@@ -11,6 +11,15 @@ import studyproject.API.Lvl.Low.Handles;
 import studyproject.API.Lvl.Low.Requests;
 import studyproject.API.Lvl.Mid.Core.UserInfo;
 
+/**
+ * Thread to get a file from another client
+ * After creating a new instance of this class call
+ * start() and the file specified in the constructor
+ * will be transmitted in the way specified in the
+ * specification
+ * @author Michael
+ *
+ */
 public class FileConnectionThread extends Thread {
 
 	private UserInfo user;
@@ -20,6 +29,23 @@ public class FileConnectionThread extends Thread {
 	private long startIndex = 0;
 	private long endIndex = 0;
 	
+	/**
+	 * Use this constructor if you want to pull the whole file,
+	 * if you only want to pull part of a file use the constructor
+	 * with start and endIndex
+	 * 
+	 * @param user
+	 * 			the user from which to pull the file
+	 * 
+	 * @param checksum
+	 * 			the checksum of the file that should be pulled
+	 * 
+	 * @param size
+	 * 			the size of the file that should be pulled
+	 * 
+	 * @param localPath
+	 * 			the complete path on which the file should be saved
+	 */
 	public FileConnectionThread(UserInfo user, String checksum, long size, String localPath){
 		this.user = user;
 		this.checksum = checksum;
@@ -27,6 +53,29 @@ public class FileConnectionThread extends Thread {
 		this.size = size;
 	}
 	
+	/**
+	 * 
+	 * This constructor is used if you only want to pull a part
+	 * of the file, the part is specified by the start and endIndex
+	 * 
+	 * @param user
+	 * 			the user from which to pull the file
+	 * 
+	 * @param checksum
+	 * 			the checksum of the file that should be pulled
+	 * 
+	 * @param size
+	 * 			the size of the file that should be pulled
+	 * 
+	 * @param localPath
+	 * 			the complete path on which the file should be saved
+	 * 
+	 * @param startIndex
+	 * 			the index from which to start the transmission
+	 * 
+	 * @param endIndex
+	 * 			the index on which to end the transmission
+	 */
 	public FileConnectionThread(UserInfo user, String checksum, long size, String localPath, long startIndex,
 			long endIndex){
 		this.user = user;
@@ -38,6 +87,9 @@ public class FileConnectionThread extends Thread {
 	}
 	
 	@Override
+	/**
+	 * starts pulling the file with the parameters set in the constructor
+	 */
 	public void run() {
 		int returnValue;
 		try(Socket socket = new Socket(user.getIpAddress(), user.getPort());
