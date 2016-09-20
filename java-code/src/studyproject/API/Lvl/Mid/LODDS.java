@@ -14,11 +14,21 @@ import studyproject.API.Lvl.Mid.Core.FileChange;
 import studyproject.API.Lvl.Mid.Core.RemoteFileInfo;
 import studyproject.API.Lvl.Mid.Core.UserInfo;
 
+/**
+ * Main class of the Mid-level API implementation of the
+ * LODDS protocol
+ * Default IP port: 9002
+ * Default advertise port: 9002
+ * Default interval between broadcasts: 1000ms
+ * @author Michael
+ *
+ */
 public class LODDS {
-	
-	private final int defaultIpPort = 9002;
-	private final int defaultAdvertisePort = 9002;
-	
+
+	private final int DEFAULT_IP_PORT = 9002;
+	private final int DEFAULT_ADVERTISE_PORT = 9002;
+	private final int DEFAULT_TIME_INTERVAL = 1000;
+
 	private long lastChange;
 	private Vector<FileChange> localFileChanges;
 	private Vector<UserInfo> clientList;
@@ -34,21 +44,40 @@ public class LODDS {
 	private String broadcastAddress;
 	private String networkAddress;
 	private int ipPort;
-	private int timeInterval = 1000;
-	
+	private int timeInterval;
+
+	/**
+	 * Initiates all lists and maps, retrieves the local and broadcast IP from the
+	 * interface name and sets the IP and advertise ports to the default (9002)
+	 * Also sets the interval between broadcasts to 1000
+	 * 
+	 * @param interfaceName
+	 * 			the name of the interface the client should use to
+	 * 			communicate with the network
+	 * 
+	 * @param userName
+	 * 			the name under which this client will appear to other
+	 * 			clients
+	 */
 	public LODDS(String interfaceName, String userName){
 		localFileChanges = new Vector<FileChange>();
 		clientList = new Vector<UserInfo>();
 		availableFiles = new ConcurrentHashMap<String, RemoteFileInfo>();
 		sharedFolders = new Vector<String>();
-		ipPort = defaultIpPort;
-		advertisePort = defaultAdvertisePort;
+		ipPort = DEFAULT_IP_PORT;
+		advertisePort = DEFAULT_ADVERTISE_PORT;
+		timeInterval = DEFAULT_TIME_INTERVAL;
 		this.interfaceName = interfaceName;
 		setNetworkAddresses();
 		this.userName = userName;
 		load = 0;
 	}
 
+	/**
+	 * creates a BroadcastSenderThread and starts it.
+	 * time between broadcasts is the value of LODDS.getTimeInterval
+	 * this interval can be changed on the fly
+	 */
 	public void startAdvertising(){
 		if(broadcastAddress == null || networkAddress == null){
 			setNetworkAddresses();
@@ -56,33 +85,94 @@ public class LODDS {
 		broadcastSender = new BroadcastSenderThread(this);
 		broadcastSender.start();
 	}
-	
+
+	/**
+	 * sends an interrupt to the BroadcastSenderThread which prompts it
+	 * to stop advertising
+	 */
 	public void stopAdvertising(){
 		broadcastSender.interrupt();
 		broadcastSender = null;
 	}
-	
+
+	/**
+	 * creates a new BroadcastListenerThread and starts it
+	 */
 	public void startListening(){
 		broadcastListener = new BroadcastListenerThread(this);
 		broadcastListener.start();
 	}
-	
+
+	/**
+	 * sets the stopThread variable in the BroadcastListener to true
+	 * which prompts the Thread to stop listening
+	 */
 	public void stopListening(){
 		broadcastListener.setStopThread(true);
 	}
-	
+
+	/**
+	 * get a whole or parts of a file from another user
+	 * Starts a FileConnectionThread and starts it, the thread does
+	 * all the work
+	 * 
+	 * @param user
+	 * 			the user from which to get the file from
+	 * 
+	 * @param checksum
+	 * 			the checksum of the file
+	 * 
+	 * @param localPath
+	 * 			the complete path under which the file should be saved
+	 * 
+	 * @param startIndex
+	 * 			the index from which to begin the file transfer
+	 * 
+	 * @param endIndex
+	 * 			the index at which to stop the file transfer
+	 */
 	public void getFile(String user, String checksum, String localPath, long startIndex, long endIndex){
 		FileConnectionThread fileConnectionThread = new FileConnectionThread(getUserConnectionInfo(user),
 				checksum, getFileSize(checksum), localPath, startIndex, endIndex);
+		//TODO set outstanding bytes on outgoing connection?
 		fileConnectionThread.start();
 	}
-	
+
+	/**
+	 * get a whole file from another user
+	 * Uses the getFile() method of this class with start and endIndex
+	 * 
+	 * @param user
+	 * 			the user from which to get the file from
+	 * 
+	 * @param checksum
+	 * 			the checksum of the file
+	 * 
+	 * @param localPath
+	 * 			the complete path under which the file should be saved
+	 * 
+	 * @param startIndex
+	 * 			the index from which to begin the file transfer
+	 * 
+	 * @param endIndex
+	 * 			the index at which to stop the file transfer
+	 */
 	public void getFile(String user, String checksum, String localPath){
 		FileConnectionThread fileConnectionThread = new FileConnectionThread(getUserConnectionInfo(user),
 				checksum, getFileSize(checksum), localPath);
 		fileConnectionThread.start();
 	}
-	
+
+	/**
+	 * get the information necessary to connect to another user,
+	 * this means IP address and port
+	 * 
+	 * @param user
+	 * 			the name of the user
+	 * 
+	 * @return
+	 * 			UserInfo that contains information about the IP and port of the user
+	 */
 	public UserInfo getUserConnectionInfo(String user){
 		for(UserInfo currentUser: clientList){
 			if(currentUser.getUserName().equals(user));
@@ -90,7 +180,16 @@ public class LODDS {
 		}
 		return null;
 	}
-	
+
+	/**
+	 * Make a folder and its contents available to other clients
+	 * 
+	 * @param path
+	 * 			the path to the folder
+	 * 
+	 * @return
+	 * 			0 or error codes
+	 */
 	public int shareFolder(String path){
 		if(Files.exists(Paths.get(path)) && Files.isDirectory(Paths.get(path)) && ! sharedFolders.contains(path)){
 			sharedFolders.add(path);
@@ -114,7 +213,17 @@ public class LODDS {
 		}
 		return 4;
 	}
-	
+
+	/**
+	 * removes a folder and its contents from the list of files other clients
+	 * can get from this client
+	 * 
+	 * @param path
+	 * 			the path of the folder
+	 * 
+	 * @return
+	 * 			0 or error codes
+	 */
 	public int unshareFolder(String path){
 		if(sharedFolders.contains(path)){
 			sharedFolders.remove(path);
@@ -129,7 +238,13 @@ public class LODDS {
 		}
 		return 4;
 	}
-	
+
+	/**
+	 * get a list of all folders this client shares
+	 * 
+	 * @return
+	 * 			list of all folders this client shares
+	 */
 	public Vector<String> getSharedFolders(){
 		return sharedFolders;
 	}
@@ -151,88 +266,157 @@ public class LODDS {
 		}
 		return fileChanges;
 	}
-	
+
+	/**
+	 * 
+	 * @return
+	 * 			a list with all known other clients
+	 */
 	public Vector<UserInfo> getUsers(){
 		return clientList;
 	}
-	
+
+	/**
+	 * 
+	 * @param interfaceName
+	 * 			the interface that should be used to communicate with the network
+	 */
 	public void setInterface(String interfaceName){
 		this.interfaceName = interfaceName;
 		setNetworkAddresses();
 	}
-	
+
+	/**
+	 * 
+	 * @return
+	 * 			the name of the interface currently used to communicate with the network
+	 */
 	public String getInterface(){
 		return interfaceName;
 	}
-	
+
+	/**
+	 * 
+	 * @param port
+	 * 			the port that broadcasts are sent to/retrieved from
+	 */
 	public void setAdvertisePort(int port){
 		this.advertisePort = port;
 	}
-	
+
+	/**
+	 * 
+	 * @return
+	 * 			the port used to broadcast to/retrieve broadcasts from
+	 */
 	public int getAdvertisePort(){
 		return advertisePort;
 	}
-	
+
+	/**
+	 * 
+	 * @param port
+	 * 			the port this client should listen to incoming IP connections on
+	 */
 	public void setListenPort(int port){
 		this.listenPort = port;
 	}
-	
+
+	/**
+	 * 
+	 * @return
+	 * 			the port currently used by this client for incoming IP connections
+	 */
 	public int getListenPort(){
 		return listenPort;
 	}
-	
+
+	/**
+	 * 
+	 * @param userName
+	 * 			the name this client should be displayed as on other clients
+	 */
 	public void setUserName(String userName){
 		this.userName = userName;
 	}
 
 	/**
-	 * @return the lastChange
+	 * @return
+	 * 			the time stamp of the last change in the file system of this client
 	 */
 	public long getLastChange() {
 		return lastChange;
 	}
 
 	/**
-	 * @param lastChange the lastChange to set
+	 * @param lastChange
+	 * 			the time stamp of the last change in the file system of this client
 	 */
 	public void setLastChange(long lastChange) {
 		this.lastChange = lastChange;
 	}
 
 	/**
-	 * @return the load
+	 * @return
+	 * 			the number of bytes that this client still has to send
 	 */
 	public long getLoad() {
 		return load;
 	}
 
 	/**
-	 * @param load the load to set
+	 * @param load
+	 * 			the number of bytes that this client still has to send
 	 */
 	public void setLoad(long load) {
 		this.load = load;
 	}
-	
+
+	/**
+	 * 
+	 * @return
+	 * 			the IP address to which this client should send broadcasts to
+	 */
 	public String getBroadcastAddress() {
 		return broadcastAddress;
 	}
 
+	/**
+	 * 
+	 * @return
+	 * 			the name that this client is currently know as in the network
+	 */
 	public String getUserName() {
 		return userName;
 	}
 
+	/**
+	 * 
+	 * @return
+	 * 			the IP address of the interface used by this client to communicate with the network
+	 */
 	public String getNetworkAddress() {
 		return networkAddress;
 	}
 
+	/**
+	 * 
+	 * @return
+	 * 			the port used to listen to incoming IP connections
+	 */
 	public int getIpPort() {
 		return ipPort;
 	}
 
+	/**
+	 * 
+	 * @return
+	 * 			the interval between broadcasts from this client
+	 */
 	public int getTimeInterval() {
 		return timeInterval;
 	}
-	
+
 	private long getFileSize(String checksum){
 		if(availableFiles.containsKey(checksum)){
 			return availableFiles.get(checksum).getSize();
