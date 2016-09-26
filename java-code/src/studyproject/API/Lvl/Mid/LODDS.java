@@ -133,7 +133,7 @@ public class LODDS {
 	 */
 	public void getFile(String user, String checksum, String localPath, long startIndex, long endIndex){
 		FileConnectionThread fileConnectionThread = new FileConnectionThread(getUserConnectionInfo(user),
-				checksum, getFileSize(checksum), localPath, startIndex, endIndex);
+				checksum, getFileSize(checksum), localPath, startIndex, endIndex, this);
 		//TODO set outstanding bytes on outgoing connection?
 		fileConnectionThread.start();
 	}
@@ -159,7 +159,7 @@ public class LODDS {
 	 */
 	public void getFile(String user, String checksum, String localPath){
 		FileConnectionThread fileConnectionThread = new FileConnectionThread(getUserConnectionInfo(user),
-				checksum, getFileSize(checksum), localPath);
+				checksum, getFileSize(checksum), localPath, this);
 		fileConnectionThread.start();
 	}
 
@@ -291,7 +291,7 @@ public class LODDS {
 	 * @return
 	 * 			the name of the interface currently used to communicate with the network
 	 */
-	public String getInterface(){
+	public synchronized String getInterface(){
 		return interfaceName;
 	}
 
@@ -300,7 +300,7 @@ public class LODDS {
 	 * @param port
 	 * 			the port that broadcasts are sent to/retrieved from
 	 */
-	public void setAdvertisePort(int port){
+	public synchronized void setAdvertisePort(int port){
 		this.advertisePort = port;
 	}
 
@@ -309,7 +309,7 @@ public class LODDS {
 	 * @return
 	 * 			the port used to broadcast to/retrieve broadcasts from
 	 */
-	public int getAdvertisePort(){
+	public synchronized int getAdvertisePort(){
 		return advertisePort;
 	}
 
@@ -318,7 +318,7 @@ public class LODDS {
 	 * @param port
 	 * 			the port this client should listen to incoming IP connections on
 	 */
-	public void setListenPort(int port){
+	public synchronized void setListenPort(int port){
 		this.listenPort = port;
 	}
 
@@ -327,7 +327,7 @@ public class LODDS {
 	 * @return
 	 * 			the port currently used by this client for incoming IP connections
 	 */
-	public int getListenPort(){
+	public synchronized int getListenPort(){
 		return listenPort;
 	}
 
@@ -344,7 +344,7 @@ public class LODDS {
 	 * @return
 	 * 			the time stamp of the last change in the file system of this client
 	 */
-	public long getLastChange() {
+	public synchronized long getLastChange() {
 		return lastChange;
 	}
 
@@ -352,7 +352,7 @@ public class LODDS {
 	 * @param lastChange
 	 * 			the time stamp of the last change in the file system of this client
 	 */
-	public void setLastChange(long lastChange) {
+	public synchronized void setLastChange(long lastChange) {
 		this.lastChange = lastChange;
 	}
 
@@ -360,7 +360,7 @@ public class LODDS {
 	 * @return
 	 * 			the number of bytes that this client still has to send
 	 */
-	public long getLoad() {
+	public synchronized long getLoad() {
 		return load;
 	}
 
@@ -368,8 +368,27 @@ public class LODDS {
 	 * @param load
 	 * 			the number of bytes that this client still has to send
 	 */
-	public void setLoad(long load) {
+	@Deprecated
+	public synchronized void setLoad(long load) {
 		this.load = load;
+	}
+
+	/**
+	 * @param load
+	 * 			the number of bytes that should be added to the current load
+	 */
+	public synchronized void incrementLoad(long load) {
+		this.load += load;
+	}
+
+	/**
+	 * @param load
+	 * 			the number of bytes that should be subtracted from the current load
+	 */
+	public synchronized void decrementLoad(long load) {
+		if(this.load >= load){
+			this.load =- load;
+		}
 	}
 
 	/**
@@ -377,7 +396,7 @@ public class LODDS {
 	 * @return
 	 * 			the IP address to which this client should send broadcasts to
 	 */
-	public String getBroadcastAddress() {
+	public synchronized String getBroadcastAddress() {
 		return broadcastAddress;
 	}
 
@@ -386,7 +405,7 @@ public class LODDS {
 	 * @return
 	 * 			the name that this client is currently know as in the network
 	 */
-	public String getUserName() {
+	public synchronized String getUserName() {
 		return userName;
 	}
 
@@ -395,7 +414,7 @@ public class LODDS {
 	 * @return
 	 * 			the IP address of the interface used by this client to communicate with the network
 	 */
-	public String getNetworkAddress() {
+	public synchronized String getNetworkAddress() {
 		return networkAddress;
 	}
 
@@ -404,7 +423,7 @@ public class LODDS {
 	 * @return
 	 * 			the port used to listen to incoming IP connections
 	 */
-	public int getIpPort() {
+	public synchronized int getIpPort() {
 		return ipPort;
 	}
 
@@ -413,7 +432,7 @@ public class LODDS {
 	 * @return
 	 * 			the interval between broadcasts from this client
 	 */
-	public int getTimeInterval() {
+	public synchronized int getTimeInterval() {
 		return timeInterval;
 	}
 
