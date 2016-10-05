@@ -36,7 +36,8 @@
                       (gethash :listening-ip ht) nil
                       (gethash :listening-port ht) 4567
                       (gethash :broadcast-ip ht) nil
-                      (gethash :broadcast-port ht) 9002)
+                      (gethash :broadcast-port ht) 9002
+                      (gethash :client-timeout ht) 5)
                 ht)
     :accessor :config
     :documentation "lodds server configuration. do not edit these by
@@ -203,8 +204,17 @@
     (unless (eql error 0)
       (format t "TODO: remove me: ERROR from read-advertise != 0~%"))
     (bt:with-recursive-lock-held ((:lock server))
-      (setf (gethash (car (last result)) (:clients server))
-            (cons (get-timestamp) result))
+      (let ((current-time (get-timestamp))
+            (clients (:clients server)))
+        ;; remove all clients older then :client-timeout
+        (maphash (lambda (key val)
+                   (when (> (- current-time (car val))
+                            (gethash :client-timeout (:config server)))
+                     (remhash key clients)))
+                 clients)
+        ;; add client
+        (setf (gethash (car (last result)) (:clients server))
+              (cons current-time result)))
       ;; TODO: removing this nil is causing a error, i have no idea why :(
       nil)))
 
