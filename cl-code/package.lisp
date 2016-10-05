@@ -49,4 +49,5 @@
    #:stop-listening
    #:remove-clients
    #:start-advertising
-   #:stop-advertising))
+   #:stop-advertising
+   #:get-user-info))

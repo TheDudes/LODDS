@@ -153,6 +153,19 @@
   (:documentation
    "Stop advertising information about server."))
 
+(defgeneric get-user-info (server)
+  (:documentation
+   "Returns List with information about an given user.
+
+    CL-USER> (get-user-info *lodds-server* \"someUser\")
+    => (1475670931 #(172 19 246 14) 4567 0 0 \"someUser\")
+
+    List contains timestamp-received, ip, port, timestamp-client,
+    load, name in that order. The first timestamp describes a local
+    timestamp when the message was received.
+
+    Returns nil if user is not found."))
+
 (defmethod switch-name ((server lodds-server) (name string))
   (bt:with-recursive-lock-held ((:lock server))
     ;; TODO: check for name errors
@@ -305,3 +318,7 @@
         ;; TODO: some error handling here
         (format t "advertising not running~%"))
     (setf (:broadcast-advertiser server) nil)))
+
+(defmethod get-user-info ((server lodds-server) (user string))
+  (bt:with-recursive-lock-held ((:lock server))
+    (gethash user (:clients server))))
