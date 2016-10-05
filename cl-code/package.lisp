@@ -50,4 +50,5 @@
    #:remove-clients
    #:start-advertising
    #:stop-advertising
+   #:get-user-list
    #:get-user-info))

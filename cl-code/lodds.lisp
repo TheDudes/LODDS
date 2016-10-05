@@ -153,9 +153,19 @@
   (:documentation
    "Stop advertising information about server."))
 
+(defgeneric get-user-list (server)
+  (:documentation
+   "Returns List of users who advertised themselfs.
+
+    CL-USER> (get-user-list *lodds-server*)
+    => (\"peter\" \"steve\" \"josh\")
+
+    Use GET-USER-INFO to get information about a user."))
+
 (defgeneric get-user-info (server)
   (:documentation
    "Returns List with information about an given user.
+    To get a list of available users see get-user-list.
 
     CL-USER> (get-user-info *lodds-server* \"someUser\")
     => (1475670931 #(172 19 246 14) 4567 0 0 \"someUser\")
@@ -318,6 +328,13 @@
         ;; TODO: some error handling here
         (format t "advertising not running~%"))
     (setf (:broadcast-advertiser server) nil)))
+
+
+(defmethod get-user-list ((server lodds-server))
+  (bt:with-recursive-lock-held ((:lock server))
+    (loop
+       :for key :being :the :hash-key :of (:clients server)
+       :collect key)))
 
 (defmethod get-user-info ((server lodds-server) (user string))
   (bt:with-recursive-lock-held ((:lock server))
