@@ -162,7 +162,7 @@
 
     Use GET-USER-INFO to get information about a user."))
 
-(defgeneric get-user-info (server)
+(defgeneric get-user-info (server user)
   (:documentation
    "Returns List with information about an given user.
     To get a list of available users see get-user-list.
