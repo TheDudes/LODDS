@@ -1,6 +1,7 @@
 package studyproject.API.Lvl.Mid;
 
 import studyproject.API.Lvl.Low.Broadcast;
+import studyproject.API.Lvl.Low.Load;
 
 /**
  * Thread that broadcasts the informations about this client
@@ -37,7 +38,7 @@ public class BroadcastSenderThread extends Thread {
 			try{
 				Broadcast.sendAdvertise(loddsObject.getBroadcastAddress(), loddsObject.getNetworkAddress(),
 						loddsObject.getIpPort(), loddsObject.getLastChange(),
-						loddsObject.getLoad(), loddsObject.getUserName());
+						Load.getCurrentLoad(), loddsObject.getUserName());
 				Thread.sleep(loddsObject.getTimeInterval());
 			} catch(InterruptedException e){
 				break;

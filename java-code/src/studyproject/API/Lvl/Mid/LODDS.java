@@ -34,7 +34,6 @@ public class LODDS {
 	private Vector<UserInfo> clientList;
 	private ConcurrentHashMap<String, RemoteFileInfo> availableFiles;
 	private Vector<String> sharedFolders; 
-	private long load;
 	private String interfaceName;
 	private int advertisePort;
 	private int listenPort;
@@ -70,7 +69,6 @@ public class LODDS {
 		this.interfaceName = interfaceName;
 		setNetworkAddresses();
 		this.userName = userName;
-		load = 0;
 	}
 
 	/**
@@ -133,7 +131,7 @@ public class LODDS {
 	 */
 	public void getFile(String user, String checksum, String localPath, long startIndex, long endIndex){
 		FileConnectionThread fileConnectionThread = new FileConnectionThread(getUserConnectionInfo(user),
-				checksum, getFileSize(checksum), localPath, startIndex, endIndex, this);
+				checksum, getFileSize(checksum), localPath, startIndex, endIndex);
 		//TODO set outstanding bytes on outgoing connection?
 		fileConnectionThread.start();
 	}
@@ -159,7 +157,7 @@ public class LODDS {
 	 */
 	public void getFile(String user, String checksum, String localPath){
 		FileConnectionThread fileConnectionThread = new FileConnectionThread(getUserConnectionInfo(user),
-				checksum, getFileSize(checksum), localPath, this);
+				checksum, getFileSize(checksum), localPath);
 		fileConnectionThread.start();
 	}
 
@@ -356,40 +354,6 @@ public class LODDS {
 		this.lastChange = lastChange;
 	}
 
-	/**
-	 * @return
-	 * 			the number of bytes that this client still has to send
-	 */
-	public synchronized long getLoad() {
-		return load;
-	}
-
-	/**
-	 * @param load
-	 * 			the number of bytes that this client still has to send
-	 */
-	@Deprecated
-	public synchronized void setLoad(long load) {
-		this.load = load;
-	}
-
-	/**
-	 * @param load
-	 * 			the number of bytes that should be added to the current load
-	 */
-	public synchronized void incrementLoad(long load) {
-		this.load += load;
-	}
-
-	/**
-	 * @param load
-	 * 			the number of bytes that should be subtracted from the current load
-	 */
-	public synchronized void decrementLoad(long load) {
-		if(this.load >= load){
-			this.load =- load;
-		}
-	}
 
 	/**
 	 * 

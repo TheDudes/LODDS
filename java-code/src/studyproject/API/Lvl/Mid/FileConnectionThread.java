@@ -26,7 +26,6 @@ public class FileConnectionThread extends Thread {
 	private String checksum;
 	private String localPath;
 	private long size;
-	private LODDS loddsObject;
 	private long startIndex = 0;
 	private long endIndex = 0;
 	
@@ -47,12 +46,11 @@ public class FileConnectionThread extends Thread {
 	 * @param localPath
 	 * 			the complete path on which the file should be saved
 	 */
-	public FileConnectionThread(UserInfo user, String checksum, long size, String localPath, LODDS loddsObject){
+	public FileConnectionThread(UserInfo user, String checksum, long size, String localPath){
 		this.user = user;
 		this.checksum = checksum;
 		this.localPath = localPath;
 		this.size = size;
-		this.loddsObject = loddsObject;
 	}
 	
 	/**
@@ -79,14 +77,13 @@ public class FileConnectionThread extends Thread {
 	 * 			the index on which to end the transmission
 	 */
 	public FileConnectionThread(UserInfo user, String checksum, long size, String localPath, long startIndex,
-			long endIndex, LODDS loddsObject){
+			long endIndex){
 		this.user = user;
 		this.checksum = checksum;
 		this.localPath = localPath;
 		this.startIndex = startIndex;
 		this.endIndex = endIndex;
 		this.size = size;
-		this.loddsObject = loddsObject;
 	}
 	
 	@Override
@@ -106,14 +103,10 @@ public class FileConnectionThread extends Thread {
 			}
 			if(returnValue != 0){
 				//TODO error handling
-			} else{
-				loddsObject.incrementLoad(size);
 			}
 			returnValue = Handles.handleFile(inStream, fileOutStream, endIndex - startIndex);
 			if(returnValue != 0){
 				//TODO error handling
-			} else {
-				loddsObject.decrementLoad(size);
 			}
 		} catch(IOException e){
 			//TODO error handling
