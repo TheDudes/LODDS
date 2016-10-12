@@ -17,6 +17,8 @@ import java.security.NoSuchAlgorithmException;
 
 import studyproject.API.Core.File.FileInfo;
 
+// TODO: Prevent multiple events
+
 /**
  * Watches a specific folder for changes and executes handlers for updating the list
  *
@@ -32,8 +34,6 @@ public class FileWatcher implements Runnable {
 		this.path = path;
 		this.watchForNewFiles = watchForNewFiles;
 		this.controller = controller;
-		
-		// System.out.println("FileWatcher started for: "+this.path);
 	}
 	
 	/**
@@ -52,74 +52,99 @@ public class FileWatcher implements Runnable {
 				dir.register(watcher, ENTRY_CREATE, ENTRY_DELETE, ENTRY_MODIFY);
 
 				while (true) {
-				    WatchKey key;
+
+				    
 				    try {
-				        // wait for a key to be available
-				        key = watcher.take();
-				    } catch (InterruptedException ex) {
-				        return;
-				    }
+						
+						
+					    WatchKey key;
+					    try {
+					        // wait for a key to be available
+					        key = watcher.take();
+					    } catch (InterruptedException ex) {
+					        return;
+					    }
+						
+						 for (WatchEvent<?> event : key.pollEvents()) {
+	
+						        // get event type
+						        WatchEvent.Kind<?> eventType = event.kind();
 
-				    for (WatchEvent<?> event : key.pollEvents()) {
-				        // get event type
-				        WatchEvent.Kind<?> eventType = event.kind();
+						        // get file name
+						        @SuppressWarnings("unchecked")
+						        WatchEvent<Path> ev = (WatchEvent<Path>) event;
+						        Path fileName = ev.context();
+						        
+						        System.out.println("FileWatcher: "+path);
+						        System.out.println(eventType.name() + ": " + fileName);
+						        
+						        // Check if file is in list
+						        FileWatcherController.semaphore.acquire();
+						        
+						        FileInfo fileFromList = controller.getWatchedFileFromList(path+"/"+fileName.toString());
+						        
+						        // New file was created -> Add to list
+						        if (watchForNewFiles && eventType == ENTRY_CREATE) {
+						        	
+						        	String fullFileName = path+"/"+fileName.toString();
+						        	File newFile = new File(fullFileName);
+						        	
+						        	if (newFile.isDirectory()) {
+						        		controller.watchDirectoryRecursively(fullFileName);
+						        	} else {
+						        		
+							        	if (fileFromList == null) {
+							        		controller.watchFile(path+"/"+fileName.toString(), false);
+							        	}
+						        	}
+						        }
+						        
+						        FileWatcherController.semaphore.release();
 
-				        // get file name
-				        @SuppressWarnings("unchecked")
-				        WatchEvent<Path> ev = (WatchEvent<Path>) event;
-				        Path fileName = ev.context();
-				        
-				        System.out.println(eventType.name() + ": " + fileName);
-				        
-				        // New file was created -> Add to list
-				        if (watchForNewFiles && eventType == ENTRY_CREATE) {
-				        	String fullFileName = path+"/"+fileName.toString();
-				        	File newFile = new File(fullFileName);
-				        	
-				        	if (newFile.isDirectory()) {
-				        		controller.watchDirectoryRecursively(fullFileName);
-				        	} else {
-				        		controller.watchFile(path+fileName.toString(), false);
-				        	}
-				        }
-  		        
-				        // Check if file is in list
-				        FileInfo fileFromList = controller.getWatchedFileFromList(path+"/"+fileName.toString());
-				        
-				        if (fileFromList != null) { // If file is in list
-				        	
-					        if (eventType == OVERFLOW) {
-					            
-					        	// DEL
-					        	controller.addDeletedFile(fileFromList);
-					        	
-					        } else if (eventType == ENTRY_DELETE) {
+						        if (fileFromList != null) { // If file is in list
+						        	
+							        if (eventType == OVERFLOW) {
+							            
+							        	// DEL
+							        	controller.deleteFileFromLists(fileFromList);
+							        	
+							        } else if (eventType == ENTRY_DELETE) {
 
-					        	// DEL
-					        	controller.addDeletedFile(fileFromList);
-					        	
+							        	// DEL
+							        	controller.deleteFileFromLists(fileFromList);
+							        	
 
-					        } else if (eventType == ENTRY_MODIFY) {
+							        } else if (eventType == ENTRY_MODIFY) {
 
-					            // DEL
-					        	controller.addDeletedFile(fileFromList);
-					        	
-					        	// ADD
-					        	controller.addNewFile(fileFromList.fileName);
+							            // DEL
+							        	controller.deleteFileFromLists(fileFromList);
+							        	
+							        	// ADD
+							        	//if (!controller.listContainsFileName(fileFromList.fileName)) {
+							        	//controller.addNewFile(fileFromList.fileName);
+							        	//}
 
-					        }
-				        } else {
-				        	// System.out.println("File not in list: "+fileName.toString());
-				        }
-				        
-				    }
+							        }
+						        } else {
+						        	// System.out.println("File not in list: "+fileName.toString());
+						        }
+						        
+						    }						
+						 
+						    // Reset key
+						    boolean valid = key.reset();
+						    if (!valid) {
+						        break;
+						    }
+											
+					} catch (InterruptedException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
 
-				    // Reset key
-				    boolean valid = key.reset();
-				    if (!valid) {
-				        break;
-				    }
-			}
+				}
+
+
 		}
 		catch (IOException ex) {
 	            System.err.println(ex);
@@ -127,10 +152,6 @@ public class FileWatcher implements Runnable {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-	}
-	
-	protected void finalize() throws Throwable {
-		System.out.println("thread finalize");
 	}
 
 }

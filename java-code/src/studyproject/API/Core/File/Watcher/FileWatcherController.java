@@ -3,8 +3,9 @@ package studyproject.API.Core.File.Watcher;
 import java.io.File;
 import java.io.IOException;
 import java.security.NoSuchAlgorithmException;
-import java.util.Iterator;
 import java.util.Vector;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Semaphore;
 
 import studyproject.API.Core.File.FileAction;
 import studyproject.API.Core.File.FileInfo;
@@ -18,28 +19,43 @@ import studyproject.API.Core.File.InfoList.FileInfoListEntry;
 public class FileWatcherController {
 	
 	// File List of files that are being watched
+	private ConcurrentHashMap<String, FileInfoListEntry> currentFilesList = new ConcurrentHashMap<String, FileInfoListEntry>();
 	public Vector<FileInfoListEntry> fileInfoList = new Vector<FileInfoListEntry>();
 	
 	// Javas watchService can only watch directories, no single files
 	// In order to watch a file we need to watch the whole directory
 	// and than filter for file updates
 	private Vector<String> watchedInternalDirectories = new Vector<String>();
-
-	// Directories that should be watched recursively
-	// private Vector<String> watchedRecursiveDirectories = new Vector<String>();
 	
+	// Helps to prevent that files are added multiple times
+	static Semaphore semaphore = new Semaphore(2);
+
 	/**
 	 * Test code
 	 * @param args
 	 * @throws NoSuchAlgorithmException
 	 * @throws IOException
+	 * @throws InterruptedException 
 	 */
-	public static void main(String[] args) throws NoSuchAlgorithmException, IOException {
+	public static void main(String[] args) throws NoSuchAlgorithmException, IOException, InterruptedException {
 		System.out.println("Start");
 
 		FileWatcherController myWatchService = new FileWatcherController();
 
 		myWatchService.watchDirectoryRecursively("testData/FileWatcherController/");
+		
+	    try {
+	        while (true) {
+	    		System.out.println("");
+	    		System.out.println(myWatchService.getInfo(0));
+	    		System.out.println("Watched directories:");
+	    		System.out.println(myWatchService.watchedInternalDirectories);
+	            Thread.sleep(5 * 1000);
+	        }
+	    } catch (InterruptedException e) {
+	        e.printStackTrace();
+	    }
+
 	}
 	
 	/**
@@ -96,9 +112,9 @@ public class FileWatcherController {
 	 * @throws IOException
 	 */
 	public void watchFile(String path, Boolean watchParentFolderForNewFiles) throws NoSuchAlgorithmException, IOException {
-		// System.out.println("watchFile: "+path);
+
 		// Create new FileInfo object and add it to vector list
-		FileInfoListEntry newFile = addNewFile(path);
+		FileInfoListEntry newFile = addFileToLists(path);
 				
 		// Add parent directory of file to watchedDirectories if its not already inside
 		if (!watchedInternalDirectories.contains(newFile.parentDirectory)) {
@@ -116,7 +132,6 @@ public class FileWatcherController {
 	 */
 	private void watchDirectory(String path, Boolean watchForNewFiles) {
         (new Thread(new FileWatcher(path, watchForNewFiles, this))).start();
-
 	}
 	
 	/**
@@ -145,40 +160,42 @@ public class FileWatcherController {
 	}
 	
 	
-	
 	/**
-	 * Returns null if there is no file with the given fileName in the list
-	 * Returns a FileInfo object if there is a file with the given fileName in the list
+	 * Returns null if there is no file with the given hash in the list
+	 * Returns a FileInfo object if there is a file with the given hash in the list
 	 * @param fileName
 	 * @return FileInfo
 	 */
-	public FileInfo getWatchedFileFromList(String fileName) {
-		
-	    Iterator<FileInfoListEntry> itr = fileInfoList.iterator();
-	    FileInfoListEntry currentElement = null;
-	    
-		while(itr.hasNext())
-		  currentElement = itr.next();
-	      if (currentElement.fileName.equals(fileName)) {
-	    	  return currentElement;
-	      }
-	  
-		return null;
+	public FileInfo getWatchedFileFromList(String hash) {
+		 return currentFilesList.get(hash);
 	}
 	
-	public void addDeletedFile(FileInfo file) {
+	public void deleteFileFromLists(FileInfo file) {
 		System.out.println("Add del file: "+file.fileName);
 
 		Long timestamp = System.currentTimeMillis() / 1000L;
     	FileInfoListEntry deletedFile = new FileInfoListEntry(file.checksum, file.size, file.fileName, FileAction.del, timestamp);
     	fileInfoList.add(deletedFile);
+    	
+    	currentFilesList.remove(file.checksum);
 	}
 	
-	public FileInfoListEntry addNewFile(String fileName) throws NoSuchAlgorithmException, IOException {
+	public FileInfoListEntry addFileToLists(String fileName) throws NoSuchAlgorithmException, IOException {
 		FileInfoListEntry newFile = new FileInfoListEntry(fileName);
 		fileInfoList.add(newFile);
 		System.out.println("Add new file: "+fileName);
+		
+		currentFilesList.put(newFile.checksum, newFile);
 		return newFile;
+		
+	}
+	
+	public Boolean listContainsFileName(String fileName) {
+		for (FileInfoListEntry myFile:fileInfoList) {
+			if (myFile.fileName.equals(fileName))
+				return true;
+		}
+		return false;
 	}
 	
 }
