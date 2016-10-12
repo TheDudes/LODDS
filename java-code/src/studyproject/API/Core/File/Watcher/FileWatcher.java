@@ -23,13 +23,19 @@ import studyproject.API.Core.File.FileInfo;
  */
 public class FileWatcher implements Runnable {
 
-	private String path;
+	private String directoryPath;
 	private Boolean watchForNewFiles;
 	private FileWatcherController controller;
 	
 	public FileWatcher(String path, Boolean watchForNewFiles, FileWatcherController controller) {
 		super();
-		this.path = path;
+		
+        // Sometimes folders don't have / at the end, so fix that
+        if (!path.substring(path.length() - 1).equals("/")) {
+        		 path = path+"/";
+        }
+       
+		this.directoryPath = path;
 		this.watchForNewFiles = watchForNewFiles;
 		this.controller = controller;
 	}
@@ -39,111 +45,123 @@ public class FileWatcher implements Runnable {
 	 * it checks if the changed file is in our file list 
 	 * or if its a recursively watched directory it monitors new files as well
 	 * 
-	 * @param path
+	 * @param directoryPath
 	 */
 	public void run() {
 		try {
 				WatchService watcher = FileSystems.getDefault().newWatchService();
 
 				// Register
-				Path dir = Paths.get(path);
+				Path dir = Paths.get(directoryPath);
 				dir.register(watcher, ENTRY_CREATE, ENTRY_DELETE, ENTRY_MODIFY);
 
 				while (true) {
 
 				    
-				    try {
-						
-						
-					    WatchKey key;
-					    try {
-					        // wait for a key to be available
-					        key = watcher.take();
-					    } catch (InterruptedException ex) {
-					        return;
-					    }
-						
-						 for (WatchEvent<?> event : key.pollEvents()) {
-	
-						        // get event type
-						        WatchEvent.Kind<?> eventType = event.kind();
-
-						        // get file name
-						        @SuppressWarnings("unchecked")
-						        WatchEvent<Path> ev = (WatchEvent<Path>) event;
-						        Path fileName = ev.context();
-						        String fullPath = path+fileName.toString();
-						        FileInfo newFileInfo = null;
-						        
-						        
-						        File newFile = new File(fullPath);
-						        
-					        	if (newFile.exists() && !newFile.isDirectory()) {
-							        newFileInfo = new FileInfo(fullPath);
-					        	} 
-						        
-						        System.out.println("FileWatcher: "+path);
-						        System.out.println(eventType.name() + ": " + fullPath);
-						        						        
-						        // Check if file is in list
-						        FileWatcherController.semaphore.acquire();
-						        
-						        FileInfo fileFromList = null;
-						        
-						        // New file was created -> Add to list
-						        if (watchForNewFiles && eventType == ENTRY_CREATE) {						        	
-						        	
-						        	if (newFile.isDirectory()) {
-						        		controller.watchDirectoryRecursively(fullPath+"/");
-						        	} else {
-						        		
-								        newFileInfo = new FileInfo(fullPath);
-						        		fileFromList = controller.getWatchedFileFromListByHash(newFileInfo.checksum);
-	
-						        		// Add file to watchList if its not already inside
-							        	if (fileFromList == null) {
-							        		controller.watchFile(fullPath, false);
-							        	}
-						        	}
-						        } else {
-						        	fileFromList = controller.getWatchedFileFromListByFileName(fullPath);
-						        	
-							        if (fileFromList != null) { // If file is in list
-							        	
-								        if (eventType == OVERFLOW || eventType == ENTRY_DELETE) {
-				
-								        	// DEL
-								        	controller.deleteFileFromLists(fileFromList);
-								        	
-								        } else if (eventType == ENTRY_MODIFY) {
-
-								            // DEL
-								        	controller.deleteFileFromLists(fileFromList);
-								        	
-								        	// ADD
-								        	controller.addFileToLists(fullPath);
-
-								        }
-								        
-							        } else {
-						        		System.out.println("Don't monitor for changes cause file not in list: "+fullPath);
-							        }
-						        }
-						        
-						        FileWatcherController.semaphore.release();
-						        
-						    }						
-						 
-						    // Reset key
-						    boolean valid = key.reset();
-						    if (!valid) {
-						        break;
-						    }
-											
-					} catch (InterruptedException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
+				    WatchKey key;
+					try {
+					    // wait for a key to be available
+					    key = watcher.take();
+					} catch (InterruptedException ex) {
+					    return;
 					}
+					
+					 
+					// Lock semaphore
+					// FileWatcherController.semaphore.acquire();
+					controller.lock.lock();
+					
+					 for (WatchEvent<?> event : key.pollEvents()) {
+
+
+					        // get event type
+					        WatchEvent.Kind<?> eventType = event.kind();
+
+					        // get file name
+					        @SuppressWarnings("unchecked")
+					        WatchEvent<Path> ev = (WatchEvent<Path>) event;
+					        Path fileName = ev.context();
+					        String fullPath = directoryPath+fileName.toString();
+					        FileInfo newFileInfo = null;
+					        
+					        File newFile = new File(fullPath);
+					        
+					        System.out.println(fullPath);
+					        
+					    	if (newFile.exists() && !newFile.isDirectory()) {
+						        newFileInfo = new FileInfo(fullPath);
+					    	} 
+
+					        System.out.println("FileWatcher: "+directoryPath);
+					        System.out.println(eventType.name() + ": " + fullPath);
+
+					        FileInfo fileFromList = null;
+					        
+					        // New file was created -> Add to list
+					        if (watchForNewFiles && eventType == ENTRY_CREATE) {	
+					        	
+					        	System.out.println("..New file was created -> Add to list: "+newFile.getPath());
+					        	
+					        	if (newFile.isDirectory()) {
+					        		controller.watchDirectoryRecursively(directoryPath);
+					        	} else {
+					        		
+					        		System.out.println("..File is not a directory");
+							        newFileInfo = new FileInfo(fullPath);
+					        		fileFromList = controller.getWatchedFileFromListByHash(newFileInfo.checksum);
+
+					        		// Add file to watchList if its not already inside
+						        	if (!controller.currentFilesListFileNameAsKey.containsKey(fullPath)) {
+						        		System.out.println("..file is not in list so its added");
+						        		controller.watchFile(fullPath, false);
+						        		
+						        	} else {
+						        		System.out.println("..file is already in list so its not added");
+						        	}
+					        	}
+					        } else {
+					        	fileFromList = controller.getWatchedFileFromListByFileName(fullPath);
+					        	
+						        if (fileFromList != null) { // If file is in list
+						        	
+							        if (eventType == OVERFLOW || eventType == ENTRY_DELETE) {
+
+							        	// DEL
+							        	controller.deleteFileFromLists(fileFromList);
+							        	
+							        	// Unwatch Directory if directory does not exist anymore
+							        	File currentFile = new File(directoryPath);
+							        	File parentDir = new File(currentFile.getParent());
+							        	if (!parentDir.exists())
+							        		controller.unwatchDirectory(directoryPath);
+							        	
+							        } else if (eventType == ENTRY_MODIFY) {
+
+							            // DEL
+							        	controller.deleteFileFromLists(fileFromList);
+							        	
+							        	// ADD
+							        	controller.addFileToLists(fullPath);
+
+							        }
+							        
+						        } else {
+					        		System.out.println("Don't monitor for changes cause file not in list: "+fullPath);
+						        }
+					        }
+					        
+					        
+					        
+					    }	
+					 
+					 	// FileWatcherController.semaphore.release();
+					 	controller.lock.unlock();
+					 
+					    // Reset key
+					    boolean valid = key.reset();
+					    if (!valid) {
+					        break;
+					    }
 
 				}
 

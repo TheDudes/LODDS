@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Vector;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Semaphore;
+import java.util.concurrent.locks.ReentrantLock;
 
 import studyproject.API.Core.File.FileAction;
 import studyproject.API.Core.File.FileInfo;
@@ -35,7 +36,10 @@ public class FileWatcherController {
 	private Vector<String> watchedInternalDirectories = new Vector<String>();
 	
 	// Helps to prevent that files are added multiple times
-	static Semaphore semaphore = new Semaphore(2);
+	static Semaphore semaphore = new Semaphore(0);
+	
+	public ReentrantLock lock = new ReentrantLock();
+
 
 	/**
 	 * Test code
@@ -49,7 +53,7 @@ public class FileWatcherController {
 
 		FileWatcherController myWatchService = new FileWatcherController();
 
-		myWatchService.watchDirectoryRecursively("testData/FileWatcherController/");
+		myWatchService.watchDirectoryRecursively("/Users/robinhood/Desktop/testData/");
 		
 	    try {
 	        while (true) {
@@ -63,6 +67,11 @@ public class FileWatcherController {
 	        e.printStackTrace();
 	    }
 
+	}
+	
+	public void unwatchDirectory(String directory) {
+		System.out.println("Unwatch: "+directory);
+		watchedInternalDirectories.remove(directory);
 	}
 	
 	/**
@@ -114,7 +123,8 @@ public class FileWatcherController {
 	 * @throws IOException
 	 */
 	public void watchFile(String path, Boolean watchParentFolderForNewFiles) throws NoSuchAlgorithmException, IOException {
-
+		System.out.println("watchFile: "+path);
+		
 		// Create new FileInfo object and add it to vector list
 		// System.out.println("watchFile: "+path);
 		FileInfoListEntry newFile = addFileToLists(path);
