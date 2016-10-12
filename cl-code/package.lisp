@@ -38,13 +38,9 @@
    #:get-interface-info
    #:get-broadcast-address
    #:get-ip-address
-   ;; lodds-server and his methods
+   ;; lodds-server and his methods (TODO: export accessors)
    #:lodds-server
-   #:switch-name
    #:switch-interface
-   #:switch-broadcast-port
-   #:switch-listening-port
-   #:switch-advertise-timeout
    #:start-listening
    #:stop-listening
    #:remove-clients

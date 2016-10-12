@@ -11,7 +11,8 @@
                :flexi-streams
                :cl-strings
                :cl-ppcre
-               :bordeaux-threads)
+               :bordeaux-threads
+               :stmx)
   :components ((:file "package")
                (:file "lodds-core")
                (:file "lodds-low-level-api")
