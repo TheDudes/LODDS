@@ -50,5 +50,6 @@
     `(let ((,result ,string-form))
        (declare (ignorable ,result))
        (cond
-         ,@(loop :for (str form) :in cases
-                 :collect `((string= ,result ,str) ,form))))))
+         ,@(loop
+              :for (str form) :in cases
+              :collect `((string= ,result ,str) ,form))))))

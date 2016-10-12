@@ -6,8 +6,9 @@
   "returns a list containing names of all up and running interfaces.
    names inside that list can be used to retrieve the broadcast or
    ip-address via 'get-broadcast-address' and 'get-ip-address'"
-  (loop :for interface :in (ip-interfaces:get-ip-interfaces-by-flags
-                            '(:iff-up :iff-running))
+  (loop
+     :for interface :in (ip-interfaces:get-ip-interfaces-by-flags
+                         '(:iff-up :iff-running))
      :collect (ip-interfaces:ip-interface-name interface)))
 
 (defun get-interface-info (interface)
@@ -312,7 +313,8 @@
         (setf (:broadcast-advertiser server)
               (bt:make-thread
                (lambda ()
-                 (loop :while t
+                 (loop
+                    :while t
                     :with timeout
                     :do (progn
                           (bt:with-recursive-lock-held ((:lock server))
