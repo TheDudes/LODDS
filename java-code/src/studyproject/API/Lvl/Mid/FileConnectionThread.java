@@ -44,11 +44,7 @@ public class FileConnectionThread extends Thread {
 	 * @param localPath
 	 *            the complete path on which the file should be saved
 	 */
-<<<<<<< Upstream, based on origin/master
-	public FileConnectionThread(UserInfo user, String checksum, long size, String localPath){
-=======
-	public FileConnectionThread(UserInfo user, String checksum, long size, String localPath, LODDS loddsObject) {
->>>>>>> e7be19b java: Bugfix in run() of FileConnectionThread
+	public FileConnectionThread(UserInfo user, String checksum, long size, String localPath) {
 		this.user = user;
 		this.checksum = checksum;
 		this.localPath = localPath;
@@ -79,11 +75,7 @@ public class FileConnectionThread extends Thread {
 	 *            the index on which to end the transmission
 	 */
 	public FileConnectionThread(UserInfo user, String checksum, long size, String localPath, long startIndex,
-<<<<<<< Upstream, based on origin/master
 			long endIndex){
-=======
-			long endIndex, LODDS loddsObject) {
->>>>>>> e7be19b java: Bugfix in run() of FileConnectionThread
 		this.user = user;
 		this.checksum = checksum;
 		this.localPath = localPath;
@@ -108,21 +100,10 @@ public class FileConnectionThread extends Thread {
 			} else {
 				returnValue = Requests.getFile(outStream, checksum, startIndex, endIndex);
 			}
-<<<<<<< Upstream, based on origin/master
-			if(returnValue != 0){
-				//TODO error handling
-=======
 			if (returnValue != 0) {
 				// TODO error handling
 			} else {
-				loddsObject.incrementLoad(size);
->>>>>>> e7be19b java: Bugfix in run() of FileConnectionThread
 			}
-<<<<<<< Upstream, based on origin/master
-			returnValue = Handles.handleFile(inStream, fileOutStream, endIndex - startIndex);
-			if(returnValue != 0){
-				//TODO error handling
-=======
 			//whole file?
 			if (endIndex == 0) {
 				returnValue = Handles.handleFile(inStream, fileOutStream, size);
@@ -131,9 +112,6 @@ public class FileConnectionThread extends Thread {
 			}
 			if (returnValue != 0) {
 				// TODO error handling
-			} else {
-				loddsObject.decrementLoad(size);
->>>>>>> e7be19b java: Bugfix in run() of FileConnectionThread
 			}
 		} catch (IOException e) {
 			// TODO error handling
