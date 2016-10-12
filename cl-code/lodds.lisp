@@ -251,7 +251,12 @@
                    b-ip
                    b-port
                    (lambda (buffer)
-                     (broadcast-listener buffer server))
+                     (broadcast-listener buffer server)
+                     ;; Sooooooooooooo, i found out that everything i
+                     ;; this function returns gets sent, so i get a
+                     ;; error if its not a buffer of (unsigned-byte 8)
+                     ;; :D
+                     nil)
                    nil
                    :in-new-thread t
                    :protocol :datagram))))))
