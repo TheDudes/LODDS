@@ -97,6 +97,7 @@ public class Responses {
 				}
 				currentPosition += fileStream.read(readBuffer, 0, toRead);
 			}
+			Load.incrementLoad(endIndex - startIndex);
 			while(sentBytes < endIndex - startIndex){
 				if((endIndex - (currentPosition + startIndex)) > BUFFERSIZE){
 					toRead = BUFFERSIZE;
@@ -107,6 +108,7 @@ public class Responses {
 				//write the number of bytes we just read to the socketStream
 				socketStream.write(readBuffer, 0, toRead);
 				socketStream.flush();
+				Load.decrementLoad(toRead);
 				sentBytes += toRead;
 			}
 		} catch(IOException e){
@@ -152,8 +154,8 @@ public class Responses {
 				Utils.readThisLength(inStream, buffer, 0, bytesToRead);
 				bytesRead += bytesToRead;
 				fileStream.write(buffer, 0, bytesToRead);
-				inStream.close();
 			}
+			inStream.close();
 		} catch(IOException e){
 			return 1;
 		}
