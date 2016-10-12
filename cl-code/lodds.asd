@@ -14,7 +14,7 @@
                :bordeaux-threads
                :stmx)
   :components ((:file "package")
-               (:file "lodds-core")
-               (:file "lodds-low-level-api")
+               (:file "core")
+               (:file "low-level-api")
                (:file "lodds")))
 
