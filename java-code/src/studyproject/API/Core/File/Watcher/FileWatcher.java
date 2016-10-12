@@ -17,8 +17,6 @@ import java.security.NoSuchAlgorithmException;
 
 import studyproject.API.Core.File.FileInfo;
 
-// TODO: Prevent multiple events
-
 /**
  * Watches a specific folder for changes and executes handlers for updating the list
  *
@@ -74,60 +72,65 @@ public class FileWatcher implements Runnable {
 						        @SuppressWarnings("unchecked")
 						        WatchEvent<Path> ev = (WatchEvent<Path>) event;
 						        Path fileName = ev.context();
+						        String fullPath = path+fileName.toString();
+						        FileInfo newFileInfo = null;
+						        
+						        
+						        File newFile = new File(fullPath);
+						        
+					        	if (newFile.exists() && !newFile.isDirectory()) {
+							        newFileInfo = new FileInfo(fullPath);
+					        	} 
 						        
 						        System.out.println("FileWatcher: "+path);
-						        System.out.println(eventType.name() + ": " + fileName);
-						        
+						        System.out.println(eventType.name() + ": " + fullPath);
+						        						        
 						        // Check if file is in list
 						        FileWatcherController.semaphore.acquire();
 						        
-						        FileInfo fileFromList = controller.getWatchedFileFromList(path+"/"+fileName.toString());
+						        FileInfo fileFromList = null;
 						        
 						        // New file was created -> Add to list
-						        if (watchForNewFiles && eventType == ENTRY_CREATE) {
-						        	
-						        	String fullFileName = path+"/"+fileName.toString();
-						        	File newFile = new File(fullFileName);
+						        if (watchForNewFiles && eventType == ENTRY_CREATE) {						        	
 						        	
 						        	if (newFile.isDirectory()) {
-						        		controller.watchDirectoryRecursively(fullFileName);
+						        		controller.watchDirectoryRecursively(fullPath+"/");
 						        	} else {
 						        		
+								        newFileInfo = new FileInfo(fullPath);
+						        		fileFromList = controller.getWatchedFileFromListByHash(newFileInfo.checksum);
+	
+						        		// Add file to watchList if its not already inside
 							        	if (fileFromList == null) {
-							        		controller.watchFile(path+"/"+fileName.toString(), false);
+							        		controller.watchFile(fullPath, false);
 							        	}
 						        	}
+						        } else {
+						        	fileFromList = controller.getWatchedFileFromListByFileName(fullPath);
+						        	
+							        if (fileFromList != null) { // If file is in list
+							        	
+								        if (eventType == OVERFLOW || eventType == ENTRY_DELETE) {
+				
+								        	// DEL
+								        	controller.deleteFileFromLists(fileFromList);
+								        	
+								        } else if (eventType == ENTRY_MODIFY) {
+
+								            // DEL
+								        	controller.deleteFileFromLists(fileFromList);
+								        	
+								        	// ADD
+								        	controller.addFileToLists(fullPath);
+
+								        }
+								        
+							        } else {
+						        		System.out.println("Don't monitor for changes cause file not in list: "+fullPath);
+							        }
 						        }
 						        
 						        FileWatcherController.semaphore.release();
-
-						        if (fileFromList != null) { // If file is in list
-						        	
-							        if (eventType == OVERFLOW) {
-							            
-							        	// DEL
-							        	controller.deleteFileFromLists(fileFromList);
-							        	
-							        } else if (eventType == ENTRY_DELETE) {
-
-							        	// DEL
-							        	controller.deleteFileFromLists(fileFromList);
-							        	
-
-							        } else if (eventType == ENTRY_MODIFY) {
-
-							            // DEL
-							        	controller.deleteFileFromLists(fileFromList);
-							        	
-							        	// ADD
-							        	//if (!controller.listContainsFileName(fileFromList.fileName)) {
-							        	//controller.addNewFile(fileFromList.fileName);
-							        	//}
-
-							        }
-						        } else {
-						        	// System.out.println("File not in list: "+fileName.toString());
-						        }
 						        
 						    }						
 						 

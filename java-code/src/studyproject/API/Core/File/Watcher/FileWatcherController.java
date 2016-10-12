@@ -3,6 +3,8 @@ package studyproject.API.Core.File.Watcher;
 import java.io.File;
 import java.io.IOException;
 import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Vector;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Semaphore;
@@ -17,9 +19,14 @@ import studyproject.API.Core.File.InfoList.FileInfoListEntry;
  * - Restructure
  */
 public class FileWatcherController {
+
+	// Hash map that contains all files that are actively being watched, files are grouped by hash in lists
+	public ConcurrentHashMap<String, Vector<FileInfoListEntry>> currentFilesListHashListAsKey = new ConcurrentHashMap<String, Vector<FileInfoListEntry>>();
 	
-	// File List of files that are being watched
-	private ConcurrentHashMap<String, FileInfoListEntry> currentFilesList = new ConcurrentHashMap<String, FileInfoListEntry>();
+	// Hash map that contains all files that are actively being watched, fileName as key
+	public ConcurrentHashMap<String, FileInfoListEntry> currentFilesListFileNameAsKey = new ConcurrentHashMap<String, FileInfoListEntry>();
+	
+	// History of all file modifications as specified in the protocol
 	public Vector<FileInfoListEntry> fileInfoList = new Vector<FileInfoListEntry>();
 	
 	// Javas watchService can only watch directories, no single files
@@ -78,11 +85,6 @@ public class FileWatcherController {
 		for (FileInfoListEntry file:fileInfoList) {
 			
 			if (timestamp == 0 || (((file.file.lastModified()/ 1000L) >= timestamp) || (file.timestampAdded >= timestamp))) {
-				/*
-				System.out.println("query timestamp: "+timestamp);
-				System.out.println("last modified: "+file.file.lastModified());
-				System.out.println("timestamp added: "+file.timestampAdded);
-				System.out.println();*/
 				body = this.convertFileInfoToString(file)+body;
 				filesMatched++;
 			} 
@@ -114,14 +116,17 @@ public class FileWatcherController {
 	public void watchFile(String path, Boolean watchParentFolderForNewFiles) throws NoSuchAlgorithmException, IOException {
 
 		// Create new FileInfo object and add it to vector list
+		// System.out.println("watchFile: "+path);
 		FileInfoListEntry newFile = addFileToLists(path);
 				
 		// Add parent directory of file to watchedDirectories if its not already inside
-		if (!watchedInternalDirectories.contains(newFile.parentDirectory)) {
-			watchedInternalDirectories.add(newFile.parentDirectory);
+		String parentDirectory = newFile.parentDirectory+"/";
+		
+		if (!watchedInternalDirectories.contains(parentDirectory)) {
+			watchedInternalDirectories.add(parentDirectory);
 			
 			// Start to watch directory
-			watchDirectory(newFile.parentDirectory, watchParentFolderForNewFiles);
+			watchDirectory(parentDirectory, watchParentFolderForNewFiles);
 		}
 		
 	}
@@ -144,6 +149,7 @@ public class FileWatcherController {
 		System.out.println("watchDirectoryRecursively: "+fileName);
 		
 		// Start to watch directory
+		System.out.println("watchDirRec**: "+fileName);
 		watchDirectory(fileName, true);
 		
 		File[] files = new File(fileName).listFiles();
@@ -166,36 +172,69 @@ public class FileWatcherController {
 	 * @param fileName
 	 * @return FileInfo
 	 */
-	public FileInfo getWatchedFileFromList(String hash) {
-		 return currentFilesList.get(hash);
+	public FileInfo getWatchedFileFromListByHash(String hash) {
+		if (!currentFilesListHashListAsKey.containsKey(hash) || currentFilesListHashListAsKey.get(hash).isEmpty()) {
+			return null;
+		} else {
+			return currentFilesListHashListAsKey.get(hash).get(0);
+		}
+	}
+	
+	public FileInfo getWatchedFileFromListByFileName(String fileName) {
+    	return currentFilesListFileNameAsKey.get(fileName);
 	}
 	
 	public void deleteFileFromLists(FileInfo file) {
 		System.out.println("Add del file: "+file.fileName);
 
+		// Create FileInfoListEntry object
 		Long timestamp = System.currentTimeMillis() / 1000L;
     	FileInfoListEntry deletedFile = new FileInfoListEntry(file.checksum, file.size, file.fileName, FileAction.del, timestamp);
+    	
+    	// Remove from fileInfoList
     	fileInfoList.add(deletedFile);
     	
-    	currentFilesList.remove(file.checksum);
+    	// Remove from currentFilesListHashListAsKey
+    	List<FileInfoListEntry> filesToDelete = new ArrayList<FileInfoListEntry>();
+    	if (currentFilesListHashListAsKey.containsKey(file.checksum)) {
+    		for (FileInfoListEntry listFile:currentFilesListHashListAsKey.get(file.checksum)) {
+    			if (listFile.fileName.equals(file.fileName)) {
+    				filesToDelete.add(listFile);
+    			}
+    		}
+    	}
+    	
+    	for (FileInfoListEntry fileToDelete:filesToDelete) {
+    		currentFilesListHashListAsKey.get(file.checksum).remove(fileToDelete);
+    	}
+    	
+    	// Remove from currentFilesListFileNameAsKey
+    	currentFilesListFileNameAsKey.remove(file.fileName);
 	}
 	
 	public FileInfoListEntry addFileToLists(String fileName) throws NoSuchAlgorithmException, IOException {
+		System.out.println("Add new file: "+fileName);
+
+		// Add to file info list
 		FileInfoListEntry newFile = new FileInfoListEntry(fileName);
 		fileInfoList.add(newFile);
-		System.out.println("Add new file: "+fileName);
 		
-		currentFilesList.put(newFile.checksum, newFile);
+		// Add to currentFilesListHashListAsKey
+		if (currentFilesListHashListAsKey.containsKey(newFile.checksum)) {
+			// Add to exitsing list if hash group exists
+			currentFilesListHashListAsKey.get(newFile.checksum).add(newFile);
+		} else {
+			// Create new list and add it if hash group does not exist
+			Vector<FileInfoListEntry> fileList = new Vector<FileInfoListEntry>();
+			fileList.add(newFile);
+			currentFilesListHashListAsKey.put(newFile.checksum, fileList);
+		}
+		
+		// Add to currentFilesListFileNameAsKey
+		currentFilesListFileNameAsKey.put(newFile.fileName, newFile);
+
 		return newFile;
 		
-	}
-	
-	public Boolean listContainsFileName(String fileName) {
-		for (FileInfoListEntry myFile:fileInfoList) {
-			if (myFile.fileName.equals(fileName))
-				return true;
-		}
-		return false;
 	}
 	
 }

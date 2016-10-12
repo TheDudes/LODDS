@@ -157,6 +157,7 @@ public class FileWatcherControllerTest {
 		// List should contain two files
 		while (controller.fileInfoList.size() != 2) {
 			// Test will time out if list will not contain zero files
+			// System.out.println(controller.fileInfoList.size());
 		}
 		
 		String actualResponse = controller.getInfo(0);
