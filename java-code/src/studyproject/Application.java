@@ -9,7 +9,6 @@ import java.util.logging.Logger;
 
 import studyproject.API.Errors.Error;
 import studyproject.API.Errors.ErrorTypes;
-import studyproject.Test.Lvl.Low.ResponsesTest;
 import studyproject.logging.APILvl;
 import studyproject.logging.LogConsoleHandler;
 import studyproject.logging.LogKey;
@@ -41,16 +40,11 @@ public class Application {
 	public static void main(String... args) {
 		Application application = new Application();
 		application.configureLogging();
-		int err;
-		if ((err = application.loadProperties(args[0])) > 0) {
-			logger.log(new Error(Level.SEVERE, LogKey.error, APILvl.gui, ErrorTypes.valueOf(err).toString()));
+		int errorCode;
+		if ((errorCode = application.loadProperties(args[0])) > 0) {
+			logger.log(new Error(Level.SEVERE, LogKey.error, APILvl.gui, ErrorTypes.valueOf(errorCode).toString()));
 		}
-		if ((Boolean.parseBoolean(properties.getProperty("test"))) == true) {
-			ResponsesTest responses = new ResponsesTest();
-			responses.testRespondFile();
-		} else {
-
-		}
+	
 
 	}
 }
