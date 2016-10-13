@@ -12,9 +12,11 @@
                :cl-strings
                :cl-ppcre
                :bordeaux-threads
-               :stmx)
+               :stmx
+               :cl-async)
   :components ((:file "package")
                (:file "core")
+               (:file "watcher")
                (:file "low-level-api")
                (:file "lodds")))
 

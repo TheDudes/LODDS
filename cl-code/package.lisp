@@ -7,6 +7,9 @@
            #:get-timestamp
            #:str-case))
 
+(defpackage #:lodds.watcher
+  (:use #:cl))
+
 (defpackage #:lodds.low-level-api
   (:use #:cl
         #:lodds.core)
