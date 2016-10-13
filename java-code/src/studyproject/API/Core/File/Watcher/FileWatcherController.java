@@ -1,14 +1,20 @@
 package studyproject.API.Core.File.Watcher;
 
+import java.awt.Component;
 import java.io.File;
 import java.io.IOException;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.TreeMap;
 import java.util.Vector;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.locks.ReentrantLock;
+
+import javax.swing.JTree;
+import javax.swing.tree.DefaultMutableTreeNode;
+import javax.swing.tree.TreeNode;
 
 import studyproject.API.Core.File.FileAction;
 import studyproject.API.Core.File.FileInfo;
@@ -29,6 +35,9 @@ public class FileWatcherController {
 	// Hash map that contains all files that are actively being watched, fileName as key
 	public ConcurrentHashMap<String, FileInfoListEntry> currentFilesListFileNameAsKey = new ConcurrentHashMap<String, FileInfoListEntry>();
 	
+	// Tree map that contains all files that are actively being watched, fileName as key
+	// public DefaultMutableTreeNode currentFilesTree = new DefaultMutableTreeNode(null);
+
 	// History of all file modifications as specified in the protocol
 	public Vector<FileInfoListEntry> fileInfoList = new Vector<FileInfoListEntry>();
 	
@@ -234,7 +243,7 @@ public class FileWatcherController {
 		FileInfoListEntry newFile = new FileInfoListEntry(fileName);
 		Boolean fileShouldBeAdded = true;
 		
-		// Check if file is already inside the list with same hash
+		// Check if file is already inside the list with same hash to prevent multiple adds
 		if (currentFilesListFileNameAsKey.containsKey(fileName)) {
 			if (currentFilesListHashListAsKey.containsKey(newFile.checksum)) {
 				if (currentFilesListHashListAsKey.get(newFile.checksum).get(0).fileName == newFile.fileName) {
@@ -262,10 +271,14 @@ public class FileWatcherController {
 				fileList.add(newFile);
 				currentFilesListHashListAsKey.put(newFile.checksum, fileList);
 			}
+			
+			// Add to tree map
+			// addNewFileToTree(newFile);
+
 		}
 
 		return newFile;
-		
 	}
+	
 	
 }
