@@ -56,7 +56,6 @@ public class FileWatcher implements Runnable {
 				dir.register(watcher, ENTRY_CREATE, ENTRY_DELETE, ENTRY_MODIFY);
 
 				while (true) {
-
 				    
 				    WatchKey key;
 					try {
@@ -71,8 +70,7 @@ public class FileWatcher implements Runnable {
 					// FileWatcherController.semaphore.acquire();
 					controller.lock.lock();
 					
-					 for (WatchEvent<?> event : key.pollEvents()) {
-
+					for (WatchEvent<?> event : key.pollEvents()) {
 
 					        // get event type
 					        WatchEvent.Kind<?> eventType = event.kind();
@@ -98,12 +96,13 @@ public class FileWatcher implements Runnable {
 					        FileInfo fileFromList = null;
 					        
 					        // New file was created -> Add to list
-					        if (watchForNewFiles && eventType == ENTRY_CREATE) {	
+					        if (watchForNewFiles && eventType == ENTRY_CREATE) {
 					        	
 					        	System.out.println("..New file was created -> Add to list: "+newFile.getPath());
 					        	
 					        	if (newFile.isDirectory()) {
-					        		controller.watchDirectoryRecursively(directoryPath);
+					        		// controller.watchDirectory(directoryPath, true);
+					        		controller.watchDirectoryRecursively(newFile.getPath());
 					        	} else {
 					        		
 					        		System.out.println("..File is not a directory");
@@ -122,20 +121,66 @@ public class FileWatcher implements Runnable {
 					        } else {
 					        	fileFromList = controller.getWatchedFileFromListByFileName(fullPath);
 					        	
-						        if (fileFromList != null) { // If file is in list
-						        	
+						        	// File or folder was deleted
 							        if (eventType == OVERFLOW || eventType == ENTRY_DELETE) {
 
 							        	// DEL
-							        	controller.deleteFileFromLists(fileFromList);
+							        	// We don't know if a directory or file was deleted
 							        	
-							        	// Unwatch Directory if directory does not exist anymore
-							        	File currentFile = new File(directoryPath);
-							        	File parentDir = new File(currentFile.getParent());
-							        	if (!parentDir.exists())
-							        		controller.unwatchDirectory(directoryPath);
+							        	// We found a file in our list that was named like this
+							        	if (fileFromList != null) { 
+							        		
+							        		// Check if that file was really deleted
+							        		File probablyDeletedFile = new File(fileFromList.fileName);
+							        		
+							        		// File does not exist anymore -> It was deleted
+							        		if (!probablyDeletedFile.exists()) {
+									        	controller.deleteFileFromLists(fileFromList);
+									        	
+									        	System.out.println("File del, parent dir: "+fileFromList.parentDirectory);
+									        	
+									        	// Unwatch Directory if directory does not exist anymore
+									        	/*File parentDir = new File(fileFromList.parentDirectory);
+									        	if (!parentDir.exists())
+									        		controller.unwatchDirectory(directoryPath);   */
+							        		}
+							        		
+							        	} else {
+							        		
+							        	// File is not in list, so it could be a folder
+							        	System.out.println("File is not in list, so it could be a folder");
 							        	
-							        } else if (eventType == ENTRY_MODIFY) {
+							        		// Check if folder is in our list
+							        		System.out.println("Check if folder is in our list: "+fullPath);
+							        		if (controller.watchedInternalDirectories.contains(fullPath) || controller.watchedInternalDirectories.contains(fullPath+"/")) {
+							        			
+							        			File probablyDeletedFolder = new File(fullPath);
+							        			
+							        			// Check if folder does still exist
+							        			System.out.println("Check if folder does still exist");
+							        			if (!probablyDeletedFolder.exists()) {
+							        				controller.watchedInternalDirectories.remove(fullPath);
+							        				controller.watchedInternalDirectories.remove(fullPath+"/");
+							        				
+										        	// Delete all sub folders from watchtedInternalDirectories
+							        				System.out.println("Delete all sub folders from watchtedInternalDirectories");
+									        		for (String subfolder:controller.watchedInternalDirectories) {
+									        			if (subfolder.contains(fullPath)) {
+									        				controller.watchedInternalDirectories.remove(subfolder);
+									        				System.out.println("Subfolder deleted: "+subfolder);
+									        			}
+									        		}
+									        		
+									        		// Delete all files from that folder
+							        			}
+							        		}
+
+							        	}
+							        	
+							        // File was modified
+							        } else if (fileFromList != null && eventType == ENTRY_MODIFY) {
+							        	
+							        	System.out.println("..File was modified");
 
 							            // DEL
 							        	controller.deleteFileFromLists(fileFromList);
@@ -145,13 +190,10 @@ public class FileWatcher implements Runnable {
 
 							        }
 							        
-						        } else {
-					        		System.out.println("Don't monitor for changes cause file not in list: "+fullPath);
-						        }
+						        
 					        }
 					        
-					        
-					        
+
 					    }	
 					 
 					 	// FileWatcherController.semaphore.release();

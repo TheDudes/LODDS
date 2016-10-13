@@ -16,8 +16,10 @@ import studyproject.API.Core.File.InfoList.FileInfoListEntry;
 
 /**
  * TODO:
- * - Handle file and folder removal
- * - Restructure
+ * - Bug fixed: We don't know if the deleted event was a file or directory
+ * - Bug: When a folder is deleted WatchService does not notify about the deleted files that were inside that folder
+ * - Bug fixed: removal of empty folder is not recognized -> folder is not removed from watched directories 
+ * - Bug fixed: removal of not empty folder is not recognized -> folder is not removed from watched directories 
  */
 public class FileWatcherController {
 
@@ -33,7 +35,7 @@ public class FileWatcherController {
 	// Javas watchService can only watch directories, no single files
 	// In order to watch a file we need to watch the whole directory
 	// and than filter for file updates
-	private Vector<String> watchedInternalDirectories = new Vector<String>();
+	public Vector<String> watchedInternalDirectories = new Vector<String>();
 	
 	// Helps to prevent that files are added multiple times
 	static Semaphore semaphore = new Semaphore(0);
@@ -145,7 +147,8 @@ public class FileWatcherController {
 	 * Starts directory listener thread
 	 * @param path
 	 */
-	private void watchDirectory(String path, Boolean watchForNewFiles) {
+	public void watchDirectory(String path, Boolean watchForNewFiles) {
+		System.out.println("watchDirectory(): "+path);
         (new Thread(new FileWatcher(path, watchForNewFiles, this))).start();
 	}
 	
@@ -161,6 +164,9 @@ public class FileWatcherController {
 		// Start to watch directory
 		System.out.println("watchDirRec**: "+fileName);
 		watchDirectory(fileName, true);
+		
+		if (!watchedInternalDirectories.contains(fileName))
+			watchedInternalDirectories.add(fileName);
 		
 		File[] files = new File(fileName).listFiles();
 
@@ -195,7 +201,7 @@ public class FileWatcherController {
 	}
 	
 	public void deleteFileFromLists(FileInfo file) {
-		System.out.println("Add del file: "+file.fileName);
+		System.out.println("deleteFileFromLists(): "+file.fileName);
 
 		// Create FileInfoListEntry object
 		Long timestamp = System.currentTimeMillis() / 1000L;
@@ -224,24 +230,39 @@ public class FileWatcherController {
 	
 	public FileInfoListEntry addFileToLists(String fileName) throws NoSuchAlgorithmException, IOException {
 		System.out.println("Add new file: "+fileName);
-
-		// Add to file info list
-		FileInfoListEntry newFile = new FileInfoListEntry(fileName);
-		fileInfoList.add(newFile);
 		
-		// Add to currentFilesListHashListAsKey
-		if (currentFilesListHashListAsKey.containsKey(newFile.checksum)) {
-			// Add to exitsing list if hash group exists
-			currentFilesListHashListAsKey.get(newFile.checksum).add(newFile);
-		} else {
-			// Create new list and add it if hash group does not exist
-			Vector<FileInfoListEntry> fileList = new Vector<FileInfoListEntry>();
-			fileList.add(newFile);
-			currentFilesListHashListAsKey.put(newFile.checksum, fileList);
+		FileInfoListEntry newFile = new FileInfoListEntry(fileName);
+		Boolean fileShouldBeAdded = true;
+		
+		// Check if file is already inside the list with same hash
+		if (currentFilesListFileNameAsKey.containsKey(fileName)) {
+			if (currentFilesListHashListAsKey.containsKey(newFile.checksum)) {
+				if (currentFilesListHashListAsKey.get(newFile.checksum).get(0).fileName == newFile.fileName) {
+					fileShouldBeAdded = false;
+				}
+			} 
 		}
 		
-		// Add to currentFilesListFileNameAsKey
-		currentFilesListFileNameAsKey.put(newFile.fileName, newFile);
+		if (fileShouldBeAdded) {
+			
+			System.out.println("File will be added");
+			// Add to currentFilesListFileNameAsKey
+			currentFilesListFileNameAsKey.put(newFile.fileName, newFile);
+
+			// Add to file info list
+			fileInfoList.add(newFile);
+			
+			// Add to currentFilesListHashListAsKey
+			if (currentFilesListHashListAsKey.containsKey(newFile.checksum)) {
+				// Add to existing list if hash group exists
+				currentFilesListHashListAsKey.get(newFile.checksum).add(newFile);
+			} else {
+				// Create new list and add it if hash group does not exist
+				Vector<FileInfoListEntry> fileList = new Vector<FileInfoListEntry>();
+				fileList.add(newFile);
+				currentFilesListHashListAsKey.put(newFile.checksum, fileList);
+			}
+		}
 
 		return newFile;
 		
