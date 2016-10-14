@@ -1,6 +1,6 @@
 ;;;; lodds.asd
 
-(asdf:defsystem #:lodds
+(asdf:defsystem #:cl-lodds
   :description "Common lisp Implementation of LODDS-Protocol"
   :author "d4ryus <d4ryus@openmailbox.org>"
   :license "none yet"
