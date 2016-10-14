@@ -1,0 +1,30 @@
+* General
+** TODO missing [0/1]
+   - [ ] File Header with Description
+
+* Lodds Lib
+** TODO missing [0/3]
+   - [ ] logging
+   - [ ] Error Handling
+   - [ ] directory watcher (cl-async)
+** TODO Code changes [1/3]
+   - [ ] rename and export accessors
+   - [ ] replace all parse-integer calls
+   - [X] Use [[https://github.com/cosmos72/stmx][STMX]] instead of Locks
+   - [ ] replace all 'bt:destroy-thread'
+
+* Low Level API
+** TODO missing [1/6]
+   - [X] check protocol syntax with regular expressions (cl-ppcre)
+   - [1/5] return correct error codes
+     - [ ] 1: connection-closed
+     - [X] 2: malformed-data
+     - [ ] 3: timeout-reached
+     - [ ] 4: file-not-found
+     - [ ] 5: connection denied (needs to be added)
+   - [ ] some error-code-to-string functionality
+   - [ ] tests
+
+** TODO BUGS [0/2]
+   - [ ] readline on sockets should timeout and stop after specified amount
+   - [ ] replace ~a with fitting format specifier
