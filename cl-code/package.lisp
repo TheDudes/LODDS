@@ -8,7 +8,11 @@
            #:str-case))
 
 (defpackage #:lodds.watcher
-  (:use #:cl))
+  (:use #:cl)
+  (:export #:watcher
+           #:add-hook
+           #:remove-hook
+           #:stop-watcher))
 
 (defpackage #:lodds.low-level-api
   (:use #:cl
