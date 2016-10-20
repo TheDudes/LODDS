@@ -19,39 +19,47 @@ public class FileWatcherTreeNode {
 	private ConcurrentHashMap<String, FileWatcherTreeNode> children;
 	private FileInfoListEntry fileInfo;
 	private FileWatcherTreeNode parent;
+	private Boolean isRoot;
 	
-	public FileWatcherTreeNode() {
+	public FileWatcherTreeNode(boolean isRoot) {
 		children = new ConcurrentHashMap<String, FileWatcherTreeNode>();
+		this.isRoot = isRoot;
+		
+		if (isRoot) {
+			fileName = "root";
+		}
 	}
 	
 	public static void main(String[] args) throws Exception {
 		String fileName = "/Users/robinhood/Desktop/testData/test.zip";
 		FileInfoListEntry entry = new FileInfoListEntry(fileName);
 		
-		FileWatcherTreeNode root = new FileWatcherTreeNode();
-		root.addFileInfoEntry(convertFileNameToStringList(entry.fileName), entry);
+		String fileName2 = "/Users/robinhood/Desktop/testData/ahoi/ahoi.zip";
+		FileInfoListEntry entry2 = new FileInfoListEntry(fileName2);
+
 		
+		FileWatcherTreeNode root = new FileWatcherTreeNode(true);
+		root.addFileInfoEntry(convertFileNameToStringList(entry.fileName), entry);
+		root.addFileInfoEntry(convertFileNameToStringList(entry2.fileName), entry2);
+
 		System.out.println("Tree:");
 		root.printTree(0);
 		
 		System.out.println("\n\nTest FileInfoListEntry:");
 		FileInfoListEntry found = root.getFileInfoListEntryByFileName(fileName);
-		System.out.println(found.checksum);
 	}
 	
 	public void printTree(Integer depth) {
-		Iterator<String> i = children.keySet().iterator();
-		if (i.hasNext()) {
-			String fileName = i.next();
-			
-			System.out.println("");
-			
-			for (int k=0; k<depth; k++) {
-				System.out.print("-");
-			}
-			
-			System.out.print(fileName);
-			
+		System.out.println("");
+		
+		// Make depth lines e.g. ---- file
+		for (int k=0; k<depth; k++) {
+			System.out.print("-");
+		}
+		
+		System.out.print(fileName);
+		
+		for (String fileName:children.keySet()) {
 			children.get(fileName).printTree(depth+1);
 		}
 	}
@@ -61,7 +69,17 @@ public class FileWatcherTreeNode {
 	}
 	
 	public FileInfoListEntry getFileInfoListEntryByFileName(String fileName) {
-		return getNodeBySubDirs(convertFileNameToStringList(fileName)).fileInfo;
+		System.out.println("Searching for file: "+fileName);
+		FileWatcherTreeNode foundNode = getNodeByFileName(fileName);
+		
+		if (foundNode == null) {
+			System.out.println("File not found: "+fileName);
+			return null;
+		} else {
+			System.out.println("File found: "+foundNode.fileName);
+			return foundNode.fileInfo;		
+		}
+
 	}
 	
 	public static List<String> convertFileNameToStringList(String fileName) {
@@ -72,6 +90,9 @@ public class FileWatcherTreeNode {
 	}
 	
 	public FileWatcherTreeNode getNodeBySubDirs(List<String> subDirsList) {
+		
+		System.out.println("SubDirList: "+subDirsList);
+		System.out.println("Current node: "+this.fileName);
 
 		// Check if child contains first folder
 		if (children.containsKey(subDirsList.get(0))) {
@@ -88,14 +109,14 @@ public class FileWatcherTreeNode {
 			// Search again
 			return child.getNodeBySubDirs(subDirsList);
 
+		} else {
+			System.out.println("Node '"+subDirsList.get(0)+"' not found in "+this.fileName);
 		}
 		
 		return null;
 	}
 
 	public void addFileInfoEntry(List<String> subDirsList, FileInfoListEntry fileInfo) throws Exception {
-		// System.out.println("Print list: ");
-		// System.out.println(subDirsList);
 
 		// If child already exists, go on
 		if (children.containsKey(subDirsList.get(0))) {
@@ -108,25 +129,29 @@ public class FileWatcherTreeNode {
 			// Remove first folder
 			subDirsList.remove(0);
 			
-			// Search again
+			// Add remaining list to child
 			child.addFileInfoEntry(subDirsList, fileInfo);
 			
 		// Child does not exist -> Add
 		} else {
 
-			// If it is the last folder, add fileInfo to current child
-			if (subDirsList.size() == 1) {
-				this.fileInfo = fileInfo;
-			} else {
 				// We need to create new child
-				FileWatcherTreeNode newNode = new FileWatcherTreeNode();
+				FileWatcherTreeNode newNode = new FileWatcherTreeNode(false);
 				newNode.fileName = subDirsList.get(0);
 				newNode.parent = this;
-				subDirsList.remove(0);
-				children.put(subDirsList.get(0), newNode);
-				newNode.addFileInfoEntry(subDirsList, fileInfo);
-			}
-			
+				
+				// Add new node as child to current node
+				children.put(newNode.fileName, newNode);
+				
+				if (subDirsList.size() != 1) {
+					
+					// Remove current entry from list
+					subDirsList.remove(0);
+					
+					// Start new add process from newNode
+					newNode.addFileInfoEntry(subDirsList, fileInfo);	
+
+				}	
 		}
 	}
 }
