@@ -1,6 +1,7 @@
 package studyproject.API.Lvl.Mid;
 
 import java.io.IOException;
+import java.net.Socket;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Vector;
@@ -46,10 +47,6 @@ public class LODDS {
 	private int ipPort;
 	private int timeInterval;
 
-	// TODO wait for Marius to provide this hash map
-	// whereas string is the hash of the fileInfo
-	private ConcurrentHashMap<String, FileInfo> localFiles;
-
 	/**
 	 * Initiates all lists and maps, retrieves the local and broadcast IP from
 	 * the interface name and sets the IP and advertise ports to the default
@@ -67,7 +64,6 @@ public class LODDS {
 		clientList = new Vector<UserInfo>();
 		availableFiles = new ConcurrentHashMap<String, RemoteFileInfo>();
 		sharedFolders = new Vector<String>();
-		localFiles = new ConcurrentHashMap<>();
 		ipPort = DEFAULT_IP_PORT;
 		advertisePort = DEFAULT_ADVERTISE_PORT;
 		timeInterval = DEFAULT_TIME_INTERVAL;
@@ -119,13 +115,13 @@ public class LODDS {
 	 * starts a new fileSenderThread which will send the whole file specified by
 	 * the checksum to the user specified by its username
 	 * 
-	 * @param user
-	 *            the unique user name
-	 * @param checksum
-	 *            the checksum of the file to send
+	 * @param socket
+	 *            the socket opened by the receiver
+	 * @param fileInfo
+	 *            the FileInfo which specifies the file which shall be sent
 	 */
-	public void sendFile(String user, String checksum) {
-		FileSenderThread fileSenderThread = new FileSenderThread(getUserConnectionInfo(user), localFiles.get(checksum));
+	public void sendFile(Socket socket, FileInfo fileInfo) {
+		FileSenderThread fileSenderThread = new FileSenderThread(socket, fileInfo);
 		fileSenderThread.start();
 	}
 
@@ -133,18 +129,17 @@ public class LODDS {
 	 * starts a new fileSenderThread which will send a part of the file
 	 * specified by the checksum to the user specified by its username
 	 * 
-	 * @param user
-	 *            the unique user name
-	 * @param checksum
-	 *            the checksum of the file to send
+	 * @param socket
+	 *            the socket opened by the receiver
+	 * @param fileInfo
+	 *            the FileInfo which specifies the file which shall be sent
 	 * @param startIndex
 	 *            the index(number of byte) where the transaction shall start
 	 * @param endIndex
 	 *            the index(number of byte) where the transaction shall end
 	 */
-	public void sendFile(String user, String checksum, long startIndex, long endIndex) {
-		FileSenderThread fileSenderThread = new FileSenderThread(getUserConnectionInfo(user), localFiles.get(checksum),
-				startIndex, endIndex);
+	public void sendFile(Socket socket, FileInfo fileInfo, long startIndex, long endIndex) {
+		FileSenderThread fileSenderThread = new FileSenderThread(socket, fileInfo, startIndex, endIndex);
 		fileSenderThread.start();
 	}
 
@@ -218,15 +213,17 @@ public class LODDS {
 	 * @param user
 	 * @param checksum
 	 */
-	public void sendFileWP(String user, String checksum) {
-
+	public void sendFileWP(String user, long timeout, FileInfo fileInfo) {
+		SendFileWPThread sendFileWPThread = new SendFileWPThread(getUserConnectionInfo(user), timeout, fileInfo);
+		sendFileWPThread.run();
 	}
 
 	/**
 	 * Gets a file if a SendPermission was received
 	 */
-	public void getFileWP() {
-
+	public void getFileWP(Socket socket, String pathToSaveTo, String fileName, long fileSize) {
+		GetFileWPThread getFileWPThread = new GetFileWPThread(socket, pathToSaveTo, fileName, fileSize);
+		getFileWPThread.run();
 	}
 
 	/**
