@@ -226,10 +226,13 @@ public class LODDS {
 		getFileWPThread.run();
 	}
 	
-	public void sendInfo() {
-		InfoSenderThread infoSenderThread = new InfoSenderThread();
-		infoSenderThread.run();
-	}
+//	/**
+//	 * Respond a infolist about the watched files and directories
+//	 */
+//	public void sendInfo() {
+//		InfoSenderThread infoSenderThread = new InfoSenderThread();
+//		infoSenderThread.run();
+//	}
 
 	/**
 	 * get the information necessary to connect to another user, this means IP
