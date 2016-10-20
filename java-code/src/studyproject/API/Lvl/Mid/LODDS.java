@@ -112,7 +112,7 @@ public class LODDS {
 	 * prompts the Thread to stop listening
 	 */
 	public void stopListening() {
-		broadcastListener.setStopThread(true);
+		broadcastListener.setRun(false);
 	}
 
 	/**

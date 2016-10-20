@@ -17,11 +17,13 @@ public class BroadcastListenerThread extends Thread {
 	private BroadcastInfo brInfo;
 	private UserInfo userInfo;
 	private InetAddress inetAddress;
-	private boolean written = false;
-	private boolean stopThread = false;
+	private boolean written;
+	private boolean run;
 	
 	public BroadcastListenerThread(LODDS loddsObject) {
 		this.loddsObject = loddsObject;
+		written = false;
+		run = true;
 	}
 	
 	@Override
@@ -29,7 +31,7 @@ public class BroadcastListenerThread extends Thread {
 		localAddress = new StringBuilder();
 		brInfo = new BroadcastInfo();
 		
-		while(!stopThread) {
+		while(run) {
 			Broadcast.getLocalIp(loddsObject.getInterface(), localAddress);
 			if (Broadcast.readAdvertise(localAddress.toString(), brInfo) != 0) {
 				// readAdvertise failed
@@ -91,7 +93,7 @@ public class BroadcastListenerThread extends Thread {
 		this.inetAddress = inetAddress;
 	}
 	
-	public void setStopThread(boolean bool) {
-		this.stopThread = bool; 
+	public void setRun(boolean bool) {
+		this.run = bool; 
 	}
 }

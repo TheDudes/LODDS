@@ -7,6 +7,7 @@ package studyproject.API.Core.Request;
  */
 public class GetPermissionRequest implements Request {
 
+	public String checksum;
 	public long fileSize;
 	public long timeout;
 	public String fileName;
