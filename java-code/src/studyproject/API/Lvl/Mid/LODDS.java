@@ -200,8 +200,20 @@ public class LODDS {
 	}
 
 	/**
+	 * updates the list of shared files of a specified user
+	 * 
+	 * @param user
+	 *            the user of which to update the list of shared files
+	 */
+	public void updateFileInfo(String user) {
+		UpdateFileInfoThread updateFileInfoThread = new UpdateFileInfoThread(getUserConnectionInfo(user), this);
+		updateFileInfoThread.start();
+	}
+
+	/**
 	 * Sends a file with the specified checksum to the specified user if he
-	 * accepted the request in the specified timeout. If not the function returns. 
+	 * accepted the request in the specified timeout. If not the function
+	 * returns.
 	 * 
 	 * @param user
 	 * @param checksum
@@ -483,6 +495,14 @@ public class LODDS {
 	 */
 	public synchronized int getTimeInterval() {
 		return timeInterval;
+	}
+
+	/**
+	 * 
+	 * @return the hashMap with all shared files in the network
+	 */
+	public ConcurrentHashMap<String, RemoteFileInfo> getAvailableFiles() {
+		return availableFiles;
 	}
 
 	private long getFileSize(String checksum) {
