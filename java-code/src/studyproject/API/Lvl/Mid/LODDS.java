@@ -46,7 +46,7 @@ public class LODDS {
 	private int ipPort;
 	private int timeInterval;
 
-	//TODO wait for Marius to provide this hash map
+	// TODO wait for Marius to provide this hash map
 	// whereas string is the hash of the fileInfo
 	private ConcurrentHashMap<String, FileInfo> localFiles;
 
@@ -115,12 +115,34 @@ public class LODDS {
 		broadcastListener.setStopThread(true);
 	}
 
+	/**
+	 * starts a new fileSenderThread which will send the whole file specified by
+	 * the checksum to the user specified by its username
+	 * 
+	 * @param user
+	 *            the unique user name
+	 * @param checksum
+	 *            the checksum of the file to send
+	 */
 	public void sendFile(String user, String checksum) {
 		FileSenderThread fileSenderThread = new FileSenderThread(getUserConnectionInfo(user), localFiles.get(checksum));
 		fileSenderThread.start();
 	}
 
-	public void sendFile(String user, String checksum, String localPath, long startIndex, long endIndex) {
+	/**
+	 * starts a new fileSenderThread which will send a part of the file
+	 * specified by the checksum to the user specified by its username
+	 * 
+	 * @param user
+	 *            the unique user name
+	 * @param checksum
+	 *            the checksum of the file to send
+	 * @param startIndex
+	 *            the index(number of byte) where the transaction shall start
+	 * @param endIndex
+	 *            the index(number of byte) where the transaction shall end
+	 */
+	public void sendFile(String user, String checksum, long startIndex, long endIndex) {
 		FileSenderThread fileSenderThread = new FileSenderThread(getUserConnectionInfo(user), localFiles.get(checksum),
 				startIndex, endIndex);
 		fileSenderThread.start();
@@ -175,6 +197,24 @@ public class LODDS {
 		FileConnectionThread fileConnectionThread = new FileConnectionThread(getUserConnectionInfo(user), checksum,
 				getFileSize(checksum), localPath, this);
 		fileConnectionThread.start();
+	}
+
+	/**
+	 * Sends a file with the specified checksum to the specified user if he
+	 * accepted the request in the specified timeout. If not the function returns. 
+	 * 
+	 * @param user
+	 * @param checksum
+	 */
+	public void sendFileWP(String user, String checksum) {
+
+	}
+
+	/**
+	 * Gets a file if a SendPermission was received
+	 */
+	public void getFileWP() {
+
 	}
 
 	/**
