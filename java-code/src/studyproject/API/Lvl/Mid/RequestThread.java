@@ -5,9 +5,9 @@ import java.io.InputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 
-import studyproject.API.Core.Request.GetFileRequest;
+//import studyproject.API.Core.Request.GetFileRequest;
 //import studyproject.API.Core.Request.GetInfoRequest;
-import studyproject.API.Core.Request.GetPermissionRequest;
+//import studyproject.API.Core.Request.GetPermissionRequest;
 import studyproject.API.Core.Request.RequestContainer;
 import studyproject.API.Lvl.Low.RequestHandler;
 
@@ -23,7 +23,7 @@ public class RequestThread extends Thread {
 	 * @param loddsObj
 	 * 				Instance of the LODDS-Class
 	 * @param socket
-	 * 				ServerSocket to 
+	 * 				ServerSocket to accept incoming requests
 	 */
 	public RequestThread(LODDS loddsObj, ServerSocket socket) {
 		this.loddsObj = loddsObj;
@@ -31,6 +31,10 @@ public class RequestThread extends Thread {
 		run = true;
 	}
 
+	/**
+	 * Start thread and handle incoming requests
+	 */
+	@Override
 	public void run() {
 		RequestContainer reqContainer = new RequestContainer();
 		InputStream socketStream;
@@ -64,9 +68,11 @@ public class RequestThread extends Thread {
 			}
 		}
 	}
-
-	public void setRun(boolean bool) {
-		run = bool;
+	
+	/**
+	 * Set run variable to false to stop the RequestThread
+	 */
+	public void setThread() {
+		run = false;
 	}
-
 }
