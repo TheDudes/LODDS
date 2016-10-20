@@ -18,6 +18,13 @@ public class RequestThread extends Thread {
 	Socket socket;
 	private boolean run;
 
+	/**
+	 * RequestThread constructor
+	 * @param loddsObj
+	 * 				Instance of the LODDS-Class
+	 * @param socket
+	 * 				ServerSocket to 
+	 */
 	public RequestThread(LODDS loddsObj, ServerSocket socket) {
 		this.loddsObj = loddsObj;
 		this.serverSocket = socket;
@@ -42,17 +49,17 @@ public class RequestThread extends Thread {
 			}
 			switch (reqContainer.request.getType()) {
 			case GET_FILE:
-				GetFileRequest fileReq = (GetFileRequest) reqContainer.request;
-				loddsObj.sendFile(loddsObj.getUserName(), fileReq.checksum, fileReq.startIndex, fileReq.endIndex);
+//				GetFileRequest fileReq = (GetFileRequest) reqContainer.request;
+//				loddsObj.sendFile(loddsObj.getUserName(), fileReq.checksum, fileReq.startIndex, fileReq.endIndex);
 				break;
 			case GET_INFO:
-				// GetInfoRequest infoReq = (GetInfoRequest)
-				// reqContainer.request;
-				// // loddsObj.
+//				 GetInfoRequest infoReq = (GetInfoRequest)
+//				 reqContainer.request;
+//				 // loddsObj.
 				break;
 			case GET_SEND_PERMISSION:
-				GetPermissionRequest permissionReq = (GetPermissionRequest) reqContainer.request;
-				loddsObj.sendFileWP(loddsObj.getUserName(), permissionReq.checksum);
+//				GetPermissionRequest permissionReq = (GetPermissionRequest) reqContainer.request;
+//				loddsObj.sendFileWP(loddsObj.getUserName(), permissionReq.checksum);
 				break;
 			}
 		}
