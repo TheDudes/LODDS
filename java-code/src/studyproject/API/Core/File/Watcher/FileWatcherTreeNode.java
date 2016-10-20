@@ -1,11 +1,7 @@
 package studyproject.API.Core.File.Watcher;
 
 import java.io.File;
-import java.io.IOException;
-import java.security.NoSuchAlgorithmException;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
@@ -13,6 +9,11 @@ import java.util.regex.Pattern;
 
 import studyproject.API.Core.File.InfoList.FileInfoListEntry;
 
+/**
+ * Tree that stores FileInfoEntry objects, structured by fileNames
+ * @author gitmalong
+ *
+ */
 public class FileWatcherTreeNode {
 
 	private String fileName;
@@ -21,6 +22,10 @@ public class FileWatcherTreeNode {
 	private FileWatcherTreeNode parent;
 	private Boolean isRoot;
 	
+	/**
+	 * Initializes a new node
+	 * @param isRoot
+	 */
 	public FileWatcherTreeNode(boolean isRoot) {
 		children = new ConcurrentHashMap<String, FileWatcherTreeNode>();
 		this.isRoot = isRoot;
@@ -29,7 +34,11 @@ public class FileWatcherTreeNode {
 			fileName = "root";
 		}
 	}
-	
+	/**
+	 * Just some testing
+	 * @param args
+	 * @throws Exception
+	 */
 	public static void main(String[] args) throws Exception {
 		String fileName = "/Users/robinhood/Desktop/testData/test.zip";
 		FileInfoListEntry entry = new FileInfoListEntry(fileName);
@@ -49,7 +58,11 @@ public class FileWatcherTreeNode {
 		FileInfoListEntry found = root.getFileInfoListEntryByFileName(fileName);
 	}
 	
-	public void printTree(Integer depth) {
+	/**
+	 * Prints tree and adds 'depth' lines before the fileName
+	 * @param depth
+	 */
+	private void printTree(Integer depth) {
 		System.out.println("");
 		
 		// Make depth lines e.g. ---- file
@@ -64,16 +77,30 @@ public class FileWatcherTreeNode {
 		}
 	}
 	
-	public FileWatcherTreeNode getNodeByFileName(String fileName) {
-		return getNodeBySubDirs(convertFileNameToStringList(fileName));
+	public void printTree() {
+		printTree(0);
 	}
 	
-	public FileInfoListEntry getFileInfoListEntryByFileName(String fileName) {
-		System.out.println("Searching for file: "+fileName);
-		FileWatcherTreeNode foundNode = getNodeByFileName(fileName);
+	/**
+	 * Searches the tree for a node with the given full fileName
+	 * @param fileName
+	 * @return
+	 */
+	public FileWatcherTreeNode getNodeByFileName(String fullFileName) {
+		return getNodeBySubDirs(convertFileNameToStringList(fullFileName));
+	}
+	
+	/**
+	 * Searches the tree for a node with the given full fileName and returns the associated FileInfoListEntry of that node
+	 * @param fullFileName
+	 * @return
+	 */
+	public FileInfoListEntry getFileInfoListEntryByFileName(String fullFileName) {
+		System.out.println("Searching for file: "+fullFileName);
+		FileWatcherTreeNode foundNode = getNodeByFileName(fullFileName);
 		
 		if (foundNode == null) {
-			System.out.println("File not found: "+fileName);
+			System.out.println("File not found: "+fullFileName);
 			return null;
 		} else {
 			System.out.println("File found: "+foundNode.fileName);
@@ -82,13 +109,23 @@ public class FileWatcherTreeNode {
 
 	}
 	
-	public static List<String> convertFileNameToStringList(String fileName) {
-		String[] subDirs = fileName.split(Pattern.quote(File.separator));
+	/**
+	 * Converts a full fileName to a string list that stores each file as an entry
+	 * @param fullFileName
+	 * @return
+	 */
+	public static List<String> convertFileNameToStringList(String fullFileName) {
+		String[] subDirs = fullFileName.split(Pattern.quote(File.separator));
 		List<String> list = new LinkedList<String>(Arrays.asList(subDirs));
 		list.remove(0);
 		return list;
 	}
 	
+	/**
+	 * Searches the tree for a given file, passed as string list
+	 * @param subDirsList
+	 * @return
+	 */
 	public FileWatcherTreeNode getNodeBySubDirs(List<String> subDirsList) {
 		
 		System.out.println("SubDirList: "+subDirsList);
@@ -116,40 +153,46 @@ public class FileWatcherTreeNode {
 		return null;
 	}
 
-	public void addFileInfoEntry(List<String> subDirsList, FileInfoListEntry fileInfo) throws Exception {
+	/**
+	 * Adds a new node/file to a list
+	 * @param fullPathAsList
+	 * @param fileInfo
+	 * @throws Exception
+	 */
+	public void addFileInfoEntry(List<String> fullPathAsList, FileInfoListEntry fileInfo) throws Exception {
 
 		// If child already exists, go on
-		if (children.containsKey(subDirsList.get(0))) {
-			FileWatcherTreeNode child = children.get(subDirsList.get(0));
+		if (children.containsKey(fullPathAsList.get(0))) {
+			FileWatcherTreeNode child = children.get(fullPathAsList.get(0));
 			
-			if (subDirsList.size() == 1) {
+			if (fullPathAsList.size() == 1) {
 				throw new Exception("child for that file name already exists");
 			}
 			
 			// Remove first folder
-			subDirsList.remove(0);
+			fullPathAsList.remove(0);
 			
 			// Add remaining list to child
-			child.addFileInfoEntry(subDirsList, fileInfo);
+			child.addFileInfoEntry(fullPathAsList, fileInfo);
 			
 		// Child does not exist -> Add
 		} else {
 
 				// We need to create new child
 				FileWatcherTreeNode newNode = new FileWatcherTreeNode(false);
-				newNode.fileName = subDirsList.get(0);
+				newNode.fileName = fullPathAsList.get(0);
 				newNode.parent = this;
 				
 				// Add new node as child to current node
 				children.put(newNode.fileName, newNode);
 				
-				if (subDirsList.size() != 1) {
+				if (fullPathAsList.size() != 1) {
 					
 					// Remove current entry from list
-					subDirsList.remove(0);
+					fullPathAsList.remove(0);
 					
 					// Start new add process from newNode
-					newNode.addFileInfoEntry(subDirsList, fileInfo);	
+					newNode.addFileInfoEntry(fullPathAsList, fileInfo);	
 
 				}	
 		}
