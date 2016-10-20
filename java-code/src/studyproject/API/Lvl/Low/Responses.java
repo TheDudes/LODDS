@@ -132,7 +132,7 @@ public class Responses {
 	 * 			the size of the file we should write
 	 * 
 	 * @return 
-	 * 			0 or an error value
+	 * 			0 if transfer was completed or an error value
 	 */
 	public static int respondSendPermission(Socket socket, FileOutputStream fileStream, long size) {
 		try{
@@ -142,6 +142,7 @@ public class Responses {
 			
 			BufferedOutputStream outStream = new BufferedOutputStream(socket.getOutputStream());
 			outStream.write(OK_FLAG.getBytes());
+			outStream.flush();
 			outStream.close();
 			
 			BufferedInputStream inStream = new BufferedInputStream(socket.getInputStream());
@@ -154,6 +155,7 @@ public class Responses {
 				Utils.readThisLength(inStream, buffer, 0, bytesToRead);
 				bytesRead += bytesToRead;
 				fileStream.write(buffer, 0, bytesToRead);
+				fileStream.flush();
 			}
 			inStream.close();
 		} catch(IOException e){
