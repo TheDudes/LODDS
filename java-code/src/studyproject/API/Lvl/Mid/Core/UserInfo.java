@@ -220,4 +220,17 @@ public class UserInfo {
 		this.lastReceivedBroadcast = lastReceivedBroadcast;
 	}
 	
+	@Override
+	public boolean equals(Object obj) {
+		if (obj == null) {
+			return false;
+		} else if (!obj.getClass().equals(this.getClass())) {
+			return false;
+		}
+		if(!this.userName.equals(((UserInfo)obj).userName)){
+			return false;
+		}
+		return true;
+	}
+	
 }
