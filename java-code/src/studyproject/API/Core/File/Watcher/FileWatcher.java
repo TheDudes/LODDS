@@ -62,7 +62,7 @@ public class FileWatcher implements Runnable {
 					    // wait for a key to be available
 					    key = watcher.take();
 					} catch (InterruptedException ex) {
-					    return;
+					    break;
 					}
 					
 					 
@@ -196,14 +196,15 @@ public class FileWatcher implements Runnable {
 
 					    }	
 					 
-					 	// FileWatcherController.semaphore.release();
-					 	controller.lock.unlock();
-					 
 					    // Reset key
 					    boolean valid = key.reset();
 					    if (!valid) {
 					        break;
 					    }
+					    
+						 
+					 	// FileWatcherController.semaphore.release();
+					 	controller.lock.unlock();
 
 				}
 

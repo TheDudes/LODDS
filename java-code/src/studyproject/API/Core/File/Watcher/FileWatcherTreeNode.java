@@ -25,13 +25,18 @@ public class FileWatcherTreeNode {
 	}
 	
 	public static void main(String[] args) throws Exception {
-		FileInfoListEntry entry = new FileInfoListEntry("/Users/robinhood/Desktop/testData/test.zip");
+		String fileName = "/Users/robinhood/Desktop/testData/test.zip";
+		FileInfoListEntry entry = new FileInfoListEntry(fileName);
 		
 		FileWatcherTreeNode root = new FileWatcherTreeNode();
 		root.addFileInfoEntry(convertFileNameToStringList(entry.fileName), entry);
 		
 		System.out.println("Tree:");
 		root.printTree(0);
+		
+		System.out.println("\n\nTest FileInfoListEntry:");
+		FileInfoListEntry found = root.getFileInfoListEntryByFileName(fileName);
+		System.out.println(found.checksum);
 	}
 	
 	public void printTree(Integer depth) {
@@ -55,6 +60,10 @@ public class FileWatcherTreeNode {
 		return getNodeBySubDirs(convertFileNameToStringList(fileName));
 	}
 	
+	public FileInfoListEntry getFileInfoListEntryByFileName(String fileName) {
+		return getNodeBySubDirs(convertFileNameToStringList(fileName)).fileInfo;
+	}
+	
 	public static List<String> convertFileNameToStringList(String fileName) {
 		String[] subDirs = fileName.split(Pattern.quote(File.separator));
 		List<String> list = new LinkedList<String>(Arrays.asList(subDirs));
@@ -66,6 +75,8 @@ public class FileWatcherTreeNode {
 
 		// Check if child contains first folder
 		if (children.containsKey(subDirsList.get(0))) {
+			System.out.println("getNodeBySubDirs. File found: "+subDirsList.get(0));
+			
 			FileWatcherTreeNode child = children.get(subDirsList.get(0));
 			
 			if (subDirsList.size() == 1)
