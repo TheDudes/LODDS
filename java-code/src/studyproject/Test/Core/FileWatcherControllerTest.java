@@ -15,7 +15,7 @@ import studyproject.API.Core.File.Watcher.FileWatcherController;
 
 public class FileWatcherControllerTest {
 	
-	private String testDirectory = "testData/FileWatcherController/";
+	private String testDirectory = "java-code/testData/FileWatcherController/";
 
 	@Test
 	public void listShouldContainOneFile() throws NoSuchAlgorithmException, IOException {
