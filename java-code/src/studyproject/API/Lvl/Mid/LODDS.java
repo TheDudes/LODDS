@@ -225,6 +225,11 @@ public class LODDS {
 		GetFileWPThread getFileWPThread = new GetFileWPThread(socket, pathToSaveTo, fileName, fileSize);
 		getFileWPThread.run();
 	}
+	
+	public void sendInfo() {
+		InfoSenderThread infoSenderThread = new InfoSenderThread();
+		infoSenderThread.run();
+	}
 
 	/**
 	 * get the information necessary to connect to another user, this means IP
