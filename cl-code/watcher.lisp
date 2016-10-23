@@ -14,18 +14,13 @@
     (thread :type bt:thread
             :reader thread
             :transactional nil)
-    (hooks :type list
-           :reader hooks
-           :initform '((:file-added        . nil)
-                       (:file-added        . nil)
-                       (:file-removed      . nil)
-                       (:file-changed      . nil)
-                       (:directory-added   . nil)
-                       (:directory-removed . nil)
-                       (:on-deleted        . nil)))
+    (hook :type function
+          :initarg :hook
+          :reader hook
+          :initform nil)
     (directory-handles :type hash-table
                        :reader directory-handles
-                       :initform (make-hash-table :test 'equalp))
+                       :initform (make-hash-table :test 'equal))
     (recursive-p :initarg :recursive-p
                  :initform nil
                  :reader recursive-p
@@ -53,12 +48,7 @@
                 (not changed-p)
                 (not file-exists-p)
                 directory-exists-p)
-           :directory-added)
-          ((and renamed-p
-                (not changed-p)
-                (not file-exists-p)
-                (not directory-exists-p))
-           :directory-removed))))
+           :directory-added))))
 
 (defun add-dir (watcher dir)
   "adds the specified dir to watcher, this funciton has to be called
@@ -78,6 +68,12 @@
 (defun add-directory-to-watch (watcher dir)
   "adds dir to watcher, can be safetly called by any thread, will
    interrupt watcher-thread."
+  (when (pathnamep dir)
+    (format t "ERROR: add-directory-to-watch: this should not happen~%")
+    (setf dir (format nil "~a" dir)))
+  (unless (char= #\/ (aref dir (- (length dir) 1)))
+    (format t "ERROR: had no trailing /~%")
+    (setf dir (concatenate 'string dir "/")))
   (if (eql (bt:current-thread)
            (thread watcher))
       (add-dir watcher dir)
@@ -87,12 +83,17 @@
 (defun remove-directory-from-watch (watcher dir)
   "adds dir to watcher, can be safetly called by any thread, will
    interrupt watcher-thread."
-
+  (when (pathnamep dir)
+    (format t "ERROR: remove-directory-to-watch: this should not happen~%")
+    (setf dir (format nil "~a" dir)))
   (let* ((table (directory-handles watcher))
          (handle (gethash dir table)))
+    (format t "removing dir: ~a~%handle: ~a~%~%" dir handle)
     (as:fs-unwatch handle)
+    (format t "removing dir (after): ~a~%~%" dir)
+    (force-output)
     (stmx:atomic
-     (setf (gethash dir table) nil))))
+     (remhash dir table))))
 
 (defun get-handle-path (handle)
   "gets the path of the given cl-async fs-handle."
@@ -111,28 +112,35 @@
     result))
 
 (defun callback (watcher handle filename renamed-p changed-p)
-  (format t "something happend!~%watcher: ~a~%filename: ~a~%handle: ~a~%renamed-p, changed-p: ~a, ~a~%~%"
-          watcher filename handle renamed-p changed-p)
+  ;; (format t "something happend!~%watcher: ~a~%filename: ~a~%handle:
+  ;; ~a~%renamed-p, changed-p: ~a, ~a~%~%"
+  ;;         watcher filename handle renamed-p changed-p)
   (let ((event-type nil)
-        (full-filename nil))
-    (if (and (eql 0 (length filename))
-             (equalp (dir watcher) (get-handle-path handle)))
-        (setf event-type :on-deleted)
-        (progn
-          (setf full-filename (concatenate 'string
-                                           (get-handle-path handle)
-                                           filename))
-          (setf event-type (get-event-type full-filename renamed-p changed-p))))
+        (full-filename (concatenate 'string
+                                    (get-handle-path handle)
+                                    filename)))
+    (if (eql 0 (length filename))
+        (if (equalp (dir watcher)
+                    full-filename)
+            ;; main directory got deleted
+            (setf event-type :on-deleted)
+            ;; if it wasnt the main directory it means
+            ;; a subdirectory was removed
+            (setf event-type :directory-removed))
+        ;; some other event besides :on-deleted and :directory-removed
+        (setf event-type (get-event-type full-filename renamed-p changed-p)))
     (case event-type
-      (:directory-added (when (recursive-p watcher)
-                          (add-directory-to-watch watcher full-filename)))
-      (:directory-removed (when (recursive-p watcher)
-                            (remove-directory-from-watch watcher full-filename)))
+      (:directory-added
+       (when (recursive-p watcher)
+         (add-directory-to-watch watcher full-filename)))
+      (:directory-removed
+       (when (recursive-p watcher)
+         (remove-directory-from-watch watcher full-filename)))
       (:on-deleted
-       (as:fs-unwatch handle)))
-    (let ((fn (cdr (assoc event-type (hooks watcher)))))
+       (remove-directory-from-watch watcher full-filename)))
+    (let ((fn (hook watcher)))
       (when fn
-        (funcall fn watcher full-filename)))))
+        (funcall fn watcher full-filename event-type)))))
 
 (defun watcher-event-loop (watcher)
   "Watcher event loop, will be called by the watcher thread. adds the
@@ -143,7 +151,8 @@
         (uiop:collect-sub*directories (pathname (dir watcher))
                                       t
                                       t
-                                      (lambda (dir) (push dir initial-directories)))
+                                      (lambda (dir) (push (format nil "~a" dir)
+                                                          initial-directories)))
         (push (dir watcher) initial-directories))
     (as:with-event-loop (:catch-app-errors t)
       (loop
@@ -155,16 +164,23 @@
 (defmethod initialize-instance ((w watcher) &rest initargs)
   ;; (declare (ignore initargs))
   (call-next-method)
-  (setf (slot-value w 'dir) (car (directory (getf initargs :dir))))
+
+  (setf (slot-value w 'dir)
+        ;; get fullpath as string
+        (format nil "~a" (car
+                          (directory (getf initargs :dir)))))
   ;; add hook to call callback with watcher and args
   (setf (slot-value w 'thread)
         (bt:make-thread (lambda () (watcher-event-loop w))
                         :name "directory-watcher")))
 
-(defun add-hook (watcher event-type hook-fn)
-  "WATCHER is the watcher object the HOOK-FN should be added to.
+(defun set-hook (watcher hook-fn)
+  "WATCHER is the watcher object the HOOK-FN should be set to.
+   If a hook was already set, it will be overwritten!
 
-   EVENT-TYPE is one of the following:
+   hook-fn should be a function witch takes 3 arguments, it will be called with the
+   watcher object, the pathname and the type of event.
+   the event type is one of the following:
    :file-added
    :file-removed
    :file-changed
@@ -173,18 +189,12 @@
    :on-deleted
 
    If a directory is added and RECURSIVE-P is true, the directory will
-   automatically be added to the watched list.
-
-   HOOK-FN is the function which should be called if a file
-   changed. The function will be called with the following 2 Arguments:
-
-   filename: the path to the new file which was added. If watcher is
-   RECURSIVE-P its the full path to the file."
+   automatically be added to the watched list."
   (unless (bt:thread-alive-p (thread watcher))
-    (format t "TODO: add-hook was called while watcher was not running! fixmeee~%")
-    (return-from add-hook))
+    (format t "TODO: set-hook was called while watcher was not running! fixmeee~%")
+    (return-from set-hook))
   (stmx:atomic
-   (setf (cdr (assoc event-type (slot-value watcher 'hooks)))
+   (setf (slot-value watcher 'hook)
          hook-fn)))
 
 (defun remove-hook (watcher event-type)
@@ -192,13 +202,14 @@
     (format t "TODO: remove-hook was called while watcher was not running! fixmeee~%")
     (return-from remove-hook))
   (stmx:atomic
-   (setf (cdr (assoc event-type (slot-value watcher 'hooks)))
-         nil)))
+   (setf (slot-value watcher 'hook) nil)))
 
 (defun stop-watcher (watcher)
   (let ((table (directory-handles watcher)))
     (loop :for handle :being :the :hash-key :of table
-       :do (as:fs-unwatch (gethash handle table)))
+       :do (progn
+             (as:fs-unwatch (gethash handle table))
+             (remhash handle table)))
     (bt:join-thread (thread watcher))))
 
 ;; (stmx:transactional

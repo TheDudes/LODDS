@@ -10,7 +10,7 @@
 (defpackage #:lodds.watcher
   (:use #:cl)
   (:export #:watcher
-           #:add-hook
+           #:set-hook
            #:remove-hook
            #:stop-watcher))
 
