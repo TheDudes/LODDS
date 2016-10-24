@@ -53,18 +53,23 @@
            (error "TODO: could not determine event type in GET-EVENT-TYPE")))))
 
 (defun add-dir (watcher dir)
-  "adds the specified dir to watcher, this funciton has to be called
-   from the watcher-thread!"
-  (stmx:atomic
-   (let ((table (directory-handles watcher)))
-     (multiple-value-bind (value present-p) (gethash dir table)
-       (declare (ignore value))
-       (when present-p
-         (format t "ERROR: Key was already Present!~%")))
-     (setf (gethash dir table)
-           (as:fs-watch dir
-                        (lambda (h f e s)
-                          (callback watcher h f e s)))))))
+  "adds the specified dir to watcher, this function has to be called
+   from the watcher-thread! See also: ADD-DIRECTORY-TO-WATCH."
+  (let ((table (directory-handles watcher)))
+    (multiple-value-bind (value present-p) (gethash dir table)
+      (declare (ignore value))
+      (when present-p
+        (format t "ERROR: Key was already Present!~%")))
+    (let ((handle (if (or (recursive-p watcher)
+                          (string= (dir watcher) dir))
+                      ;; add a fs-watch if either RECURSIVE-P is true
+                      ;; or its the main directory
+                      (as:fs-watch dir
+                                   (lambda (h f e s)
+                                     (callback watcher h f e s)))
+                      nil)))
+      (stmx:atomic
+       (setf (gethash dir table) handle)))))
 
 (defun add-directory-to-watch (watcher dir)
   "adds dir to watcher, can be safetly called by any thread, will
@@ -85,11 +90,14 @@
   "adds dir to watcher, can be safetly called by any thread, will
    interrupt watcher-thread."
   (when (pathnamep dir)
-    (format t "ERROR: remove-directory-to-watch: this should not happen~%")
+    (format t "ERROR: remove-directory-to-watch: dir is pathnamep, this should not happen~%")
     (setf dir (format nil "~a" dir)))
   (let* ((table (directory-handles watcher))
          (handle (gethash dir table)))
-    (as:fs-unwatch handle)
+    (when handle
+      ;; only call fs-unwatch if there is a handle. (handles are NIL
+      ;; if RECURSIVE-P is NIL)
+      (as:fs-unwatch handle))
     (stmx:atomic
      (remhash dir table))))
 
@@ -141,17 +149,16 @@
     (when (or (eql event-type :directory-added)
               (eql event-type :directory-removed))
       (setf full-filename (concatenate 'string full-filename "/")))
-    ;; if watcher is recursive-p add/remove dir
-    (when (recursive-p watcher)
-      (case event-type
-        (:directory-added
-         (add-directory-to-watch watcher full-filename))
-        (:directory-removed
-         (remove-directory-from-watch watcher full-filename))))
-    ;; if watcher directory got removed, remove its handle too, so
-    ;; that the event loop can finish
-    (when (eql event-type :on-deleted)
-      (remove-directory-from-watch watcher full-filename))
+    ;; add/remove directory from watcher
+    (case event-type
+      (:directory-added
+       (add-directory-to-watch watcher full-filename))
+      (:directory-removed
+       (remove-directory-from-watch watcher full-filename))
+      (:on-deleted
+       ;; if watcher directory got removed, remove its handle too, so
+       ;; that the event loop can finish
+       (remove-directory-from-watch watcher full-filename)))
     ;; lets check if hook is set, and if so call it
     (let ((fn (hook watcher)))
       (when fn
@@ -161,18 +168,23 @@
   "Watcher event loop, will be called by the watcher thread. adds the
    initial directories. This thread will get interrupted by
    add-directory-to-watch-dir if a new directory is added."
-  (let ((initial-directories (list)))
+  (let ((initial-directories (list))
+        (root-dir (dir watcher)))
     (if (recursive-p watcher)
-        (uiop:collect-sub*directories (pathname (dir watcher))
+        (uiop:collect-sub*directories (pathname root-dir)
                                       t
                                       t
                                       (lambda (dir) (push (format nil "~a" dir)
                                                           initial-directories)))
-        (push (dir watcher) initial-directories))
+        (progn
+          (push root-dir initial-directories)
+          (loop
+             :for dir :in (uiop:subdirectories root-dir)
+             :do (push (format nil "~a" dir) initial-directories))))
     (as:with-event-loop (:catch-app-errors t)
       (loop
          :for dir :in initial-directories
-         :do (add-dir watcher dir))))) ;; we can directly call add-dir here,
+         :do (add-dir watcher dir))))) ;; we can call add-dir directly here,
                                ;; since we are inside the event-loop
                                ;; thread
 
@@ -214,11 +226,13 @@
 
 (defun stop-watcher (watcher)
   (let ((table (directory-handles watcher)))
-    (loop :for handle :being :the :hash-key :of table
+    (loop :for path :being :the :hash-key :of table
        :do (progn
-             (as:fs-unwatch (gethash handle table))
+             (let ((handle (gethash path table)))
+               (when handle
+                 (as:fs-unwatch handle)))
              (stmx:atomic
-              (remhash handle table))))
+              (remhash path table))))
     (bt:join-thread (thread watcher))))
 
 ;; (stmx:transactional
