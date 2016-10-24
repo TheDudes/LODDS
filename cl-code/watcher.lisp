@@ -53,13 +53,12 @@
 (defun add-dir (watcher dir)
   "adds the specified dir to watcher, this funciton has to be called
    from the watcher-thread!"
-  (format t "adding key: ~a~%" dir)
   (stmx:atomic
    (let ((table (directory-handles watcher)))
      (multiple-value-bind (value present-p) (gethash dir table)
        (declare (ignore value))
        (when present-p
-         (format t "ERROR: Key was already Present!!!!~%")))
+         (format t "ERROR: Key was already Present!~%")))
      (setf (gethash dir table)
            (as:fs-watch dir
                         (lambda (h f e s)
@@ -69,10 +68,10 @@
   "adds dir to watcher, can be safetly called by any thread, will
    interrupt watcher-thread."
   (when (pathnamep dir)
-    (format t "ERROR: add-directory-to-watch: this should not happen~%")
+    (format t "ERROR: add-directory-to-watch: dir is pathnamep, this should not happen!~%")
     (setf dir (format nil "~a" dir)))
   (unless (char= #\/ (aref dir (- (length dir) 1)))
-    (format t "ERROR: had no trailing /~%")
+    (format t "ERROR: add-directory-to-watch: dir had no trailing /~%")
     (setf dir (concatenate 'string dir "/")))
   (if (eql (bt:current-thread)
            (thread watcher))
@@ -88,10 +87,7 @@
     (setf dir (format nil "~a" dir)))
   (let* ((table (directory-handles watcher))
          (handle (gethash dir table)))
-    (format t "removing dir: ~a~%handle: ~a~%~%" dir handle)
     (as:fs-unwatch handle)
-    (format t "removing dir (after): ~a~%~%" dir)
-    (force-output)
     (stmx:atomic
      (remhash dir table))))
 
@@ -125,19 +121,36 @@
             ;; main directory got deleted
             (setf event-type :on-deleted)
             ;; if it wasnt the main directory it means
-            ;; a subdirectory was removed
-            (setf event-type :directory-removed))
+            ;; a subdirectory was removed, so ignore it, it will be
+            ;; handled by the event the handle above gets.
+            (return-from callback))
         ;; some other event besides :on-deleted and :directory-removed
         (setf event-type (get-event-type full-filename renamed-p changed-p)))
-    (case event-type
-      (:directory-added
-       (when (recursive-p watcher)
-         (add-directory-to-watch watcher full-filename)))
-      (:directory-removed
-       (when (recursive-p watcher)
-         (remove-directory-from-watch watcher full-filename)))
-      (:on-deleted
-       (remove-directory-from-watch watcher full-filename)))
+    ;; lets check if a directory was removed, just add a trailing /
+    ;; and see if its inside directory-handles
+    (when (eql event-type :file-removed)
+      (let ((dir-name (concatenate 'string full-filename "/")))
+        (multiple-value-bind (value present-p)
+            (gethash dir-name (directory-handles watcher))
+          (declare (ignore value))
+          (when present-p
+            (setf event-type :directory-removed)))))
+    ;; in case a directoy was added/removed add a trailing /
+    (when (or (eql event-type :directory-added)
+              (eql event-type :directory-removed))
+      (setf full-filename (concatenate 'string full-filename "/")))
+    ;; if watcher is recursive-p add/remove dir
+    (when (recursive-p watcher)
+      (case event-type
+        (:directory-added
+         (add-directory-to-watch watcher full-filename))
+        (:directory-removed
+         (remove-directory-from-watch watcher full-filename))))
+    ;; if watcher directory got removed, remove its handle too, so
+    ;; that the event loop can finish
+    (when (eql event-type :on-deleted)
+      (remove-directory-from-watch watcher full-filename))
+    ;; lets check if hook is set, and if so call it
     (let ((fn (hook watcher)))
       (when fn
         (funcall fn watcher full-filename event-type)))))
@@ -209,7 +222,8 @@
     (loop :for handle :being :the :hash-key :of table
        :do (progn
              (as:fs-unwatch (gethash handle table))
-             (remhash handle table)))
+             (stmx:atomic
+              (remhash handle table))))
     (bt:join-thread (thread watcher))))
 
 ;; (stmx:transactional
