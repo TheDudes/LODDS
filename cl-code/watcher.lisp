@@ -358,6 +358,16 @@ For more Details see the actual error message.
               (remhash path table))))
     (bt:join-thread (thread watcher))))
 
+(defun get-all-tracked-files (watcher)
+  "returns all files (excluding directories) which are tracked by the
+   given watcher"
+  (apply #'append
+         (loop
+            :for key :being :the :hash-keys :of (directory-handles watcher)
+            :using (hash-value value)
+            :if value
+            :collect (uiop:directory-files key))))
+
 ;; (stmx:transactional
 ;;  (defclass watcher-lodds (watcher)
 ;;    (watcher-object-lodds
