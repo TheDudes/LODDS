@@ -11,7 +11,11 @@
   (:use #:cl)
   (:export #:watcher
            #:set-hook
-           #:stop-watcher))
+           #:stop-watcher
+           #:dir
+           #:hook
+           #:directory-handles
+           #:recursive-p))
 
 (defpackage #:lodds.low-level-api
   (:use #:cl
