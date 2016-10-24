@@ -98,6 +98,9 @@ For more Details see the actual error message.
                           SET-HOOK since its a STMX:TRANSACTIONAL
                           variable and needs to be set inside a
                           STMX:ATOMIC block.")
+    (alive-p :reader alive-p
+             :initform nil
+             :documentation "To check if watcher is alive and running.")
     (directory-handles :type hash-table
                        :reader directory-handles
                        :initform (make-hash-table :test 'equal)
@@ -265,7 +268,10 @@ For more Details see the actual error message.
     ;; lets check if hook is set, and if so call it
     (let ((fn (hook watcher)))
       (when fn
-        (funcall fn watcher full-filename event-type)))))
+        (funcall fn watcher full-filename event-type)))
+    (when (eql event-type :on-deleted)
+      (stmx:atomic
+       (setf (slot-value watcher 'alive-p) nil)))))
 
 (defun watcher-event-loop (watcher)
   "Watcher event loop, will be called by the watcher thread. This
@@ -289,9 +295,11 @@ For more Details see the actual error message.
     (as:with-event-loop (:catch-app-errors t)
       (loop
          :for dir :in initial-directories
-         :do (add-dir watcher dir))))) ;; we can call add-dir directly here,
-                               ;; since we are inside the event-loop
-                               ;; thread
+         ;; we can call add-dir directly here, since we are inside the
+         ;; event-loop thread
+         :do (add-dir watcher dir))
+      (stmx:atomic
+       (setf (slot-value watcher 'alive-p) t)))))
 
 ;; overwrite constructor and set DIR to a absolute Path, also start
 ;; the event-loop Thread
@@ -356,7 +364,9 @@ For more Details see the actual error message.
                  (as:fs-unwatch handle)))
              (stmx:atomic
               (remhash path table))))
-    (bt:join-thread (thread watcher))))
+    (bt:join-thread (thread watcher))
+    (stmx:atomic
+     (setf (slot-value watcher 'alive-p) nil))))
 
 (defun get-all-tracked-files (watcher)
   "returns all files (excluding directories) which are tracked by the
