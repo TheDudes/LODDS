@@ -210,13 +210,6 @@
    (setf (slot-value watcher 'hook)
          hook-fn)))
 
-(defun remove-hook (watcher event-type)
-  (unless (bt:thread-alive-p (thread watcher))
-    (format t "TODO: remove-hook was called while watcher was not running! fixmeee~%")
-    (return-from remove-hook))
-  (stmx:atomic
-   (setf (slot-value watcher 'hook) nil)))
-
 (defun stop-watcher (watcher)
   (let ((table (directory-handles watcher)))
     (loop :for handle :being :the :hash-key :of table

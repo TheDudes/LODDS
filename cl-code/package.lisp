@@ -11,7 +11,6 @@
   (:use #:cl)
   (:export #:watcher
            #:set-hook
-           #:remove-hook
            #:stop-watcher))
 
 (defpackage #:lodds.low-level-api
