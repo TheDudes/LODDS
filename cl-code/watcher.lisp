@@ -371,12 +371,14 @@ For more Details see the actual error message.
 (defun get-all-tracked-files (watcher)
   "returns all files (excluding directories) which are tracked by the
    given watcher"
-  (apply #'append
-         (loop
-            :for key :being :the :hash-keys :of (directory-handles watcher)
-            :using (hash-value value)
-            :if value
-            :collect (uiop:directory-files key))))
+  (mapcar
+   (lambda (pathname) (format nil "~a" pathname))
+   (apply #'append
+          (loop
+             :for key :being :the :hash-keys :of (directory-handles watcher)
+             :using (hash-value value)
+             :if value
+             :collect (uiop:directory-files key)))))
 
 ;; (stmx:transactional
 ;;  (defclass watcher-lodds (watcher)
