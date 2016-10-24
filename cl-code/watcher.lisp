@@ -7,7 +7,7 @@
 (stmx:transactional
  (defclass watcher ()
    ((dir :initform (error "specify a directory!")
-         :type pathname
+         :type string
          :initarg :dir
          :reader dir
          :transactional nil)
@@ -175,13 +175,13 @@
                                ;; thread
 
 (defmethod initialize-instance ((w watcher) &rest initargs)
-  ;; (declare (ignore initargs))
   (call-next-method)
-
-  (setf (slot-value w 'dir)
-        ;; get fullpath as string
-        (format nil "~a" (car
-                          (directory (getf initargs :dir)))))
+  ;; get fullpath as string
+  (let ((fullpath (car (directory (getf initargs :dir)))))
+    (unless fullpath
+      (error "TODO: ERROR: The given Directory does not exist (or is
+              fishy). calling DIRECTORY on it returned NIL."))
+    (setf (slot-value w 'dir) (format nil "~a" fullpath)))
   ;; add hook to call callback with watcher and args
   (setf (slot-value w 'thread)
         (bt:make-thread (lambda () (watcher-event-loop w))
