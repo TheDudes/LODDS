@@ -48,7 +48,9 @@
                 (not changed-p)
                 (not file-exists-p)
                 directory-exists-p)
-           :directory-added))))
+           :directory-added)
+          (t
+           (error "TODO: could not determine event type in GET-EVENT-TYPE")))))
 
 (defun add-dir (watcher dir)
   "adds the specified dir to watcher, this funciton has to be called
