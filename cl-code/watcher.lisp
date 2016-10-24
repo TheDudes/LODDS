@@ -1,5 +1,70 @@
 ;;;; watcher.lisp
 
+#|
+
+This file contains the directory watcher which is used to watch a
+directory for changes to its files and directories.
+
+To use the Watcher create a instance of WATCHER with a directory to
+watch and attach a hook, either by specifying it at creation or by
+calling SET-HOOK. Once a Watcher is created a Thread is started which
+is handling the event-loop (see cl-async documentation for more
+information about the event-loop)
+
+For example:
+
+(defparameter *my-watcher*
+              (make-instance 'watcher
+                             :dir "~/watch-me/" ;; watch ~/watch-me/
+                             :recursive-p t     ;; also watch all subdirectories of ~/watch-me/
+                             :hook (lambda (watcher path type) ;; call this function if anything happens
+                                     (format t "something happend on watcher: ~a, which watches: ~a!~%"
+                                               watcher (dir watcher))
+                                     (format t "it happened to: ~a, event: ~a~%"
+                                               path event))))
+
+watcher is the WATCHER the event occured on. Usefull if multiple
+watcher are used.
+
+path is the absolute path to the changed file, so if i-was-changed.txt
+inside ~/watch-me/some-dir/ is changed, the path will be (if $HOME is
+/home/steve):
+/home/steve/watch-me/some-dir/i-was-changed.txt
+
+type (the last argument to the hook function) will be one of the
+following:
+   :file-added (will always be followed by a :file-changed event with
+                the same path)
+   :file-removed
+   :file-changed
+   :directory-added
+   :directory-removed
+   :on-deleted (given if the main directory, which is watched by
+                WATCHER (:dir initarg to make-instance), is
+                deleted. If the Hook returns the Event Loop will
+                finish and the Watcher THREAD will terminate)
+
+To Switch the Hook use SET-HOOK:
+
+(set-hook *my-watcher* #'call-me-instead)
+
+To disable/remove the hook use:
+
+(set-hook *my-watcher* nil)
+
+and to stop the Watcher and cleanup all its resources use:
+
+(stop-watcher *my-watcher*)
+
+NOTE: The Watcher uses STMX for atomic operations, so it might throw
+an error if some functios (like STOP-WATCHER) are getting called from
+the REPL Thread. To fix this call those functions from a
+Bordeaux-Thread using:
+(bt:make-thread (lambda () (stop-watcher *my-watcher*)))
+For more Details see the actual error message.
+
+|#
+
 (in-package #:lodds.watcher)
 
 ;;; "lodds.watcher" goes here. Hacks and glory await!
@@ -10,23 +75,60 @@
          :type string
          :initarg :dir
          :reader dir
-         :transactional nil)
+         :transactional nil
+         :documentation "Main or Root Directory which will be watched,
+                         if RECURSIVE-P is t all its subdirectories
+                         will be watched too.")
     (thread :type bt:thread
             :reader thread
-            :transactional nil)
+            :transactional nil
+            :documentation "BT:THREAD which will run the event-loop,
+                            on Creation of WATCHER the THREAD will be
+                            created. Thread will finish if DIR gets deleted or
+                            STOP-WATCHER is called.")
     (hook :type function
           :initarg :hook
           :reader hook
-          :initform nil)
+          :initform nil
+          :documentation "The function which gets called if a event
+                          occurs. HOOk needs to be a FUNCTION which
+                          takes 3 arguments. It will be called with
+                          the Watcher Object, the filename and the
+                          Event-type. To add/change the hook use
+                          SET-HOOK since its a STMX:TRANSACTIONAL
+                          variable and needs to be set inside a
+                          STMX:ATOMIC block.")
     (directory-handles :type hash-table
                        :reader directory-handles
-                       :initform (make-hash-table :test 'equal))
+                       :initform (make-hash-table :test 'equal)
+                       :documentation "Hash-table of all watched
+                                       directories, if RECURSIVE-P is
+                                       NIL this Hash-table will only
+                                       contain the DIR handle. If
+                                       RECURSIVE-P is T it will
+                                       contain all watched
+                                       subdirectories, and it will be
+                                       automatically be updated in
+                                       case a directory is added or
+                                       removed. Do not set member by
+                                       Hand, these will be updated by
+                                       ADD-DIRECTORY-TO-WATCH and
+                                       REMOVE-DIRECTORY-FROM-WATCH,
+                                       for more info see CALLBACK.")
     (recursive-p :initarg :recursive-p
                  :initform nil
                  :reader recursive-p
-                 :transactional nil))))
+                 :transactional nil
+                 :documentation "If T all subdirectories of DIR will
+                                 be watched too, if NIL just DIR is
+                                 watched."))))
 
 (defun get-event-type (filename renamed-p changed-p)
+  "Will determine the Event-Type by using UIOP:DIRECTORY-EXISTS-P and
+   UIOP:FILE-EXISTS-P. Will return one of the following types:
+   :file-added, :file-removed, :file-changed, :directory-added.
+   Since its not possible to determine :directory-removed and
+   :on-delete a :file-removed will be returned instead."
   (let ((file-exists-p (uiop:file-exists-p filename))
         (directory-exists-p (uiop:directory-exists-p filename)))
     (cond ((and renamed-p
@@ -73,7 +175,7 @@
 
 (defun add-directory-to-watch (watcher dir)
   "adds dir to watcher, can be safetly called by any thread, will
-   interrupt watcher-thread."
+   interrupt watcher-thread if BT:CURRENT-THREAD != (THREAD WATCHER)."
   (when (pathnamep dir)
     (format t "ERROR: add-directory-to-watch: dir is pathnamep, this should not happen!~%")
     (setf dir (format nil "~a" dir)))
@@ -87,8 +189,8 @@
                            #'add-dir watcher dir)))
 
 (defun remove-directory-from-watch (watcher dir)
-  "adds dir to watcher, can be safetly called by any thread, will
-   interrupt watcher-thread."
+  "removes dir from watcher, can be safetly called by any thread, will
+   interrupt watcher-thread if BT:CURRENT-THREAD != (THREAD WATCHER)"
   (when (pathnamep dir)
     (format t "ERROR: remove-directory-to-watch: dir is pathnamep, this should not happen~%")
     (setf dir (format nil "~a" dir)))
@@ -102,7 +204,7 @@
      (remhash dir table))))
 
 (defun get-handle-path (handle)
-  "gets the path of the given cl-async fs-handle."
+  "gets the path (string) of the given cl-async fs-handle."
   (let ((buffer (cffi:foreign-alloc :char
                                     :initial-element 0
                                     :count 2048))
@@ -118,9 +220,9 @@
     result))
 
 (defun callback (watcher handle filename renamed-p changed-p)
-  ;; (format t "something happend!~%watcher: ~a~%filename: ~a~%handle:
-  ;; ~a~%renamed-p, changed-p: ~a, ~a~%~%"
-  ;;         watcher filename handle renamed-p changed-p)
+  "the main callback which gets called if a Event occures. This
+   function will determine the event type and then call the hook
+   function, if set."
   (let ((event-type nil)
         (full-filename (concatenate 'string
                                     (get-handle-path handle)
@@ -130,9 +232,10 @@
                     full-filename)
             ;; main directory got deleted
             (setf event-type :on-deleted)
-            ;; if it wasnt the main directory it means
-            ;; a subdirectory was removed, so ignore it, it will be
-            ;; handled by the event the handle above gets.
+            ;; in case it was not the main directory a subdirectory
+            ;; was removed, so ignore it. Because this function will
+            ;; be called again by the Handle from the Parent
+            ;; Directory.
             (return-from callback))
         ;; some other event besides :on-deleted and :directory-removed
         (setf event-type (get-event-type full-filename renamed-p changed-p)))
@@ -165,8 +268,10 @@
         (funcall fn watcher full-filename event-type)))))
 
 (defun watcher-event-loop (watcher)
-  "Watcher event loop, will be called by the watcher thread. adds the
-   initial directories. This thread will get interrupted by
+  "Watcher event loop, will be called by the watcher thread. This
+   Function/Thread will return if all handles are removed. That will
+   only happen if STOP-WATCHER is called or the Main Directory gets
+   deleted. This thread will get interrupted by
    add-directory-to-watch-dir if a new directory is added."
   (let ((initial-directories (list))
         (root-dir (dir watcher)))
@@ -188,15 +293,18 @@
                                ;; since we are inside the event-loop
                                ;; thread
 
+;; overwrite constructor and set DIR to a absolute Path, also start
+;; the event-loop Thread
 (defmethod initialize-instance ((w watcher) &rest initargs)
   (call-next-method)
-  ;; get fullpath as string
+  ;; get fullpath as string and check if something went wrong
   (let ((fullpath (car (directory (getf initargs :dir)))))
     (unless fullpath
       (error "TODO: ERROR: The given Directory does not exist (or is
               fishy). calling DIRECTORY on it returned NIL."))
     (setf (slot-value w 'dir) (format nil "~a" fullpath)))
-  ;; add hook to call callback with watcher and args
+  ;; add hook to call CALLBACK with watcher and args. CALLBACK will
+  ;; then figure out which type of event happend etc.
   (setf (slot-value w 'thread)
         (bt:make-thread (lambda () (watcher-event-loop w))
                         :name "directory-watcher")))
@@ -205,26 +313,41 @@
   "WATCHER is the watcher object the HOOK-FN should be set to.
    If a hook was already set, it will be overwritten!
 
-   hook-fn should be a function witch takes 3 arguments, it will be called with the
-   watcher object, the pathname and the type of event.
+   Calling SET-HOOK with HOOK-FN NIL will disable the Hook.
+
+   HOOK-FN should be a function witch takes 3 arguments, it will be called with the
+   watcher object, the path and the type of event.
    the event type is one of the following:
-   :file-added
+
+
+   :file-added (will always be followed by a :file-changed event with the same path)
    :file-removed
    :file-changed
    :directory-added
    :directory-removed
-   :on-deleted
+   :on-deleted (given if the main directory, which is watched by
+                WATCHER (:dir initarg to make-instance), is
+                deleted. If the Hook returns the Event Loop will
+                finish and the Watcher THREAD will terminate)
 
    If a directory is added and RECURSIVE-P is true, the directory will
-   automatically be added to the watched list."
-  (unless (bt:thread-alive-p (thread watcher))
-    (format t "TODO: set-hook was called while watcher was not running! fixmeee~%")
-    (return-from set-hook))
+   automatically be added to the watched list. If a subdirectory gets
+   deleted the handle will be deleted too. So there is no need to
+   handle those.
+
+   Example:
+   (set-hook my-watcher-obj
+             (lambda (watcher path event-type)
+               (format t \"Hook from Watcher ~a was called!~%\" watcher)
+               (format t \"File ~a, Event: ~a!~%\" path event-type)))"
   (stmx:atomic
    (setf (slot-value watcher 'hook)
          hook-fn)))
 
 (defun stop-watcher (watcher)
+  "Will stop the Watcher. Removes all handles and joins the watcher
+   thread. The given WATCHER can be deleted when STOP-WATCHER
+   returns."
   (let ((table (directory-handles watcher)))
     (loop :for path :being :the :hash-key :of table
        :do (progn
