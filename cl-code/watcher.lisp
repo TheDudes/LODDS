@@ -380,30 +380,90 @@ For more Details see the actual error message.
              :if value
              :collect (uiop:directory-files key)))))
 
-;; (stmx:transactional
-;;  (defclass watcher-lodds (watcher)
-;;    (watcher-object-lodds
-;;     ((file-table-name :type hashtable
-;;                       (("name"     ("checksum" size ))))
-;;      (file-table-hash :type hashtable
-;;                       (("checksum" ("name" ...))))))))
+(defun get-file-info (pathname)
+  (values
+   (lodds.core:sha-256 pathname)
+   (with-open-file (stream pathname
+                           :direction :input
+                           :if-does-not-exist nil)
+     (if stream
+         (file-length stream)
+         0))))
 
-;; (defmethod rem-file (name)
-;;   (stmx:atomic
-;;    (let ((data (gethash name file-table-name)))
-;;      (remhash name file-table-name)
-;;      (let ((new-list (delete name (gethash data.hash file-table-hash)))
-;;            (if (null new-list)
-;;                (remhash data.hash file-table-hash)
-;;                (setf (gethash data.hash new-list))))))))
 
-;; (defmethod get-file-infos (checksum &key (all nil))
-;;   (if all
-;;       (stmx:atomic
-;;        (mapcar
-;;         (lambda (name)
-;;           (gethash name file-table-name))
-;;         (gethash hash file-table-hash)))
-;;       (stmx:atomic
-;;        (gethash (car (gethash hash file-table-hash))
-;;                 file-table-name))))
+(stmx:transactional
+ (defclass lodds-watcher (watcher)
+   ((file-table-name :type hashtable
+                     :initform (make-hash-table :test 'equal)
+                     :reader file-table-name)
+    (file-table-hash :type hashtable
+                     :initform (make-hash-table :test 'equal)
+                     :reader file-table-hash))))
+
+(defun add-file (lodds-watcher pathname &optional (checksum nil) (size nil))
+  "adds a file to the given lodds-watcher, this functions is called by
+   LODDS-HOOK to update the watcher if a file was added or has changed"
+  (unless (and checksum size)
+    (multiple-value-bind (hash filesize) (get-file-info pathname)
+      (setf checksum hash
+            size filesize)))
+  (stmx:atomic
+   (let ((ft-hash (file-table-hash lodds-watcher)))
+     (setf (gethash pathname (file-table-name lodds-watcher))
+           (list checksum size))
+     (let ((val (gethash checksum ft-hash)))
+       (setf (gethash checksum ft-hash)
+             (if val
+                 (cons pathname val)
+                 (list pathname)))))))
+
+(defun remove-file (lodds-watcher pathname)
+  "removes a file from the lodds-watcher, will be called bei
+   LODDS-HOOK if a file was removed or has changed"
+  (stmx:atomic
+   (let* ((ft-name (file-table-name lodds-watcher))
+          (ft-hash (file-table-hash lodds-watcher))
+          (checksum (car (gethash pathname ft-name))))
+     (let ((new-val (remove pathname (gethash checksum ft-hash)
+                            :test #'string=)))
+       (if new-val
+           (setf (gethash checksum ft-hash)
+                 new-val)
+           (remhash checksum ft-hash)))
+     (remhash pathname ft-name))))
+
+(defun update-file (lodds-watcher pathname)
+  "checks if the given file under PATHNAME changed (if the checksum is
+   different to the current), and if so calls REMOVE-FILE and ADD-FILE"
+  (multiple-value-bind (new-checksum new-size)
+      (get-file-info pathname)
+    (unless (string= new-checksum
+                     (car (gethash pathname (file-table-name lodds-watcher))))
+      ;; in case checksum changed, we need to update
+      (remove-file lodds-watcher pathname)
+      (add-file lodds-watcher pathname new-checksum new-size))))
+
+(defun lodds-hook (watcher pathname type)
+  "will be called if some filesystem events occur inside the watched
+   directory"
+  (case type
+    (:file-added (add-file watcher pathname))
+    (:file-removed (remove-file watcher pathname))
+    (:file-changed (update-file watcher pathname))))
+
+(defmethod initialize-instance ((lodds-w lodds-watcher) &rest initargs)
+  (declare (ignore initargs))
+  (call-next-method)
+
+  ;; wait until watcher is alive and added all initial handles
+  (loop
+     :while (not (alive-p lodds-w))
+     :do (sleep 0.01))
+
+  ;; now add all initialy tracked files
+  (loop :for file :in (get-all-tracked-files lodds-w)
+     :do (add-file lodds-w file))
+
+  ;; TODO: replace lambda with direct call
+  (set-hook lodds-w (lambda (a b c)
+                      (lodds-hook a b c))))
