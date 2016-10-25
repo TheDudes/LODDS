@@ -215,7 +215,7 @@ public class LODDS {
 	 */
 	public void sendFileWP(String user, long timeout, FileInfo fileInfo) {
 		SendFileWPThread sendFileWPThread = new SendFileWPThread(getUserConnectionInfo(user), timeout, fileInfo);
-		sendFileWPThread.run();
+		sendFileWPThread.start();
 	}
 
 	/**
@@ -223,7 +223,7 @@ public class LODDS {
 	 */
 	public void getFileWP(Socket socket, String pathToSaveTo, String fileName, long fileSize) {
 		GetFileWPThread getFileWPThread = new GetFileWPThread(socket, pathToSaveTo, fileName, fileSize);
-		getFileWPThread.run();
+		getFileWPThread.start();
 	}
 	
 //	/**

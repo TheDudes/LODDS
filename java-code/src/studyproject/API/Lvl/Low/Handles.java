@@ -17,7 +17,6 @@ import studyproject.API.Core.File.InfoList.InfoType;
 public class Handles {
 
 	private static final int BUFFERSIZE = 4096;
-	private static final int TIMEOUT = 10000; // Timeout in milliseconds
 	private static final int TIMEINTERVAL = 1000; // Timeoutinterval
 	private static final String GET_INFO_HEAD_REGEX = "(upd|all) \\d{1,19} \\d{1,19}";
 	private static final String GET_INFO_BODY_LINE_REGEX = "(add|del) \\w{64} \\d{1,19} [^/\\\\:*?\"<>|%]*";
@@ -94,8 +93,8 @@ public class Handles {
 		try {
 			byte[] byteArray = new byte[BUFFERSIZE];
 			while (size > 0) {
-				if(size < byteArray.length){
-					readSize = Utils.readThisLength(socketStream, byteArray, 0, (int)size);
+				if (size < byteArray.length) {
+					readSize = Utils.readThisLength(socketStream, byteArray, 0, (int) size);
 				} else {
 					readSize = Utils.readThisLength(socketStream, byteArray, 0, byteArray.length);
 				}
@@ -113,11 +112,13 @@ public class Handles {
 	 * 
 	 * @param socketStream
 	 *            the BufferedReader to read from
+	 * @param timeout
+	 *            the time in ms until the request times out
 	 * @return integer representing the result. Negative value if function fails
 	 */
-	public static int handleSendPermission(BufferedReader socketStream) {
+	public static int handleSendPermission(BufferedReader socketStream, long timeout) {
 		String s;
-		long endTime = System.currentTimeMillis() + TIMEOUT;
+		long endTime = System.currentTimeMillis() + timeout;
 		while (System.currentTimeMillis() < endTime) {
 			try {
 				if ((s = socketStream.readLine()) != null) {
