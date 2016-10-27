@@ -30,6 +30,7 @@ public class LODDS {
 	private final int DEFAULT_ADVERTISE_PORT = 9002;
 	private final int DEFAULT_TIME_INTERVAL = 1000;
 
+	private long loadBalancingMinumum = 4096;
 	private long lastChange;
 	private Vector<FileChange> localFileChanges;
 	private Vector<UserInfo> clientList;
@@ -121,7 +122,8 @@ public class LODDS {
 	 *            the FileInfo which specifies the file which shall be sent
 	 */
 	public void sendFile(Socket socket, FileInfo fileInfo) {
-		FileSenderThread fileSenderThread = new FileSenderThread(socket, fileInfo);
+		FileSenderThread fileSenderThread = new FileSenderThread(socket,
+				fileInfo);
 		fileSenderThread.start();
 	}
 
@@ -138,8 +140,10 @@ public class LODDS {
 	 * @param endIndex
 	 *            the index(number of byte) where the transaction shall end
 	 */
-	public void sendFile(Socket socket, FileInfo fileInfo, long startIndex, long endIndex) {
-		FileSenderThread fileSenderThread = new FileSenderThread(socket, fileInfo, startIndex, endIndex);
+	public void sendFile(Socket socket, FileInfo fileInfo, long startIndex,
+			long endIndex) {
+		FileSenderThread fileSenderThread = new FileSenderThread(socket,
+				fileInfo, startIndex, endIndex);
 		fileSenderThread.start();
 	}
 
@@ -148,7 +152,7 @@ public class LODDS {
 	 * FileConnectionThread and starts it, the thread does all the work
 	 * 
 	 * @param user
-	 *            the user from which to get the file from
+	 *            the username of the user from which to get the file from
 	 * 
 	 * @param checksum
 	 *            the checksum of the file
@@ -162,10 +166,11 @@ public class LODDS {
 	 * @param endIndex
 	 *            the index at which to stop the file transfer
 	 */
-	public void getFile(String user, String checksum, String localPath, long startIndex, long endIndex) {
-		FileConnectionThread fileConnectionThread = new FileConnectionThread(getUserConnectionInfo(user), checksum,
-				getFileSize(checksum), localPath, startIndex, endIndex, this);
-		// TODO set outstanding bytes on outgoing connection?
+	public void getFile(String user, String checksum, String localPath,
+			long startIndex, long endIndex) {
+		FileConnectionThread fileConnectionThread = new FileConnectionThread(
+				getUserConnectionInfo(user), checksum, getFileSize(checksum),
+				localPath, startIndex, endIndex, this);
 		fileConnectionThread.start();
 	}
 
@@ -174,7 +179,7 @@ public class LODDS {
 	 * class with start and endIndex
 	 * 
 	 * @param user
-	 *            the user from which to get the file from
+	 *            the username of the user from which to get the file from
 	 * 
 	 * @param checksum
 	 *            the checksum of the file
@@ -189,9 +194,30 @@ public class LODDS {
 	 *            the index at which to stop the file transfer
 	 */
 	public void getFile(String user, String checksum, String localPath) {
-		FileConnectionThread fileConnectionThread = new FileConnectionThread(getUserConnectionInfo(user), checksum,
-				getFileSize(checksum), localPath, this);
+		FileConnectionThread fileConnectionThread = new FileConnectionThread(
+				getUserConnectionInfo(user), checksum, getFileSize(checksum),
+				localPath, this);
 		fileConnectionThread.start();
+	}
+
+	/**
+	 * WIP
+	 * 
+	 * @param checksum
+	 * @param localPath
+	 */
+	@Deprecated
+	public void getFileWithLoadBal(String checksum, String localPath) {
+		if (!availableFiles.containsKey(checksum)) {
+			// TODO error handling
+		} else {
+			if (availableFiles.get(checksum).getOwningUsers().size() == 1) {
+				getFile(availableFiles.get(checksum).getOwningUsers().get(0)
+						.getUserName(), checksum, localPath);
+			} else {
+				splitLoad(checksum, localPath);
+			}
+		}
 	}
 
 	/**
@@ -201,7 +227,8 @@ public class LODDS {
 	 *            the user of which to update the list of shared files
 	 */
 	public void updateFileInfo(String user) {
-		UpdateFileInfoThread updateFileInfoThread = new UpdateFileInfoThread(getUserConnectionInfo(user), this);
+		UpdateFileInfoThread updateFileInfoThread = new UpdateFileInfoThread(
+				getUserConnectionInfo(user), this);
 		updateFileInfoThread.start();
 	}
 
@@ -214,25 +241,28 @@ public class LODDS {
 	 * @param checksum
 	 */
 	public void sendFileWP(String user, long timeout, FileInfo fileInfo) {
-		SendFileWPThread sendFileWPThread = new SendFileWPThread(getUserConnectionInfo(user), timeout, fileInfo);
+		SendFileWPThread sendFileWPThread = new SendFileWPThread(
+				getUserConnectionInfo(user), timeout, fileInfo);
 		sendFileWPThread.start();
 	}
 
 	/**
 	 * Gets a file if a SendPermission was received
 	 */
-	public void getFileWP(Socket socket, String pathToSaveTo, String fileName, long fileSize) {
-		GetFileWPThread getFileWPThread = new GetFileWPThread(socket, pathToSaveTo, fileName, fileSize);
+	public void getFileWP(Socket socket, String pathToSaveTo, String fileName,
+			long fileSize) {
+		GetFileWPThread getFileWPThread = new GetFileWPThread(socket,
+				pathToSaveTo, fileName, fileSize);
 		getFileWPThread.start();
 	}
-	
-//	/**
-//	 * Respond a infolist about the watched files and directories
-//	 */
-//	public void sendInfo() {
-//		InfoSenderThread infoSenderThread = new InfoSenderThread();
-//		infoSenderThread.run();
-//	}
+
+	// /**
+	// * Respond a infolist about the watched files and directories
+	// */
+	// public void sendInfo() {
+	// InfoSenderThread infoSenderThread = new InfoSenderThread();
+	// infoSenderThread.run();
+	// }
 
 	/**
 	 * get the information necessary to connect to another user, this means IP
@@ -261,20 +291,30 @@ public class LODDS {
 	 * @return 0 or error codes
 	 */
 	public int shareFolder(String path) {
-		if (Files.exists(Paths.get(path)) && Files.isDirectory(Paths.get(path)) && !sharedFolders.contains(path)) {
+		if (Files.exists(Paths.get(path)) && Files.isDirectory(Paths.get(path))
+				&& !sharedFolders.contains(path)) {
 			sharedFolders.add(path);
 			// TODO tell the fileWatcher to start tracking this dir
 			try {
-				Files.walk(Paths.get(path)).forEach(filePath -> {
-					if (Files.isRegularFile(filePath)) {
-						try {
-							localFileChanges.add(new FileChange(path, Files.size(Paths.get(path)),
-									FileHasher.getFileHash(path), FileAction.add, System.currentTimeMillis() / 1000));
-						} catch (Exception e) {
-							// TODO what to do here?
-						}
-					}
-				});
+				Files.walk(Paths.get(path))
+						.forEach(
+								filePath -> {
+									if (Files.isRegularFile(filePath)) {
+										try {
+											localFileChanges
+													.add(new FileChange(
+															path,
+															Files.size(Paths
+																	.get(path)),
+															FileHasher
+																	.getFileHash(path),
+															FileAction.add,
+															System.currentTimeMillis() / 1000));
+										} catch (Exception e) {
+											// TODO what to do here?
+										}
+									}
+								});
 				setLastChange(System.currentTimeMillis() / 1000);
 				return 0;
 			} catch (IOException e) {
@@ -524,6 +564,35 @@ public class LODDS {
 		StringBuilder networkAddr = new StringBuilder();
 		Broadcast.getLocalIp(interfaceName, networkAddr);
 		networkAddress = networkAddr.toString();
+	}
+
+	private void splitLoad(String checksum, String localPath) {
+		if (getFileSize(checksum) < loadBalancingMinumum) {
+			getFile(getClientMinLoad(checksum), checksum, localPath);
+		} else {
+			// TODO start thread that assigns how much is taken from which user,
+			// checks the threads to get the parts of the file and, after all
+			// threads finished, puts the temporary files together
+		}
+	}
+
+	/**
+	 * 
+	 * @return the client that has the specified and has the lowest amount of
+	 *         load or the first client in the list that has no load
+	 */
+	private String getClientMinLoad(String checksum) {
+		long minLoad = Long.MAX_VALUE;
+		String clientWithLowestLoad = "";
+		for (UserInfo userInfo : availableFiles.get(checksum).getOwningUsers()) {
+			if (userInfo.getLoad() == 0) {
+				return userInfo.getUserName();
+			} else if (userInfo.getLoad() < minLoad) {
+				clientWithLowestLoad = userInfo.getUserName();
+				minLoad = userInfo.getLoad();
+			}
+		}
+		return clientWithLowestLoad;
 	}
 
 }
