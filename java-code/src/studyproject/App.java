@@ -7,13 +7,12 @@ import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import studyproject.API.Errors.Error;
-import studyproject.API.Errors.ErrorTypes;
+import studyproject.API.Errors.ErrLog;
 import studyproject.logging.APILvl;
 import studyproject.logging.LogConsoleHandler;
 import studyproject.logging.LogKey;
 
-public class Application {
+public class App {
 
 	private static Logger logger;
 	public static Properties properties;
@@ -38,11 +37,11 @@ public class Application {
 	}
 
 	public static void main(String... args) {
-		Application application = new Application();
+		App application = new App();
 		application.configureLogging();
 		int errorCode;
 		if ((errorCode = application.loadProperties(args[0])) > 0) {
-			logger.log(new Error(Level.SEVERE, LogKey.error, APILvl.gui, ErrorTypes.valueOf(errorCode).toString()));
+			ErrLog.log(Level.SEVERE, LogKey.error, APILvl.gui,errorCode, "loadProperties");
 		}
 	
 

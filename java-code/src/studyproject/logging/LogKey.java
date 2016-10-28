@@ -7,5 +7,5 @@ package studyproject.logging;
  *
  */
 public enum LogKey {
-	warning, error, filetransferComplete, filetransferInit, debug, broadcastSend, broadcastReceived, sendPermission
+	warning, error, filetransferComplete, filetransferInit, debug, broadcastSent, broadcastReceived, sendPermission
 }
