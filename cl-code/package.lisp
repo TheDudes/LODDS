@@ -61,4 +61,5 @@
    #:get-file-changes
    #:get-shared-folders
    #:share-folder
-   #:unshare-folder))
+   #:unshare-folder
+   #:shutdown))

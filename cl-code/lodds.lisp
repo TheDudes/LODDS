@@ -228,6 +228,12 @@
   (:documentation
    "returns a list of all changes since the given timestamp. if
    timestamp is nil a full list of all files will be returnd"))
+
+(defgeneric shutdown (server)
+  (:documentation
+   "shuts down the whole server, removes all handles and joins all
+   spawned threads."))
+
 (defmethod switch-interface ((server lodds-server) (interface string))
   (let ((interface-info (get-interface-info interface)))
     (unless (null interface-info)
@@ -433,3 +439,8 @@
                    :collect (cons :add
                                   info)))
               (:watchers server)))))
+
+(defmethod shutdown ((server lodds-server))
+  (stop-advertising server)
+  (stop-listening server)
+  (unshare-folder server))
