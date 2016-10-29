@@ -36,12 +36,14 @@
      :initform nil
      :initarg :name
      :accessor :name
+     :type string
      :transactional nil
      :documentation "Advertised name. Will be displayed by other
                     Clients as ur name.")
     (listening-ip
      :initform nil
      :reader :listening-ip
+     :type fixnum
      :documentation "Transactional variable, will be set by
                     SWITCH-INTERFACE inside a stmx:atomic block. Do
                     not set by hand.")
@@ -72,6 +74,7 @@
      :initform 5
      :initarg :client-timeout
      :accessor :client-timeout
+     :type integer
      :transactional nil
      :documentation "Timeout till client gets delete from local
                     list. Each advertise from other Clients is saved
@@ -80,6 +83,7 @@
     (interface
      :initform nil
      :reader :interface
+     :type string
      :documentation "Transactional (STMX)!
                     Currently selected interface. To get a list of
                     available interface use GET-INTERFACES. Use
@@ -106,6 +110,7 @@
      :initform (make-hash-table :test #'equalp)
      :accessor :clients
      :transactional nil
+     :type hashtable
      :documentation "hashtable containing all clients which their
                     broadcast information. This table is updated by
                     BROADCAST-LISTENER.
@@ -113,6 +118,7 @@
     (load
      :initform 0
      :accessor :load
+     :type integer
      :documentation "Transactional (STMX)!
                     current load, this variable describes the sum of
                     all outstanding bytes which need to be
