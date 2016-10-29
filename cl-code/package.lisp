@@ -13,7 +13,7 @@
   (:export #:watcher
            #:file-table-name
            #:file-table-hash
-           #:get-file-changes))
+           #:get-all-tracked-file-infos))
 
 (defpackage #:lodds.low-level-api
   (:use #:cl
@@ -55,4 +55,6 @@
    #:start-advertising
    #:stop-advertising
    #:get-user-list
-   #:get-user-info))
+   #:get-user-info
+   #:get-timestamp-last-change
+   #:get-file-changes))

@@ -47,12 +47,19 @@
                      :documentation "hashmap of tracked files, with their checksum as key.
                                     Value is a list of files with the given checksum.
                                     Note: this member is STMX:TRANSACTIONAL")
-    (list-of-changes :type list
-                     :initform '()
-                     :accessor list-of-changes
-                     :documentation "list of changes. Each member is a
-                                    list of Timestamp, Type, checksum,
-                                    size and name in that order."))))
+    (change-hook :type function
+                 :initform (error "Specify a :change-hook!")
+                 :initarg :change-hook
+                 :reader change-hook
+                 :transactional nil
+                 :documentation "this hook gets called when a change
+                                 occured and a new change entry was
+                                 generated, its used to put changes
+                                 from multiple watchers into one list
+                                 of changes. Its called with one
+                                 argument, a list of Timestamp, Type,
+                                 checksum, size and name in that
+                                 order."))))
 
 (defun add-file (watcher pathname &optional (checksum nil) (size nil))
   "adds a file to the given watcher, this functions is called by
@@ -61,37 +68,37 @@
     (multiple-value-bind (hash filesize) (get-file-info pathname)
       (setf checksum hash
             size filesize)))
-  (let ((new-change (list (lodds.core:get-timestamp)
-                          :add
-                          checksum
-                          size
-                          (subseq pathname (length (root-dir-path watcher))))))
-    (stmx:atomic
-     (let ((ft-hash (file-table-hash watcher)))
-       (push new-change (list-of-changes watcher))
-       (setf (gethash pathname (file-table-name watcher))
-             (list checksum size))
-       (let ((val (gethash checksum ft-hash)))
-         (setf (gethash checksum ft-hash)
-               (if val
-                   (cons pathname val)
-                   (list pathname))))))))
+  (funcall (change-hook watcher)
+           (list (lodds.core:get-timestamp)
+                 :add
+                 checksum
+                 size
+                 (subseq pathname (length (root-dir-path watcher)))))
+  (stmx:atomic
+   (let ((ft-hash (file-table-hash watcher)))
+     (setf (gethash pathname (file-table-name watcher))
+           (list checksum size))
+     (let ((val (gethash checksum ft-hash)))
+       (setf (gethash checksum ft-hash)
+             (if val
+                 (cons pathname val)
+                 (list pathname)))))))
 
 (defun remove-file (watcher pathname)
   "removes a file from the watcher, will be called bei
    HOOK if a file was removed or has changed"
   (let* ((ft-name (file-table-name watcher))
          (ft-hash (file-table-hash watcher))
-         (checksum (car (gethash pathname ft-name)))
-         (new-change (destructuring-bind (checksum size)
-                         (gethash pathname ft-name)
-                       (list (lodds.core:get-timestamp)
-                             :del
-                             checksum
-                             size
-                             (subseq pathname (length (root-dir-path watcher)))))))
+         (checksum (car (gethash pathname ft-name))))
+    (funcall (change-hook watcher)
+             (destructuring-bind (checksum size)
+                 (gethash pathname ft-name)
+               (list (lodds.core:get-timestamp)
+                     :del
+                     checksum
+                     size
+                     (subseq pathname (length (root-dir-path watcher))))))
     (stmx:atomic
-     (push new-change (list-of-changes watcher))
      (let ((new-val (remove pathname (gethash checksum ft-hash)
                             :test #'string=)))
        (if new-val
@@ -142,15 +149,8 @@
   (cl-fs-watcher:set-hook w (lambda (a b c)
                               (hook a b c))))
 
-(defun get-file-changes (watcher &optional (timestamp nil))
-  (reverse
-   (if timestamp
-       (loop
-          :for (ts . change) :in (list-of-changes watcher)
-          :when (>= ts timestamp)
-          :collect change :into result
-          :else
-          :do (return result))
-       (loop
-          :for (ts . change) :in (list-of-changes watcher)
-          :collect change))))
+(defun get-all-tracked-file-infos (watcher)
+  (loop
+     :for filename :being :the :hash-keys :of (file-table-name watcher)
+     :using (hash-value info)
+     :collect (append info (list (subseq filename (length (root-dir-path watcher)))))))

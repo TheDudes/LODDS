@@ -124,13 +124,19 @@
                     all outstanding bytes which need to be
                     transfered. Do NOT set this variable, retrieving
                     it should be fine. TODO: who sets this?")
-    (last-change
-     :initform 0
-     :accessor :last-change
+    (watchers
+     :reader :watchers
+     :initform nil
+     :type list
      :transactional nil
-     :documentation "this timestamp describes the last local
-                    timestamp. its advertised to other clients via
-                    START-ADVERTISING. TODO: who sets this?")
+     :documentation "List of Directory watchers")
+    (list-of-changes
+     :type list
+     :initform '()
+     :accessor :list-of-changes
+     :documentation "list of changes. Each member is a list of
+                     Timestamp, Type, checksum, size and name in that
+                     order.")
     (advertise-timeout
      :initform 1
      :accessor :advertise-timeout
@@ -167,6 +173,11 @@
   (:documentation
    "removes all clients which a longer inactive then INACTIVE-TIME"))
 
+(defgeneric get-timestamp-last-change (server)
+  (:documentation
+   "returns the timestamp of the last change, who would have thought?
+   :D"))
+
 (defgeneric start-advertising (server)
   (:documentation
    "Start advertising information about server on BROADCAST-IP and
@@ -200,6 +211,11 @@
 
     Returns nil if user is not found."))
 
+
+(defgeneric get-file-changes (server &optional timestamp)
+  (:documentation
+   "returns a list of all changes since the given timestamp. if
+   timestamp is nil a full list of all files will be returnd"))
 (defmethod switch-interface ((server lodds-server) (interface string))
   (let ((interface-info (get-interface-info interface)))
     (unless (null interface-info)
@@ -288,21 +304,22 @@
               (remhash key (:clients server)))
             remove-me)))
 
+(defmethod get-timestamp-last-change ((server lodds-server))
+  (car (car (:list-of-changes server))))
+
 (defun advertiser (server)
   "handles advertisements, will adversite server on broadcast
   network. This function is getting called by START-ADVERTISING. Will
   run inside seperate Thread (spawned by START-ADVERTISING)."
-  (let ((last-change (:last-change server))
-        (load (:load server)))
-    ;; TODO: this could fail
-    (send-advertise
-     (:broadcast-ip server)
-     (:broadcast-port server)
-     (list (:listening-ip server)
-           (:listening-port server)
-           last-change
-           load
-           (:name server)))))
+  ;; TODO: this could fail
+  (send-advertise
+   (:broadcast-ip server)
+   (:broadcast-port server)
+   (list (:listening-ip server)
+         (:listening-port server)
+         (get-timestamp-last-change server)
+         (:load server)
+         (:name server))))
 
 (defmethod start-advertising ((server lodds-server))
   ;;TODO: same as START-LISTENING, could be a bug here
@@ -331,7 +348,6 @@
       (format t "advertising not running~%"))
   (setf (:broadcast-advertiser server) nil))
 
-
 (defmethod get-user-list ((server lodds-server))
   (loop
      :for key :being :the :hash-key :of (:clients server)
@@ -339,3 +355,22 @@
 
 (defmethod get-user-info ((server lodds-server) (user string))
   (gethash user (:clients server)))
+
+(defmethod get-file-changes ((server lodds-server) &optional (timestamp nil))
+  (if timestamp
+      (reverse
+       (loop
+          :for (ts . change) :in (:list-of-changes server)
+          :when (>= ts timestamp)
+          :collect change :into result
+          :else
+          :do (return result)
+          :finally (return result)))
+      (apply #'append
+             (mapcar
+              (lambda (watcher)
+                (loop
+                   :for info :in (lodds.watcher:get-all-tracked-file-infos watcher)
+                   :collect (cons :add
+                                  info)))
+              (:watchers server)))))
