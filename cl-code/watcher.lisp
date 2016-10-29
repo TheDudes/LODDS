@@ -73,7 +73,7 @@
     (:file-changed (update-file watcher pathname))))
 
 (defmethod initialize-instance ((w watcher) &rest initargs)
-  (declare (ignore initargs))
+  (declare (ignorable initargs))
   (call-next-method)
 
   ;; wait until watcher is alive and added all initial handles
