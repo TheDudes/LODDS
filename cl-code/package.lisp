@@ -58,4 +58,7 @@
    #:get-user-list
    #:get-user-info
    #:get-timestamp-last-change
-   #:get-file-changes))
+   #:get-file-changes
+   #:get-shared-folders
+   #:share-folder
+   #:unshare-folder))

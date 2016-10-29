@@ -211,6 +211,18 @@
 
     Returns nil if user is not found."))
 
+(defgeneric get-shared-folders (server)
+  (:documentation
+   "returns a list of all currently shared folders."))
+
+(defgeneric share-folder (server folder-path)
+  (:documentation
+   "share a given folder, adds a watcher to handle updates."))
+
+(defgeneric unshare-folder (server &optional folder-path)
+  (:documentation
+   "unshare the given folder, if folder-path is nil (or not specified)
+   all folders will be removed"))
 
 (defgeneric get-file-changes (server &optional timestamp)
   (:documentation
@@ -355,6 +367,53 @@
 
 (defmethod get-user-info ((server lodds-server) (user string))
   (gethash user (:clients server)))
+
+(defmethod get-shared-folders ((server lodds-server))
+  (mapcar #'cl-fs-watcher:dir (:watchers server)))
+
+(defmethod share-folder ((server lodds-server) (folder-path string))
+  ;; check if a folder like the given one exists already
+  (let ((absolute-path (format nil "~a" (car (directory folder-path )))))
+    (if (eql 0 (length absolute-path))
+        (error "TODO: some error on given directory :( (does it exist?)")
+        (multiple-value-bind (path name) (lodds.core:split-directory absolute-path)
+          (declare (ignore path))
+          (loop
+             :for shared-folder :in (get-shared-folders server)
+             :do (multiple-value-bind (p n) (lodds.core:split-directory shared-folder)
+                   (declare (ignore p))
+                   (when (string= name n)
+                     (error "TODO: the given directory can not be shared since a directory with that name already exists :(")))))))
+  (when (find folder-path (get-shared-folders server))
+    (error "TODO: the folder you tried to share has the same name"))
+  (let ((new-watcher (make-instance 'lodds.watcher:watcher
+                                    :change-hook (lambda (change)
+                                                   (stmx:atomic
+                                                    (push change (:list-of-changes server))))
+                                    :dir folder-path
+                                    :recursive-p t)))
+    (stmx:atomic
+     (push new-watcher
+           (slot-value server 'watchers)))))
+
+(defmethod unshare-folder ((server lodds-server) &optional (folder-path nil))
+  (if (null folder-path )
+      (progn
+        (mapcar
+         (lambda (watcher)
+           (lodds.watcher:stop-watcher watcher nil))
+         (:watchers server))
+        (setf (slot-value server 'watchers) nil
+              (:list-of-changes server) nil))
+      (let ((watcher (find (format nil "~a" (car (directory folder-path )))
+                           (:watchers server) :key #'cl-fs-watcher:dir)))
+        (if watcher
+            (progn
+              (cl-fs-watcher:stop-watcher watcher)
+              (stmx:atomic
+               (setf (slot-value server 'watchers)
+                     (remove watcher (:watchers server)))))
+            (error "TODO: could not find watcher to unshare with given folder-path")))))
 
 (defmethod get-file-changes ((server lodds-server) &optional (timestamp nil))
   (if timestamp
