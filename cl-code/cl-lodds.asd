@@ -13,8 +13,8 @@
                :cl-ppcre
                :bordeaux-threads
                :stmx
-               :cl-async
-               :cffi)
+               :cffi
+               :cl-fs-watcher)
   :components ((:file "package")
                (:file "core")
                (:file "watcher")

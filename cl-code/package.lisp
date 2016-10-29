@@ -10,12 +10,8 @@
 (defpackage #:lodds.watcher
   (:use #:cl)
   (:export #:watcher
-           #:set-hook
-           #:stop-watcher
-           #:dir
-           #:hook
-           #:directory-handles
-           #:recursive-p))
+           #:file-table-name
+           #:file-table-hash))
 
 (defpackage #:lodds.low-level-api
   (:use #:cl
