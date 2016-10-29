@@ -25,7 +25,13 @@
                      :reader file-table-hash
                      :documentation "hashmap of tracked files, with their checksum as key.
                                     Value is a list of files with the given checksum.
-                                    Note: this member is STMX:TRANSACTIONAL"))))
+                                    Note: this member is STMX:TRANSACTIONAL")
+    (list-of-changes :type list
+                     :initform '()
+                     :accessor list-of-changes
+                     :documentation "list of changes. Each member is a
+                                    list of Timestamp, Type, checksum,
+                                    size and name in that order."))))
 
 (defun add-file (watcher pathname &optional (checksum nil) (size nil))
   "adds a file to the given watcher, this functions is called by
@@ -34,23 +40,38 @@
     (multiple-value-bind (hash filesize) (get-file-info pathname)
       (setf checksum hash
             size filesize)))
-  (stmx:atomic
-   (let ((ft-hash (file-table-hash watcher)))
-     (setf (gethash pathname (file-table-name watcher))
-           (list checksum size))
-     (let ((val (gethash checksum ft-hash)))
-       (setf (gethash checksum ft-hash)
-             (if val
-                 (cons pathname val)
-                 (list pathname)))))))
+  (let ((new-change (list (lodds.core:get-timestamp)
+                          :add
+                          checksum
+                          size
+                          pathname)))
+    (stmx:atomic
+     (let ((ft-hash (file-table-hash watcher)))
+       (push new-change (list-of-changes watcher))
+       (setf (gethash pathname (file-table-name watcher))
+             (list checksum size))
+       (let ((val (gethash checksum ft-hash)))
+         (setf (gethash checksum ft-hash)
+               (if val
+                   (cons pathname val)
+                   (list pathname))))))))
 
 (defun remove-file (watcher pathname)
   "removes a file from the watcher, will be called bei
    HOOK if a file was removed or has changed"
-  (stmx:atomic
-   (let* ((ft-name (file-table-name watcher))
-          (ft-hash (file-table-hash watcher))
-          (checksum (car (gethash pathname ft-name))))
+
+  (let* ((ft-name (file-table-name watcher))
+         (ft-hash (file-table-hash watcher))
+         (checksum (car (gethash pathname ft-name)))
+         (new-change (destructuring-bind (checksum size)
+                         (gethash pathname ft-name)
+                       (list (lodds.core:get-timestamp)
+                             :del
+                             checksum
+                             size
+                             pathname))))
+    (stmx:atomic
+     (push new-change (list-of-changes watcher))
      (let ((new-val (remove pathname (gethash checksum ft-hash)
                             :test #'string=)))
        (if new-val
@@ -95,3 +116,17 @@
   ;; TODO: replace lambda with direct call
   (cl-fs-watcher:set-hook w (lambda (a b c)
                               (hook a b c))))
+
+(defun get-file-changes (watcher &optional (timestamp nil))
+  (let ((result nil))
+    (if timestamp
+        (loop
+           :for (ts . change) :in (list-of-changes watcher)
+           :when (>= ts timestamp)
+           :do (push change result)
+           :else
+           :do (return-from get-file-changes (reverse result)))
+        (reverse
+         (loop
+            :for (ts . change) :in (list-of-changes watcher)
+            :collect change)))))
