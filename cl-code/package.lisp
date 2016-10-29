@@ -11,7 +11,8 @@
   (:use #:cl)
   (:export #:watcher
            #:file-table-name
-           #:file-table-hash))
+           #:file-table-hash
+           #:get-file-changes))
 
 (defpackage #:lodds.low-level-api
   (:use #:cl
