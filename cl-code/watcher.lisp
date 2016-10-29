@@ -14,7 +14,28 @@
 
 (stmx:transactional
  (defclass watcher (cl-fs-watcher:watcher)
-   ((file-table-name :type hashtable
+   ((root-dir-name :type string
+                   :reader root-dir-name
+                   :transactional nil
+                   :documentation "contains the root directory name of
+                                  the watched dir (DIR), without the
+                                  path and starting with a slash. set
+                                  after initialization. ROOT-DIR-PATH
+                                  concatenated with ROOT-DIR-NAME
+                                  gives DIR. This variable is used to
+                                  calculate the path for
+                                  LIST-OF-CHANGE.")
+    (root-dir-path :type string
+                   :reader root-dir-path
+                   :transactional nil
+                   :documentation "contains the directory name where
+                                  the root-directory is located. set
+                                  after initialization. ROOT-DIR-PATH
+                                  concatenated with ROOT-DIR-NAME
+                                  gives DIR. This variable is used to
+                                  calculate the path for
+                                  LIST-OF-CHANGE.")
+    (file-table-name :type hashtable
                      :initform (make-hash-table :test 'equal)
                      :reader file-table-name
                      :documentation "hashtable of tracked files, with their path as key.
@@ -44,7 +65,7 @@
                           :add
                           checksum
                           size
-                          pathname)))
+                          (subseq pathname (length (root-dir-path watcher))))))
     (stmx:atomic
      (let ((ft-hash (file-table-hash watcher)))
        (push new-change (list-of-changes watcher))
@@ -59,7 +80,6 @@
 (defun remove-file (watcher pathname)
   "removes a file from the watcher, will be called bei
    HOOK if a file was removed or has changed"
-
   (let* ((ft-name (file-table-name watcher))
          (ft-hash (file-table-hash watcher))
          (checksum (car (gethash pathname ft-name)))
@@ -69,7 +89,7 @@
                              :del
                              checksum
                              size
-                             pathname))))
+                             (subseq pathname (length (root-dir-path watcher)))))))
     (stmx:atomic
      (push new-change (list-of-changes watcher))
      (let ((new-val (remove pathname (gethash checksum ft-hash)
@@ -103,6 +123,16 @@
   (declare (ignorable initargs))
   (call-next-method)
 
+  (let* ((root-dir-absolute (cl-fs-watcher:dir w))
+         (last-trailing-slash-pos (position #\/
+                                            root-dir-absolute
+                                            :from-end t
+                                            :end (1- (length root-dir-absolute)))))
+    (setf (slot-value w 'root-dir-name)
+          (subseq root-dir-absolute last-trailing-slash-pos))
+    (setf (slot-value w 'root-dir-path)
+          (subseq root-dir-absolute 0 last-trailing-slash-pos)))
+
   ;; wait until watcher is alive and added all initial handles
   (loop
      :while (not (cl-fs-watcher:alive-p w))
@@ -118,15 +148,14 @@
                               (hook a b c))))
 
 (defun get-file-changes (watcher &optional (timestamp nil))
-  (let ((result nil))
-    (if timestamp
-        (loop
-           :for (ts . change) :in (list-of-changes watcher)
-           :when (>= ts timestamp)
-           :do (push change result)
-           :else
-           :do (return-from get-file-changes (reverse result)))
-        (reverse
-         (loop
-            :for (ts . change) :in (list-of-changes watcher)
-            :collect change)))))
+  (reverse
+   (if timestamp
+       (loop
+          :for (ts . change) :in (list-of-changes watcher)
+          :when (>= ts timestamp)
+          :collect change :into result
+          :else
+          :do (return result))
+       (loop
+          :for (ts . change) :in (list-of-changes watcher)
+          :collect change))))
