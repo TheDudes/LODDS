@@ -16,10 +16,16 @@
  (defclass watcher (cl-fs-watcher:watcher)
    ((file-table-name :type hashtable
                      :initform (make-hash-table :test 'equal)
-                     :reader file-table-name)
+                     :reader file-table-name
+                     :documentation "hashtable of tracked files, with their path as key.
+                                    Value is a list of file checksum and its size.
+                                    Note: this member is STMX:TRANSACTIONAL")
     (file-table-hash :type hashtable
                      :initform (make-hash-table :test 'equal)
-                     :reader file-table-hash))))
+                     :reader file-table-hash
+                     :documentation "hashmap of tracked files, with their checksum as key.
+                                    Value is a list of files with the given checksum.
+                                    Note: this member is STMX:TRANSACTIONAL"))))
 
 (defun add-file (watcher pathname &optional (checksum nil) (size nil))
   "adds a file to the given watcher, this functions is called by
