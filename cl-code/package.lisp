@@ -13,7 +13,8 @@
   (:export #:watcher
            #:file-table-name
            #:file-table-hash
-           #:get-all-tracked-file-infos))
+           #:get-all-tracked-file-infos
+           #:stop-watcher))
 
 (defpackage #:lodds.low-level-api
   (:use #:cl

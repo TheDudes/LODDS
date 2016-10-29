@@ -154,3 +154,14 @@
      :for filename :being :the :hash-keys :of (file-table-name watcher)
      :using (hash-value info)
      :collect (append info (list (subseq filename (length (root-dir-path watcher)))))))
+
+(defun stop-watcher (watcher &optional (run-change-hook-p t))
+  (cl-fs-watcher:stop-watcher watcher)
+  (when run-change-hook-p
+    (loop
+       :for info :in (get-all-tracked-file-infos watcher)
+       :do (funcall (change-hook watcher)
+                    (apply #'list
+                           (lodds.core:get-timestamp)
+                           :del
+                           info)))))
