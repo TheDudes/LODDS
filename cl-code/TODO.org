@@ -3,10 +3,11 @@
    - [ ] File Header with Description
 
 * Lodds Lib
-** TODO missing [0/3]
+** TODO missing [0/4]
    - [ ] logging
    - [ ] Error Handling
    - [ ] directory watcher (cl-async)
+   - [ ] initargs (interface -> overwrite initialize-instance)
 ** TODO Code changes [1/3]
    - [ ] rename and export accessors
    - [ ] replace all parse-integer calls
