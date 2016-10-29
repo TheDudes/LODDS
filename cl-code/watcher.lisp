@@ -123,15 +123,10 @@
   (declare (ignorable initargs))
   (call-next-method)
 
-  (let* ((root-dir-absolute (cl-fs-watcher:dir w))
-         (last-trailing-slash-pos (position #\/
-                                            root-dir-absolute
-                                            :from-end t
-                                            :end (1- (length root-dir-absolute)))))
-    (setf (slot-value w 'root-dir-name)
-          (subseq root-dir-absolute last-trailing-slash-pos))
-    (setf (slot-value w 'root-dir-path)
-          (subseq root-dir-absolute 0 last-trailing-slash-pos)))
+  (multiple-value-bind (path name)
+      (lodds.core:split-directory (cl-fs-watcher:dir w))
+    (setf (slot-value w 'root-dir-name) name
+          (slot-value w 'root-dir-path) path))
 
   ;; wait until watcher is alive and added all initial handles
   (loop

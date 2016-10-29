@@ -53,3 +53,25 @@
          ,@(loop
               :for (str form) :in cases
               :collect `((string= ,result ,str) ,form))))))
+
+(defun get-last-slash-position (pathname)
+  (position #\/
+            pathname
+            :from-end t
+            :end (1- (length pathname))))
+
+(defun split-directory (directory-path)
+  "splits a given directory path into two.
+
+  CL-USER> (split-directory \"/some/long/path\")
+  => \"/some/long\" \"/path\"
+
+  returns multiple values, to get both use MULTIPLE-VALUE-BIND:
+  CL-USER> (multiple-value-bind (path name)
+              (split-directory \"/some/long/path\")
+            (list path name))
+  => (\"/some/long\" \"/path\")"
+  (let ((slash-position (get-last-slash-position directory-path)))
+    (values
+     (subseq directory-path 0 slash-position)
+     (subseq directory-path slash-position))))

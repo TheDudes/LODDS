@@ -5,7 +5,8 @@
   (:export #:sha-256
            #:copy-stream
            #:get-timestamp
-           #:str-case))
+           #:str-case
+           #:split-directory))
 
 (defpackage #:lodds.watcher
   (:use #:cl)
