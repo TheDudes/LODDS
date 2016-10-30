@@ -403,23 +403,25 @@
            (slot-value server 'watchers)))))
 
 (defmethod unshare-folder ((server lodds-server) &optional (folder-path nil))
-  (if (null folder-path )
+  (if folder-path
+      (let ((watcher (find (format nil "~a" (car (directory folder-path)))
+                           (watchers server)
+                           :key #'cl-fs-watcher:dir
+                           :test #'string=)))
+        (if watcher
+            (progn
+              (lodds.watcher:stop-watcher watcher)
+              (stmx:atomic
+               (setf (slot-value server 'watchers)
+                     (remove watcher (watchers server)))))
+            (error "TODO: could not find watcher to unshare with given folder-path")))
       (progn
         (mapcar
          (lambda (watcher)
            (lodds.watcher:stop-watcher watcher nil))
          (watchers server))
         (setf (slot-value server 'watchers) nil
-              (list-of-changes server) nil))
-      (let ((watcher (find (format nil "~a" (car (directory folder-path )))
-                           (watchers server) :key #'cl-fs-watcher:dir)))
-        (if watcher
-            (progn
-              (cl-fs-watcher:stop-watcher watcher)
-              (stmx:atomic
-               (setf (slot-value server 'watchers)
-                     (remove watcher (watchers server)))))
-            (error "TODO: could not find watcher to unshare with given folder-path")))))
+              (list-of-changes server) nil))))
 
 (defmethod get-file-changes ((server lodds-server) &optional (timestamp nil))
   (if timestamp
