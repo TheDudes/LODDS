@@ -97,30 +97,31 @@ multiple-value-bind.
    (:send-permission size timeout filename)
    will use *get-scanner* to to check for syntax errors"
   (let ((line (read-line socket-stream)))
-    (if (cl-ppcre:scan *get-scanner* line)
-        (destructuring-bind (get type . args)
-            (cl-strings:split line)
-          (let ((requ-type (str-case type
-                             ("file" :file)
-                             ("info" :info)
-                             ("send-permission" :send-permission))))
-            (case requ-type
-              (:file (values 0
-                             (list :file
-                                   (car args)
-                                   (parse-integer (nth 1 args))
-                                   (parse-integer (nth 2 args)))))
-              (:info (values 0
-                             (list :info
-                                   (car args))))
-              (:send-permission (values 0
-                                        (destructuring-bind (size timeout . filename)
-                                            args
-                                          (list :send-permission
-                                                (parse-integer size)
-                                                (parse-integer timeout)
-                                                (cl-strings:join filename :separator " "))))))))
-        2)))
+    (unless (cl-ppcre:scan *get-scanner* line)
+      (return-from parse-request 2))
+    (destructuring-bind (get type . args)
+        (cl-strings:split line)
+      (declare (ignore get))
+      (let ((requ-type (str-case type
+                         ("file" :file)
+                         ("info" :info)
+                         ("send-permission" :send-permission))))
+        (case requ-type
+          (:file (values 0
+                         (list :file
+                               (car args)
+                               (parse-integer (nth 1 args))
+                               (parse-integer (nth 2 args)))))
+          (:info (values 0
+                         (list :info
+                               (parse-integer (car args)))))
+          (:send-permission (values 0
+                                    (destructuring-bind (size timeout . filename)
+                                        args
+                                      (list :send-permission
+                                            (parse-integer size)
+                                            (parse-integer timeout)
+                                            (cl-strings:join filename :separator " "))))))))))
 
 ;; get family
 (defun get-file (socket-stream checksum start end)
