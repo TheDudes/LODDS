@@ -15,8 +15,7 @@
      ;; TODO: buffer-size to config
      :with written = 0
      :with buffer-size = 8192
-     :with buffer = (make-array (list buffer-size)
-                                :element-type '(unsigned-byte 8))
+     :with buffer = (make-array (list buffer-size))
      :for read = (read-sequence buffer stream-from)
      :until (zerop read)
      :do (progn
