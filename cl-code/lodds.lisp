@@ -93,6 +93,7 @@
     (broadcast-listener
      :accessor broadcast-listener
      :initform nil
+     :type bt:thread
      :transactional nil
      :documentation "BROADCAST-LISTENER server object. If this member
                     variable is nil the Server is not listening to
@@ -103,6 +104,7 @@
     (broadcast-advertiser
      :accessor broadcast-advertiser
      :initform nil
+     :type bt:thread
      :transactional nil
      :documentation "BROADCAST-ADVERTISER broadcasts information to
                     other clients. TODO implement")
