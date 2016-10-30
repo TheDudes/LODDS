@@ -58,6 +58,8 @@
            #:interface
            #:broadcast-listener
            #:broadcast-advertiser
+           #:handler-socket
+           #:handler-thread
            #:clients
            #:current-load
            #:watchers

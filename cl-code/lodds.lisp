@@ -107,7 +107,19 @@
      :type bt:thread
      :transactional nil
      :documentation "BROADCAST-ADVERTISER broadcasts information to
-                    other clients. TODO implement")
+                    other clients.")
+    (handler-socket
+     :reader handler-socket
+     :initform nil
+     :type usocket:socket
+     :transactional nil
+     :documentation "Server Socket which listens for incomming connections.")
+    (handler-thread
+     :reader handler-thread
+     :initform nil
+     :type bt:thread
+     :transactional nil
+     :documentation "Thread which listens for incomming connections.")
     (clients
      :accessor clients
      :initform (make-hash-table :test #'equalp)
@@ -341,6 +353,71 @@
          (current-load server)
          (name server))))
 
+(defun generate-info-response (server timestamp)
+  (let* ((type (if (eql 0 timestamp)
+                   :all
+                   :upd))
+         (current-timestamp (get-timestamp))
+         (file-infos (get-file-changes server
+                                       current-timestamp
+                                       (case type
+                                         (:all nil)
+                                         (:upd timestamp)))))
+    (list type
+          current-timestamp
+          file-infos)))
+
+(defun get-file-info (server checksum)
+  "returns a list with information about the requested file. if file
+  with requested checksum is not found nil will be returned"
+  (car
+   (loop
+      :for watcher :in (watchers server)
+      :when (gethash checksum
+                     (lodds.watcher:file-table-hash watcher))
+      :return it)))
+
+(defun handler (stream server)
+  "handles incomming connections and starts threads to handle
+  requests"
+  (declare (type stream stream))
+  (handler-case
+      (multiple-value-bind (error request)
+          (lodds.low-level-api:parse-request stream)
+        (if (eql 0 error)
+            (case (car request)
+              (:file
+               (destructuring-bind (checksum start end)
+                   (cdr request)
+                 (let ((filename (get-file-info server checksum)))
+                   (if filename
+                       (with-open-file (file-stream filename
+                                                    :direction :input)
+                         (lodds.low-level-api:respond-file stream
+                                                           file-stream
+                                                           start end))
+                       (format t "TODO: could not find file!!~%")))))
+              (:info (apply #'lodds.low-level-api:respond-info
+                            stream
+                            (generate-info-response server (cadr request))))
+              (:send-permission
+               (destructuring-bind (size timeout filename)
+                   (cdr request)
+                 (declare (ignore timeout))
+                 ;; TODO: ask user here for file path
+                 (with-open-file (file-stream (concatenate 'string "/tmp/" filename)
+                                              :direction :output
+                                              :if-exists :supersede)
+                   (lodds.low-level-api:respond-send-permission stream
+                                                                file-stream
+                                                                size)))))
+            (error "low level api returned error ~a~%" error)))
+    ;; TODO: error handling
+    (end-of-file ()
+      (format t "TODO: tcp: got end of file~%"))
+    (error (e)
+      (format t "TODO: tcp: error occured: ~a~%" e))))
+
 (defmethod start-advertising ((server lodds-server))
   ;;TODO: same as START-LISTENING, could be a bug here
   (if (broadcast-advertiser server)
@@ -357,7 +434,19 @@
                         (setf timeout (advertise-timeout server))
                         (advertiser server)
                         (sleep timeout)))
-               :name "broadcast-advertiser")))))
+               :name "broadcast-advertiser"))))
+  (if (handler-thread server)
+      (multiple-value-bind (thread socket)
+          (usocket:socket-server (listening-ip server)
+                                 (listening-port server)
+                                 ;; TODO: remove lambda if i dont recompile handler anymore
+                                 (lambda (stream server)
+                                   (handler stream server))
+                                 (list server)
+                                 :in-new-thread t
+                                 :reuse-address t)
+        (setf (slot-value server 'handler-thread) thread
+              (slot-value server 'handler-socket) socket))))
 
 (defmethod stop-advertising ((server lodds-server))
   ;; TODO: Same here as START-ADVERTISING, what happens if it gets called twice?
@@ -366,7 +455,15 @@
       (bt:destroy-thread (broadcast-advertiser server))
       ;; TODO: some error handling here
       (format t "advertising not running~%"))
-  (setf (broadcast-advertiser server) nil))
+  (when (handler-socket server)
+    (usocket:socket-close (handler-socket server)))
+  (let ((thread (handler-thread server)))
+    (when (and thread
+               (bt:thread-alive-p thread))
+      (bt:join-thread (handler-thread server))))
+  (setf (broadcast-advertiser server) nil
+        (slot-value server 'handler-thread) nil
+        (slot-value server 'handler-socket) nil))
 
 (defmethod get-user-list ((server lodds-server))
   (loop
