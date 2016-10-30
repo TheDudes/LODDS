@@ -226,7 +226,7 @@
    "unshare the given folder, if folder-path is nil (or not specified)
    all folders will be removed"))
 
-(defgeneric get-file-changes (server &optional timestamp)
+(defgeneric get-file-changes (server current-timestamp &optional timestamp)
   (:documentation
    "returns a list of all changes since the given timestamp. if
    timestamp is nil a full list of all files will be returnd"))
@@ -425,15 +425,22 @@
         (setf (slot-value server 'watchers) nil
               (list-of-changes server) nil))))
 
-(defmethod get-file-changes ((server lodds-server) &optional (timestamp nil))
+(defmethod get-file-changes ((server lodds-server) current-timestamp &optional (timestamp nil))
   (if timestamp
       (reverse
        (loop
           :for (ts . change) :in (list-of-changes server)
-          :when (>= ts timestamp)
+          ;; only collect infos with timestamps not equal to
+          ;; CURRENT-TIMESTAMP and which are not older than TIMESTAMP
+          :when (and (>= ts timestamp)
+                     (not (eql ts current-timestamp)))
           :collect change :into result
           :else
-          :do (return result)
+          ;; stop and return only if this :else was triggerd by TS
+          ;; beeing older then TIMESTAMP, and not if TS was eql to
+          ;; CURRENT-TIMESTAMP
+          :do (when (<= ts timestamp)
+                (return result))
           :finally (return result)))
       (apply #'append
              (mapcar
