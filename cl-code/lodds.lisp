@@ -252,7 +252,7 @@
             (start-listening server))))
       interface)))
 
-(defun broadcast-listener (buffer server)
+(defun broadcast-listener-callback (buffer server)
   "handles broadcast received messages. This function is a callback
   for the BROADCAST-LISTENER. It is set by START-LISTENING"
   (format t "broadcast: ~a ~a~%"
@@ -291,7 +291,7 @@
                    b-ip
                    b-port
                    (lambda (buffer)
-                     (broadcast-listener buffer server)
+                     (broadcast-listener-callback buffer server)
                      ;; Sooooooooooooo, i found out that everything i
                      ;; this function returns gets sent, so i get a
                      ;; error if its not a buffer of (unsigned-byte 8)
