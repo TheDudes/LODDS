@@ -41,12 +41,29 @@
   (:use #:cl
         #:lodds.core
         #:lodds.low-level-api)
-  (:export #:get-interfaces
+  (:export ;; general functions
+           #:get-interfaces
            #:get-interface-info
            #:get-broadcast-address
            #:get-ip-address
-           ;; lodds-server and his methods (TODO: export accessors)
+           ;; lodds-server reader/accessors
            #:lodds-server
+           #:name
+           #:listening-ip
+           #:listening-port
+           #:broadcast-ip
+           #:broadcast-port
+           #:client-timeout
+           #:client-timeout
+           #:interface
+           #:broadcast-listener
+           #:broadcast-advertiser
+           #:clients
+           #:current-load
+           #:watchers
+           #:list-of-changes
+           #:advertise-timeout
+           ;; lodds server methods
            #:switch-interface
            #:start-listening
            #:stop-listening
