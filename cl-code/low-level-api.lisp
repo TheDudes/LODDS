@@ -154,7 +154,7 @@ multiple-value-bind.
    file-stream will be positioned at start, and only transfer till end."
   (unless (eql start 0)
     (file-position file-stream start))
-  (lodds.core:copy-stream socket-stream file-stream (- end start))
+  (lodds.core:copy-stream file-stream socket-stream (- end start))
   0)
 
 (defun respond-info (socket-stream type timestamp file-infos)
