@@ -187,6 +187,7 @@ multiple-value-bind.
   "response to a 'get send-permission', will send a OK and copy the
    socket-stream content (max size bytes) to file-stream."
   (format socket-stream "OK~%")
+  (force-output socket-stream)
   (copy-stream socket-stream file-stream size)
   0)
 
