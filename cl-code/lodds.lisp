@@ -33,47 +33,47 @@
 (stmx:transactional
  (defclass lodds-server ()
    ((name
-     :initform nil
-     :initarg :name
      :accessor name
+     :initarg :name
+     :initform nil
      :type string
      :transactional nil
      :documentation "Advertised name. Will be displayed by other
                     Clients as ur name.")
     (listening-ip
-     :initform nil
      :reader listening-ip
+     :initform nil
      :type fixnum
      :documentation "Transactional variable, will be set by
                     SWITCH-INTERFACE inside a stmx:atomic block. Do
                     not set by hand.")
     (listening-port
-     :initform 4567
-     :initarg :listening-port
      :accessor listening-port
+     :initarg :listening-port
+     :initform 4567
      :transactional nil
      :documentation "Port the LODDS-SERVER listens on. Listening
                     (STOP/START-LISTENING) has to be restarted for
                     changes to take effect")
     (broadcast-ip
-     :initform nil
      :reader broadcast-ip
+     :initform nil
      :documentation "Transactional variable, IP LODDS-SERVER
                     Advertises information, will be set by
                     SWITCH-INTERFACE inside a stmx:atomic block. Do
                     not set by hand.")
     (broadcast-port
-     :initform 9002
-     :initarg :broadcast-port
      :accessor broadcast-port
+     :initarg :broadcast-port
+     :initform 9002
      :transactional nil
      :documentation "Port the LODDS-SERVER advertises to. Broadcasting
                     (STOP/START-BROADCASTING) has to be restarted for
                     changes to take effect")
     (client-timeout
-     :initform 5
-     :initarg :client-timeout
      :accessor client-timeout
+     :initarg :client-timeout
+     :initform 5
      :type integer
      :transactional nil
      :documentation "Timeout till client gets delete from local
@@ -81,8 +81,8 @@
                     with a timestamp, if timestamp is older than
                     CLIENT-TIMEOUT, the client will be deleted.")
     (interface
-     :initform nil
      :reader interface
+     :initform nil
      :type string
      :documentation "Transactional (STMX)!
                     Currently selected interface. To get a list of
@@ -91,8 +91,8 @@
                     interface. SWITCH-INTEFACE will switch the value
                     inside a stmx:atomic.")
     (broadcast-listener
-     :initform nil
      :accessor broadcast-listener
+     :initform nil
      :transactional nil
      :documentation "BROADCAST-LISTENER server object. If this member
                     variable is nil the Server is not listening to
@@ -101,16 +101,16 @@
                     this member by hand, since its spawning a thread
                     and manipulating the CLIENT member.")
     (broadcast-advertiser
-     :initform nil
      :accessor broadcast-advertiser
+     :initform nil
      :transactional nil
      :documentation "BROADCAST-ADVERTISER broadcasts information to
                     other clients. TODO implement")
     (clients
-     :initform (make-hash-table :test #'equalp)
      :accessor clients
-     :transactional nil
+     :initform (make-hash-table :test #'equalp)
      :type hashtable
+     :transactional nil
      :documentation "hashtable containing all clients which their
                     broadcast information. This table is updated by
                     BROADCAST-LISTENER.
@@ -131,15 +131,15 @@
      :transactional nil
      :documentation "List of Directory watchers")
     (list-of-changes
-     :type list
-     :initform '()
      :accessor list-of-changes
+     :initform '()
+     :type list
      :documentation "list of changes. Each member is a list of
                      Timestamp, Type, checksum, size and name in that
                      order.")
     (advertise-timeout
-     :initform 1
      :accessor advertise-timeout
+     :initform 1
      :transactional nil
      :documentation "Specifies timeout between
                     advertisements. Specified in seconds."))))
