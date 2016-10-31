@@ -16,7 +16,8 @@ public enum ErrorTypes {
 	connectionClosed, 
 	malformedData,
 	timoutReached,
-	fileNotFound;
+	fileNotFound,
+	connectionDenied;
 	
 	private static Map<Integer, ErrorTypes> map = new HashMap<Integer, ErrorTypes>();
 

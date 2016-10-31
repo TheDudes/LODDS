@@ -94,6 +94,11 @@ public class ErrLog {
 		case timoutReached:
 			errorMsg = "Timeout has been reached whithout a response";
 			break;
+		case connectionDenied:
+			errorMsg = "Other client denied the conncetion";
+			break;
+		default:
+			break;
 
 		}
 		return getErrorMsgPrefix(logKey, apiLvl, functionName) + ": " + errorMsg;
