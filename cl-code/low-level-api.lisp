@@ -58,7 +58,12 @@ multiple-value-bind.
           (data (flexi-streams:string-to-octets
                  (format nil "~a ~a ~a ~a ~a~%"
                          (usocket:vector-quad-to-dotted-quad ip)
-                         port timestamp load name))))
+                         port
+                         (if timestamp
+                             timestamp
+                             0)
+                         load
+                         name))))
       (setf (usocket:socket-option sock :broadcast) t)
       (usocket:socket-send sock data (length data)
                            :host broadcast-host
