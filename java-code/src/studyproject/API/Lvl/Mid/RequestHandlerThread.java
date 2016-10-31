@@ -11,7 +11,7 @@ import java.net.Socket;
 import studyproject.API.Core.Request.RequestContainer;
 import studyproject.API.Lvl.Low.RequestHandler;
 
-public class RequestThread extends Thread {
+public class RequestHandlerThread extends Thread {
 
 	LODDS loddsObj;
 	ServerSocket serverSocket;
@@ -26,7 +26,7 @@ public class RequestThread extends Thread {
 	 * @param socket
 	 *            ServerSocket to accept incoming requests
 	 */
-	public RequestThread(LODDS loddsObj, ServerSocket socket) {
+	public RequestHandlerThread(LODDS loddsObj, ServerSocket socket) {
 		this.loddsObj = loddsObj;
 		this.serverSocket = socket;
 		run = true;
