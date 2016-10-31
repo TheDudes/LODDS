@@ -10,6 +10,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import studyproject.API.Core.File.FileAction;
 import studyproject.API.Core.File.FileHasher;
 import studyproject.API.Core.File.FileInfo;
+import studyproject.API.Loadbalancer.Loadbalancer;
 import studyproject.API.Lvl.Low.Broadcast;
 import studyproject.API.Lvl.Mid.Core.ConnectionInfo;
 import studyproject.API.Lvl.Mid.Core.FileChange;
@@ -31,7 +32,9 @@ public class LODDS {
 	private final int DEFAULT_TIME_INTERVAL = 1000;
 
 	private long loadBalancingMinumum = 4096;
+
 	private long lastChange;
+	private Loadbalancer loadbalancer;
 	private Vector<FileChange> localFileChanges;
 	private Vector<UserInfo> clientList;
 	private ConcurrentHashMap<String, RemoteFileInfo> availableFiles;
@@ -72,6 +75,8 @@ public class LODDS {
 		setNetworkAddresses();
 		this.userName = userName;
 		load = 0;
+
+		loadbalancer = new Loadbalancer(this, loadBalancingMinumum);
 	}
 
 	/**
@@ -215,7 +220,7 @@ public class LODDS {
 				getFile(availableFiles.get(checksum).getOwningUsers().get(0)
 						.getUserName(), checksum, localPath);
 			} else {
-				splitLoad(checksum, localPath);
+				loadbalancer.splitLoad(checksum, localPath);
 			}
 		}
 	}
@@ -550,7 +555,7 @@ public class LODDS {
 		return availableFiles;
 	}
 
-	private long getFileSize(String checksum) {
+	public long getFileSize(String checksum) {
 		if (availableFiles.containsKey(checksum)) {
 			return availableFiles.get(checksum).getSize();
 		}
@@ -564,35 +569,6 @@ public class LODDS {
 		StringBuilder networkAddr = new StringBuilder();
 		Broadcast.getLocalIp(interfaceName, networkAddr);
 		networkAddress = networkAddr.toString();
-	}
-
-	private void splitLoad(String checksum, String localPath) {
-		if (getFileSize(checksum) < loadBalancingMinumum) {
-			getFile(getClientMinLoad(checksum), checksum, localPath);
-		} else {
-			// TODO start thread that assigns how much is taken from which user,
-			// checks the threads to get the parts of the file and, after all
-			// threads finished, puts the temporary files together
-		}
-	}
-
-	/**
-	 * 
-	 * @return the client that has the specified and has the lowest amount of
-	 *         load or the first client in the list that has no load
-	 */
-	private String getClientMinLoad(String checksum) {
-		long minLoad = Long.MAX_VALUE;
-		String clientWithLowestLoad = "";
-		for (UserInfo userInfo : availableFiles.get(checksum).getOwningUsers()) {
-			if (userInfo.getLoad() == 0) {
-				return userInfo.getUserName();
-			} else if (userInfo.getLoad() < minLoad) {
-				clientWithLowestLoad = userInfo.getUserName();
-				minLoad = userInfo.getLoad();
-			}
-		}
-		return clientWithLowestLoad;
 	}
 
 }
