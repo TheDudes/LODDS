@@ -274,7 +274,8 @@
           (flexi-streams:octets-to-string buffer))
   (multiple-value-bind (error result) (read-advertise buffer)
     (unless (eql error 0)
-      (format t "TODO: remove me: ERROR from read-advertise != 0~%"))
+      (format t "TODO: remove me: ERROR from read-advertise != 0~%")
+      (return-from broadcast-listener-callback))
     (let ((current-time (get-timestamp))
           (clients (clients server)))
       ;; remove all clients older then :client-timeout
