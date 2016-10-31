@@ -378,13 +378,12 @@
                      (lodds.watcher:file-table-hash watcher))
       :return it)))
 
-(defun handler (stream server)
+(defun handler (socket server)
   "handles incomming connections and starts threads to handle
   requests"
-  (declare (type stream stream))
   (handler-case
       (multiple-value-bind (error request)
-          (lodds.low-level-api:parse-request stream)
+          (lodds.low-level-api:parse-request (usocket:socket-stream socket))
         (if (eql 0 error)
             (case (car request)
               (:file
@@ -394,12 +393,12 @@
                    (if filename
                        (with-open-file (file-stream filename
                                                     :direction :input)
-                         (lodds.low-level-api:respond-file stream
+                         (lodds.low-level-api:respond-file (usocket:socket-stream socket)
                                                            file-stream
                                                            start end))
                        (format t "TODO: could not find file!!~%")))))
               (:info (apply #'lodds.low-level-api:respond-info
-                            stream
+                            (usocket:socket-stream socket)
                             (generate-info-response server (cadr request))))
               (:send-permission
                (destructuring-bind (size timeout filename)
@@ -409,7 +408,7 @@
                  (with-open-file (file-stream (concatenate 'string "/tmp/" filename)
                                               :direction :output
                                               :if-exists :supersede)
-                   (lodds.low-level-api:respond-send-permission stream
+                   (lodds.low-level-api:respond-send-permission (usocket:socket-stream socket)
                                                                 file-stream
                                                                 size)))))
             (error "low level api returned error ~a~%" error)))
@@ -417,7 +416,10 @@
     (end-of-file ()
       (format t "TODO: tcp: got end of file~%"))
     (error (e)
-      (format t "TODO: tcp: error occured: ~a~%" e))))
+      (format t "TODO: tcp: error occured: ~a~%" e)))
+  ;; TODO: handler should spawn threads which will close stream/socket
+  (close (usocket:socket-stream socket))
+  (usocket:socket-close socket))
 
 (defmethod start-advertising ((server lodds-server))
   ;;TODO: same as START-LISTENING, could be a bug here
@@ -437,17 +439,20 @@
                         (sleep timeout)))
                :name "broadcast-advertiser"))))
   (if (handler-thread server)
-      (multiple-value-bind (thread socket)
-          (usocket:socket-server (listening-ip server)
-                                 (listening-port server)
-                                 ;; TODO: remove lambda if i dont recompile handler anymore
-                                 (lambda (stream server)
-                                   (handler stream server))
-                                 (list server)
-                                 :in-new-thread t
-                                 :reuse-address t)
-        (setf (slot-value server 'handler-thread) thread
-              (slot-value server 'handler-socket) socket))))
+      (format t "already handling incomming requests!~%")
+      (progn
+        (setf (slot-value server 'handler-socket)
+              (usocket:socket-listen (listening-ip server)
+                                     (listening-port server)
+                                     :reuse-address t))
+        (setf (slot-value server 'handler-thread)
+              (bt:make-thread
+               (lambda ()
+                 (loop
+                    (handler (usocket:socket-accept (handler-socket server))
+                             server)))
+               :name "Handler-Thread")))))
+
 
 (defmethod stop-advertising ((server lodds-server))
   ;; TODO: Same here as START-ADVERTISING, what happens if it gets called twice?
