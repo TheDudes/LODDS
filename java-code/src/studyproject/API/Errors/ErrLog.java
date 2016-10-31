@@ -76,16 +76,16 @@ public class ErrLog {
 	 * 
 	 */
 	public static String getErrorMsg(int errorCode, LogKey logKey, APILvl apiLvl, String functionName) {
-		String errorMsg = "";
+		String errorMsg = "No error message found!";
 		ErrorTypes errorType = ErrorTypes.valueOf(errorCode);
 		switch (errorType) {
 		case oK:
-			errorMsg = "";
+			errorMsg = "oK";
 			break;
 		case connectionClosed:
 			errorMsg = "Connection to client closed unexpectedly";
 			break;
-		case fileNotFound:
+		case fileNotFound: 
 			errorMsg = "The specified File(via Checksum or Pathname) could not be found";
 			break;
 		case malformedData:
@@ -96,8 +96,6 @@ public class ErrLog {
 			break;
 		case connectionDenied:
 			errorMsg = "Other client denied the conncetion";
-			break;
-		default:
 			break;
 
 		}
