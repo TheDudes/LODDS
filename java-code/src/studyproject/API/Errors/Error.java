@@ -4,6 +4,7 @@ import java.util.logging.Level;
 import java.util.logging.LogRecord;
 
 import studyproject.logging.LogKey;
+import studyproject.API.Core.Utils;
 import studyproject.logging.APILvl;
 
 /**
@@ -20,6 +21,7 @@ public class Error extends LogRecord {
 	private APILvl apiLvl;
 	private String msg;
 	private String thrownBy;
+	private String timestamp;
 
 	/**
 	 * @deprecated do not use this constructor
@@ -28,6 +30,7 @@ public class Error extends LogRecord {
 	 */
 	public Error(Level level, String msg) {
 		super(level, msg);
+		this.timestamp = Utils.formatUnixTimestamp(this.getMillis());
 	}
 
 	/**
@@ -40,14 +43,18 @@ public class Error extends LogRecord {
 	 * @param apiLvl
 	 *            the {@link APILvl} where the Error is produced
 	 * @param msg
-	 *            the specific error message
+	 *            the specific error message which all non gui logger shall log
+	 * @param errorMsg
+	 *            the single error message returned by
+	 *            ErrLog.getErrorMsg(errorCode)
 	 */
-	public Error(Level level, LogKey logKey, APILvl apiLvl,String thrownBy, String msg) {
+	public Error(Level level, LogKey logKey, APILvl apiLvl, String thrownBy, String msg, String errorMsg) {
 		super(level, msg);
 		this.logKey = logKey;
 		this.apiLvl = apiLvl;
-		this.msg = msg;
+		this.msg = errorMsg;
 		this.thrownBy = thrownBy;
+		this.timestamp = Utils.formatUnixTimestamp(this.getMillis());
 	}
 
 	public LogKey getLogKey() {
@@ -57,8 +64,6 @@ public class Error extends LogRecord {
 	public void setLogKey(LogKey logKey) {
 		this.logKey = logKey;
 	}
-
-	
 
 	public APILvl getApiLvl() {
 		return apiLvl;
@@ -84,6 +89,12 @@ public class Error extends LogRecord {
 		this.thrownBy = thrownBy;
 	}
 
-	
-	
+	public String getTimestamp() {
+		return timestamp;
+	}
+
+	public void setTimestamp(String timestamp) {
+		this.timestamp = timestamp;
+	}
+
 }

@@ -33,6 +33,7 @@ public class LogConsoleHandler extends Handler {
 		if (!isLoggable(record))
 			return;
 		System.err.println(getFormatter().format(record));
+		
 	}
 
 }

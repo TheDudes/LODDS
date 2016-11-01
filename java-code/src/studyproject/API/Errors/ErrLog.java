@@ -33,7 +33,7 @@ public class ErrLog {
 	 * @return the Error Object with filled information
 	 */
 	public static Error log(Level level, LogKey logKey, APILvl apiLvl, int errorCode, String functionName) {
-		Error error = getError(level, logKey, apiLvl, errorCode, getErrorMsg(errorCode, logKey, apiLvl, functionName));
+		Error error = getError(level, logKey, apiLvl, errorCode, functionName);
 		Logger.getGlobal().log(error);
 		return error;
 	}
@@ -53,10 +53,13 @@ public class ErrLog {
 	 *            the ordinal number of the {@link ErrorTypes}
 	 * @param functionName
 	 *            the function which have thrown the Error
+	 * 
 	 * @return the Error Object with filled information
 	 */
 	public static Error getError(Level level, LogKey logKey, APILvl apiLvl, int errorCode, String functionName) {
-		return new Error(level, logKey, apiLvl, functionName, getErrorMsg(errorCode, logKey, apiLvl, functionName));
+		return new Error(level, logKey, apiLvl, functionName,
+				getErrorMsgPrefix(logKey, apiLvl, functionName) + ": " + getErrorMsg(errorCode),
+				getErrorMsg(errorCode));
 	}
 
 	/**
@@ -65,17 +68,8 @@ public class ErrLog {
 	 * 
 	 * @param errorCode
 	 *            the ordinal number of the {@link ErrorTypes}
-	 * @param logKey
-	 *            the certein {@link LogKey}
-	 * @param apiLvl
-	 *            the {@link APILvl} where the error was produced
-	 * @param functionName
-	 *            the function which have thrown the error
-	 * @return a string formatted like "{@link LogKey}: {@link APILvl} :Thrown
-	 *         By 'functionName': ErrorMessage"
-	 * 
 	 */
-	public static String getErrorMsg(int errorCode, LogKey logKey, APILvl apiLvl, String functionName) {
+	public static String getErrorMsg(int errorCode) {
 		String errorMsg = "No error message found!";
 		ErrorTypes errorType = ErrorTypes.valueOf(errorCode);
 		switch (errorType) {
@@ -99,7 +93,7 @@ public class ErrLog {
 			break;
 
 		}
-		return getErrorMsgPrefix(logKey, apiLvl, functionName) + ": " + errorMsg;
+		return errorMsg;
 
 	}
 

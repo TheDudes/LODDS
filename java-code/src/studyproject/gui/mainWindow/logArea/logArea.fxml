@@ -50,6 +50,7 @@
    <center>
       <TableView fx:id="logTableView" tableMenuButtonVisible="true" BorderPane.alignment="CENTER">
         <columns>
+            <TableColumn fx:id="timestampCol" minWidth="20.0" prefWidth="75.0" text="Timestamp" />
           <TableColumn fx:id="logKeyCol" minWidth="20.0" prefWidth="75.0" text="LogKey" />
           <TableColumn fx:id="apiLvlCol" prefWidth="75.0" text="APILvl" />
             <TableColumn fx:id="thrownByCol" prefWidth="75.0" text="Thrown By" />

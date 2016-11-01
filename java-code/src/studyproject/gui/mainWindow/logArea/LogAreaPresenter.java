@@ -3,6 +3,7 @@ package studyproject.gui.mainWindow.logArea;
 import java.net.URL;
 import java.util.ResourceBundle;
 import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -13,8 +14,6 @@ import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.cell.PropertyValueFactory;
 import studyproject.API.Errors.Error;
-import studyproject.logging.APILvl;
-import studyproject.logging.LogKey;
 
 public class LogAreaPresenter implements Initializable {
 
@@ -38,16 +37,20 @@ public class LogAreaPresenter implements Initializable {
 	TableColumn<Error, String> thrownByCol;
 	@FXML
 	TableColumn<Error, String> msgCol;
+	@FXML
+	TableColumn<Error, String> timestampCol;
 
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {
+		Logger.getGlobal().addHandler(new LogAreaHandler(Level.ALL, logTableView));
+
+		timestampCol.setCellValueFactory(new PropertyValueFactory<Error, String>("timestamp"));
 		logKeyCol.setCellValueFactory(new PropertyValueFactory<Error, String>("logKey"));
 		apiLvlCol.setCellValueFactory(new PropertyValueFactory<Error, String>("apiLvl"));
 		thrownByCol.setCellValueFactory(new PropertyValueFactory<Error, String>("thrownBy"));
 		msgCol.setCellValueFactory(new PropertyValueFactory<Error, String>("msg"));
 
-		ObservableList<Error> errors = FXCollections.observableArrayList(
-				new Error(Level.SEVERE, LogKey.getReceived, APILvl.gui, "init", "hello there son"));
+		ObservableList<Error> errors = FXCollections.observableArrayList();
 		logTableView.setItems(errors);
 	}
 
