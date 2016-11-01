@@ -18,7 +18,7 @@ import javafx.scene.layout.GridPane;
 import studyproject.App;
 
 /**
- * 
+ * Settings window. Load and edit properties
  * @author chris
  *
  */
@@ -34,27 +34,37 @@ public class SettingsWindowPresenter implements Initializable {
 	GridPane settingsGrid;
 
 	@Override
-	public void initialize(URL location, ResourceBundle resources) {
-		int numberOfRows = 0;
-		
+	public void initialize(URL location, ResourceBundle resources) {		
 		okButton.setOnAction(ok -> okPressed());
 		applyButton.setOnAction(apply -> applyPressed());
 		cancelButton.setOnAction(cancel -> cancelPressed());
-		loadSettings(numberOfRows);
+		loadSettings();
 	}
 
-	private void loadSettings(int numberOfRows) {
+	/**
+	 * Load Key-Value pairs from the properties file 
+	 */
+	private void loadSettings() {
+		int numberOfRows = 0;
 		for (Entry<Object, Object> entry : App.properties.entrySet()) {
 			settingsGrid.addRow(numberOfRows++, new Label((String) entry.getKey()),
 					new TextField((String) entry.getValue()));
 		}
 	}
 
+	/**
+	 * Action that happens when pressing the 'OK' button.
+	 * Executes functionality of the 'Apply' and 'Cancel' buttons
+	 */
 	private void okPressed() {
 		applyPressed();
 		cancelPressed();
 	}
 
+	/**
+	 * Action that happens when pressing the 'Apply' button.
+	 * Saves the Key-Value pairs to the properties file
+	 */
 	private void applyPressed() {
 		ObservableList<Node> observList = settingsGrid.getChildren();
 		Label label;
@@ -82,11 +92,13 @@ public class SettingsWindowPresenter implements Initializable {
 			// TODO Error handling
 			e.printStackTrace();
 		}
-
 	}
 
+	/**
+	 * Action that happens when pressing the 'Cancel' button.
+	 * Close the 'Settings' window
+	 */
 	private void cancelPressed() {
-		System.out.println("Pressed Cancle. Nothing happens");
 		settingsGrid.getScene().getWindow().hide();
 	}
 
