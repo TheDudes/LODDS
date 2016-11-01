@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.VBox?>
+
+
+<AnchorPane xmlns="http://javafx.com/javafx/8.0.65" xmlns:fx="http://javafx.com/fxml/1" fx:controller="studyproject.gui.mainWindow.tasksList.TasksListPresenter">
+   <children>
+      <VBox>
+         <children>
+            <AnchorPane fx:id="tasksListAnchor" />
+            <Button fx:id="addButton" mnemonicParsing="false" text="Button" />
+         </children>
+      </VBox>
+   </children>
+</AnchorPane>
