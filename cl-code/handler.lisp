@@ -1,8 +1,5 @@
 (in-package #:lodds.handler)
 
-(define-condition shutdown (error)
-  nil)
-
 (defun handle-file-request (server socket request)
   (destructuring-bind (checksum start end) request
     (let ((filename (lodds:get-file-info server checksum)))
@@ -52,7 +49,7 @@
   (close (usocket:socket-stream socket))
   (usocket:socket-close socket))
 
-(defun handler-loop (server)
+(defun run (server)
   (let ((socket (usocket:socket-listen
                  (lodds:get-ip-address (lodds:interface server))
                  (lodds:handler-port server)
@@ -66,31 +63,10 @@
                                         (usocket:socket-accept socket))
                     (usocket:bad-file-descriptor-error ()
                       (setf running nil))
-                    (shutdown () (setf running nil))
+                    (lodds:shutdown-condition () (setf running nil))
                     (error (e)
                       (format t "got error: ~a~%" e)
                       (setf running nil)))))
-      (close (usocket:socket-stream socket))
       (usocket:socket-close socket)
       (format t "Handler stopped!~%")
       (setf (lodds:handler server) nil))))
-
-(defun start (server)
-  (let ((handler (lodds:handler server)))
-    (if handler
-        (format t "HANDLER already running.~%")
-        (setf (lodds:handler server)
-              (bt:make-thread
-               (lambda ()
-                 (handler-loop server))
-               :name "Handler")))))
-
-(defun stop (server)
-  (let ((handler (lodds:handler server)))
-    (if handler
-        (bt:interrupt-thread handler
-                             (lambda ()
-                               (signal (make-condition 'shutdown))))
-        (format t "handler not running!~%"))))
-
-

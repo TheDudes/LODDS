@@ -39,18 +39,15 @@
 
 (defpackage #:lodds.listener
   (:use #:cl)
-  (:export #:start
-           #:stop))
+  (:export #:run))
 
 (defpackage #:lodds.advertiser
   (:use #:cl)
-  (:export #:start
-           #:stop))
+  (:export #:run))
 
 (defpackage #:lodds.handler
   (:use #:cl)
-  (:export #:start
-           #:stop))
+  (:export #:run))
 
 (defpackage #:lodds
   (:use #:cl
@@ -62,6 +59,9 @@
            #:get-broadcast-address
            #:get-ip-address
            ;; lodds-server reader/accessors
+           #:shutdown-condition
+           #:*subsystems*
+           #:get-subsystem
            #:lodds-server
            #:name
            #:broadcast-port

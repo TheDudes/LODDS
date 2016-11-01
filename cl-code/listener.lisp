@@ -1,8 +1,5 @@
 (in-package lodds.listener)
 
-(define-condition shutdown (error)
-  nil)
-
 (defun handle-message (server message)
   (format t "broadcast: ~a ~a~%" (lodds.core:get-timestamp) message)
   (multiple-value-bind (error result) (lodds.low-level-api:read-advertise message)
@@ -38,7 +35,7 @@
                  (subseq buffer 0 n))
                 (error "listener:get-next-message: receive error: ~A" n)))))))
 
-(defun listener-loop (server)
+(defun run (server)
   (let ((socket (usocket:socket-connect
                  nil nil
                  :local-host (lodds:get-broadcast-address "enp0s25")
@@ -51,28 +48,10 @@
               :do (handler-case
                       (handle-message server
                                       (get-next-message socket))
-                    (shutdown () (setf running nil))
+                    (lodds:shutdown-condition () (setf running nil))
                     (error (e)
                       (format t "got error: ~a~%" e)
                       (setf running nil)))))
       (usocket:socket-close socket)
       (format t "Listener stopped!~%")
       (setf (lodds:listener server) nil))))
-
-(defun start (server)
-  (let ((listener (lodds:listener server)))
-    (if listener
-        (format t "LISTENER already running.~%")
-        (setf (lodds:listener server)
-              (bt:make-thread
-               (lambda ()
-                 (listener-loop server))
-               :name "Listener")))))
-
-(defun stop (server)
-  (let ((listener (lodds:listener server)))
-    (if listener
-        (bt:interrupt-thread listener
-                             (lambda ()
-                               (signal (make-condition 'shutdown))))
-        (format t "listener not running!~%"))))
