@@ -37,6 +37,21 @@
            #:handle-file
            #:handle-send-permission))
 
+(defpackage #:lodds.listener
+  (:use #:cl)
+  (:export #:start
+           #:stop))
+
+(defpackage #:lodds.advertiser
+  (:use #:cl)
+  (:export #:start
+           #:stop))
+
+(defpackage #:lodds.handler
+  (:use #:cl)
+  (:export #:start
+           #:stop))
+
 (defpackage #:lodds
   (:use #:cl
         #:lodds.core
@@ -49,17 +64,13 @@
            ;; lodds-server reader/accessors
            #:lodds-server
            #:name
-           #:listening-ip
-           #:listening-port
-           #:broadcast-ip
            #:broadcast-port
-           #:client-timeout
+           #:listener
+           #:advertiser
+           #:handler-port
+           #:handler
            #:client-timeout
            #:interface
-           #:broadcast-listener
-           #:broadcast-advertiser
-           #:handler-socket
-           #:handler-thread
            #:clients
            #:current-load
            #:watchers
@@ -67,14 +78,14 @@
            #:advertise-timeout
            ;; lodds server methods
            #:switch-interface
-           #:start-listening
-           #:stop-listening
+           #:start
+           #:stop
            #:remove-clients
-           #:start-advertising
-           #:stop-advertising
+           #:get-file-info
            #:get-user-list
            #:get-user-info
            #:get-timestamp-last-change
+           #:generate-info-response
            #:get-file-changes
            #:get-shared-folders
            #:share-folder

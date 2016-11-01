@@ -12,7 +12,7 @@
      :collect (ip-interfaces:ip-interface-name interface)))
 
 (defun get-interface-info (interface)
-  "returns the specified interface"
+  "returns the specified interface, nil if interface was not found"
   (find interface (ip-interfaces:get-ip-interfaces-by-flags
                    '(:iff-up :iff-running))
         :key #'ip-interfaces:ip-interface-name
@@ -40,28 +40,6 @@
      :transactional nil
      :documentation "Advertised name. Will be displayed by other
                     Clients as ur name.")
-    (listening-ip
-     :reader listening-ip
-     :initform nil
-     :type fixnum
-     :documentation "Transactional variable, will be set by
-                    SWITCH-INTERFACE inside a stmx:atomic block. Do
-                    not set by hand.")
-    (listening-port
-     :accessor listening-port
-     :initarg :listening-port
-     :initform 4567
-     :transactional nil
-     :documentation "Port the LODDS-SERVER listens on. Listening
-                    (STOP/START-LISTENING) has to be restarted for
-                    changes to take effect")
-    (broadcast-ip
-     :reader broadcast-ip
-     :initform nil
-     :documentation "Transactional variable, IP LODDS-SERVER
-                    Advertises information, will be set by
-                    SWITCH-INTERFACE inside a stmx:atomic block. Do
-                    not set by hand.")
     (broadcast-port
      :accessor broadcast-port
      :initarg :broadcast-port
@@ -70,6 +48,38 @@
      :documentation "Port the LODDS-SERVER advertises to. Broadcasting
                     (STOP/START-BROADCASTING) has to be restarted for
                     changes to take effect")
+    (listener
+     :accessor listener
+     :initform nil
+     :type bt:thread
+     :transactional nil
+     :documentation "LISTENER server object. If this member variable
+                    is nil the Server is not listening to broadcast
+                    messages of other clients. Use START-LISTEINING
+                    and STOP-LISTENING and do not set this member by
+                    hand, since its spawning a thread and manipulating
+                    the CLIENT member.")
+    (advertiser
+     :accessor advertiser
+     :initform nil
+     :type bt:thread
+     :transactional nil
+     :documentation "ADVERTISER broadcasts information to other
+                    clients.")
+    (handler-port
+     :accessor handler-port
+     :initarg :handler-port
+     :initform 4567
+     :transactional nil
+     :documentation "Port the LODDS-SERVER listens on. Listening
+                    (STOP/START-LISTENING) has to be restarted for
+                    changes to take effect")
+    (handler
+     :accessor handler
+     :initform nil
+     :type bt:thread
+     :transactional nil
+     :documentation "Thread which listens for incomming connections.")
     (client-timeout
      :accessor client-timeout
      :initarg :client-timeout
@@ -81,45 +91,15 @@
                     with a timestamp, if timestamp is older than
                     CLIENT-TIMEOUT, the client will be deleted.")
     (interface
-     :reader interface
+     :accessor interface
      :initform nil
      :type string
      :documentation "Transactional (STMX)!
                     Currently selected interface. To get a list of
                     available interface use GET-INTERFACES. Use
                     SWITCH-INTERFACE to change, or set, the
-                    interface. SWITCH-INTEFACE will switch the value
+                    interface. SWITCH-INTERFACE will switch the value
                     inside a stmx:atomic.")
-    (broadcast-listener
-     :accessor broadcast-listener
-     :initform nil
-     :type bt:thread
-     :transactional nil
-     :documentation "BROADCAST-LISTENER server object. If this member
-                    variable is nil the Server is not listening to
-                    broadcast messages of other clients. Use
-                    START-LISTEINING and STOP-LISTENING and do not set
-                    this member by hand, since its spawning a thread
-                    and manipulating the CLIENT member.")
-    (broadcast-advertiser
-     :accessor broadcast-advertiser
-     :initform nil
-     :type bt:thread
-     :transactional nil
-     :documentation "BROADCAST-ADVERTISER broadcasts information to
-                    other clients.")
-    (handler-socket
-     :reader handler-socket
-     :initform nil
-     :type usocket:socket
-     :transactional nil
-     :documentation "Server Socket which listens for incomming connections.")
-    (handler-thread
-     :reader handler-thread
-     :initform nil
-     :type bt:thread
-     :transactional nil
-     :documentation "Thread which listens for incomming connections.")
     (clients
      :accessor clients
      :initform (make-hash-table :test #'equalp)
@@ -127,7 +107,7 @@
      :transactional nil
      :documentation "hashtable containing all clients which their
                     broadcast information. This table is updated by
-                    BROADCAST-LISTENER.
+                    LISTENER
                     TODO: implement something to retrieve a copy.")
     (current-load
      :initform 0
@@ -139,7 +119,7 @@
                     transfered. Do NOT set this variable, retrieving
                     it should be fine. TODO: who sets this?")
     (watchers
-     :reader watchers
+     :accessor watchers
      :initform nil
      :type list
      :transactional nil
@@ -173,15 +153,19 @@
   (:documentation
    "switch ADVERTISE-TIMEOUT, TIMEOUT is given in seconds."))
 
-(defgeneric start-listening (server)
+(defgeneric start (server subsystem)
   (:documentation
-   "Will start listening for broadcast messages of other clients,
-   it will spawn a seperate thread which updates a hashtable inside
-   server (accessable through :clients)."))
+   "Starts the given subsystem. subsystem can be one of:
+   :listener
+   :advertiser
+   :handler"))
 
-(defgeneric stop-listening (server)
+(defgeneric stop (server subsystem)
   (:documentation
-   "Stops the given server from listening on broadcast address."))
+   "Stops the given subsystem. subsystem can be one of:
+   :listener
+   :advertiser
+   :handler"))
 
 (defgeneric remove-clients (server inactive-time)
   (:documentation
@@ -191,16 +175,6 @@
   (:documentation
    "returns the timestamp of the last change, who would have thought?
    :D"))
-
-(defgeneric start-advertising (server)
-  (:documentation
-   "Start advertising information about server on BROADCAST-IP and
-   BROADCAST-PORT. use SWITCH-INTERFACE to set the ip. This function
-   will spawn a thread."))
-
-(defgeneric stop-advertising (server)
-  (:documentation
-   "Stop advertising information about server."))
 
 (defgeneric get-user-list (server)
   (:documentation
@@ -249,81 +223,34 @@
    spawned threads."))
 
 (defmethod switch-interface ((server lodds-server) (interface string))
-  (let ((interface-info (get-interface-info interface)))
-    (unless (null interface-info)
-      (with-accessors ((ip ip-interfaces:ip-interface-address)
-                       (bc ip-interfaces:ip-interface-broadcast-address))
-          (get-interface-info interface)
-        (let ((was-listening nil))
-          (when (broadcast-listener server)
-            (stop-listening server)
-            (setf was-listening t))
-          (stmx:atomic
-           (setf (slot-value server 'interface) interface
-                 (slot-value server 'listening-ip) ip
-                 (slot-value server 'broadcast-ip) bc))
-          (when was-listening
-            (start-listening server))))
-      interface)))
+  (if (null (get-interface-info interface))
+      (format t "TODO: given interface could not be found. Available interfaces: ~a"
+              (get-interfaces))
+      (let ((was-listening nil))
+        (when (listener server)
+          (stop-listening server)
+          (setf was-listening t))
+        (stmx:atomic
+         (setf (interface server) interface))
+        (when was-listening
+          (start-listening server))
+        interface)))
 
-(defun broadcast-listener-callback (buffer server)
-  "handles broadcast received messages. This function is a callback
-  for the BROADCAST-LISTENER. It is set by START-LISTENING"
-  (format t "broadcast: ~a ~a~%"
-          (get-timestamp)
-          (flexi-streams:octets-to-string buffer))
-  (multiple-value-bind (error result) (read-advertise buffer)
-    (unless (eql error 0)
-      (format t "TODO: remove me: ERROR from read-advertise != 0~%")
-      (return-from broadcast-listener-callback))
-    (let ((current-time (get-timestamp))
-          (clients (clients server)))
-      ;; remove all clients older then :client-timeout
-      (maphash (lambda (key val)
-                 (when (> (- current-time (car val))
-                          (client-timeout server))
-                   (remhash key clients)))
-               clients)
-      ;; add client
-      (setf (gethash (car (last result)) (clients server))
-            (cons current-time result)))))
+(defmethod start ((server lodds-server) subsystem)
+  (let ((fn (case subsystem
+              (:listener #'lodds.listener:start)
+              (:advertiser #'lodds.advertiser:start)
+              (:handler #'lodds.handler:start)
+              (t (error "subsystem ~a not recognized!" subsystem)))))
+    (funcall fn server)))
 
-(defmethod start-listening ((server lodds-server))
-  ;; TODO: potentional Bug here when START-LISTENING gets called twice,
-  ;; the whole if should be atomic, but is it needed? What about blocking this function
-  ;; while its beeing processed by another thread? could this even happen?
-  (if (broadcast-listener server)
-      ;; TODO: error message or something here
-      (format t "broadcast listener already running.~%")
-      (let* ((b-ip (broadcast-ip server))
-             (b-port (broadcast-port server)))
-        (if (or (null b-ip)
-                (null b-port))
-            ;; TODO: implement error handling here.
-            (format t "error: broadcast ip or port not set!~%")
-            (setf (broadcast-listener server)
-                  (usocket:socket-server
-                   b-ip
-                   b-port
-                   (lambda (buffer)
-                     (broadcast-listener-callback buffer server)
-                     ;; Sooooooooooooo, i found out that everything i
-                     ;; this function returns gets sent, so i get a
-                     ;; error if its not a buffer of (unsigned-byte 8)
-                     ;; :D
-                     nil)
-                   nil
-                   :in-new-thread t
-                   :protocol :datagram))))))
-
-(defmethod stop-listening ((server lodds-server))
-  ;; TODO: Same bug as START-LISTENING
-  (if (null (broadcast-listener server))
-      (format t "broadcast listener not running.~%")
-      ;; TODO this destroy has to go away
-      (progn
-        (bt:destroy-thread (broadcast-listener server))
-        (setf (broadcast-listener server) nil))))
+(defmethod stop ((server lodds-server) subsystem)
+  (let ((fn (case subsystem
+              (:listener #'lodds.listener:stop)
+              (:advertiser #'lodds.advertiser:stop)
+              (:handler #'lodds.handler:stop)
+              (t (error "subsystem ~a not recognized!" subsystem)))))
+    (funcall fn server)))
 
 (defmethod remove-clients ((server lodds-server) (inactive-time fixnum))
   (let ((remove-me (list))
@@ -339,20 +266,6 @@
 
 (defmethod get-timestamp-last-change ((server lodds-server))
   (car (car (list-of-changes server))))
-
-(defun advertiser (server)
-  "handles advertisements, will adversite server on broadcast
-  network. This function is getting called by START-ADVERTISING. Will
-  run inside seperate Thread (spawned by START-ADVERTISING)."
-  ;; TODO: this could fail
-  (send-advertise
-   (broadcast-ip server)
-   (broadcast-port server)
-   (list (listening-ip server)
-         (listening-port server)
-         (get-timestamp-last-change server)
-         (current-load server)
-         (name server))))
 
 (defun generate-info-response (server timestamp)
   (let* ((type (if (eql 0 timestamp)
@@ -377,99 +290,6 @@
       :when (gethash checksum
                      (lodds.watcher:file-table-hash watcher))
       :return it)))
-
-(defun handler (socket server)
-  "handles incomming connections and starts threads to handle
-  requests"
-  (handler-case
-      (multiple-value-bind (error request)
-          (lodds.low-level-api:parse-request (usocket:socket-stream socket))
-        (if (eql 0 error)
-            (case (car request)
-              (:file
-               (destructuring-bind (checksum start end)
-                   (cdr request)
-                 (let ((filename (get-file-info server checksum)))
-                   (if filename
-                       (with-open-file (file-stream filename
-                                                    :direction :input)
-                         (lodds.low-level-api:respond-file (usocket:socket-stream socket)
-                                                           file-stream
-                                                           start end))
-                       (format t "TODO: could not find file!!~%")))))
-              (:info (apply #'lodds.low-level-api:respond-info
-                            (usocket:socket-stream socket)
-                            (generate-info-response server (cadr request))))
-              (:send-permission
-               (destructuring-bind (size timeout filename)
-                   (cdr request)
-                 (declare (ignore timeout))
-                 ;; TODO: ask user here for file path
-                 (with-open-file (file-stream (concatenate 'string "/tmp/" filename)
-                                              :direction :output
-                                              :if-exists :supersede)
-                   (lodds.low-level-api:respond-send-permission (usocket:socket-stream socket)
-                                                                file-stream
-                                                                size)))))
-            (error "low level api returned error ~a~%" error)))
-    ;; TODO: error handling
-    (end-of-file ()
-      (format t "TODO: tcp: got end of file~%"))
-    (error (e)
-      (format t "TODO: tcp: error occured: ~a~%" e)))
-  ;; TODO: handler should spawn threads which will close stream/socket
-  (close (usocket:socket-stream socket))
-  (usocket:socket-close socket))
-
-(defmethod start-advertising ((server lodds-server))
-  ;;TODO: same as START-LISTENING, could be a bug here
-  (if (broadcast-advertiser server)
-      ;; TODO: some kind of error handling here
-      (format t "already advertising!~%")
-      (setf (broadcast-advertiser server)
-            (bt:make-thread
-             (lambda ()
-               (loop
-                  :while t
-                  :with timeout
-                  :do (progn
-                        ;; repull timeout to get changes
-                        (setf timeout (advertise-timeout server))
-                        (advertiser server)
-                        (sleep timeout)))
-               :name "broadcast-advertiser"))))
-  (if (handler-thread server)
-      (format t "already handling incomming requests!~%")
-      (progn
-        (setf (slot-value server 'handler-socket)
-              (usocket:socket-listen (listening-ip server)
-                                     (listening-port server)
-                                     :reuse-address t))
-        (setf (slot-value server 'handler-thread)
-              (bt:make-thread
-               (lambda ()
-                 (loop
-                    (handler (usocket:socket-accept (handler-socket server))
-                             server)))
-               :name "Handler-Thread")))))
-
-
-(defmethod stop-advertising ((server lodds-server))
-  ;; TODO: Same here as START-ADVERTISING, what happens if it gets called twice?
-  (if (broadcast-advertiser server)
-      ;; TODO: this destroy has to go away
-      (bt:destroy-thread (broadcast-advertiser server))
-      ;; TODO: some error handling here
-      (format t "advertising not running~%"))
-  (when (handler-socket server)
-    (usocket:socket-close (handler-socket server)))
-  (let ((thread (handler-thread server)))
-    (when (and thread
-               (bt:thread-alive-p thread))
-      (bt:join-thread (handler-thread server))))
-  (setf (broadcast-advertiser server) nil
-        (slot-value server 'handler-thread) nil
-        (slot-value server 'handler-socket) nil))
 
 (defmethod get-user-list ((server lodds-server))
   (loop
@@ -505,7 +325,7 @@
                                     :recursive-p t)))
     (stmx:atomic
      (push new-watcher
-           (slot-value server 'watchers)))))
+           (watchers server)))))
 
 (defmethod unshare-folder ((server lodds-server) &optional (folder-path nil))
   (if folder-path
@@ -517,7 +337,7 @@
             (progn
               (lodds.watcher:stop-watcher watcher)
               (stmx:atomic
-               (setf (slot-value server 'watchers)
+               (setf (watchers server)
                      (remove watcher (watchers server)))))
             (error "TODO: could not find watcher to unshare with given folder-path")))
       (progn
@@ -525,7 +345,7 @@
          (lambda (watcher)
            (lodds.watcher:stop-watcher watcher nil))
          (watchers server))
-        (setf (slot-value server 'watchers) nil
+        (setf (watchers server) nil
               (list-of-changes server) nil))))
 
 (defmethod get-file-changes ((server lodds-server) current-timestamp &optional (timestamp nil))
@@ -555,6 +375,7 @@
               (watchers server)))))
 
 (defmethod shutdown ((server lodds-server))
-  (stop-advertising server)
-  (stop-listening server)
+  (loop
+     :for subsystem :in (list :listener :advertiser :handler)
+     :do (stop server subsystem))
   (unshare-folder server))

@@ -19,5 +19,8 @@
                (:file "core")
                (:file "watcher")
                (:file "low-level-api")
+               (:file "listener")
+               (:file "advertiser")
+               (:file "handler")
                (:file "lodds")))
 

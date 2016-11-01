@@ -64,23 +64,25 @@ multiple-value-bind.
                              0)
                          load
                          name))))
-      (setf (usocket:socket-option sock :broadcast) t)
-      (usocket:socket-send sock data (length data)
-                           :host broadcast-host
-                           :port broadcast-port)
-      (usocket:socket-close sock)))
-  0)
+      (handler-case
+          (progn
+            (setf (usocket:socket-option sock :broadcast) t)
+            (usocket:socket-send sock data (length data)
+                                 :host broadcast-host
+                                 :port broadcast-port)
+            (usocket:socket-close sock)
+            0) ;; everything went fine
+        (usocket:network-unreachable-error ()
+          6))))) ;; network-unreachable-error
 
 (defun read-advertise (message)
   "counter-part to send-advertise, will parse the given message (byte
    vector) and return a list out of ip, port, timestamp, load and name.
    for example: '(#(192 168 2 255) 12345 9999 87654321 \"username\")
    will use *advertise-scanner* to check for syntax errors."
-  (if (cl-ppcre:scan *advertise-scanner*
-                     (flexi-streams:octets-to-string message))
+  (if (cl-ppcre:scan *advertise-scanner* message)
       (destructuring-bind (ip port timestamp load . name)
-          (cl-strings:split
-           (flexi-streams:octets-to-string message))
+          (cl-strings:split message)
         (values 0
                 (list (usocket:dotted-quad-to-vector-quad ip)
                       (parse-integer port)
