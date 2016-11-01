@@ -3,4 +3,5 @@ Code	Discription
 2		malformedData		
 3		timoutReached		
 4		fileNotFound
-5		connectionDenied		
+5		connectionDenied	
+6		networkUnreachable	
