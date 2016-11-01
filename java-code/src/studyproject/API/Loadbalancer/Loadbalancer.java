@@ -1,6 +1,7 @@
 package studyproject.API.Loadbalancer;
 
-import studyproject.API.Lvl.Mid.LODDS;
+import java.util.Vector;
+
 import studyproject.API.Lvl.Mid.Core.UserInfo;
 
 /**
@@ -10,41 +11,52 @@ import studyproject.API.Lvl.Mid.Core.UserInfo;
  */
 public class Loadbalancer {
 
-	private LODDS loddsobject;
 	private long loadBalancingMinumum;
 	private int parallelDownloads;
 
-	public Loadbalancer(LODDS loddsobject, long loadBalancingMinumum, int parallelDownloads) {
-		this.loddsobject = loddsobject;
+	/**
+	 * 
+	 * @param loadBalancingMinumum
+	 *            the size at which this client uses loadbalancing
+	 * @param parallelDownloads
+	 *            the maximum number of concurrent downloads used to pull this
+	 *            file
+	 */
+	public Loadbalancer(long loadBalancingMinumum, int parallelDownloads) {
 		this.loadBalancingMinumum = loadBalancingMinumum;
 		this.parallelDownloads = parallelDownloads;
 	}
 
-	public synchronized void splitLoad(String checksum, String localPath,
-			long fileSize) {
-		if (loddsobject.getFileSize(checksum) < loadBalancingMinumum) {
-			loddsobject
-					.getFile(getClientMinLoad(checksum), checksum, localPath);
-		} else {
-			// TODO start thread that assigns how much is taken from which user,
-			// checks the threads to get the parts of the file and, after all
-			// threads finished, puts the temporary files together
-			LoadbalancerMainThread loadbalancerMainThread = new LoadbalancerMainThread(
-					loddsobject, checksum, localPath,
-					fileSize, loadBalancingMinumum, parallelDownloads);
-			loadbalancerMainThread.start();
-		}
+	/**
+	 * 
+	 * @param owningUsers
+	 *            the vector with all users owning the specified file
+	 * @param checksum
+	 *            the checksum of the specified file
+	 * @param localPath
+	 *            the complete path to the location where the file should be
+	 *            placed
+	 * @param fileSize
+	 *            the total size of the file
+	 */
+	public synchronized void splitLoad(Vector<UserInfo> owningUsers,
+			String checksum, String localPath, long fileSize) {
+		LoadbalancerMainThread loadbalancerMainThread = new LoadbalancerMainThread(
+				owningUsers, checksum, localPath, fileSize,
+				loadBalancingMinumum, parallelDownloads);
+		loadbalancerMainThread.start();
 	}
 
 	/**
 	 * 
-	 * @return the client that has the specified and has the lowest amount of
-	 *         load or the first client in the list that has no load
+	 * @return the client that has the specified file and has the lowest amount
+	 *         of load or the first client in the list that has no load
 	 */
-	private synchronized String getClientMinLoad(String checksum) {
+	public synchronized String getClientMinLoad(Vector<UserInfo> owningUsers,
+			String checksum) {
 		long minLoad = Long.MAX_VALUE;
 		String clientWithLowestLoad = "";
-		for (UserInfo userInfo : loddsobject.getOwningUsers(checksum)) {
+		for (UserInfo userInfo : owningUsers) {
 			if (userInfo.getLoad() == 0) {
 				return userInfo.getUserName();
 			} else if (userInfo.getLoad() < minLoad) {
@@ -74,10 +86,20 @@ public class Loadbalancer {
 		this.loadBalancingMinumum = loadBalancingMinumum;
 	}
 
+	/**
+	 * 
+	 * @return the maximum number of concurrent downloads used to pull this file
+	 */
 	public int getParallelDownloads() {
 		return parallelDownloads;
 	}
 
+	/**
+	 * 
+	 * @param parallelDownloads
+	 *            the maximum number of concurrent downloads used to pull this
+	 *            file
+	 */
 	public void setParallelDownloads(int parallelDownloads) {
 		this.parallelDownloads = parallelDownloads;
 	}
