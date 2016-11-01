@@ -33,18 +33,17 @@ public class SettingsWindowPresenter implements Initializable {
 	@FXML
 	GridPane settingsGrid;
 
-	private int numberOfRows = 0;
-
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {
-		System.out.println("SettingsWindow");
+		int numberOfRows = 0;
+		
 		okButton.setOnAction(ok -> okPressed());
 		applyButton.setOnAction(apply -> applyPressed());
 		cancelButton.setOnAction(cancel -> cancelPressed());
-		loadSettings();
+		loadSettings(numberOfRows);
 	}
 
-	private void loadSettings() {
+	private void loadSettings(int numberOfRows) {
 		for (Entry<Object, Object> entry : App.properties.entrySet()) {
 			settingsGrid.addRow(numberOfRows++, new Label((String) entry.getKey()),
 					new TextField((String) entry.getValue()));
