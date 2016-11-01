@@ -3,16 +3,16 @@
    - [ ] File Header with Description
 
 * Lodds Lib
-** TODO missing [0/4]
+** TODO missing [1/4]
    - [ ] logging
    - [ ] Error Handling
-   - [ ] directory watcher (cl-async)
+   - [X] directory watcher (cl-async)
    - [ ] initargs (interface -> overwrite initialize-instance)
-** TODO Code changes [2/4]
+** TODO Code changes [3/4]
    - [X] rename and export accessors
    - [ ] replace all parse-integer calls
    - [X] Use [[https://github.com/cosmos72/stmx][STMX]] instead of Locks
-   - [ ] replace all 'bt:destroy-thread'
+   - [X] replace all 'bt:destroy-thread'
 
 * Low Level API
 ** TODO missing [1/6]
@@ -23,6 +23,7 @@
      - [ ] 3: timeout-reached
      - [ ] 4: file-not-found
      - [ ] 5: connection denied (needs to be added)
+     - [ ] 6: network-unreachable
    - [ ] some error-code-to-string functionality
    - [ ] tests
 
