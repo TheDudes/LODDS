@@ -4,7 +4,7 @@
 <?import javafx.scene.control.MenuBar?>
 <?import javafx.scene.control.MenuItem?>
 
-<MenuBar xmlns:fx="http://javafx.com/fxml/1" xmlns="http://javafx.com/javafx/8.0.65">
+<MenuBar xmlns="http://javafx.com/javafx/8.0.76-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="studyproject.gui.mainWindow.topMenu.TopMenuPresenter">
   <menus>
     <Menu mnemonicParsing="false" text="File">
       <items>
@@ -14,6 +14,7 @@
     <Menu mnemonicParsing="false" text="Edit">
       <items>
         <MenuItem mnemonicParsing="false" text="Delete" />
+            <MenuItem fx:id="settingsItem" mnemonicParsing="false" text="Settings" />
       </items>
     </Menu>
     <Menu mnemonicParsing="false" text="Help">

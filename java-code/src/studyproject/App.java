@@ -20,6 +20,7 @@ public class App extends Application{
 
 	private static Logger logger;
 	public static Properties properties;
+	public static String pathToProperties;
 
 	public void configureLogging() {
 		logger = Logger.getGlobal();
@@ -49,15 +50,15 @@ public class App extends Application{
 		Scene mainScene = new Scene(mainView.getView());
 		mainStage.setScene(mainScene);
 		mainStage.show();
-
 	}
 	
 
 	public static void main(String... args) {
 		App application = new App();
 		application.configureLogging();
+		pathToProperties = args[0];
 		int errorCode;
-		if ((errorCode = application.loadProperties(args[0])) > 0) {
+		if ((errorCode = application.loadProperties(pathToProperties)) > 0) {
 			ErrLog.log(Level.SEVERE, LogKey.error, APILvl.gui,errorCode, "loadProperties");
 		}
 

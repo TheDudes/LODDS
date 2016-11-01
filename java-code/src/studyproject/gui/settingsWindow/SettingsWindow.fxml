@@ -9,26 +9,23 @@
 <?import javafx.scene.layout.RowConstraints?>
 <?import javafx.scene.layout.VBox?>
 
-
-<VBox maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/8.0.65" xmlns:fx="http://javafx.com/fxml/1">
+<VBox maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/8.0.76-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="studyproject.gui.settingsWindow.SettingsWindowPresenter">
    <children>
-      <GridPane VBox.vgrow="ALWAYS">
+      <GridPane fx:id="settingsGrid" VBox.vgrow="ALWAYS">
         <columnConstraints>
           <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
           <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
         </columnConstraints>
         <rowConstraints>
           <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
-          <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
-          <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
         </rowConstraints>
       </GridPane>
       <Separator prefWidth="200.0" VBox.vgrow="NEVER" />
-      <HBox alignment="CENTER_RIGHT" spacing="5.0" VBox.vgrow="NEVER">
+      <HBox alignment="CENTER_RIGHT" spacing="5.0">
          <children>
-            <Button mnemonicParsing="false" text="Apply" />
-            <Button mnemonicParsing="false" text="OK" />
-            <Button mnemonicParsing="false" text="Cancel">
+            <Button fx:id="applyButton" mnemonicParsing="false" text="Apply" />
+            <Button fx:id="okButton" mnemonicParsing="false" text="OK" />
+            <Button fx:id="cancelButton" mnemonicParsing="false" text="Cancel">
                <HBox.margin>
                   <Insets left="10.0" />
                </HBox.margin>
