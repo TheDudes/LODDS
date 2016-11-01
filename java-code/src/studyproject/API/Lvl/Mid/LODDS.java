@@ -69,8 +69,7 @@ public class LODDS {
 		this.userName = userName;
 		load = 0;
 
-		loadbalancer = new Loadbalancer(this, loadBalancingMinumum,
-				parallelDownloads);
+		loadbalancer = new Loadbalancer(loadBalancingMinumum, parallelDownloads);
 	}
 
 	/**
@@ -169,7 +168,7 @@ public class LODDS {
 			long startIndex, long endIndex) {
 		FileConnectionThread fileConnectionThread = new FileConnectionThread(
 				getUserConnectionInfo(user), checksum, getFileSize(checksum),
-				localPath, startIndex, endIndex, this);
+				localPath, startIndex, endIndex);
 		fileConnectionThread.start();
 	}
 
@@ -195,17 +194,21 @@ public class LODDS {
 	public void getFile(String user, String checksum, String localPath) {
 		FileConnectionThread fileConnectionThread = new FileConnectionThread(
 				getUserConnectionInfo(user), checksum, getFileSize(checksum),
-				localPath, this);
+				localPath);
 		fileConnectionThread.start();
 	}
 
 	/**
-	 * WIP
+	 * if there is more than one user that shares the file the load is split
+	 * between the clients with the lowest load. The parts of the file are
+	 * stored as temporary files and then assembled into the real file after the
+	 * download of the next part has finished
 	 * 
 	 * @param checksum
+	 *            the checksum of the file to be pulled
 	 * @param localPath
+	 *            the absolute path to the location the file should be stored in
 	 */
-	@Deprecated
 	public void getFileWithLoadBal(String checksum, String localPath) {
 		Vector<UserInfo> owningUsers = getOwningUsers(checksum);
 		if (owningUsers != null && owningUsers.size() == 0
@@ -215,8 +218,14 @@ public class LODDS {
 			if (owningUsers.size() == 1) {
 				getFile(owningUsers.get(0).getUserName(), checksum, localPath);
 			} else {
-				loadbalancer.splitLoad(checksum, localPath,
-						getFileSize(checksum));
+				if (getFileSize(checksum) < loadBalancingMinumum) {
+					getFile(loadbalancer
+							.getClientMinLoad(owningUsers, checksum),
+							checksum, localPath);
+				} else {
+					loadbalancer.splitLoad(getOwningUsers(checksum), checksum,
+							localPath, getFileSize(checksum));
+				}
 			}
 		}
 	}
