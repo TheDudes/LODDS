@@ -40,8 +40,6 @@ public class LogAreaHandler extends Handler {
 			return;
 		if (!isLoggable(record))
 			return;
-
-		System.out.println("this is logAreaHandler with record: " + record.getMessage());
 		toLogTo.getItems().add((Error) record);
 	}
 
