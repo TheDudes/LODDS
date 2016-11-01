@@ -1,16 +1,17 @@
 package studyproject.gui.mainWindow.tasksList;
 
 import javafx.collections.ObservableList;
+import javafx.concurrent.Task;
 
 public class TasksListModel {
-	private ObservableList<Test> tasks;
+	private ObservableList<Task<Void>> tasks;
 
-	public ObservableList<Test> getTasks() {
+	public ObservableList<Task<Void>> getTasks() {
 		return tasks;
 	}
 
-	public void setTasks(ObservableList<Test> tasks) {
-		this.tasks = tasks;
+	public void setTasks(ObservableList<Task<Void>> observableList) {
+		this.tasks = observableList;
 	}
 	
 	
