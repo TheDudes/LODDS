@@ -56,7 +56,7 @@ public class ErrLog {
 	 * @return the Error Object with filled information
 	 */
 	public static Error getError(Level level, LogKey logKey, APILvl apiLvl, int errorCode, String functionName) {
-		return new Error(level, logKey, apiLvl, getErrorMsg(errorCode, logKey, apiLvl, functionName));
+		return new Error(level, logKey, apiLvl, functionName, getErrorMsg(errorCode, logKey, apiLvl, functionName));
 	}
 
 	/**
@@ -85,7 +85,7 @@ public class ErrLog {
 		case connectionClosed:
 			errorMsg = "Connection to client closed unexpectedly";
 			break;
-		case fileNotFound: 
+		case fileNotFound:
 			errorMsg = "The specified File(via Checksum or Pathname) could not be found";
 			break;
 		case malformedData:
