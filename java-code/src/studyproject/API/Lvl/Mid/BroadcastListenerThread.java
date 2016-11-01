@@ -3,14 +3,15 @@ package studyproject.API.Lvl.Mid;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.Vector;
+import java.util.concurrent.ConcurrentHashMap;
 
 import studyproject.API.Core.BroadcastInfo;
 import studyproject.API.Lvl.Low.Broadcast;
-import studyproject.API.Lvl.Mid.Core.RemoteFileInfo;
+import studyproject.API.Lvl.Mid.Core.FileCoreInfo;
 import studyproject.API.Lvl.Mid.Core.UserInfo;
 
 public class BroadcastListenerThread extends Thread {
-	
+
 	private LODDS loddsObject;
 	private StringBuilder broadcastAddress;
 	private StringBuilder localAddress;
@@ -19,19 +20,19 @@ public class BroadcastListenerThread extends Thread {
 	private InetAddress inetAddress;
 	private boolean written;
 	private boolean run;
-	
+
 	public BroadcastListenerThread(LODDS loddsObject) {
 		this.loddsObject = loddsObject;
 		written = false;
 		run = true;
 	}
-	
+
 	@Override
 	public void run() {
 		localAddress = new StringBuilder();
 		brInfo = new BroadcastInfo();
-		
-		while(run) {
+
+		while (run) {
 			Broadcast.getLocalIp(loddsObject.getInterface(), localAddress);
 			if (Broadcast.readAdvertise(localAddress.toString(), brInfo) != 0) {
 				// readAdvertise failed
@@ -39,12 +40,15 @@ public class BroadcastListenerThread extends Thread {
 			}
 			try {
 				inetAddress = InetAddress.getByName(brInfo.networkAddress);
-				if (inetAddress.equals(InetAddress.getByName(localAddress.toString()))) {
+				if (inetAddress.equals(InetAddress.getByName(localAddress
+						.toString()))) {
 					continue;
 				}
-				for(UserInfo user: loddsObject.getUsers()) {
+				for (UserInfo user : loddsObject.getUsers()) {
 					if (user.getIpAddress().equals(inetAddress)) {
-						System.out.println("BroadcastListenerThread: Already in Userlist: " + brInfo.toString());
+						System.out
+								.println("BroadcastListenerThread: Already in Userlist: "
+										+ brInfo.toString());
 						user.setPort(brInfo.ipPort);
 						user.setLoad(brInfo.load);
 						user.setUserName(brInfo.name);
@@ -56,11 +60,15 @@ public class BroadcastListenerThread extends Thread {
 					continue;
 				}
 				if (written == false) {
-					System.out.println("BroadcastListenerThread: Added to Userlist: " + brInfo.toString());
-					userInfo = new UserInfo(inetAddress, brInfo.ipPort, brInfo.name, brInfo.timestamp,
-							brInfo.load, new Vector<RemoteFileInfo>(), brInfo.timestamp);
-					
-					loddsObject.getUsers().add(userInfo);	
+					System.out
+							.println("BroadcastListenerThread: Added to Userlist: "
+									+ brInfo.toString());
+					userInfo = new UserInfo(inetAddress, brInfo.ipPort,
+							brInfo.name, brInfo.timestamp, brInfo.load,
+							new ConcurrentHashMap<String, FileCoreInfo>(),
+							new ConcurrentHashMap<String, Vector<String>>(),
+							brInfo.timestamp);
+					loddsObject.getUsers().add(userInfo);
 				}
 			} catch (UnknownHostException e) {
 				e.printStackTrace();
@@ -92,8 +100,8 @@ public class BroadcastListenerThread extends Thread {
 	public void setInetAddress(InetAddress inetAddress) {
 		this.inetAddress = inetAddress;
 	}
-	
+
 	public void setRun(boolean bool) {
-		this.run = bool; 
+		this.run = bool;
 	}
 }

@@ -6,15 +6,17 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.Vector;
 import java.util.concurrent.ConcurrentHashMap;
 
 import studyproject.API.Core.Timestamp;
 import studyproject.API.Core.File.FileAction;
 import studyproject.API.Core.File.FileInfo;
 import studyproject.API.Core.File.InfoList.FileInfoListType;
+import studyproject.API.Core.File.InfoList.InfoType;
 import studyproject.API.Lvl.Low.Handles;
 import studyproject.API.Lvl.Low.Requests;
-import studyproject.API.Lvl.Mid.Core.RemoteFileInfo;
+import studyproject.API.Lvl.Mid.Core.FileCoreInfo;
 import studyproject.API.Lvl.Mid.Core.UserInfo;
 
 /**
@@ -28,76 +30,79 @@ import studyproject.API.Lvl.Mid.Core.UserInfo;
  */
 public class UpdateFileInfoThread extends Thread {
 
-	private UserInfo userConnectionInfo;
-	private LODDS loddsObject;
+	private UserInfo userInfo;
 
-	public UpdateFileInfoThread(UserInfo userConnectionInfo, LODDS loddsObject) {
-		this.userConnectionInfo = userConnectionInfo;
-		this.loddsObject = loddsObject;
+	public UpdateFileInfoThread(UserInfo userConnectionInfo) {
+		this.userInfo = userConnectionInfo;
 	}
 
 	@Override
 	public void run() {
-		try (Socket socket = new Socket(userConnectionInfo.getIpAddress(), userConnectionInfo.getPort());
-				BufferedOutputStream bufferedOutputStream = new BufferedOutputStream(socket.getOutputStream());
-				BufferedReader bufferedreader = new BufferedReader(new InputStreamReader(socket.getInputStream()))) {
+		try (Socket socket = new Socket(userInfo.getIpAddress(),
+				userInfo.getPort());
+				BufferedOutputStream bufferedOutputStream = new BufferedOutputStream(
+						socket.getOutputStream());
+				BufferedReader bufferedreader = new BufferedReader(
+						new InputStreamReader(socket.getInputStream()))) {
 			ArrayList<FileInfo> fileInfoList = new ArrayList<FileInfo>();
 			Timestamp newFileListTimestamp = new Timestamp();
 			FileInfoListType infoType = new FileInfoListType();
-			Requests.getInfo(bufferedOutputStream, userConnectionInfo.getLastUpdate());
-			Handles.handleInfo(bufferedreader, fileInfoList, newFileListTimestamp, infoType);
-			userConnectionInfo.setFileListTimestamp(newFileListTimestamp.value);
-			userConnectionInfo.setLastUpdate(System.currentTimeMillis() / 1000);
-			updateHashmapEntries(fileInfoList);
-			updateClientFileList(fileInfoList);
+			Requests.getInfo(bufferedOutputStream, userInfo.getLastUpdate());
+			Handles.handleInfo(bufferedreader, fileInfoList,
+					newFileListTimestamp, infoType);
+			userInfo.setFileListTimestamp(newFileListTimestamp.value);
+			userInfo.setLastUpdate(System.currentTimeMillis() / 1000);
+			if (infoType.equals(InfoType.all)) {
+				userInfo.setChecksumToPath(new ConcurrentHashMap<String, Vector<String>>());
+				userInfo.setPathToFileInfo(new ConcurrentHashMap<String, FileCoreInfo>());
+			}
+			updateEntries(fileInfoList);
 		} catch (IOException e) {
 			// TODO error handling
 		}
 	}
 
 	/**
-	 * updates the list contained in the user object with the changes from the
-	 * list
+	 * updates the hash maps contained in the user object with the changes from
+	 * the list
 	 * 
 	 * @param fileInfoList
 	 *            the list of changes
 	 */
-	private void updateClientFileList(ArrayList<FileInfo> fileInfoList) {
+	private void updateEntries(ArrayList<FileInfo> fileInfoList) {
 		for (FileInfo fileInfo : fileInfoList) {
 			if (fileInfo.fileAction.equals(FileAction.add)) {
-				userConnectionInfo.getFileList().add(new RemoteFileInfo(fileInfo));
+				addEntry(fileInfo);
 			} else if (fileInfo.fileAction.equals(FileAction.del)) {
-				userConnectionInfo.getFileList().remove(new RemoteFileInfo(fileInfo));
+				deleteEntry(fileInfo);
 			}
 		}
 	}
 
-	/**
-	 * applies the changes passed in the fileInfoList to the hashmap that
-	 * contains all shared files
-	 * 
-	 * @param fileInfoList
-	 *            the list of changes
-	 */
-	private void updateHashmapEntries(ArrayList<FileInfo> fileInfoList) {
-		ConcurrentHashMap<String, RemoteFileInfo> availableFiles = loddsObject.getAvailableFiles();
-		for (FileInfo fileInfo : fileInfoList) {
-			if (fileInfo.fileAction.equals(FileAction.add)) {
-				if (availableFiles.containsKey(fileInfo.checksum)) {
-					if (!availableFiles.get(fileInfo.checksum).getOwningUsers().contains(userConnectionInfo)) {
-						availableFiles.get(fileInfo.checksum).getOwningUsers().add(userConnectionInfo);
-					}
-				} else {
-					availableFiles.put(fileInfo.checksum, new RemoteFileInfo(fileInfo, userConnectionInfo));
-				}
-			} else if (fileInfo.fileAction.equals(FileAction.del)) {
-				if (availableFiles.get(fileInfo.checksum).getOwningUsers().size() > 1) {
-					availableFiles.get(fileInfo.checksum).getOwningUsers().remove(userConnectionInfo);
-				} else if (availableFiles.get(fileInfo.checksum).getOwningUsers().contains(userConnectionInfo)) {
-					availableFiles.remove(fileInfo.checksum);
-				}
+	private void deleteEntry(FileInfo fileInfo) {
+		if (userInfo.getChecksumToPath().containsKey(fileInfo.checksum)) {
+			if (userInfo.getChecksumToPath().get(fileInfo.checksum).size() > 1) {
+				userInfo.getChecksumToPath().get(fileInfo.checksum)
+						.remove(fileInfo.fileName);
+			} else {
+				userInfo.getChecksumToPath().remove(fileInfo.checksum);
 			}
 		}
+		userInfo.getPathToFileInfo().remove(fileInfo.fileName);
+	}
+
+	private void addEntry(FileInfo fileInfo) {
+		if (!userInfo.getChecksumToPath().containsKey(fileInfo.checksum)) {
+			userInfo.getChecksumToPath().get(fileInfo.checksum)
+					.add(fileInfo.fileName);
+		} else if (!userInfo.getChecksumToPath().get(fileInfo.checksum)
+				.contains(fileInfo.fileName)) {
+			Vector<String> pathList = new Vector<String>();
+			pathList.add(fileInfo.fileName);
+			userInfo.getChecksumToPath().put(fileInfo.checksum, pathList);
+		}
+		userInfo.getPathToFileInfo().put(fileInfo.fileName,
+				new FileCoreInfo(fileInfo.checksum, fileInfo.size));
 	}
 
 }

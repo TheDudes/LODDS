@@ -1,20 +1,14 @@
 package studyproject.API.Lvl.Mid;
 
-import java.io.IOException;
 import java.net.Socket;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Vector;
-import java.util.concurrent.ConcurrentHashMap;
 
-import studyproject.API.Core.File.FileAction;
-import studyproject.API.Core.File.FileHasher;
 import studyproject.API.Core.File.FileInfo;
 import studyproject.API.Loadbalancer.Loadbalancer;
 import studyproject.API.Lvl.Low.Broadcast;
 import studyproject.API.Lvl.Mid.Core.ConnectionInfo;
-import studyproject.API.Lvl.Mid.Core.FileChange;
-import studyproject.API.Lvl.Mid.Core.RemoteFileInfo;
 import studyproject.API.Lvl.Mid.Core.UserInfo;
 
 /**
@@ -30,14 +24,13 @@ public class LODDS {
 	private final int DEFAULT_IP_PORT = 9002;
 	private final int DEFAULT_ADVERTISE_PORT = 9002;
 	private final int DEFAULT_TIME_INTERVAL = 1000;
+	private final int DEFAULT_PARALLEL_DOWNLOADS = 8;
 
 	private long loadBalancingMinumum = 4096;
 
 	private long lastChange;
 	private Loadbalancer loadbalancer;
-	private Vector<FileChange> localFileChanges;
 	private Vector<UserInfo> clientList;
-	private ConcurrentHashMap<String, RemoteFileInfo> availableFiles;
 	private Vector<String> sharedFolders;
 	private long load;
 	private String interfaceName;
@@ -50,6 +43,7 @@ public class LODDS {
 	private String networkAddress;
 	private int ipPort;
 	private int timeInterval;
+	private int parallelDownloads;
 
 	/**
 	 * Initiates all lists and maps, retrieves the local and broadcast IP from
@@ -64,19 +58,19 @@ public class LODDS {
 	 *            the name under which this client will appear to other clients
 	 */
 	public LODDS(String interfaceName, String userName) {
-		localFileChanges = new Vector<FileChange>();
 		clientList = new Vector<UserInfo>();
-		availableFiles = new ConcurrentHashMap<String, RemoteFileInfo>();
 		sharedFolders = new Vector<String>();
 		ipPort = DEFAULT_IP_PORT;
 		advertisePort = DEFAULT_ADVERTISE_PORT;
 		timeInterval = DEFAULT_TIME_INTERVAL;
+		parallelDownloads = DEFAULT_PARALLEL_DOWNLOADS;
 		this.interfaceName = interfaceName;
 		setNetworkAddresses();
 		this.userName = userName;
 		load = 0;
 
-		loadbalancer = new Loadbalancer(this, loadBalancingMinumum);
+		loadbalancer = new Loadbalancer(this, loadBalancingMinumum,
+				parallelDownloads);
 	}
 
 	/**
@@ -213,14 +207,16 @@ public class LODDS {
 	 */
 	@Deprecated
 	public void getFileWithLoadBal(String checksum, String localPath) {
-		if (!availableFiles.containsKey(checksum)) {
+		Vector<UserInfo> owningUsers = getOwningUsers(checksum);
+		if (owningUsers != null && owningUsers.size() == 0
+				|| owningUsers == null) {
 			// TODO error handling
 		} else {
-			if (availableFiles.get(checksum).getOwningUsers().size() == 1) {
-				getFile(availableFiles.get(checksum).getOwningUsers().get(0)
-						.getUserName(), checksum, localPath);
+			if (owningUsers.size() == 1) {
+				getFile(owningUsers.get(0).getUserName(), checksum, localPath);
 			} else {
-				loadbalancer.splitLoad(checksum, localPath);
+				loadbalancer.splitLoad(checksum, localPath,
+						getFileSize(checksum));
 			}
 		}
 	}
@@ -233,7 +229,7 @@ public class LODDS {
 	 */
 	public void updateFileInfo(String user) {
 		UpdateFileInfoThread updateFileInfoThread = new UpdateFileInfoThread(
-				getUserConnectionInfo(user), this);
+				getUserConnectionInfo(user));
 		updateFileInfoThread.start();
 	}
 
@@ -300,31 +296,6 @@ public class LODDS {
 				&& !sharedFolders.contains(path)) {
 			sharedFolders.add(path);
 			// TODO tell the fileWatcher to start tracking this dir
-			try {
-				Files.walk(Paths.get(path))
-						.forEach(
-								filePath -> {
-									if (Files.isRegularFile(filePath)) {
-										try {
-											localFileChanges
-													.add(new FileChange(
-															path,
-															Files.size(Paths
-																	.get(path)),
-															FileHasher
-																	.getFileHash(path),
-															FileAction.add,
-															System.currentTimeMillis() / 1000));
-										} catch (Exception e) {
-											// TODO what to do here?
-										}
-									}
-								});
-				setLastChange(System.currentTimeMillis() / 1000);
-				return 0;
-			} catch (IOException e) {
-				return 1;
-			}
 		}
 		return 4;
 	}
@@ -341,11 +312,6 @@ public class LODDS {
 	public int unshareFolder(String path) {
 		if (sharedFolders.contains(path)) {
 			sharedFolders.remove(path);
-			for (FileChange fileChange : localFileChanges) {
-				if (fileChange.getPath().startsWith(path)) {
-					localFileChanges.remove(fileChange);
-				}
-			}
 			setLastChange(System.currentTimeMillis() / 1000);
 			// TODO tell fileWatcher to stop tracking this dir
 			return 0;
@@ -371,15 +337,7 @@ public class LODDS {
 		return null;
 	}
 
-	public Vector<FileChange> getFileChanges(long timeStamp) {
-		Vector<FileChange> fileChanges = new Vector<FileChange>();
-		for (FileChange fileChange : localFileChanges) {
-			if (fileChange.getTimeStamp() > timeStamp) {
-				fileChanges.add(fileChange);
-			}
-		}
-		return fileChanges;
-	}
+	// TODO implement getFileChanges(long timestamp)
 
 	/**
 	 * 
@@ -547,19 +505,64 @@ public class LODDS {
 		return timeInterval;
 	}
 
+	// TODO create a getAllAvailableFiles method without having to construct a
+	// list/hash map
+
 	/**
 	 * 
-	 * @return the hashMap with all shared files in the network
+	 * @param checksum
+	 *            the checksum of the file you want the size of
+	 * @return the size of the file for which the checksum is given
 	 */
-	public ConcurrentHashMap<String, RemoteFileInfo> getAvailableFiles() {
-		return availableFiles;
-	}
-
 	public long getFileSize(String checksum) {
-		if (availableFiles.containsKey(checksum)) {
-			return availableFiles.get(checksum).getSize();
+		for (UserInfo userInfo : clientList) {
+			if (userInfo.getChecksumToPath() != null
+					&& userInfo.getChecksumToPath().containsKey(checksum)) {
+				return userInfo
+						.getPathToFileInfo()
+						.get(userInfo.getChecksumToPath().get(checksum)
+								.firstElement()).getFilesize();
+			}
 		}
 		return 0;
+	}
+
+	/**
+	 * 
+	 * @param checksum
+	 *            the checksum of the file whose owners you want to know
+	 * @return a vector of UserInfos with all users who have a file with the
+	 *         given checksum
+	 */
+	public Vector<UserInfo> getOwningUsers(String checksum) {
+		Vector<UserInfo> owningUsers = new Vector<UserInfo>();
+		for (UserInfo userInfo : clientList) {
+			if (userInfo.getChecksumToPath() != null
+					&& userInfo.getChecksumToPath().containsKey(checksum)) {
+				owningUsers.add(userInfo);
+			}
+		}
+		return owningUsers;
+	}
+
+	/**
+	 * 
+	 * @return the number of clients the Loadbalancer can pull files from at
+	 *         once
+	 */
+	public int getParallelDownloads() {
+		return parallelDownloads;
+	}
+
+	/**
+	 * 
+	 * @param parallelDownloads
+	 *            the number of clients the Loadbalancer can pull files from at
+	 *            once
+	 */
+	public void setParallelDownloads(int parallelDownloads) {
+		this.parallelDownloads = parallelDownloads;
+		loadbalancer.setParallelDownloads(parallelDownloads);
 	}
 
 	private void setNetworkAddresses() {
