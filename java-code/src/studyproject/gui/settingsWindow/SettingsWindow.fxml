@@ -9,7 +9,7 @@
 <?import javafx.scene.layout.RowConstraints?>
 <?import javafx.scene.layout.VBox?>
 
-<VBox maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/8.0.76-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="studyproject.gui.settingsWindow.SettingsWindowPresenter">
+<VBox maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" xmlns="http://javafx.com/javafx/8.0.76-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="studyproject.gui.settingsWindow.SettingsWindowPresenter">
    <children>
       <GridPane fx:id="settingsGrid" VBox.vgrow="ALWAYS">
         <columnConstraints>
@@ -21,7 +21,7 @@
         </rowConstraints>
       </GridPane>
       <Separator prefWidth="200.0" VBox.vgrow="NEVER" />
-      <HBox alignment="CENTER_RIGHT" spacing="5.0">
+      <HBox alignment="CENTER_RIGHT" spacing="5.0" VBox.vgrow="NEVER">
          <children>
             <Button fx:id="applyButton" mnemonicParsing="false" text="Apply" />
             <Button fx:id="okButton" mnemonicParsing="false" text="OK" />

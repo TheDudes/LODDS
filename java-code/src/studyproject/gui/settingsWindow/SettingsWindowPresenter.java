@@ -15,6 +15,7 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
+import javafx.scene.layout.Priority;
 import studyproject.App;
 
 /**
@@ -49,6 +50,9 @@ public class SettingsWindowPresenter implements Initializable {
 		for (Entry<Object, Object> entry : App.properties.entrySet()) {
 			settingsGrid.addRow(numberOfRows++, new Label((String) entry.getKey()),
 					new TextField((String) entry.getValue()));
+		}
+		for (Node node : settingsGrid.getChildren()) {
+			GridPane.setVgrow(node, Priority.ALWAYS);
 		}
 	}
 
