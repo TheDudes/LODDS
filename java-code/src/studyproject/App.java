@@ -1,6 +1,5 @@
 package studyproject;
 
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.Properties;
@@ -13,6 +12,7 @@ import javafx.stage.Stage;
 import studyproject.API.Errors.ErrLog;
 import studyproject.gui.mainWindow.MainWindowView;
 import studyproject.logging.APILvl;
+import studyproject.logging.FileLogHandler;
 import studyproject.logging.LogConsoleHandler;
 import studyproject.logging.LogKey;
 
@@ -26,13 +26,15 @@ public class App extends Application{
 		logger = Logger.getGlobal();
 		logger.setUseParentHandlers(false);
 		logger.addHandler(new LogConsoleHandler(Level.ALL));
+		logger.addHandler(new FileLogHandler(properties.getProperty("pathToLogFile")));
 		logger.setLevel(Level.ALL);
 	}
 
-	public int loadProperties(String pathToProperties) {
+	public int loadProperties(String pathToUserProperties) {
 		properties = new Properties();
+		
 		try {
-			properties.load(new FileInputStream(pathToProperties));
+			properties.load(getClass().getResourceAsStream("resources/lodds.properties"));
 		} catch (FileNotFoundException e) {
 			return 4;
 		} catch (IOException e) {
@@ -45,7 +47,7 @@ public class App extends Application{
 	
 	@Override
 	public void start(Stage mainStage) throws Exception {
-		
+		mainStage.setTitle("Local Open Distributed Data Sharing");
 		MainWindowView mainView = new MainWindowView();
 		Scene mainScene = new Scene(mainView.getView());
 		mainStage.setScene(mainScene);
@@ -55,13 +57,12 @@ public class App extends Application{
 
 	public static void main(String... args) {
 		App application = new App();
-		application.configureLogging();
 		pathToProperties = args[0];
 		int errorCode;
 		if ((errorCode = application.loadProperties(pathToProperties)) > 0) {
 			ErrLog.log(Level.SEVERE, LogKey.error, APILvl.gui,errorCode, "loadProperties");
 		}
-
+		application.configureLogging();
 		launch(args);
 
 	}
