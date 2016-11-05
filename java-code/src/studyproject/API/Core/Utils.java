@@ -67,13 +67,13 @@ public class Utils {
 	 * This function formats a given unix timestamp to the format "HH:mm:ss a"
 	 * and returns it as String
 	 * 
-	 * @param unixSeconds
+	 * @param unixMillis
 	 *            The Unix Timestamp you want to format
 	 * @return the formatted unix timestamp as string e.g. "10:30:41 PM"
 	 */
-	public static String formatUnixTimestamp(long unixSeconds) {
+	public static String formatUnixTimestamp(long unixMillis) {
 		// *1000 is to convert seconds to milliseconds
-		Date date = new Date(unixSeconds * 1000L);
+		Date date = new Date(unixMillis);
 		SimpleDateFormat sdf = new SimpleDateFormat("HH:mm:ss a");
 		// give a timezone reference
 		sdf.setTimeZone(TimeZone.getDefault());
