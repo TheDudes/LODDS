@@ -25,21 +25,11 @@
       (0 t)
       (t (error "Unknown error occured on ADVERTISER")))))
 
-(defun run (server)
-  (let ((running t))
-    (loop
-       :while running
-       :do (handler-case
-            (progn
-              ;; repull timeout to get changes
-              (try-send server)
-              (sleep (lodds:advertise-timeout server)))
-            (lodds:shutdown-condition () (setf running nil))
-            (error (e)
-                   (format t "got error: ~a~%" e)
-                   (setf running nil)))))
-  (format t "Advertiser stopped!~%")
-  (setf (lodds:advertiser server) nil))
+(defun run (subsystem server)
+  (loop
+     ;; repull timeout to get changes
+     (try-send server)
+     (sleep (lodds:advertise-timeout server))))
 
 ;; (defun start (server)
 ;;   (let ((advertiser (lodds:advertiser server)))

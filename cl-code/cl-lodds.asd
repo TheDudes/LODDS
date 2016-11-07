@@ -19,6 +19,7 @@
                (:file "core")
                (:file "watcher")
                (:file "low-level-api")
+               (:file "event")
                (:file "listener")
                (:file "advertiser")
                (:file "handler")

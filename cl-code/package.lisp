@@ -37,6 +37,14 @@
            #:handle-file
            #:handle-send-permission))
 
+(defpackage #:lodds.event
+  (:use #:cl)
+  (:export #:event-queue
+           #:add-callback
+           #:remove-callback
+           #:push-event
+           #:run))
+
 (defpackage #:lodds.listener
   (:use #:cl)
   (:export #:run))
@@ -60,6 +68,7 @@
            #:get-ip-address
            ;; lodds-server reader/accessors
            #:shutdown-condition
+           #:subsystem
            #:*subsystems*
            #:get-subsystem
            #:lodds-server
@@ -78,8 +87,10 @@
            #:advertise-timeout
            ;; lodds server methods
            #:switch-interface
-           #:start
-           #:stop
+           ;; subsystem stuff
+           #:subsystem-start
+           #:subsystem-stop
+
            #:remove-clients
            #:get-file-info
            #:get-user-list

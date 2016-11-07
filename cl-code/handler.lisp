@@ -49,26 +49,16 @@
   (close (usocket:socket-stream socket))
   (usocket:socket-close socket))
 
-(defun run (server)
+(defun run (subsystem server)
   (let ((socket nil))
     (unwind-protect
-      (let ((running t))
-        (setf socket (usocket:socket-listen
-                      (lodds:get-ip-address (stmx:$ (lodds:interface server)))
-                      (lodds:handler-port server)
-                      :reuse-address t))
-        (loop
-           :while running
-           :do (handler-case
-                   (handler-callback server
-                                     (usocket:socket-accept socket))
-                 (usocket:bad-file-descriptor-error ()
-                   (setf running nil))
-                 (lodds:shutdown-condition () (setf running nil))
-                 (error (e)
-                   (format t "got error: ~a~%" e)
-                   (setf running nil)))))
+         (progn
+           (setf socket (usocket:socket-listen
+                         (lodds:get-ip-address (stmx:$ (lodds:interface server)))
+                         (lodds:handler-port server)
+                         :reuse-address t))
+           (loop
+              (handler-callback server
+                                (usocket:socket-accept socket))))
       (when socket
-        (usocket:socket-close socket))
-      (format t "Handler stopped!~%")
-      (setf (lodds:handler server) nil))))
+        (usocket:socket-close socket)))))

@@ -30,76 +30,103 @@
   (ip-interfaces:ip-interface-address
    (get-interface-info interface)))
 
+(defclass subsystem ()
+  ((name :accessor name
+         :initarg :name
+         :initform (error "please specify a subsystem name (keyword like :my-awesome-subsystem)")
+         :type keyword
+         :documentation "Name to identify a subsystem.")
+   (thread :accessor thread
+           :initform nil
+           :type bt:thread
+           :documentation "The subsystem Thread. Once a subsystem is
+           initialized it calls INIT-FN in a new thread.")
+   (alive-p :accessor alive-p
+            :initform nil
+            :type boolean
+            :documentation "Flag to check if subsystem is
+            alive/running, do not set this by hand, this is just a
+            indicator!. To start/stop a subsystem use SUBSYSTEM-START
+            and SUBSYSTEM-STOP.")
+   (init-fn :accessor init-fn
+            :initarg :init-fn
+            :initform (error "please specivy a init function which will be run by the subsystem")
+            :type function
+            :documentation "The 'main' function which will be called
+            by a extra thread.")
+   (init-args :accessor init-args
+              :initarg :init-args
+              :initform nil
+              :type list
+              :documentation "List of args which will be passed to
+              init-fn")
+   (event-queue :accessor event-queue
+                :initarg :event-queue
+                :initform nil
+                :type lodds.event:event-queue
+                :documentation "The event-queue where new events are
+                pushed to.")))
+
+(defmethod print-object ((object subsystem) stream)
+  (print-unreadable-object (object stream :type t :identity t)
+    (with-slots (name thread alive-p) object
+      (format stream "~a :alive-p ~a :thread ~a"
+              name alive-p thread))))
+
 (defclass lodds-server ()
   ((name :accessor name
          :initarg :name
          :initform nil
          :type string
          :documentation "Advertised name. Will be displayed by other
-         Clients as ur name.")
+         Clients as client name.")
    (broadcast-port :accessor broadcast-port
                    :initarg :broadcast-port
                    :initform 9002
                    :documentation "Port the LODDS-SERVER advertises
                    to. Broadcasting (subsystem :advertiser) has to be
-                   restarted for changes to take effect")
-   (listener :accessor listener
-             :initform nil
-             :type bt:thread
-             :documentation "LISTENER subsystem thread. If this member
-             variable is nil the Server is not listening to broadcast
-             messages of other clients. Use (start ur-server-obj
-             :listening) to start listening to broadcast messages. Do
-             not set this member by hand, since its spawning a thread
-             and manipulating the CLIENT member.")
-   (advertiser :accessor advertiser
+                   restarted for changes to take effect.")
+   (subsystems :accessor subsystems
                :initform nil
-               :type bt:thread
-               :documentation "ADVERTISER broadcasts information to
-               other clients. use (start ur-server-obj :advertiser) to
-               start advertising information.")
+               :type list
+               :documentation "list of subsystems known to lodds, will
+               be set after init, see INITIALIZE-INSTANCE for more
+               details.")
    (handler-port :accessor handler-port
                  :initarg :handler-port
                  :initform 4567
                  :documentation "Port the LODDS-SERVER listens on. The
-                 Handler subsystem has to be restarted for changes to
+                 :handler subsystem has to be restarted for changes to
                  take effect.")
-   (handler :accessor handler
-            :initform nil
-            :type bt:thread
-            :documentation "HANDLER subsystem thread, listens for
-            incomming connections and handles thems (starts threads
-            etc).")
    (client-timeout :accessor client-timeout
                    :initarg :client-timeout
                    :initform 5
                    :type integer
-                   :documentation "Timeout till client gets delete
+                   :documentation "Timeout till client gets deleted
                    from local list. Each advertise from other Clients
                    is saved with a timestamp, if timestamp is older
                    than CLIENT-TIMEOUT, the client will be deleted.")
    (interface :accessor interface
               :initform (stmx:tvar nil)
               :type stmx:tvar
-              :documentation "Transactional (STMX)!  Currently
-              selected interface. To get a list of available interface
-              use GET-INTERFACES. Use SWITCH-INTERFACE to change, or
-              set, the interface. SWITCH-INTERFACE will switch the
-              value inside a stmx:atomic.")
+              :documentation "STMX:TVAR Currently selected
+              interface. To get a list of available interface use
+              GET-INTERFACES. Use SWITCH-INTERFACE to change, or set,
+              the interface. SWITCH-INTERFACE will switch the value
+              inside a STMX:ATOMIC.")
    (clients :accessor clients
             :initform (make-hash-table :test #'equalp)
             :type hashtable
-            :documentation "hashtable containing all clients which
+            :documentation "Hashtable containing all clients which
             their broadcast information. This table is updated by
-            LISTENER.  TODO: implement something to retrieve a copy.")
+            LISTENER. TODO: implement something to retrieve a copy.")
    (current-load :accessor current-load
                  :initform (stmx:tvar 0)
                  :type stmx:tvar
-                 :documentation "Transactional (STMX)!  current load,
-                 this variable describes the sum of all outstanding
-                 bytes which need to be transfered. Do NOT set this
-                 variable, retrieving it should be fine. TODO: who
-                 sets this?")
+                 :documentation "STMX:TVAR, describes the sum of all
+                 outstanding bytes which need to be transfered. Do NOT
+                 set this variable, retrieving it should be
+                 fine tho. TODO: who sets this?")
    (watchers :accessor watchers
              :initform nil
              :type list
@@ -107,23 +134,58 @@
    (list-of-changes :accessor list-of-changes
                     :initform (stmx.util:tlist nil)
                     :type stmx.util:tlist
-                    :documentation "List of changes. Each member is a
-                    list of Timestamp, Type, checksum, size and name
-                    in that order.")
+                    :documentation "STMX.UTIL:TLIST, List of
+                    changes. Each member is a list of Timestamp, Type,
+                    checksum, size and name in that order.")
    (advertise-timeout :accessor advertise-timeout
                       :initform 1
                       :documentation "Timeout between
                       advertisements. Specified in seconds. Restarting
-                      the ADVERTISE is not necessary.")))
+                      the :advertiser subsystem is not necessary,
+                      since it rereads the value.")))
+
+(defmethod initialize-instance ((server lodds-server) &rest initargs)
+  (declare (ignorable initargs))
+  (call-next-method)
+  (setf (subsystems server)
+        ;; EVENT-QUEUE subsystem, this one is special to the others,
+        ;; since its used by all the other subsystems. it contains a
+        ;; STMX.util:TFIFO where messages can be added
+        ;; (PUSH-EVENT). its used to transfer messages between
+        ;; subsystems and the server object (or anything that has
+        ;; attached a callback to the queue (ADD-CALLBACK). see
+        ;; event.lisp for more info
+        (let ((event-queue (make-instance 'lodds.event:event-queue
+                                          :name :event-queue
+                                          :init-fn #'lodds.event:run)))
+          (subsystem-start server event-queue)
+          (list event-queue
+                ;; LISTENER subsystem listens on broadcast address of
+                ;; the set INTERFACE and BROADCAST-PORT member of
+                ;; server for advertisements from other clients
+                (make-instance 'subsystem
+                               :name :listener
+                               :init-fn #'lodds.listener:run
+                               :init-args (list server)
+                               :event-queue event-queue)
+                ;; ADVERTISER subystem, broadcasts information to
+                ;; other clients on broadcast address of INTERFACE and
+                ;; BROADCAST-PORT.
+                (make-instance 'subsystem
+                               :name :advertiser
+                               :init-fn #'lodds.advertiser:run
+                               :init-args (list server)
+                               :event-queue event-queue)
+                ;; HANDLER subsystem, listens for incomming
+                ;; connections and handles those (starts threads etc).
+                (make-instance 'subsystem
+                               :name :handler
+                               :init-fn #'lodds.handler:run
+                               :init-args (list server)
+                               :event-queue event-queue)))))
 
 (define-condition shutdown-condition (error)
   nil)
-
-(defvar *subsystems*
-  ;;          identifier  slot        package
-  (list (list :advertiser 'advertiser 'lodds.advertiser)
-        (list :listener   'listener   'lodds.listener)
-        (list :handler    'handler    'lodds.handler)))
 
 (defgeneric switch-interface (server interface)
   (:documentation
@@ -138,21 +200,13 @@
   (:documentation
    "switch ADVERTISE-TIMEOUT, TIMEOUT is given in seconds."))
 
-(defgeneric start (server &optional subsystem)
+(defgeneric subsystem-start (server subsystem)
   (:documentation
-   "Starts the given subsystem. subsystem can be one of:
-   :listener
-   :advertiser
-   :handler
-   not specifing a subsystem will start all (or those not started yet)."))
+   "Starts the given subsystem."))
 
-(defgeneric stop (server &optional subsystem)
+(defgeneric subsystem-stop (server subsystem)
   (:documentation
-   "Stops the given subsystem. subsystem can be one of:
-   :listener
-   :advertiser
-   :handler
-   if left out, stops all subsystems"))
+   "Stops the given subsystem."))
 
 (defgeneric remove-clients (server inactive-time)
   (:documentation
@@ -217,15 +271,18 @@
       ;; collect all running subsystems
       (let ((was-running
              (loop
-                :for (subsystem slot package) :in *subsystems*
-                :when (slot-value server slot)
-                :collect subsystem)))
+                :for key :in (list :handler
+                                   :advertiser
+                                   :listener)
+                :for subsystem = (get-subsystem server key)
+                :when (alive-p subsystem )
+                :collect subsystem )))
 
         ;; stop all subsystem which are running atm
         ;; TODO: fix waiting until all subsystems are closed
         (loop
            :for subsystem :in was-running
-           :do (stop server subsystem))
+           :do (subsystem-stop server subsystem))
 
         (stmx:atomic
          (setf (stmx:$ (interface server)) interface))
@@ -233,47 +290,53 @@
         ;; start all subsystem which where running before
         (loop
            :for subsystem :in was-running
-           :do (start server subsystem))
+           :do (subsystem-start server subsystem))
 
         interface)))
 
-(defmethod start ((server lodds-server) &optional (subsystem nil))
-  (labels ((run-subsystem (subsys slot package)
-             (let ((handle (slot-value server slot)))
-               (if handle
-                   (format t "~a is already Running.~%" subsys)
-                   (bt:make-thread
-                    (lambda ()
-                      (funcall (symbol-function (find-symbol "RUN" package))
-                               server))
-                    :name (format nil "~a" subsys))))))
-    (if subsystem
-        (destructuring-bind (subsystem slot package)
-            (assoc subsystem *subsystems*)
-          (setf (slot-value server slot)
-                (run-subsystem subsystem slot package)))
-        (loop
-           :for (subsystem slot package) :in *subsystems*
-           :do (setf (slot-value server slot)
-                     (run-subsystem subsystem slot package))))))
+(defun save-subsystem-start (subsystem)
+  (labels ((save-init-fn ()
+               (unwind-protect
+                    (progn
+                      (setf (alive-p subsystem) t)
+                      (loop
+                         :while (alive-p subsystem)
+                         :do (handler-case
+                                 (apply (init-fn subsystem) subsystem (init-args subsystem))
+                               (lodds:shutdown-condition ()
+                                 (setf (alive-p subsystem) nil))
+                               (error (e)
+                                 (format t "got uncaught error from subsystem ~a: ~a~%"
+                                         (name subsystem)
+                                         e)
+                                 (setf (alive-p subsystem) nil)))))
+                 (format t "~a stopped!~%" (name subsystem))
+                 (setf (alive-p subsystem) nil))))
+    (if (alive-p subsystem)
+        (format t "Subsystem ~a is already Running!~%" (name subsystem))
+        (setf
+         (thread subsystem)
+         (bt:make-thread #'save-init-fn
+                         :name (format nil "LODDS-~a" (name subsystem)))))))
 
-(defmethod stop ((server lodds-server) &optional (subsystem nil))
-  (labels ((stop-subsystem (subsys slot)
-             (let ((handle (slot-value server slot)))
-               (if handle
-                   (bt:interrupt-thread
-                    handle
-                    (lambda ()
-                      (signal (make-condition 'shutdown-condition))))
-                   (format t "~a not running.~%" subsys)))))
-    (if subsystem
-        (destructuring-bind (subsystem slot package)
-            (assoc subsystem *subsystems*)
-          (declare (ignore package))
-          (stop-subsystem subsystem slot))
-        (loop
-           :for (subsystem slot package) :in *subsystems*
-           :do (stop-subsystem subsystem slot)))))
+(defun get-subsystem (server name)
+  (find name (subsystems server) :key #'name))
+
+(defmethod subsystem-start ((server lodds-server) subsystem)
+  (when (eql 'keyword (type-of subsystem))
+    (setf subsystem (get-subsystem server subsystem)))
+  (when subsystem
+    (save-subsystem-start subsystem)))
+
+(defmethod subsystem-stop ((server lodds-server) subsystem)
+  (when (eql 'keyword (type-of subsystem))
+    (setf subsystem (get-subsystem server subsystem)))
+  (when (and subsystem
+             (alive-p subsystem))
+    (bt:interrupt-thread
+     (thread subsystem)
+     (lambda ()
+       (signal (make-condition 'shutdown-condition))))))
 
 (defmethod remove-clients ((server lodds-server) (inactive-time fixnum))
   (let ((remove-me (list))
@@ -402,5 +465,6 @@
               (watchers server)))))
 
 (defmethod shutdown ((server lodds-server))
-  (stop server)
+  (loop :for subsystem :in (subsystems server)
+     :do (subsystem-stop server subsystem))
   (unshare-folder server))
