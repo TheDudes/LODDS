@@ -36,13 +36,14 @@
                 (error "listener:get-next-message: receive error: ~A" n)))))))
 
 (defun run (server)
-  (let ((socket (usocket:socket-connect
-                 nil nil
-                 :local-host (lodds:get-broadcast-address "enp0s25")
-                 :local-port (lodds:broadcast-port server)
-                 :protocol :datagram)))
+  (let ((socket nil))
     (unwind-protect
          (let ((running t))
+           (setf socket (usocket:socket-connect
+                         nil nil
+                         :local-host (lodds:get-broadcast-address "enp0s25")
+                         :local-port (lodds:broadcast-port server)
+                         :protocol :datagram))
            (loop
               :while running
               :do (handler-case
@@ -52,6 +53,7 @@
                     (error (e)
                       (format t "got error: ~a~%" e)
                       (setf running nil)))))
-      (usocket:socket-close socket)
+      (when socket
+        (usocket:socket-close socket))
       (format t "Listener stopped!~%")
       (setf (lodds:listener server) nil))))

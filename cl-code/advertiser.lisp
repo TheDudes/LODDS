@@ -6,14 +6,14 @@
   run inside seperate Thread (spawned by START-ADVERTISING)."
   ;; TODO: this could fail
   (labels ((send ()
-             (let ((interface (lodds:interface server)))
+             (let ((interface (stmx:$ (lodds:interface server))))
                (lodds.low-level-api:send-advertise
                 (lodds:get-broadcast-address interface)
                 (lodds:broadcast-port server)
                 (list (lodds:get-ip-address interface)
                       (lodds:handler-port server)
                       (lodds:get-timestamp-last-change server)
-                      (lodds:current-load server)
+                      (stmx:$ (lodds:current-load server))
                       (lodds:name server))))))
     (case (send)
       ;; TODO: real error handling

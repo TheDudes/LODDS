@@ -30,118 +30,91 @@
   (ip-interfaces:ip-interface-address
    (get-interface-info interface)))
 
-(stmx:transactional
- (defclass lodds-server ()
-   ((name
-     :accessor name
-     :initarg :name
-     :initform nil
-     :type string
-     :transactional nil
-     :documentation "Advertised name. Will be displayed by other
-                    Clients as ur name.")
-    (broadcast-port
-     :accessor broadcast-port
-     :initarg :broadcast-port
-     :initform 9002
-     :transactional nil
-     :documentation "Port the LODDS-SERVER advertises to. Broadcasting
-                    (subsystem :advertiser) has to be restarted for
-                    changes to take effect")
-    (listener
-     :accessor listener
-     :initform nil
-     :type bt:thread
-     :transactional nil
-     :documentation "LISTENER subsystem thread. If this member
-                    variable is nil the Server is not listening to
-                    broadcast messages of other clients. Use (start
-                    ur-server-obj :listening) to start listening to
-                    broadcast messages. Do not set this member by
-                    hand, since its spawning a thread
-                    and manipulating the CLIENT member.")
-    (advertiser
-     :accessor advertiser
-     :initform nil
-     :type bt:thread
-     :transactional nil
-     :documentation "ADVERTISER broadcasts information to other
-                    clients. use (start ur-server-obj :advertiser) to
-                    start advertising information.")
-    (handler-port
-     :accessor handler-port
-     :initarg :handler-port
-     :initform 4567
-     :transactional nil
-     :documentation "Port the LODDS-SERVER listens on. The Handler
-                    subsystem has to be restarted for changes to take
-                    effect.")
-    (handler
-     :accessor handler
-     :initform nil
-     :type bt:thread
-     :transactional nil
-     :documentation "HANDLER subsystem thread, listens for incomming
-                    connections and handles thems (starts threads
-                    etc).")
-    (client-timeout
-     :accessor client-timeout
-     :initarg :client-timeout
-     :initform 5
-     :type integer
-     :transactional nil
-     :documentation "Timeout till client gets delete from local
-                    list. Each advertise from other Clients is saved
-                    with a timestamp, if timestamp is older than
-                    CLIENT-TIMEOUT, the client will be deleted.")
-    (interface
-     :accessor interface
-     :initform nil
-     :type string
-     :documentation "Transactional (STMX)!
-                    Currently selected interface. To get a list of
-                    available interface use GET-INTERFACES. Use
-                    SWITCH-INTERFACE to change, or set, the
-                    interface. SWITCH-INTERFACE will switch the value
-                    inside a stmx:atomic.")
-    (clients
-     :accessor clients
-     :initform (make-hash-table :test #'equalp)
-     :type hashtable
-     :transactional nil
-     :documentation "hashtable containing all clients which their
-                    broadcast information. This table is updated by
-                    LISTENER.
-                    TODO: implement something to retrieve a copy.")
-    (current-load
-     :initform 0
-     :accessor current-load
-     :type integer
-     :documentation "Transactional (STMX)!
-                    current load, this variable describes the sum of
-                    all outstanding bytes which need to be
-                    transfered. Do NOT set this variable, retrieving
-                    it should be fine. TODO: who sets this?")
-    (watchers
-     :accessor watchers
-     :initform nil
-     :type list
-     :transactional nil
-     :documentation "List of Directory watchers.")
-    (list-of-changes
-     :accessor list-of-changes
-     :initform '()
-     :type list
-     :documentation "List of changes. Each member is a list of
-                     Timestamp, Type, checksum, size and name in that
-                     order.")
-    (advertise-timeout
-     :accessor advertise-timeout
-     :initform 1
-     :transactional nil
-     :documentation "Timeout between advertisements. Specified in
-                    seconds. Restarting the ADVERTISE is not
-                    necessary."))))
+(defclass lodds-server ()
+  ((name :accessor name
+         :initarg :name
+         :initform nil
+         :type string
+         :documentation "Advertised name. Will be displayed by other
+         Clients as ur name.")
+   (broadcast-port :accessor broadcast-port
+                   :initarg :broadcast-port
+                   :initform 9002
+                   :documentation "Port the LODDS-SERVER advertises
+                   to. Broadcasting (subsystem :advertiser) has to be
+                   restarted for changes to take effect")
+   (listener :accessor listener
+             :initform nil
+             :type bt:thread
+             :documentation "LISTENER subsystem thread. If this member
+             variable is nil the Server is not listening to broadcast
+             messages of other clients. Use (start ur-server-obj
+             :listening) to start listening to broadcast messages. Do
+             not set this member by hand, since its spawning a thread
+             and manipulating the CLIENT member.")
+   (advertiser :accessor advertiser
+               :initform nil
+               :type bt:thread
+               :documentation "ADVERTISER broadcasts information to
+               other clients. use (start ur-server-obj :advertiser) to
+               start advertising information.")
+   (handler-port :accessor handler-port
+                 :initarg :handler-port
+                 :initform 4567
+                 :documentation "Port the LODDS-SERVER listens on. The
+                 Handler subsystem has to be restarted for changes to
+                 take effect.")
+   (handler :accessor handler
+            :initform nil
+            :type bt:thread
+            :documentation "HANDLER subsystem thread, listens for
+            incomming connections and handles thems (starts threads
+            etc).")
+   (client-timeout :accessor client-timeout
+                   :initarg :client-timeout
+                   :initform 5
+                   :type integer
+                   :documentation "Timeout till client gets delete
+                   from local list. Each advertise from other Clients
+                   is saved with a timestamp, if timestamp is older
+                   than CLIENT-TIMEOUT, the client will be deleted.")
+   (interface :accessor interface
+              :initform (stmx:tvar nil)
+              :type stmx:tvar
+              :documentation "Transactional (STMX)!  Currently
+              selected interface. To get a list of available interface
+              use GET-INTERFACES. Use SWITCH-INTERFACE to change, or
+              set, the interface. SWITCH-INTERFACE will switch the
+              value inside a stmx:atomic.")
+   (clients :accessor clients
+            :initform (make-hash-table :test #'equalp)
+            :type hashtable
+            :documentation "hashtable containing all clients which
+            their broadcast information. This table is updated by
+            LISTENER.  TODO: implement something to retrieve a copy.")
+   (current-load :accessor current-load
+                 :initform (stmx:tvar 0)
+                 :type stmx:tvar
+                 :documentation "Transactional (STMX)!  current load,
+                 this variable describes the sum of all outstanding
+                 bytes which need to be transfered. Do NOT set this
+                 variable, retrieving it should be fine. TODO: who
+                 sets this?")
+   (watchers :accessor watchers
+             :initform nil
+             :type list
+             :documentation "List of Directory watchers.")
+   (list-of-changes :accessor list-of-changes
+                    :initform (stmx.util:tlist nil)
+                    :type stmx.util:tlist
+                    :documentation "List of changes. Each member is a
+                    list of Timestamp, Type, checksum, size and name
+                    in that order.")
+   (advertise-timeout :accessor advertise-timeout
+                      :initform 1
+                      :documentation "Timeout between
+                      advertisements. Specified in seconds. Restarting
+                      the ADVERTISE is not necessary.")))
 
 (define-condition shutdown-condition (error)
   nil)
@@ -249,12 +222,13 @@
                 :collect subsystem)))
 
         ;; stop all subsystem which are running atm
+        ;; TODO: fix waiting until all subsystems are closed
         (loop
            :for subsystem :in was-running
            :do (stop server subsystem))
 
         (stmx:atomic
-         (setf (interface server) interface))
+         (setf (stmx:$ (interface server)) interface))
 
         ;; start all subsystem which where running before
         (loop
@@ -314,7 +288,7 @@
             remove-me)))
 
 (defmethod get-timestamp-last-change ((server lodds-server))
-  (car (car (list-of-changes server))))
+  (car (stmx.util:tfirst (list-of-changes server))))
 
 (defun generate-info-response (server timestamp)
   (let* ((type (if (eql 0 timestamp)
@@ -369,7 +343,7 @@
   (let ((new-watcher (make-instance 'lodds.watcher:watcher
                                     :change-hook (lambda (change)
                                                    (stmx:atomic
-                                                    (push change (list-of-changes server))))
+                                                    (stmx.util:tpush change (list-of-changes server))))
                                     :dir folder-path
                                     :recursive-p t)))
     (stmx:atomic
@@ -395,13 +369,17 @@
            (lodds.watcher:stop-watcher watcher nil))
          (watchers server))
         (setf (watchers server) nil
-              (list-of-changes server) nil))))
+              (list-of-changes server) (stmx.util:tlist nil)))))
 
 (defmethod get-file-changes ((server lodds-server) current-timestamp &optional (timestamp nil))
   (if timestamp
       (reverse
        (loop
-          :for (ts . change) :in (list-of-changes server)
+          :for val = (list-of-changes server) :then (stmx.util:trest val)
+          :for first = (stmx.util:tfirst val)
+          :until (not first)
+          :for ts = (car first)
+          :for change = (cdr first)
           ;; only collect infos with timestamps not equal to
           ;; CURRENT-TIMESTAMP and which are not older than TIMESTAMP
           :when (and (>= ts timestamp)
