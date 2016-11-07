@@ -2,7 +2,7 @@
 
 (defun handle-file-request (server socket request)
   (destructuring-bind (checksum start end) request
-    (let ((filename (lodds:get-file-info server checksum)))
+    (let ((filename (lodds.watcher:get-file-info server checksum)))
       (if filename
           (with-open-file (file-stream filename
                                        :direction :input)

@@ -2,7 +2,27 @@
 
 (in-package #:lodds.watcher)
 
-(defun get-file-info (pathname)
+(defmethod print-object ((object dir-watcher) stream)
+  (print-unreadable-object (object stream :type t :identity t)
+    (with-slots (root-dir-path root-dir-name file-table-name) object
+      (format stream "~a~a :files ~a"
+              root-dir-path
+              root-dir-name
+              (hash-table-count file-table-name)))))
+
+(defmethod print-object ((object watcher) stream)
+  (print-unreadable-object (object stream :type t :identity t)
+    (with-slots (lodds.subsystem:name
+                 lodds.subsystem:alive-p
+                 dir-watchers
+                 list-of-changes) object
+      (format stream "~a :alive-p ~a :watchers ~a last-change: ~a"
+              lodds.subsystem:name
+              lodds.subsystem:alive-p
+              (length dir-watchers)
+              (first (stmx.util:tfirst list-of-changes))))))
+
+(defun get-file-stats (pathname)
   (values
    (lodds.core:sha-256 pathname)
    (with-open-file (stream pathname
@@ -12,71 +32,32 @@
          (file-length stream)
          0))))
 
-(stmx:transactional
- (defclass watcher (cl-fs-watcher:watcher)
-   ((root-dir-name :type string
-                   :reader root-dir-name
-                   :transactional nil
-                   :documentation "contains the root directory name of
-                                  the watched dir (DIR), without the
-                                  path and starting with a slash. set
-                                  after initialization. ROOT-DIR-PATH
-                                  concatenated with ROOT-DIR-NAME
-                                  gives DIR. This variable is used to
-                                  calculate the path for
-                                  LIST-OF-CHANGE.")
-    (root-dir-path :type string
-                   :reader root-dir-path
-                   :transactional nil
-                   :documentation "contains the directory name where
-                                  the root-directory is located. set
-                                  after initialization. ROOT-DIR-PATH
-                                  concatenated with ROOT-DIR-NAME
-                                  gives DIR. This variable is used to
-                                  calculate the path for
-                                  LIST-OF-CHANGE.")
-    (file-table-name :type hashtable
-                     :initform (make-hash-table :test 'equal)
-                     :reader file-table-name
-                     :documentation "hashtable of tracked files, with their path as key.
-                                    Value is a list of file checksum and its size.
-                                    Note: this member is STMX:TRANSACTIONAL")
-    (file-table-hash :type hashtable
-                     :initform (make-hash-table :test 'equal)
-                     :reader file-table-hash
-                     :documentation "hashmap of tracked files, with their checksum as key.
-                                    Value is a list of files with the given checksum.
-                                    Note: this member is STMX:TRANSACTIONAL")
-    (change-hook :type function
-                 :initform (error "Specify a :change-hook!")
-                 :initarg :change-hook
-                 :reader change-hook
-                 :transactional nil
-                 :documentation "this hook gets called when a change
-                                 occured and a new change entry was
-                                 generated, its used to put changes
-                                 from multiple watchers into one list
-                                 of changes. Its called with one
-                                 argument, a list of Timestamp, Type,
-                                 checksum, size and name in that
-                                 order."))))
+(defmethod lodds.subsystem:start ((subsys watcher))
+  nil) ;;not needed, will be started by SHARE-FOLDER
 
-(defun add-file (watcher pathname &optional (checksum nil) (size nil))
-  "adds a file to the given watcher, this functions is called by
-   HOOK to update the watcher if a file was added or has changed"
+(defmethod lodds.subsystem:stop ((subsys watcher))
+  (declare (ignore server))
+  (mapcar
+   (lambda (dir-watcher)
+     (stop-dir-watcher subsys dir-watcher nil))
+   (dir-watchers subsys)))
+
+(defun add-file (dir-watcher pathname &optional (checksum nil) (size nil))
+  "adds a file to the given dir-watcher, this functions is called by
+   HOOK to update the dir-watcher if a file was added or has changed"
   (unless (and checksum size)
-    (multiple-value-bind (hash filesize) (get-file-info pathname)
+    (multiple-value-bind (hash filesize) (get-file-stats pathname)
       (setf checksum hash
             size filesize)))
-  (funcall (change-hook watcher)
+  (funcall (change-hook dir-watcher)
            (list (lodds.core:get-timestamp)
                  :add
                  checksum
                  size
-                 (subseq pathname (length (root-dir-path watcher)))))
+                 (subseq pathname (length (root-dir-path dir-watcher)))))
   (stmx:atomic
-   (let ((ft-hash (file-table-hash watcher)))
-     (setf (gethash pathname (file-table-name watcher))
+   (let ((ft-hash (file-table-hash dir-watcher)))
+     (setf (gethash pathname (file-table-name dir-watcher))
            (list checksum size))
      (let ((val (gethash checksum ft-hash)))
        (setf (gethash checksum ft-hash)
@@ -84,20 +65,20 @@
                  (cons pathname val)
                  (list pathname)))))))
 
-(defun remove-file (watcher pathname)
-  "removes a file from the watcher, will be called bei
+(defun remove-file (dir-watcher pathname)
+  "removes a file from the dir-watcher, will be called bei
    HOOK if a file was removed or has changed"
-  (let* ((ft-name (file-table-name watcher))
-         (ft-hash (file-table-hash watcher))
+  (let* ((ft-name (file-table-name dir-watcher))
+         (ft-hash (file-table-hash dir-watcher))
          (checksum (car (gethash pathname ft-name))))
-    (funcall (change-hook watcher)
+    (funcall (change-hook dir-watcher)
              (destructuring-bind (checksum size)
                  (gethash pathname ft-name)
                (list (lodds.core:get-timestamp)
                      :del
                      checksum
                      size
-                     (subseq pathname (length (root-dir-path watcher))))))
+                     (subseq pathname (length (root-dir-path dir-watcher))))))
     (stmx:atomic
      (let ((new-val (remove pathname (gethash checksum ft-hash)
                             :test #'string=)))
@@ -107,26 +88,26 @@
            (remhash checksum ft-hash)))
      (remhash pathname ft-name))))
 
-(defun update-file (watcher pathname)
+(defun update-file (dir-watcher pathname)
   "checks if the given file under PATHNAME changed (if the checksum is
    different to the current), and if so calls REMOVE-FILE and ADD-FILE"
   (multiple-value-bind (new-checksum new-size)
-      (get-file-info pathname)
+      (get-file-stats pathname)
     (unless (string= new-checksum
-                     (car (gethash pathname (file-table-name watcher))))
+                     (car (gethash pathname (file-table-name dir-watcher))))
       ;; in case checksum changed, we need to update
-      (remove-file watcher pathname)
-      (add-file watcher pathname new-checksum new-size))))
+      (remove-file dir-watcher pathname)
+      (add-file dir-watcher pathname new-checksum new-size))))
 
-(defun hook (watcher pathname type)
+(defun hook (dir-watcher pathname type)
   "will be called if some filesystem events occur inside the watched
    directory"
   (case type
-    (:file-added (add-file watcher pathname))
-    (:file-removed (remove-file watcher pathname))
-    (:file-changed (update-file watcher pathname))))
+    (:file-added (add-file dir-watcher pathname))
+    (:file-removed (remove-file dir-watcher pathname))
+    (:file-changed (update-file dir-watcher pathname))))
 
-(defmethod initialize-instance ((w watcher) &rest initargs)
+(defmethod initialize-instance ((w dir-watcher) &rest initargs)
   (declare (ignorable initargs))
   (call-next-method)
 
@@ -135,7 +116,7 @@
     (setf (slot-value w 'root-dir-name) name
           (slot-value w 'root-dir-path) path))
 
-  ;; wait until watcher is alive and added all initial handles
+  ;; wait until dir-watcher is alive and added all initial handles
   (loop
      :while (not (cl-fs-watcher:alive-p w))
      :do (sleep 0.01))
@@ -149,19 +130,84 @@
   (cl-fs-watcher:set-hook w (lambda (a b c)
                               (hook a b c))))
 
-(defun get-all-tracked-file-infos (watcher)
+(defun get-all-tracked-file-infos (dir-watcher)
+  "returns info about all tracked files."
   (loop
-     :for filename :being :the :hash-keys :of (file-table-name watcher)
+     :for filename :being :the :hash-keys :of (file-table-name dir-watcher)
      :using (hash-value info)
-     :collect (append info (list (subseq filename (length (root-dir-path watcher)))))))
+     :collect (append info (list (subseq filename (length (root-dir-path dir-watcher)))))))
 
-(defun stop-watcher (watcher &optional (run-change-hook-p t))
-  (cl-fs-watcher:stop-watcher watcher)
+(defun stop-dir-watcher (watcher dir-watcher &optional (run-change-hook-p t))
+  "stops a dir-watcher and its event loop and removes the dir-watcher
+  from the dir-watchers list, also checks if it was the last
+  dis-watcher, if so deletes list-of-changes and sets alive-p to nil"
+  (cl-fs-watcher:stop-watcher dir-watcher)
   (when run-change-hook-p
     (loop
-       :for info :in (get-all-tracked-file-infos watcher)
-       :do (funcall (change-hook watcher)
+       :for info :in (get-all-tracked-file-infos dir-watcher)
+       :do (funcall (change-hook dir-watcher)
                     (apply #'list
                            (lodds.core:get-timestamp)
                            :del
-                           info)))))
+                           info))))
+  (stmx:atomic
+   (setf (dir-watchers watcher)
+         (remove dir-watcher (dir-watchers watcher))))
+  (unless (dir-watchers watcher)
+    (setf (list-of-changes watcher) (stmx.util:tlist nil)
+          (lodds.subsystem:alive-p watcher) nil)))
+
+(defun get-file-info (watcher checksum)
+  "returns a list with information about the requested file. if file
+  with requested checksum is not found nil will be returned"
+  (car
+   (loop
+      :for dir-watcher :in (dir-watchers watcher)
+      :when (gethash checksum
+                     (file-table-hash dir-watcher))
+      :return it)))
+
+(defun get-shared-folders (watcher)
+  "returns a list of all currently shared folders."
+  (mapcar #'cl-fs-watcher:dir (dir-watchers watcher)))
+
+(defun share-folder (watcher folder-path)
+  "share a given folder, adds a watcher to handle updates."
+  ;; check if a folder like the given one exists already
+  (let ((absolute-path (format nil "~a" (car (directory folder-path)))))
+    (if (eql 0 (length absolute-path))
+        (error "TODO: some error on given directory :( (does it exist?)")
+        (multiple-value-bind (path name) (lodds.core:split-directory absolute-path)
+          (declare (ignore path))
+          (loop
+             :for shared-folder :in (get-shared-folders watcher)
+             :do (multiple-value-bind (p n) (lodds.core:split-directory shared-folder)
+                   (declare (ignore p))
+                   (when (string= name n)
+                     (error "TODO: the given directory can not be shared since a directory with that name already exists :(")))))))
+  (when (find folder-path (get-shared-folders watcher))
+    (error "TODO: the folder you tried to share has the same name"))
+  (let ((new-dir-watcher
+         (make-instance 'dir-watcher
+                        :change-hook (lambda (change)
+                                       (stmx:atomic
+                                        (stmx.util:tpush change
+                                                         (list-of-changes watcher))))
+                        :dir folder-path
+                        :recursive-p t)))
+    (stmx:atomic
+     (push new-dir-watcher
+           (dir-watchers watcher)))
+    (setf (lodds.subsystem:alive-p watcher) t)))
+
+(defun unshare-folder (watcher folder-path)
+  "unshare the given folder, if folder-path is nil (or not specified)
+   all folders will be removed"
+  (if folder-path
+      (let ((rem-watcher (find (format nil "~a" (car (directory folder-path)))
+                               (dir-watchers watcher)
+                               :key #'cl-fs-watcher:dir
+                               :test #'string=)))
+        (if rem-watcher
+            (stop-dir-watcher watcher rem-watcher)
+            (error "TODO: could not find watcher to unshare with given folder-path")))))

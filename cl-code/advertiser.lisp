@@ -30,21 +30,3 @@
      ;; repull timeout to get changes
      (try-send server)
      (sleep (lodds:advertise-timeout server))))
-
-;; (defun start (server)
-;;   (let ((advertiser (lodds:advertiser server)))
-;;     (if advertiser
-;;         (format t "ADVERTISER already running.~%")
-;;         (setf (lodds:advertiser server)
-;;               (bt:make-thread
-;;                (lambda ()
-;;                  (advertiser-loop server))
-;;                :name "Advertiser")))))
-
-;; (defun stop (server)
-;;   (let ((advertiser (lodds:advertiser server)))
-;;     (if advertiser
-;;         (bt:interrupt-thread advertiser
-;;                              (lambda ()
-;;                                (signal (make-condition 'shutdown))))
-;;         (format t "advertiser not running!~%"))))

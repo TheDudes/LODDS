@@ -1,26 +1,5 @@
 (in-package #:lodds.event)
 
-(defclass event-queue (lodds:subsystem)
-  ((queue :accessor queue
-          :initform (make-instance 'stmx.util:tfifo )
-          :type stmx.util:tfifo
-          :documentation "the actual queue containing events")
-   (callbacks :accessor callbacks
-              :initform (make-hash-table :test 'equalp)
-              :type hash-table
-              :documentation "hash-table containing callbacks which
-              will be called by the event-queue if a event occurs")
-   (callback-args :accessor callback-args
-                  :initform nil
-                  :type list
-                  :documentation "Arguments passed to callbacks,
-                  callback will be called like the following:
-
-                  (apply #'callback-args subsystem event-type)
-
-                  so these args are the first arguments!
-                  if CALLBACK-ARGS is nil, they are left out")))
-
 (defun add-callback (evt-queue name fn &key (overwrite nil))
   (restart-case
       (if overwrite

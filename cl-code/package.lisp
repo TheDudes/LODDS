@@ -8,14 +8,6 @@
            #:str-case
            #:split-directory))
 
-(defpackage #:lodds.watcher
-  (:use #:cl)
-  (:export #:watcher
-           #:file-table-name
-           #:file-table-hash
-           #:get-all-tracked-file-infos
-           #:stop-watcher))
-
 (defpackage #:lodds.low-level-api
   (:use #:cl
         #:lodds.core)
@@ -36,6 +28,35 @@
            #:handle-info
            #:handle-file
            #:handle-send-permission))
+
+(defpackage #:lodds.subsystem
+  (:use #:cl)
+  (:export #:shutdown-condition
+           #:subsystem
+           ;; accessors
+           #:name
+           #:thread
+           #:alive-p
+           #:init-fn
+           #:init-args
+           #:event-queue
+           ;; function/methos on subsystem + server
+           #:start
+           #:stop))
+
+(defpackage #:lodds.watcher
+  (:use #:cl)
+  (:export #:watcher
+           #:dir-watchers
+           #:list-of-changes
+           ;; #:file-table-name
+           ;; #:file-table-hash
+           ;; #:stop-watcher
+           #:get-all-tracked-file-infos
+           #:get-file-info
+           #:get-shared-folders
+           #:share-folder
+           #:unshare-folder))
 
 (defpackage #:lodds.event
   (:use #:cl)
@@ -66,39 +87,26 @@
            #:get-interface-info
            #:get-broadcast-address
            #:get-ip-address
-           ;; lodds-server reader/accessors
-           #:shutdown-condition
+           ;; classes
            #:subsystem
-           #:*subsystems*
-           #:get-subsystem
            #:lodds-server
+           ;; lodds-server reader/accessors
            #:name
            #:broadcast-port
-           #:listener
-           #:advertiser
            #:handler-port
-           #:handler
            #:client-timeout
            #:interface
            #:clients
            #:current-load
-           #:watchers
            #:list-of-changes
            #:advertise-timeout
            ;; lodds server methods
+           #:get-subsystem
            #:switch-interface
-           ;; subsystem stuff
-           #:subsystem-start
-           #:subsystem-stop
-
            #:remove-clients
-           #:get-file-info
+           #:get-timestamp-last-change
            #:get-user-list
            #:get-user-info
-           #:get-timestamp-last-change
-           #:generate-info-response
            #:get-file-changes
-           #:get-shared-folders
-           #:share-folder
-           #:unshare-folder
-           #:shutdown))
+           #:shutdown
+           #:generate-info-response))
