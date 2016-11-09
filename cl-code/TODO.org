@@ -9,8 +9,10 @@
    - [X] directory watcher (cl-async)
    - [ ] initargs (interface -> overwrite initialize-instance)
 
-** TODO Code changes [3/4]
+** TODO Code changes [3/5]
    - [X] rename and export accessors
+   - [ ] global/dynamic bound server, subsystem and event-queue to not
+         pass those around all the time
    - [ ] replace all parse-integer calls
    - [X] Use [[https://github.com/cosmos72/stmx][STMX]] instead of Locks
    - [X] replace all 'bt:destroy-thread'
