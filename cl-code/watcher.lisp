@@ -174,8 +174,9 @@
 (defun share-folder (watcher folder-path)
   "share a given folder, adds a watcher to handle updates."
   ;; check if a folder like the given one exists already
-  (let ((absolute-path (format nil "~a" (car (directory folder-path)))))
-    (if (eql 0 (length absolute-path))
+  (let* ((dir (car (directory folder-path)))
+         (absolute-path (format nil "~a" dir)))
+    (if (null dir)
         (error "TODO: some error on given directory :( (does it exist?)")
         (multiple-value-bind (path name) (lodds.core:split-directory absolute-path)
           (declare (ignore path))
