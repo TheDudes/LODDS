@@ -41,7 +41,8 @@
          (progn
            (setf socket (usocket:socket-connect
                          nil nil
-                         :local-host (lodds:get-broadcast-address (stmx:$ (lodds:interface server)))
+                         :local-host (lodds:get-broadcast-address
+                                      (stmx:$ (lodds:interface server)))
                          :local-port (lodds:broadcast-port server)
                          :protocol :datagram))
            (loop

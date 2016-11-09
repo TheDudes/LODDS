@@ -8,6 +8,7 @@
    - [ ] Error Handling
    - [X] directory watcher (cl-async)
    - [ ] initargs (interface -> overwrite initialize-instance)
+
 ** TODO Code changes [3/4]
    - [X] rename and export accessors
    - [ ] replace all parse-integer calls
