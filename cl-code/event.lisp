@@ -1,21 +1,22 @@
 (in-package #:lodds.event)
 
-(defun add-callback (evt-queue name fn &key (overwrite nil))
-  (labels ((set-value ()
-             (setf (gethash name (callbacks evt-queue)) fn)))
-    (restart-case
-        (if overwrite
-            (set-value)
-            (multiple-value-bind (value exists)
-                (gethash name (callbacks evt-queue))
-              (if exists
-                  (error "Callback ~a already Exists and is set to ~a!"
-                         name value)
-                  (set-value))))
-      (overwrite-callback ()
-        (set-value))
-      (dont-overwrite-callback ()
-        nil))))
+(defun add-callback (name fn &key (overwrite nil))
+  (let ((evt-queue (lodds:get-subsystem :event-queue)))
+    (labels ((set-value ()
+               (setf (gethash name (callbacks evt-queue)) fn)))
+      (restart-case
+          (if overwrite
+              (set-value)
+              (multiple-value-bind (value exists)
+                  (gethash name (callbacks evt-queue))
+                (if exists
+                    (error "Callback ~a already Exists and is set to ~a!"
+                           name value)
+                    (set-value))))
+        (overwrite-callback ()
+          (set-value))
+        (dont-overwrite-callback ()
+          nil)))))
 
 (defun remove-callback (name)
   (setf (gethash name (callbacks (lodds:get-subsystem :event-queue)))

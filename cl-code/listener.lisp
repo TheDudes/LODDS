@@ -1,10 +1,10 @@
 (in-package lodds.listener)
 
 (defun handle-message (message)
-  (format t "broadcast: ~a ~a~%" (lodds.core:get-timestamp) message)
   (multiple-value-bind (error result) (lodds.low-level-api:read-advertise message)
     (unless (eql error 0)
       (error "TODO: remove me: ERROR from read-advertise != 0~%"))
+    (lodds.event:push-event :listener result)
     (let ((current-time (lodds.core:get-timestamp))
           (clients (lodds:clients lodds:*server*)))
       ;; remove all clients older then :client-timeout

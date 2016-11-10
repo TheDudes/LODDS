@@ -9,7 +9,8 @@
             (lodds.low-level-api:respond-file (usocket:socket-stream socket)
                                               file-stream
                                               start end))
-          (format t "TODO: could not find file!!~%")))))
+          (lodds.event:push-event :handler
+                                  (list :error :local-file-not-found))))))
 
 (defun handle-info-request (socket request)
   (apply #'lodds.low-level-api:respond-info
@@ -38,13 +39,16 @@
                         (:file #'handle-file-request)
                         (:info #'handle-info-request)
                         (:send-permission #'handle-send-permission-request))))
+              (lodds.event:push-event :handler request)
               (funcall fn socket (cdr request)))
             (error "low level api Returned error ~a~%" error)))
     ;; TODO: error handling
     (end-of-file ()
-      (format t "TODO: tcp: got end of file~%"))
+      (lodds.event:push-event :handler
+                              (list :error :end-of-file)))
     (error (e)
-      (format t "TODO: tcp: error occured: ~a~%" e)))
+      (lodds.event:push-event :handler
+                              (list :error e))))
   ;; TODO: handler should spawn threads which will close stream/socket
   (close (usocket:socket-stream socket))
   (usocket:socket-close socket))

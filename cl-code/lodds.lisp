@@ -40,25 +40,24 @@
    (get-interface-info interface)))
 
 (defun event-callback (subsystem event-type)
-  (format t "~a: ~a~%"
+  (format t "~a: ~{~a~^ ~}~%"
           subsystem event-type))
 
 (defmethod initialize-instance ((server lodds-server) &rest initargs)
   (declare (ignorable initargs))
   (call-next-method)
-  (setf (subsystems server)
-        ;; EVENT-QUEUE subsystem, this one is special to the others,
-        ;; since its used by all the other subsystems. it contains a
-        ;; STMX.util:TFIFO where messages can be added
-        ;; (PUSH-EVENT). its used to transfer messages between
-        ;; subsystems and the server object (or anything that has
-        ;; attached a callback to the queue (ADD-CALLBACK). see
-        ;; event.lisp for more info
-        (with-server server ;; bind *server* for every subsystem of *server*
+  (with-server server ;; bind *server* for every subsystem of *server*
+    (setf (subsystems server)
+          ;; EVENT-QUEUE subsystem, this one is special to the others,
+          ;; since its used by all the other subsystems. it contains a
+          ;; STMX.util:TFIFO where messages can be added
+          ;; (PUSH-EVENT). its used to transfer messages between
+          ;; subsystems and the server object (or anything that has
+          ;; attached a callback to the queue (ADD-CALLBACK). see
+          ;; event.lisp for more info
           (let ((event-queue (make-instance 'lodds.event:event-queue
                                             :name :event-queue
                                             :init-fn #'lodds.event:run)))
-            (lodds.event:add-callback event-queue "lodds" #'event-callback)
             (list event-queue
                   ;; LISTENER subsystem listens on broadcast address of
                   ;; the set INTERFACE and BROADCAST-PORT member of
@@ -80,12 +79,16 @@
                                  :name :handler
                                  :init-fn #'lodds.handler:run
                                  :event-queue event-queue)
+                  ;; WATCHER subsystem, handles filesystem changes,
+                  ;; updates/handles local list of shared files
                   (make-instance 'lodds.watcher:watcher
                                  :name :watcher
                                  :init-fn nil
-                                 :event-queue event-queue))))))
+                                 :event-queue event-queue))))
+    (lodds.event:add-callback "lodds" #'event-callback)))
 
 (defun get-subsystem (name)
+  "returns the requested subsystem, if not found nil will returned"
   (find name (subsystems *server*) :key #'lodds.subsystem:name))
 
 (defun switch-interface (interface)
@@ -96,9 +99,9 @@
   stop the advertiser (if running), switch the interface, and start
   the advertiser again. Wont start any subsystems"
   (if (null (get-interface-info interface))
-      (format t "TODO: given interface could not be found. Available interfaces: ~a"
-              (get-interfaces))
-
+      ;; TODO: interface selection?
+      (error "Given interface could not be found. Available interfaces: ~a"
+             (get-interfaces))
       ;; collect all running subsystems
       (let ((was-running
              (loop
@@ -207,8 +210,16 @@
 (defun shutdown ()
   "shuts down the whole server, removes all handles and joins all
   spawned threads."
-  (loop :for subsystem :in (subsystems *server*)
-     :do (lodds.subsystem:stop subsystem)))
+  (let ((event-queue nil))
+    (loop :for subsystem :in (subsystems *server*)
+          :if (eql (lodds.subsystem:name subsystem)
+                   :event-queue)
+            :do (setf event-queue subsystem)
+          :else
+            :do (lodds.subsystem:stop subsystem))
+    ;; stop event-queue after the others, so i can see stopped messages
+    (when event-queue
+      (lodds.subsystem:stop event-queue))))
 
 (defun generate-info-response (timestamp)
   (let* ((type (if (eql 0 timestamp)

@@ -29,18 +29,22 @@
                              (shutdown-condition ()
                                (setf (alive-p subsystem) nil))
                              (error (e)
-                               (format t "got uncaught error from subsystem ~a: ~a~%"
-                                       (name subsystem)
-                                       e)
+                               (lodds.event:push-event (name subsystem)
+                                                       (list :error e))
                                (setf (alive-p subsystem) nil)))))
-               (format t "~a stopped!~%" (name subsystem))
+               (lodds.event:push-event (name subsystem)
+                                       (list "stopped!"))
                (setf (alive-p subsystem) nil))))
     (if (alive-p subsystem)
-        (format t "Subsystem ~a is already Running!~%" (name subsystem))
-        (setf
-         (thread subsystem)
-         (bt:make-thread #'save-init-fn
-                         :name (format nil "LODDS-~a" (name subsystem)))))))
+        (lodds.event:push-event (lodds.subsystem:name subsystem)
+                                (list "already running!"))
+        (progn
+          (setf
+           (thread subsystem)
+           (bt:make-thread #'save-init-fn
+                           :name (format nil "LODDS-~a" (name subsystem))))
+          (lodds.event:push-event (lodds.subsystem:name subsystem)
+                                  (list "started!"))))))
 
 (defmethod start ((subsys subsystem))
   (when subsys

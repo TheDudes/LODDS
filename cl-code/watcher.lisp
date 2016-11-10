@@ -156,7 +156,8 @@
     (unless (dir-watchers watcher)
       (setf (list-of-changes watcher) (stmx.util:tlist nil)
             (lodds.subsystem:alive-p watcher) nil)
-      (format t "~a stopped!~%" (lodds.subsystem:name watcher)))))
+      (lodds.event:push-event (lodds.subsystem:name watcher)
+                              (list "stopped!")))))
 
 (defun get-file-info (checksum)
   "returns a list with information about the requested file. if file
@@ -202,7 +203,9 @@
       (stmx:atomic
        (push new-dir-watcher
              (dir-watchers watcher)))
-      (setf (lodds.subsystem:alive-p watcher) t))))
+      (setf (lodds.subsystem:alive-p watcher) t)
+      (lodds.event:push-event (lodds.subsystem:name watcher)
+                              (list :watching folder-path)))))
 
 (defun unshare-folder (folder-path)
   "unshare the given folder, if folder-path is nil (or not specified)
