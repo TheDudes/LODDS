@@ -26,12 +26,6 @@
             :type function
             :documentation "The 'main' function which will be called
             by a extra thread.")
-   (init-args :accessor init-args
-              :initarg :init-args
-              :initform nil
-              :type list
-              :documentation "List of args which will be passed to
-              init-fn")
    (event-queue :accessor event-queue
                 :initarg :event-queue
                 :initform nil
@@ -52,17 +46,7 @@
               :initform (make-hash-table :test 'equalp)
               :type hash-table
               :documentation "hash-table containing callbacks which
-              will be called by the event-queue if a event occurs")
-   (callback-args :accessor callback-args
-                  :initform nil
-                  :type list
-                  :documentation "Arguments passed to callbacks,
-                  callback will be called like the following:
-
-                  (apply #'callback-args subsystem event-type)
-
-                  so these args are the first arguments!
-                  if CALLBACK-ARGS is nil, they are left out")))
+              will be called by the event-queue if a event occurs")))
 
 ;; lodds.watcher classes
 

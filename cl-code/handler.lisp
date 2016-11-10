@@ -1,8 +1,8 @@
 (in-package #:lodds.handler)
 
-(defun handle-file-request (server socket request)
+(defun handle-file-request (socket request)
   (destructuring-bind (checksum start end) request
-    (let ((filename (lodds.watcher:get-file-info server checksum)))
+    (let ((filename (lodds.watcher:get-file-info checksum)))
       (if filename
           (with-open-file (file-stream filename
                                        :direction :input)
@@ -11,12 +11,12 @@
                                               start end))
           (format t "TODO: could not find file!!~%")))))
 
-(defun handle-info-request (server socket request)
+(defun handle-info-request (socket request)
   (apply #'lodds.low-level-api:respond-info
          (usocket:socket-stream socket)
-         (apply #'lodds:generate-info-response server request)))
+         (apply #'lodds:generate-info-response request)))
 
-(defun handle-send-permission-request (server socket request)
+(defun handle-send-permission-request (socket request)
   (destructuring-bind (size timeout filename) request
     (declare (ignore timeout))
     ;; TODO: ask user here for file path
@@ -27,7 +27,7 @@
                                                    file-stream
                                                    size))))
 
-(defun handler-callback (server socket)
+(defun handler-callback (socket)
   "handles incomming connections and starts threads to handle
   requests"
   (handler-case
@@ -38,7 +38,7 @@
                         (:file #'handle-file-request)
                         (:info #'handle-info-request)
                         (:send-permission #'handle-send-permission-request))))
-              (funcall fn server socket (cdr request)))
+              (funcall fn socket (cdr request)))
             (error "low level api Returned error ~a~%" error)))
     ;; TODO: error handling
     (end-of-file ()
@@ -49,16 +49,15 @@
   (close (usocket:socket-stream socket))
   (usocket:socket-close socket))
 
-(defun run (subsystem server)
+(defun run ()
   (let ((socket nil))
     (unwind-protect
          (progn
            (setf socket (usocket:socket-listen
-                         (lodds:get-ip-address (stmx:$ (lodds:interface server)))
-                         (lodds:handler-port server)
+                         (lodds:get-ip-address (stmx:$ (lodds:interface lodds:*server*)))
+                         (lodds:handler-port lodds:*server*)
                          :reuse-address t))
            (loop
-              (handler-callback server
-                                (usocket:socket-accept socket))))
+              (handler-callback (usocket:socket-accept socket))))
       (when socket
         (usocket:socket-close socket)))))

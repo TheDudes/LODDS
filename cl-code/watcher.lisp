@@ -33,13 +33,12 @@
          0))))
 
 (defmethod lodds.subsystem:start ((subsys watcher))
-  nil) ;;not needed, will be started by SHARE-FOLDER
+  (error "You cannot start the Watcher subsystem like that! use SHARE and UNSHARE to start/stop"))
 
 (defmethod lodds.subsystem:stop ((subsys watcher))
-  (declare (ignore server))
   (mapcar
    (lambda (dir-watcher)
-     (stop-dir-watcher subsys dir-watcher nil))
+     (stop-dir-watcher dir-watcher nil))
    (dir-watchers subsys)))
 
 (defun add-file (dir-watcher pathname &optional (checksum nil) (size nil))
@@ -137,7 +136,7 @@
      :using (hash-value info)
      :collect (append info (list (subseq filename (length (root-dir-path dir-watcher)))))))
 
-(defun stop-dir-watcher (watcher dir-watcher &optional (run-change-hook-p t))
+(defun stop-dir-watcher (dir-watcher &optional (run-change-hook-p t))
   "stops a dir-watcher and its event loop and removes the dir-watcher
   from the dir-watchers list, also checks if it was the last
   dis-watcher, if so deletes list-of-changes and sets alive-p to nil"
@@ -150,65 +149,70 @@
                            (lodds.core:get-timestamp)
                            :del
                            info))))
-  (stmx:atomic
-   (setf (dir-watchers watcher)
-         (remove dir-watcher (dir-watchers watcher))))
-  (unless (dir-watchers watcher)
-    (setf (list-of-changes watcher) (stmx.util:tlist nil)
-          (lodds.subsystem:alive-p watcher) nil)))
+  (let ((watcher (lodds:get-subsystem :watcher)))
+    (stmx:atomic
+     (setf (dir-watchers watcher)
+           (remove dir-watcher (dir-watchers watcher))))
+    (unless (dir-watchers watcher)
+      (setf (list-of-changes watcher) (stmx.util:tlist nil)
+            (lodds.subsystem:alive-p watcher) nil)
+      (format t "~a stopped!~%" (lodds.subsystem:name watcher)))))
 
-(defun get-file-info (watcher checksum)
+(defun get-file-info (checksum)
   "returns a list with information about the requested file. if file
   with requested checksum is not found nil will be returned"
   (car
    (loop
-      :for dir-watcher :in (dir-watchers watcher)
+     :for dir-watcher :in (dir-watchers (lodds:get-subsystem :watcher))
       :when (gethash checksum
                      (file-table-hash dir-watcher))
       :return it)))
 
-(defun get-shared-folders (watcher)
+(defun get-shared-folders ()
   "returns a list of all currently shared folders."
-  (mapcar #'cl-fs-watcher:dir (dir-watchers watcher)))
+  (mapcar #'cl-fs-watcher:dir (dir-watchers (lodds:get-subsystem :watcher))))
 
-(defun share-folder (watcher folder-path)
+(defun share-folder (folder-path)
   "share a given folder, adds a watcher to handle updates."
   ;; check if a folder like the given one exists already
   (let* ((dir (car (directory folder-path)))
-         (absolute-path (format nil "~a" dir)))
+         (absolute-path (format nil "~a" dir))
+         (watcher (lodds:get-subsystem :watcher)))
     (if (null dir)
         (error "TODO: some error on given directory :( (does it exist?)")
         (multiple-value-bind (path name) (lodds.core:split-directory absolute-path)
           (declare (ignore path))
           (loop
-             :for shared-folder :in (get-shared-folders watcher)
-             :do (multiple-value-bind (p n) (lodds.core:split-directory shared-folder)
-                   (declare (ignore p))
-                   (when (string= name n)
-                     (error "TODO: the given directory can not be shared since a directory with that name already exists :(")))))))
-  (when (find folder-path (get-shared-folders watcher))
-    (error "TODO: the folder you tried to share has the same name"))
-  (let ((new-dir-watcher
-         (make-instance 'dir-watcher
-                        :change-hook (lambda (change)
-                                       (stmx:atomic
-                                        (stmx.util:tpush change
-                                                         (list-of-changes watcher))))
-                        :dir folder-path
-                        :recursive-p t)))
-    (stmx:atomic
-     (push new-dir-watcher
-           (dir-watchers watcher)))
-    (setf (lodds.subsystem:alive-p watcher) t)))
+            :for shared-folder :in (get-shared-folders)
+            :do (multiple-value-bind (p n) (lodds.core:split-directory shared-folder)
+                  (declare (ignore p))
+                  (when (string= name n)
+                    (error "TODO: the given directory can not be shared since a directory with that name already exists :("))))))
+    (when (find folder-path (get-shared-folders))
+      (error "TODO: the folder you tried to share has the same name"))
+    (let* ((hook (lambda (change)
+                   (stmx:atomic
+                    (stmx.util:tpush change
+                                     (list-of-changes watcher)))))
+           (new-dir-watcher
+             (make-instance 'dir-watcher
+                            :change-hook hook
+                            :dir folder-path
+                            :recursive-p t)))
+      (stmx:atomic
+       (push new-dir-watcher
+             (dir-watchers watcher)))
+      (setf (lodds.subsystem:alive-p watcher) t))))
 
-(defun unshare-folder (watcher folder-path)
+(defun unshare-folder (folder-path)
   "unshare the given folder, if folder-path is nil (or not specified)
    all folders will be removed"
-  (if folder-path
-      (let ((rem-watcher (find (format nil "~a" (car (directory folder-path)))
-                               (dir-watchers watcher)
-                               :key #'cl-fs-watcher:dir
-                               :test #'string=)))
-        (if rem-watcher
-            (stop-dir-watcher watcher rem-watcher)
-            (error "TODO: could not find watcher to unshare with given folder-path")))))
+  (let ((watcher (lodds:get-subsystem :watcher)))
+    (if folder-path
+        (let ((rem-watcher (find (format nil "~a" (car (directory folder-path)))
+                                 (dir-watchers watcher )
+                                 :key #'cl-fs-watcher:dir
+                                 :test #'string=)))
+          (if rem-watcher
+              (stop-dir-watcher rem-watcher)
+              (error "TODO: could not find watcher to unshare with given folder-path"))))))

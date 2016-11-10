@@ -2,6 +2,15 @@
 
 (in-package #:lodds)
 
+(defparameter *server* nil)
+
+(defmacro with-server (server &body body)
+  `(let* ((*server* ,server)
+          (bt:*default-special-bindings*
+            (append (list (cons '*server* ,server))
+                    bt:*default-special-bindings*)))
+     ,@body))
+
 (defun get-interfaces ()
   "returns a list containing names of all up and running interfaces.
    names inside that list can be used to retrieve the broadcast or
@@ -30,6 +39,10 @@
   (ip-interfaces:ip-interface-address
    (get-interface-info interface)))
 
+(defun event-callback (subsystem event-type)
+  (format t "~a: ~a~%"
+          subsystem event-type))
+
 (defmethod initialize-instance ((server lodds-server) &rest initargs)
   (declare (ignorable initargs))
   (call-next-method)
@@ -41,93 +54,47 @@
         ;; subsystems and the server object (or anything that has
         ;; attached a callback to the queue (ADD-CALLBACK). see
         ;; event.lisp for more info
-        (let ((event-queue (make-instance 'lodds.event:event-queue
-                                          :name :event-queue
-                                          :init-fn #'lodds.event:run)))
-          (lodds.subsystem:start event-queue)
-          (list event-queue
-                ;; LISTENER subsystem listens on broadcast address of
-                ;; the set INTERFACE and BROADCAST-PORT member of
-                ;; server for advertisements from other clients
-                (make-instance 'lodds.subsystem:subsystem
-                               :name :listener
-                               :init-fn #'lodds.listener:run
-                               :init-args (list server)
-                               :event-queue event-queue)
-                ;; ADVERTISER subystem, broadcasts information to
-                ;; other clients on broadcast address of INTERFACE and
-                ;; BROADCAST-PORT.
-                (make-instance 'lodds.subsystem:subsystem
-                               :name :advertiser
-                               :init-fn #'lodds.advertiser:run
-                               :init-args (list server)
-                               :event-queue event-queue)
-                ;; HANDLER subsystem, listens for incomming
-                ;; connections and handles those (starts threads etc).
-                (make-instance 'lodds.subsystem:subsystem
-                               :name :handler
-                               :init-fn #'lodds.handler:run
-                               :init-args (list server)
-                               :event-queue event-queue)
-                (make-instance 'lodds.watcher:watcher
-                               :name :watcher
-                               :init-fn nil
-                               :event-queue event-queue)))))
-(defgeneric switch-interface (server interface)
-  (:documentation
-   "Switch interface the server acts on.  Interface is a string, to
-    retrieve a list of available interfaces use GET-INTERFACES. Ports
-    wont be set. SWITCH-INTEFFACE will check if a subsystem is running
-    and restart it. For example, (SWITCH-INTERFACE \"enp0s25\") will
-    stop the advertiser (if running), switch the interface, and start
-    the advertiser again. Wont start any subsystems"))
+        (with-server server ;; bind *server* for every subsystem of *server*
+          (let ((event-queue (make-instance 'lodds.event:event-queue
+                                            :name :event-queue
+                                            :init-fn #'lodds.event:run)))
+            (lodds.event:add-callback event-queue "lodds" #'event-callback)
+            (list event-queue
+                  ;; LISTENER subsystem listens on broadcast address of
+                  ;; the set INTERFACE and BROADCAST-PORT member of
+                  ;; server for advertisements from other clients
+                  (make-instance 'lodds.subsystem:subsystem
+                                 :name :listener
+                                 :init-fn #'lodds.listener:run
+                                 :event-queue event-queue)
+                  ;; ADVERTISER subystem, broadcasts information to
+                  ;; other clients on broadcast address of INTERFACE and
+                  ;; BROADCAST-PORT.
+                  (make-instance 'lodds.subsystem:subsystem
+                                 :name :advertiser
+                                 :init-fn #'lodds.advertiser:run
+                                 :event-queue event-queue)
+                  ;; HANDLER subsystem, listens for incomming
+                  ;; connections and handles those (starts threads etc).
+                  (make-instance 'lodds.subsystem:subsystem
+                                 :name :handler
+                                 :init-fn #'lodds.handler:run
+                                 :event-queue event-queue)
+                  (make-instance 'lodds.watcher:watcher
+                                 :name :watcher
+                                 :init-fn nil
+                                 :event-queue event-queue))))))
 
-(defgeneric remove-clients (server inactive-time)
-  (:documentation
-   "removes all clients which a longer inactive then INACTIVE-TIME"))
+(defun get-subsystem (name)
+  (find name (subsystems *server*) :key #'lodds.subsystem:name))
 
-(defgeneric get-timestamp-last-change (server)
-  (:documentation
-   "returns the timestamp of the last change, who would have thought?
-   :D"))
-
-(defgeneric get-user-list (server)
-  (:documentation
-   "Returns List of users who advertised themselfs.
-
-    CL-USER> (get-user-list *lodds-server*)
-    => (\"peter\" \"steve\" \"josh\")
-
-    Use GET-USER-INFO to get information about a user."))
-
-(defgeneric get-user-info (server user)
-  (:documentation
-   "Returns List with information about an given user.
-    To get a list of available users see get-user-list.
-
-    CL-USER> (get-user-info *lodds-server* \"someUser\")
-    => (1475670931 #(172 19 246 14) 4567 0 0 \"someUser\")
-
-    List contains timestamp-received, ip, port, timestamp-client,
-    load, name in that order. The first timestamp describes a local
-    timestamp when the message was received.
-
-    Returns nil if user is not found."))
-
-(defgeneric get-file-changes (server current-timestamp &optional timestamp)
-  (:documentation
-   "returns a list of all changes since the given timestamp. if
-   timestamp is nil a full list of all files will be returnd"))
-
-(defgeneric shutdown (server)
-  (:documentation
-   "shuts down the whole server, removes all handles and joins all
-   spawned threads."))
-
-(defun get-subsystem (server name)
-  (find name (subsystems server) :key #'lodds.subsystem:name))
-
-(defmethod switch-interface ((server lodds-server) (interface string))
+(defun switch-interface (interface)
+  "Switch interface the server acts on.  Interface is a string, to
+  retrieve a list of available interfaces use GET-INTERFACES. Ports
+  wont be set. SWITCH-INTEFFACE will check if a subsystem is running
+  and restart it. For example, (SWITCH-INTERFACE \"enp0s25\") will
+  stop the advertiser (if running), switch the interface, and start
+  the advertiser again. Wont start any subsystems"
   (if (null (get-interface-info interface))
       (format t "TODO: given interface could not be found. Available interfaces: ~a"
               (get-interfaces))
@@ -138,8 +105,8 @@
                 :for key :in (list :handler
                                    :advertiser
                                    :listener)
-                :for subsystem = (get-subsystem server key)
-                :when (lodds.subsystem:alive-p subsystem )
+                :for subsystem = (get-subsystem key)
+                :when (lodds.subsystem:alive-p subsystem)
                 :collect subsystem)))
 
         ;; stop all subsystem which are running atm
@@ -149,7 +116,7 @@
            :do (lodds.subsystem:stop subsystem))
 
         (stmx:atomic
-         (setf (stmx:$ (interface server)) interface))
+         (setf (stmx:$ (interface *server*)) interface))
 
         ;; start all subsystem which where running before
         (loop
@@ -158,39 +125,59 @@
 
         interface)))
 
-(defmethod remove-clients ((server lodds-server) (inactive-time fixnum))
+(defun remove-clients (inactive-time)
+  "removes all clients which a longer inactive then INACTIVE-TIME"
   (let ((remove-me (list))
         (current-time (get-timestamp)))
     (maphash (lambda (key value)
                (when (> (- current-time (car value))
                         inactive-time)
                  (push key remove-me)))
-             (clients server))
+             (clients *server*))
     (mapcar (lambda (key)
-              (remhash key (clients server)))
+              (remhash key (clients *server*)))
             remove-me)))
 
-(defmethod get-timestamp-last-change ((server lodds-server))
+(defun get-timestamp-last-change ()
+  "returns the timestamp of the last change, who would have thought?
+  :D"
   (first
    (stmx.util:tfirst
     (lodds.watcher:list-of-changes
-     (get-subsystem server :watcher)))))
+     (get-subsystem :watcher)))))
 
-(defmethod get-user-list ((server lodds-server))
+(defun get-user-list ()
+  "Returns List of users who advertised themselfs.
+
+  CL-USER> (get-user-list *lodds-server*)
+  => (\"peter\" \"steve\" \"josh\")
+
+  Use GET-USER-INFO to get information about a user."
   (loop
-     :for key :being :the :hash-key :of (clients server)
+     :for key :being :the :hash-key :of (clients *server*)
      :collect key))
 
-(defmethod get-user-info ((server lodds-server) (user string))
-  (gethash user (clients server)))
+(defun get-user-info (user)
+  "Returns List with information about an given user.
+  To get a list of available users see get-user-list.
 
-(defmethod get-file-changes ((server lodds-server)
-                             current-timestamp
-                             &optional (timestamp nil))
+  CL-USER> (get-user-info *lodds-server* \"someUser\")
+  => (1475670931 #(172 19 246 14) 4567 0 0 \"someUser\")
+
+  List contains timestamp-received, ip, port, timestamp-client,
+  load, name in that order. The first timestamp describes a local
+  timestamp when the message was received.
+
+  Returns nil if user is not found."
+  (gethash user (clients *server*)))
+
+(defun get-file-changes (current-timestamp &optional (timestamp nil))
+  "returns a list of all changes since the given timestamp. if
+  timestamp is nil a full list of all files will be returnd"
   (if timestamp
       (reverse
        (loop
-          :for val = (lodds.watcher:list-of-changes (get-subsystem server :watcher))
+          :for val = (lodds.watcher:list-of-changes (get-subsystem :watcher))
           :then (stmx.util:trest val)
           :for first = (stmx.util:tfirst val)
           :until (not first)
@@ -215,22 +202,23 @@
                    :for info :in (lodds.watcher:get-all-tracked-file-infos watcher)
                    :collect (cons :add
                                   info)))
-              (lodds.watcher:dir-watchers (get-subsystem server :watcher))))))
+              (lodds.watcher:dir-watchers (get-subsystem :watcher))))))
 
-(defmethod shutdown ((server lodds-server))
-  (loop :for subsystem :in (subsystems server)
+(defun shutdown ()
+  "shuts down the whole server, removes all handles and joins all
+  spawned threads."
+  (loop :for subsystem :in (subsystems *server*)
      :do (lodds.subsystem:stop subsystem)))
 
-(defun generate-info-response (server timestamp)
+(defun generate-info-response (timestamp)
   (let* ((type (if (eql 0 timestamp)
                    :all
                    :upd))
          (current-timestamp (lodds.core:get-timestamp))
-         (file-infos (lodds:get-file-changes server
-                                             current-timestamp
-                                             (case type
-                                               (:all nil)
-                                               (:upd timestamp)))))
+         (file-infos (get-file-changes current-timestamp
+                                       (case type
+                                         (:all nil)
+                                         (:upd timestamp)))))
     (list type
           current-timestamp
           file-infos)))

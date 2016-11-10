@@ -25,8 +25,8 @@
                     (loop
                        :while (alive-p subsystem)
                        :do (handler-case
-                               (apply (init-fn subsystem) subsystem (init-args subsystem))
-                             (lodds.subsystem:shutdown-condition ()
+                               (funcall (init-fn subsystem))
+                             (shutdown-condition ()
                                (setf (alive-p subsystem) nil))
                              (error (e)
                                (format t "got uncaught error from subsystem ~a: ~a~%"
@@ -53,4 +53,3 @@
      (thread subsys)
      (lambda ()
        (signal (make-condition 'shutdown-condition))))))
-

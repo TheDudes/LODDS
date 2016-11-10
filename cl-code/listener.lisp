@@ -1,20 +1,20 @@
 (in-package lodds.listener)
 
-(defun handle-message (server message)
+(defun handle-message (message)
   (format t "broadcast: ~a ~a~%" (lodds.core:get-timestamp) message)
   (multiple-value-bind (error result) (lodds.low-level-api:read-advertise message)
     (unless (eql error 0)
       (error "TODO: remove me: ERROR from read-advertise != 0~%"))
     (let ((current-time (lodds.core:get-timestamp))
-          (clients (lodds:clients server)))
+          (clients (lodds:clients lodds:*server*)))
       ;; remove all clients older then :client-timeout
       (maphash (lambda (key val)
                  (when (> (- current-time (car val))
-                          (lodds:client-timeout server))
+                          (lodds:client-timeout lodds:*server*))
                    (remhash key clients)))
                clients)
       ;; add client
-      (setf (gethash (car (last result)) (lodds:clients server))
+      (setf (gethash (car (last result)) (lodds:clients lodds:*server*))
             (cons current-time result)))))
 
 (defun get-next-message (socket)
@@ -35,18 +35,17 @@
                  (subseq buffer 0 n))
                 (error "listener:get-next-message: receive error: ~A" n)))))))
 
-(defun run (subsystem server)
+(defun run ()
   (let ((socket nil))
     (unwind-protect
          (progn
            (setf socket (usocket:socket-connect
                          nil nil
                          :local-host (lodds:get-broadcast-address
-                                      (stmx:$ (lodds:interface server)))
-                         :local-port (lodds:broadcast-port server)
+                                      (stmx:$ (lodds:interface lodds:*server*)))
+                         :local-port (lodds:broadcast-port lodds:*server*)
                          :protocol :datagram))
            (loop
-              (handle-message server
-                              (get-next-message socket))))
+              (handle-message (get-next-message socket))))
       (when socket
         (usocket:socket-close socket)))))

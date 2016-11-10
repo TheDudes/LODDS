@@ -82,7 +82,11 @@
   (:use #:cl
         #:lodds.core
         #:lodds.low-level-api)
-  (:export ;; general functions
+  (:export ;; global variables and macros
+           #:*server*
+           #:*event-queue*
+           #:with-server
+           ;; general functions
            #:get-interfaces
            #:get-interface-info
            #:get-broadcast-address
@@ -100,7 +104,7 @@
            #:current-load
            #:list-of-changes
            #:advertise-timeout
-           ;; lodds server methods
+           ;; functions using bound *server*
            #:get-subsystem
            #:switch-interface
            #:remove-clients
