@@ -38,6 +38,7 @@
            #:thread
            #:alive-p
            #:init-fn
+           #:cleanup-fn
            #:init-args
            #:event-queue
            ;; function/methos on subsystem + server
@@ -64,6 +65,7 @@
            #:add-callback
            #:remove-callback
            #:push-event
+           #:cleanup
            #:run))
 
 (defpackage #:lodds.listener

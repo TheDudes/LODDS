@@ -34,6 +34,9 @@
                                (setf (alive-p subsystem) nil)))))
                (lodds.event:push-event (name subsystem)
                                        (list "stopped!"))
+               (let ((cfn (cleanup-fn subsystem)))
+                 (when cfn
+                   (funcall cfn)))
                (setf (alive-p subsystem) nil))))
     (if (alive-p subsystem)
         (lodds.event:push-event (lodds.subsystem:name subsystem)

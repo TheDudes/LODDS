@@ -27,6 +27,14 @@
    (stmx.util:put (queue (lodds:get-subsystem :event-queue))
                   (list subsystem event))))
 
+(defun cleanup ()
+  (let ((event-queue (lodds:get-subsystem :event-queue)))
+    (when event-queue
+      (loop
+         :for cb :being :the :hash-value :of (callbacks event-queue)
+         :while (not (stmx.util:empty? (queue event-queue)))
+         :do (apply cb (stmx.util:take (queue event-queue)))))))
+
 (defun run ()
   (loop
     (let* ((event-queue (lodds:get-subsystem :event-queue)))

@@ -57,6 +57,7 @@
           ;; event.lisp for more info
           (let ((event-queue (make-instance 'lodds.event:event-queue
                                             :name :event-queue
+                                            :cleanup-fn #'lodds.event:cleanup
                                             :init-fn #'lodds.event:run)))
             (list event-queue
                   ;; LISTENER subsystem listens on broadcast address of
