@@ -37,9 +37,9 @@
 
 (defun run ()
   (loop
-    (let* ((event-queue (lodds:get-subsystem :event-queue)))
-      (if event-queue
-          (loop
-            :for cb :being :the :hash-value :of (callbacks event-queue)
-            :do (apply cb (stmx.util:take (queue event-queue))))
-          (error "Event-Queue is nil!"))))) ;; just wait until event-queue was added to subsystems
+     (let ((event-queue (lodds:get-subsystem :event-queue)))
+       (if event-queue
+           (loop
+              :for cb :being :the :hash-value :of (callbacks event-queue)
+              :do (apply cb (stmx.util:take (queue event-queue))))
+           (error "Event-Queue is nil!")))))
