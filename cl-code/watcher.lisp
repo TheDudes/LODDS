@@ -116,14 +116,12 @@
           (slot-value w 'root-dir-path) path))
 
   ;; wait until dir-watcher is alive and added all initial handles
-  (loop
-     :while (not (cl-fs-watcher:alive-p w))
-     :do (sleep 0.01))
+  (loop :while (not (cl-fs-watcher:alive-p w))
+        :do (sleep 0.01))
 
   ;; now add all initialy tracked files
-  (loop
-     :for file :in (cl-fs-watcher:get-all-tracked-files w)
-     :do (add-file w file))
+  (loop :for file :in (cl-fs-watcher:get-all-tracked-files w)
+        :do (add-file w file))
 
   ;; TODO: replace lambda with direct call
   (cl-fs-watcher:set-hook w (lambda (a b c)
@@ -131,10 +129,9 @@
 
 (defun get-all-tracked-file-infos (dir-watcher)
   "returns info about all tracked files."
-  (loop
-     :for filename :being :the :hash-keys :of (file-table-name dir-watcher)
-     :using (hash-value info)
-     :collect (append info (list (subseq filename (length (root-dir-path dir-watcher)))))))
+  (loop :for filename :being :the :hash-keys :of (file-table-name dir-watcher)
+        :using (hash-value info)
+        :collect (append info (list (subseq filename (length (root-dir-path dir-watcher)))))))
 
 (defun stop-dir-watcher (dir-watcher &optional (run-change-hook-p t))
   "stops a dir-watcher and its event loop and removes the dir-watcher
@@ -142,13 +139,12 @@
   dis-watcher, if so deletes list-of-changes and sets alive-p to nil"
   (cl-fs-watcher:stop-watcher dir-watcher)
   (when run-change-hook-p
-    (loop
-       :for info :in (get-all-tracked-file-infos dir-watcher)
-       :do (funcall (change-hook dir-watcher)
-                    (apply #'list
-                           (lodds.core:get-timestamp)
-                           :del
-                           info))))
+    (loop :for info :in (get-all-tracked-file-infos dir-watcher)
+          :do (funcall (change-hook dir-watcher)
+                       (apply #'list
+                              (lodds.core:get-timestamp)
+                              :del
+                              info))))
   (let ((watcher (lodds:get-subsystem :watcher)))
     (stmx:atomic
      (setf (dir-watchers watcher)
@@ -163,11 +159,10 @@
   "returns a list with information about the requested file. if file
   with requested checksum is not found nil will be returned"
   (car
-   (loop
-     :for dir-watcher :in (dir-watchers (lodds:get-subsystem :watcher))
-      :when (gethash checksum
-                     (file-table-hash dir-watcher))
-      :return it)))
+   (loop :for dir-watcher :in (dir-watchers (lodds:get-subsystem :watcher))
+         :when (gethash checksum
+                        (file-table-hash dir-watcher))
+         :return it)))
 
 (defun get-shared-folders ()
   "returns a list of all currently shared folders."
@@ -183,12 +178,11 @@
         (error "TODO: some error on given directory :( (does it exist?)")
         (multiple-value-bind (path name) (lodds.core:split-directory absolute-path)
           (declare (ignore path))
-          (loop
-            :for shared-folder :in (get-shared-folders)
-            :do (multiple-value-bind (p n) (lodds.core:split-directory shared-folder)
-                  (declare (ignore p))
-                  (when (string= name n)
-                    (error "TODO: the given directory can not be shared since a directory with that name already exists :("))))))
+          (loop :for shared-folder :in (get-shared-folders)
+                :do (multiple-value-bind (p n) (lodds.core:split-directory shared-folder)
+                      (declare (ignore p))
+                      (when (string= name n)
+                        (error "TODO: the given directory can not be shared since a directory with that name already exists :("))))))
     (when (find folder-path (get-shared-folders))
       (error "TODO: the folder you tried to share has the same name"))
     (let* ((hook (lambda (change)

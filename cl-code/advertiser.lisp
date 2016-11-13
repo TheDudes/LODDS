@@ -29,7 +29,5 @@
             result))))))
 
 (defun run ()
-  (loop
-     ;; repull timeout to get changes
-     (try-send)
-     (sleep (lodds:advertise-timeout lodds:*server*))))
+  (loop (try-send) ;; repull timeout to get changes
+        (sleep (lodds:advertise-timeout lodds:*server*))))

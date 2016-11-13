@@ -15,10 +15,9 @@
   "returns a list containing names of all up and running interfaces.
    names inside that list can be used to retrieve the broadcast or
    ip-address via 'get-broadcast-address' and 'get-ip-address'"
-  (loop
-     :for interface :in (ip-interfaces:get-ip-interfaces-by-flags
-                         '(:iff-up :iff-running))
-     :collect (ip-interfaces:ip-interface-name interface)))
+  (loop :for interface :in (ip-interfaces:get-ip-interfaces-by-flags
+                            '(:iff-up :iff-running))
+        :collect (ip-interfaces:ip-interface-name interface)))
 
 (defun get-interface-info (interface)
   "returns the specified interface, nil if interface was not found"
@@ -105,27 +104,24 @@
              (get-interfaces))
       ;; collect all running subsystems
       (let ((was-running
-             (loop
-                :for key :in (list :handler
-                                   :advertiser
-                                   :listener)
-                :for subsystem = (get-subsystem key)
-                :when (lodds.subsystem:alive-p subsystem)
-                :collect subsystem)))
+              (loop :for key :in (list :handler
+                                       :advertiser
+                                       :listener)
+                    :for subsystem = (get-subsystem key)
+                    :when (lodds.subsystem:alive-p subsystem)
+                    :collect subsystem)))
 
         ;; stop all subsystem which are running atm
         ;; TODO: fix waiting until all subsystems are closed
-        (loop
-           :for subsystem :in was-running
-           :do (lodds.subsystem:stop subsystem))
+        (loop :for subsystem :in was-running
+              :do (lodds.subsystem:stop subsystem))
 
         (stmx:atomic
          (setf (stmx:$ (interface *server*)) interface))
 
         ;; start all subsystem which where running before
-        (loop
-           :for subsystem :in was-running
-           :do (lodds.subsystem:start subsystem))
+        (loop :for subsystem :in was-running
+              :do (lodds.subsystem:start subsystem))
 
         interface)))
 
@@ -157,9 +153,8 @@
   => (\"peter\" \"steve\" \"josh\")
 
   Use GET-USER-INFO to get information about a user."
-  (loop
-     :for key :being :the :hash-key :of (clients *server*)
-     :collect key))
+  (loop :for key :being :the :hash-key :of (clients *server*)
+        :collect key))
 
 (defun get-user-info (user)
   "Returns List with information about an given user.
@@ -180,32 +175,30 @@
   timestamp is nil a full list of all files will be returnd"
   (if timestamp
       (reverse
-       (loop
-          :for val = (lodds.watcher:list-of-changes (get-subsystem :watcher))
-          :then (stmx.util:trest val)
-          :for first = (stmx.util:tfirst val)
-          :until (not first)
-          :for ts = (car first)
-          :for change = (cdr first)
-          ;; only collect infos with timestamps not equal to
-          ;; CURRENT-TIMESTAMP and which are not older than TIMESTAMP
-          :when (and (>= ts timestamp)
-                     (not (eql ts current-timestamp)))
-          :collect change :into result
-          :else
-          ;; stop and return only if this :else was triggerd by TS
-          ;; beeing older then TIMESTAMP, and not if TS was eql to
-          ;; CURRENT-TIMESTAMP
-          :do (when (<= ts timestamp)
-                (return result))
-          :finally (return result)))
+       (loop :for val = (lodds.watcher:list-of-changes (get-subsystem :watcher))
+             :then (stmx.util:trest val)
+             :for first = (stmx.util:tfirst val)
+             :until (not first)
+             :for ts = (car first)
+             :for change = (cdr first)
+             ;; only collect infos with timestamps not equal to
+             ;; CURRENT-TIMESTAMP and which are not older than TIMESTAMP
+             :when (and (>= ts timestamp)
+                        (not (eql ts current-timestamp)))
+             :collect change :into result
+             :else
+             ;; stop and return only if this :else was triggerd by TS
+             ;; beeing older then TIMESTAMP, and not if TS was eql to
+             ;; CURRENT-TIMESTAMP
+             :do (when (<= ts timestamp)
+                   (return result))
+             :finally (return result)))
       (apply #'append
              (mapcar
               (lambda (watcher)
-                (loop
-                   :for info :in (lodds.watcher:get-all-tracked-file-infos watcher)
-                   :collect (cons :add
-                                  info)))
+                (loop :for info :in (lodds.watcher:get-all-tracked-file-infos watcher)
+                      :collect (cons :add
+                                     info)))
               (lodds.watcher:dir-watchers (get-subsystem :watcher))))))
 
 (defun shutdown ()

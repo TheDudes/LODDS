@@ -11,26 +11,24 @@
 
 (defun copy-stream (stream-from stream-to &optional size)
   "will read from stream-from and write to stream-to size bytes"
-  (loop
-     ;; TODO: buffer-size to config
-     :with written = 0
-     :with buffer-size = 8192
-     :with buffer = (make-array (list buffer-size))
-     :for read = (read-sequence buffer stream-from)
-     :until (zerop read)
-     :do (progn
-           (if (and size
-                    (> (+ read written)
-                       size))
-               (progn
-                 (write-sequence buffer stream-to :end (- size written))
-                 ;; TODO: error handling
-                 (return))
-               (progn
-                 (write-sequence buffer stream-to :end read)
-                 (incf written read)))
-           ;; TODO: error handling
-           (when (< read buffer-size) (return)))))
+  (loop :with written = 0
+        :with buffer-size = 8192 ;; TODO: buffer-size to config
+        :with buffer = (make-array (list buffer-size))
+        :for read = (read-sequence buffer stream-from)
+        :until (zerop read)
+        :do (progn
+              (if (and size
+                       (> (+ read written)
+                          size))
+                  (progn
+                    (write-sequence buffer stream-to :end (- size written))
+                    ;; TODO: error handling
+                    (return))
+                  (progn
+                    (write-sequence buffer stream-to :end read)
+                    (incf written read)))
+              ;; TODO: error handling
+              (when (< read buffer-size) (return)))))
 
 ;; got code from lisptips http://lisptips.com/page/4 modified it to my needs :)
 
@@ -49,9 +47,8 @@
     `(let ((,result ,string-form))
        (declare (ignorable ,result))
        (cond
-         ,@(loop
-              :for (str form) :in cases
-              :collect `((string= ,result ,str) ,form))))))
+         ,@(loop :for (str form) :in cases
+                 :collect `((string= ,result ,str) ,form))))))
 
 (defun get-last-slash-position (pathname)
   (position #\/

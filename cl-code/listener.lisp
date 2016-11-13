@@ -45,7 +45,6 @@
                                       (stmx:$ (lodds:interface lodds:*server*)))
                          :local-port (lodds:broadcast-port lodds:*server*)
                          :protocol :datagram))
-           (loop
-              (handle-message (get-next-message socket))))
+           (loop (handle-message (get-next-message socket))))
       (when socket
         (usocket:socket-close socket)))))

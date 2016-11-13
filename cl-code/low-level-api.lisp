@@ -180,15 +180,14 @@ multiple-value-bind.
               "all"
               "upd")
           (length file-infos))
-  (loop
-     :for (type checksum size name) :in file-infos
-     :do (format socket-stream "~a ~a ~a ~a~%"
-                 (if (eql type :add)
-                     "add"
-                     "del")
-                 checksum
-                 size
-                 name))
+  (loop :for (type checksum size name) :in file-infos
+        :do (format socket-stream "~a ~a ~a ~a~%"
+                    (if (eql type :add)
+                        "add"
+                        "del")
+                    checksum
+                    size
+                    name))
   0)
 
 (defun respond-send-permission (socket-stream file-stream size)
@@ -221,21 +220,20 @@ multiple-value-bind.
                     ((equalp type "del") :del)
                     (t (error "TODO: handle-info add|del error")))
                   (parse-integer timestamp)
-                  (loop
-                     :repeat (parse-integer count)
-                     :collect (progn
-                                (setf line (read-line socket-stream))
-                                (if (cl-ppcre:scan *info-body-scanner* line)
-                                    (destructuring-bind (type checksum size . name)
-                                        (cl-strings:split line)
-                                      (list (cond
-                                              ((equalp type "add") :add)
-                                              ((equalp type "del") :del)
-                                              (t (error "TODO: handle-info add|del error")))
-                                            checksum
-                                            (parse-integer size)
-                                            (cl-strings:join name :separator " ")))
-                                    2)))))
+                  (loop :repeat (parse-integer count)
+                        :collect (progn
+                                   (setf line (read-line socket-stream))
+                                   (if (cl-ppcre:scan *info-body-scanner* line)
+                                       (destructuring-bind (type checksum size . name)
+                                           (cl-strings:split line)
+                                         (list (cond
+                                                 ((equalp type "add") :add)
+                                                 ((equalp type "del") :del)
+                                                 (t (error "TODO: handle-info add|del error")))
+                                               checksum
+                                               (parse-integer size)
+                                               (cl-strings:join name :separator " ")))
+                                       2)))))
         2)))
 
 (defun handle-send-permission (socket timeout file-stream)

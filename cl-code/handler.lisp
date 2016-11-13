@@ -61,7 +61,6 @@
                          (lodds:get-ip-address (stmx:$ (lodds:interface lodds:*server*)))
                          (lodds:handler-port lodds:*server*)
                          :reuse-address t))
-           (loop
-              (handler-callback (usocket:socket-accept socket))))
+           (loop (handler-callback (usocket:socket-accept socket))))
       (when socket
         (usocket:socket-close socket)))))
