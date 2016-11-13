@@ -43,28 +43,33 @@
   communication will also serve as a way to tell others that a file has
   changed and they have to request a update.
 
-  'ip-address port timestamp_lastChange load name\n'
+  'name@ip-address:port timestamp_lastChange load\n'
     Every client who wants to be visible for others will broadcast a
     message with information about himself.
 
     Arguments:
-      ip-address
-        The clients ip address.
+      name@ip-address:port
+        String containing a Tripple out of the Clients name,
+        ip-address and port.
+        Name is the client's nickname to be seen in the client
+        list. Allowed are only characters [a-z], [A-Z] and numbers
+        [0-9].
+        Ip-address is the IPv4 address where the client listens for
+        incomming connections.
+        Port is the Port number where the client listens for incomming
+        connections.
 
-      port
-        Port number where the client is listening for connections.
+        Name and ip-address are seperated by a @ (at) sign, ip-address
+        and port a seperated by a : (colon) sign.
 
       timestamp_lastChange
         Timestamp of last change. If something changed this timestamp
         will be updated, so others can request a update if wanted.
 
-	  load
-	  	Amount of outstanding bytes the broadcasting client still needs
-        to transfer. This information can be used for laod balancing
-        purposes.
-
-      name
-        Is the client's nickname to be seen in the client list.
+      load
+        Amount of outstanding bytes the broadcasting client still
+        needs to transfer. This information can be used for laod
+        balancing purposes.
 
     Response:
       -
@@ -176,7 +181,7 @@
        Arguments:
          size
            The size of the file in byte.
-		 timeout
+         timeout
            The time to accept the request in seconds.
 
          filename
