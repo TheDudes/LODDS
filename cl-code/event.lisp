@@ -1,45 +1,105 @@
 (in-package #:lodds.event)
 
-(defun add-callback (name fn &key (overwrite nil))
+(defmacro update-callback (name fn alist-accessor)
+  `(if (assoc ,name ,alist-accessor)
+       (restart-case
+           (error "Callback ~a already exists and is set to ~a!"
+                  ,name (cdr (assoc ,name ,alist-accessor)))
+         (overwrite-callback ()
+           (setf (cdr (assoc ,name ,alist-accessor))
+                 fn))
+         (dont-overwrite-callback ()
+           nil))
+       (setf ,alist-accessor
+             (append (list (cons ,name ,fn))
+                     ,alist-accessor))))
+
+(defun add-callback (name fn &key (event-type nil))
+  "adds the given callback to the event-loop. NAME is a keyword which
+  identifies the given callback. This is helpfull to overwrite or
+  remove callbacks. FN is the callback function itself, it will be
+  called with at least 2 arguemnts, the event-type and information
+  about the event. If EVENT-TYPE is given, the given function FN will
+  only be called for events with the specified EVENT-TYPE. If left
+  out, FN will be called for every occuring event. EVENT-TYPE is, like
+  NAME, a keyword. lodds:*server* needs to be bound, else a error will
+  thrown."
   (let ((evt-queue (lodds:get-subsystem :event-queue)))
-    (labels ((set-value ()
-               (setf (gethash name (callbacks evt-queue)) fn)))
-      (restart-case
-          (if overwrite
-              (set-value)
-              (multiple-value-bind (value exists)
-                  (gethash name (callbacks evt-queue))
-                (if exists
-                    (error "Callback ~a already Exists and is set to ~a!"
-                           name value)
-                    (set-value))))
-        (overwrite-callback ()
-          (set-value))
-        (dont-overwrite-callback ()
-          nil)))))
+    (unless evt-queue
+      (error "Could not find event-queue!"))
+    (if event-type
+        (let* ((ht (typed-callbacks evt-queue)))
+          (update-callback name fn (gethash event-type ht)))
+        (update-callback name fn (callbacks evt-queue)))))
 
-(defun remove-callback (name)
-  (setf (gethash name (callbacks (lodds:get-subsystem :event-queue)))
-        nil))
+(defun remove-callback (name &key event-type)
+  "Removes a callback which refers to the given NAME. EVENT-TYPE must
+  be specified if it was specified by adding the given callback with
+  ADD-CALLBACK. lodds:*server* needs to be bound, else a error will be
+  thrown."
+  (let ((evt-queue (lodds:get-subsystem :event-queue)))
+    (unless evt-queue
+      (error "Could not find event-queue!"))
+    (if event-type
+        (let* ((ht (typed-callbacks evt-queue)))
+          (setf (gethash event-type ht)
+                (remove-if (lambda (cb)
+                             (string= (car cb)
+                                      name))
+                           (gethash event-type ht))))
+        (setf (callbacks evt-queue)
+              (remove-if (lambda (cb)
+                           (string= (car cb)
+                                    name))
+                         (callbacks evt-queue))))))
 
-(defun push-event (subsystem event)
+(defun push-event (event-type event)
+  "Pushes a given given EVENT of type EVENT-TYPE onto the
+  event-queue. EVENT-TYPE is a keyword describing the event, EVENT can
+  be anything."
   (stmx:atomic
    (stmx.util:put (queue (lodds:get-subsystem :event-queue))
-                  (list subsystem event))))
+                  (list event-type event))))
+
+(defun handle-event (event event-queue)
+  "handles a single event and calls it inside a RESTART-CASE. If a
+  error occures its possible to RETRY, IGNORE or REMOVE the callback."
+  (labels ((save-call (name fn &key event-type)
+             (restart-case
+                 (apply fn event)
+               (retry-calling-callback ()
+                 ;; reload function from hashtable and try again
+                 (destructuring-bind (new-name . new-fn)
+                     (assoc name
+                            (if event-type
+                                (gethash event-type
+                                         (typed-callbacks event-queue))
+                                (callbacks event-queue)))
+                   (save-call new-name new-fn :event-type event-type)))
+               (ignore-callback ()
+                 nil)
+               (remove-callback ()
+                 (remove-callback name :event-type event-type)))))
+    (loop :for (name . fn) :in (callbacks event-queue)
+          :do (save-call name fn))
+    (loop :for (name . fn) :in  (gethash (car event)
+                                         (typed-callbacks event-queue))
+          :do (save-call name fn :event-type (car event)))))
 
 (defun cleanup ()
+  "If Event-queue gets stopped this function will be called, it will
+handle all left events and then return"
   (let ((event-queue (lodds:get-subsystem :event-queue)))
     (when event-queue
-      (loop
-         :for cb :being :the :hash-value :of (callbacks event-queue)
-         :while (not (stmx.util:empty? (queue event-queue)))
-         :do (apply cb (stmx.util:take (queue event-queue)))))))
+      (let ((q (queue event-queue)))
+        (loop :while (not (stmx.util:empty? q))
+              :do (handle-event (stmx.util:take q)
+                                event-queue))))))
 
 (defun run ()
-  (loop
-     (let ((event-queue (lodds:get-subsystem :event-queue)))
-       (if event-queue
-           (loop
-              :for cb :being :the :hash-value :of (callbacks event-queue)
-              :do (apply cb (stmx.util:take (queue event-queue))))
-           (error "Event-Queue is nil!")))))
+  "init function for Event-Queue subsystem, will run until stopped."
+  (loop (let ((event-queue (lodds:get-subsystem :event-queue)))
+          (if event-queue
+              (handle-event (stmx.util:take (queue event-queue))
+                            event-queue)
+              (error "Event-Queue is nil!")))))

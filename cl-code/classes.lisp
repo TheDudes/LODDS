@@ -48,10 +48,18 @@
           :type stmx.util:tfifo
           :documentation "the actual queue containing events")
    (callbacks :accessor callbacks
-              :initform (make-hash-table :test 'equalp)
-              :type hash-table
-              :documentation "hash-table containing callbacks which
-              will be called by the event-queue if a event occurs")))
+              :initform nil
+              :type list
+              :documentation "callback functions which will be called
+              if a event occures. Functions inside CALLBACKS will
+              always be called, no matter what type of event occured.")
+   (typed-callbacks :accessor typed-callbacks
+                    :initform (make-hash-table)
+                    :type hash-table
+                    :documentation "hash-table containing callbacks
+                    accessable by their EVENT-TYPE. Callbacks saved
+                    under a specific EVENT-TYPE will only be called if
+                    a event occures with the given EVENT-TYPE.")))
 
 ;; lodds.watcher classes
 

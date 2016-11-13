@@ -18,26 +18,22 @@
    "Stops the given subsystem."))
 
 (defun save-start (subsystem)
+  "Savetly starts a given subsystem inside a UNWIND-PROTOTECT which
+  will push a event to the event-queue, set ALIVE-P flag to nil and
+  call CLEANUP-FN."
   (labels ((save-init-fn ()
              (unwind-protect
                   (progn
                     (setf (alive-p subsystem) t)
-                    (loop
-                       :while (alive-p subsystem)
-                       :do (handler-case
-                               (funcall (init-fn subsystem))
-                             (shutdown-condition ()
-                               (setf (alive-p subsystem) nil))
-                             (error (e)
-                               (lodds.event:push-event (name subsystem)
-                                                       (list :error e))
-                               (setf (alive-p subsystem) nil)))))
+                    (handler-case
+                        (funcall (init-fn subsystem))
+                      (shutdown-condition ())))
                (lodds.event:push-event (name subsystem)
                                        (list "stopped!"))
+               (setf (alive-p subsystem) nil)
                (let ((cfn (cleanup-fn subsystem)))
                  (when cfn
-                   (funcall cfn)))
-               (setf (alive-p subsystem) nil))))
+                   (funcall cfn))))))
     (if (alive-p subsystem)
         (lodds.event:push-event (lodds.subsystem:name subsystem)
                                 (list "already running!"))
