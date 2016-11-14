@@ -20,8 +20,8 @@ multiple-value-bind.
 
 (defvar *advertise-scanner*
   (cl-ppcre:create-scanner
-   ;; ip port timestamp load name
-   "^(\\d{1,3}\\.){3}\\d{1,3} \\d{1,5} \\d+ \\d+ [^\\s]+\\n$")
+   ;; name@ip:port timestamp load
+   "^([a-z]|[A-Z]|[0-9])+@(\\d{1,3}\\.){3}\\d{1,3}:\\d{1,5} \\d+ \\d+\\n$")
   "used to scan advertise strings to check if they are correct")
 
 (defvar *get-scanner*
@@ -56,14 +56,14 @@ multiple-value-bind.
   (destructuring-bind (ip port timestamp load name) ad-info
     (let ((sock (usocket:socket-connect nil nil :protocol :datagram))
           (data (flexi-streams:string-to-octets
-                 (format nil "~a ~a ~a ~a ~a~%"
+                 (format nil "~a@~a:~a ~a ~a~%"
+                         name
                          (usocket:vector-quad-to-dotted-quad ip)
                          port
                          (if timestamp
                              timestamp
                              0)
-                         load
-                         name))))
+                         load))))
       (handler-case
           (progn
             (setf (usocket:socket-option sock :broadcast) t)
@@ -81,18 +81,19 @@ multiple-value-bind.
    for example: '(#(192 168 2 255) 12345 9999 87654321 \"username\")
    will use *advertise-scanner* to check for syntax errors."
   (if (cl-ppcre:scan *advertise-scanner* message)
-      (destructuring-bind (ip port timestamp load . name)
+      (destructuring-bind (name timestamp load)
           (cl-strings:split message)
-        (values 0
-                (list (usocket:dotted-quad-to-vector-quad ip)
-                      (parse-integer port)
-                      (parse-integer timestamp)
-                      (parse-integer load)
-                      (let ((name (cl-strings:join name)))
-                        (cl-strings:shorten ;; delete \n
-                         name
-                         (- (length name) 1)
-                         :truncate-string nil)))))
+        (destructuring-bind (ip port)
+            (cl-strings:split (second
+                               (cl-strings:split name #\@))
+                              #\:)
+          (values 0
+                  (list
+                   (usocket:dotted-quad-to-vector-quad ip)
+                   (parse-integer port)
+                   (parse-integer timestamp)
+                   (parse-integer load)
+                   name))))
       2))
 
 (defun parse-request (socket-stream)
