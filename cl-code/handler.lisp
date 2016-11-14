@@ -1,57 +1,95 @@
 (in-package #:lodds.handler)
 
-(defun handle-file-request (socket request)
-  (destructuring-bind (checksum start end) request
-    (let ((filename (lodds.watcher:get-file-info checksum)))
-      (if filename
-          (with-open-file (file-stream filename
-                                       :direction :input)
-            (lodds.low-level-api:respond-file (usocket:socket-stream socket)
-                                              file-stream
-                                              start end))
-          (lodds.event:push-event :handler
-                                  (list :error :local-file-not-found))))))
+(defmacro with-socket (socket &body body)
+  `(unwind-protect
+        (handler-case
+            (progn
+              (unless ,socket
+                (error "WTF WHY IS MY SOCKET NIL"))
+              ,@body)
+          (end-of-file ()
+            (lodds.event:push-event :error
+                                    (list :end-of-file)))
+          (error (e)
+            (lodds.event:push-event :error
+                                    (list e))))
+     (when ,socket
+       (close (usocket:socket-stream ,socket))
+       (usocket:socket-close ,socket))))
 
-(defun handle-info-request (socket request)
-  (apply #'lodds.low-level-api:respond-info
-         (usocket:socket-stream socket)
-         (apply #'lodds:generate-info-response request)))
+(defmethod lodds.task:run-task ((task lodds.task:task-request-file))
+  (with-accessors ((socket lodds.task:request-socket)
+                   (checksum lodds.task:request-checksum)
+                   (start lodds.task:request-start)
+                   (end lodds.task:request-end)) task
+    (with-socket socket
+      (let ((filename (lodds.watcher:get-file-info checksum)))
+        (if filename
+            (with-open-file (file-stream filename
+                                         :direction :input)
+              (lodds.low-level-api:respond-file (usocket:socket-stream socket)
+                                                file-stream
+                                                start end))
+            (lodds.event:push-event :handler
+                                    (list :error :local-file-not-found)))))))
 
-(defun handle-send-permission-request (socket request)
-  (destructuring-bind (size timeout filename) request
+(defmethod lodds.task:run-task ((task lodds.task:task-request-info))
+  (with-accessors ((socket lodds.task:request-socket)
+                   (timestamp lodds.task:request-timestamp)) task
+    (with-socket socket
+      (apply #'lodds.low-level-api:respond-info
+             (usocket:socket-stream socket)
+             (lodds:generate-info-response timestamp)))))
+
+(defmethod lodds.task:run-task ((task lodds.task:task-request-send-permission))
+  (with-accessors ((socket lodds.task:request-socket)
+                   (size lodds.task:request-size)
+                   (timeout lodds.task:request-timeout)
+                   (filename lodds.task:request-filename)) task
     (declare (ignore timeout))
-    ;; TODO: ask user here for file path
-    (with-open-file (file-stream (concatenate 'string "/tmp/" filename)
-                                 :direction :output
-                                 :if-exists :supersede)
-      (lodds.low-level-api:respond-send-permission (usocket:socket-stream socket)
-                                                   file-stream
-                                                   size))))
+    (with-socket socket
+      ;; TODO: ask user here for file path
+      (with-open-file (file-stream (concatenate 'string "/tmp/" filename)
+                                   :direction :output
+                                   :if-exists :supersede)
+        (lodds.low-level-api:respond-send-permission (usocket:socket-stream socket)
+                                                     file-stream
+                                                     size)))))
 
 (defun handler-callback (socket)
   "handles incomming connections and starts threads to handle
   requests"
-  (handler-case
-      (multiple-value-bind (error request)
-          (lodds.low-level-api:parse-request (usocket:socket-stream socket))
-        (if (eql 0 error)
-            (let ((fn (case (car request)
-                        (:file #'handle-file-request)
-                        (:info #'handle-info-request)
-                        (:send-permission #'handle-send-permission-request))))
-              (lodds.event:push-event :handler request)
-              (funcall fn socket (cdr request)))
-            (error "low level api Returned error ~a~%" error)))
-    ;; TODO: error handling
-    (end-of-file ()
-      (lodds.event:push-event :handler
-                              (list :error :end-of-file)))
-    (error (e)
-      (lodds.event:push-event :handler
-                              (list :error e))))
-  ;; TODO: handler should spawn threads which will close stream/socket
-  (close (usocket:socket-stream socket))
-  (usocket:socket-close socket))
+  (multiple-value-bind (error request)
+      (lodds.low-level-api:parse-request (usocket:socket-stream socket))
+    (if (eql 0 error)
+        (let ((new-task nil))
+          (case (car request)
+            (:file
+             (destructuring-bind (checksum start end) (cdr request)
+               (setf new-task
+                     (make-instance 'lodds.task:task-request-file
+                                    :name "request-file"
+                                    :request-socket socket
+                                    :request-checksum checksum
+                                    :request-start start
+                                    :request-end end))))
+            (:info
+             (setf new-task
+                   (make-instance 'lodds.task:task-request-info
+                                  :name "request-info"
+                                  :request-socket socket
+                                  :request-timestamp (cadr request))))
+            (:send-permission
+             (destructuring-bind (size timeout filename) (cdr request)
+               (setf new-task
+                     (make-instance 'lodds.task:task-request-send-permission
+                                    :name "request-send-permission"
+                                    :request-socket socket
+                                    :request-size size
+                                    :request-timeout timeout
+                                    :request-filename filename)))))
+          (lodds.event:push-event :task new-task))
+        (error "low level api Returned error ~a~%" error))))
 
 (defun run ()
   (let ((socket nil))

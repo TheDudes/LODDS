@@ -95,6 +95,56 @@
                 :type integer
                 :documentation "Advertised load of given Client")))
 
+(defclass task-request (task)
+  ((request-socket :reader request-socket
+                   :initform (error "Specify a socket pls.")
+                   :initarg :request-socket
+                   :type usocket:socket
+                   :documentation "Socket with the requesting client
+                   on the other end :D")))
+
+(defclass task-request-file (task-request)
+  ((request-checksum :reader request-checksum
+                     :initform nil
+                     :initarg :request-checksum
+                     :type string
+                     :documentation "Requested File checksum.")
+   (request-start :reader request-start
+                  :initform nil
+                  :initarg :request-start
+                  :type rational
+                  :documentation "Requested File start position.")
+   (request-end :reader request-end
+                :initform nil
+                :initarg :request-end
+                :type rational
+                :documentation "Requested File end position.")))
+
+(defclass task-request-info (task-request)
+  ((request-timestamp :reader request-timestamp
+                      :initform 0
+                      :initarg :request-timestamp
+                      :type rational
+                      :documentation "Requested info timestamp.")))
+
+(defclass task-request-send-permission (task-request)
+  ((request-size :accessor request-size
+                 :initform nil
+                 :initarg :request-size
+                 :type rational
+                 :documentation "Size of the File requested to send.")
+   (request-timeout :accessor request-timeout
+                    :initform nil
+                    :initarg :request-timeout
+                    :type rational
+                    :documentation "Time the Requesting Client will wait
+                    for a answer.")
+   (request-filename :accessor request-filename
+                     :initform nil
+                     :initarg :request-filename
+                     :type string
+                     :documentation "Name of the File requested to send")))
+
 ;; lodds.event classes
 
 (in-package #:lodds.event)

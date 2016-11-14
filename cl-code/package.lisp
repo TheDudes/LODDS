@@ -51,14 +51,32 @@
            #:task
            #:name
            #:run-task
+           ;; task-client and accessors
            #:task-client
            #:client-name
            #:client-ip
            #:client-port
+           ;; task-client-info and accessors
            #:task-client-info
            #:client-message-timestamp
            #:client-last-change
-           #:client-load))
+           #:client-load
+           ;; task-request and accerssors
+           #:task-request
+           #:request-socket
+           ;; task-request-file and accerssors
+           #:task-request-file
+           #:request-checksum
+           #:request-start
+           #:request-end
+           ;; task-request-info and accerssors
+           #:task-request-info
+           #:request-timestamp
+           ;; task-request-send-permission and accerssors
+           #:task-request-send-permission
+           #:request-size
+           #:request-timeout
+           #:request-filename))
 
 (defpackage #:lodds.watcher
   (:use #:cl)

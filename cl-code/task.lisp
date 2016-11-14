@@ -3,15 +3,47 @@
 (defmethod print-object ((object task) stream)
   (print-unreadable-object (object stream :type t :identity t)
     (format stream "~a"
-            (lodds.task:name object))))
+            (name object))))
 
 (defmethod print-object ((object task-client) stream)
   (print-unreadable-object (object stream :type t :identity t)
-    (with-slots (lodds.task:name
-                 lodds.task:client-name) object
+    (with-accessors ((name name)
+                     (c-name client-name)) object
       (format stream "~a :client ~a"
-              lodds.task:name
-              lodds.task:client-name))))
+              name
+              c-name))))
+
+(defmethod print-object ((object task-request-file) stream)
+  (print-unreadable-object (object stream :type t :identity t)
+    (with-accessors ((name name)
+                     (checksum request-checksum)
+                     (start request-start)
+                     (end request-end)) object
+      (format stream "~a :checksum ~a :start ~a :end ~a"
+              name
+              (concatenate 'string (subseq checksum 0 7) "...")
+              start
+              end))))
+
+(defmethod print-object ((object task-request-info) stream)
+  (print-unreadable-object (object stream :type t :identity t)
+    (with-accessors ((name name)
+                     (timestamp request-timestamp)) object
+      (format stream "~a :timestamp ~a"
+              name
+              timestamp))))
+
+(defmethod print-object ((object task-request-send-permission) stream)
+  (print-unreadable-object (object stream :type t :identity t)
+    (with-accessors ((name name)
+                     (size request-size)
+                     (timeout request-timeout)
+                     (filename request-filename)) object
+      (format stream "~a :size ~a :timeout ~a :filename ~a"
+              name
+              size
+              timeout
+              filename))))
 
 (defgeneric run-task (task)
   (:documentation "Generic Function which will be called if task was

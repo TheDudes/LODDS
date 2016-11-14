@@ -63,21 +63,21 @@
               (gethash cn (lodds:clients lodds:*server*)) client-info))
       (let ((locked (bt:acquire-lock (lodds:c-lock client-info) nil)))
         (if locked
-          ;; only go on if we locked, if not, just drop the update, we
-          ;;will update on the next advertise. unwind-protect to be sure
-          ;;we unlock that lock.
-          (unwind-protect
-               (handler-case
-                   (progn
-                     (setf (lodds:c-last-message client-info) cmt
-                           (lodds:c-load client-info) cl)
-                     (when (< (lodds:c-last-change client-info)
-                              clc)
-                       (update-client-list client-info)))
-                 (error (e)
-                   (format t "got error inside update-client-list ~a~%" e)))
-            (bt:release-lock (lodds:c-lock client-info)))
-          (lodds.event:push-event :info (list :dropped task)))))))
+            ;; only go on if we locked, if not, just drop the update, we
+            ;;will update on the next advertise. unwind-protect to be sure
+            ;;we unlock that lock.
+            (unwind-protect
+                 (handler-case
+                     (progn
+                       (setf (lodds:c-last-message client-info) cmt
+                             (lodds:c-load client-info) cl)
+                       (when (< (lodds:c-last-change client-info)
+                                clc)
+                         (update-client-list client-info)))
+                   (error (e)
+                     (format t "got error inside update-client-list ~a~%" e)))
+              (bt:release-lock (lodds:c-lock client-info)))
+            (lodds.event:push-event :info (list :dropped task)))))))
 
 (defun handle-message (message)
   (multiple-value-bind (error result) (lodds.low-level-api:read-advertise message)
