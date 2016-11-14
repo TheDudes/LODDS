@@ -76,6 +76,25 @@
                   :type integer
                   :documentation "Port of client, for exampe: 1234")))
 
+(defclass task-client-info (task-client)
+  ((client-message-timestamp :reader client-message-timestamp
+                             :initform nil
+                             :initarg :client-message-timestamp
+                             :type integer
+                             :documentation "Timestamp the Broadcast message
+                             was received")
+   (client-last-change :reader client-last-change
+                       :initarg :client-last-change
+                       :initform (error "Specify client-last-change")
+                       :type integer
+                       :documentation "Timestamp of last change,
+                       received vom client")
+   (client-load :reader client-load
+                :initarg :client-load
+                :initform (error "Specify client load")
+                :type integer
+                :documentation "Advertised load of given Client")))
+
 ;; lodds.event classes
 
 (in-package #:lodds.event)
@@ -167,6 +186,50 @@
 ;; lodds classes
 
 (in-package #:lodds)
+
+(defclass client-info ()
+  ((c-name :accessor c-name
+           :initarg :c-name
+           :initform (error "specify client name")
+           :type string
+           :documentation "client name, like d4ryus@192.168.2.102")
+   (c-last-message :accessor c-last-message
+                   :initarg :c-last-message
+                   :initform (error "specivy clients last-message timestamp")
+                   :type integer
+                   :documentation "clients last message timestamp")
+   (c-ip :accessor c-ip
+         :initarg :c-ip
+         :initform (error "specify client ip")
+         :type vector
+         :documentation "client ip")
+   (c-port :accessor c-port
+           :initarg :c-port
+           :initform (error "specify client port")
+           :type integer
+           :documentation "client port")
+   (c-last-change :accessor c-last-change
+                  :initarg :c-last-change
+                  :initform (error "specify client last-change")
+                  :type integer
+                  :documentation "clients last change timestamp")
+   (c-load :accessor c-load
+           :initarg :c-load
+           :initform (error "specify clients load")
+           :type integer
+           :documentation "clients load")
+   (c-file-table-name :accessor c-file-table-name
+                      :type hashtable
+                      :initform (make-hash-table :test 'equal)
+                      :documentation "hashtable of clients shared
+                                    files, with their path as key.
+                                    Value is a list of file checksum
+                                    and its size.")
+   (c-file-table-hash :accessor c-file-table-hash
+                      :initform (make-hash-table :test 'equal)
+                      :type hashtable
+                      :documentation "hashmap of clients shared files, with their checksum as key.
+                                    Value is a list of files with the given checksum.")))
 
 (defclass lodds-server ()
   ((name :accessor name

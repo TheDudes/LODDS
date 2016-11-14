@@ -54,7 +54,12 @@
            #:task-client
            #:client-name
            #:client-ip
-           #:client-port))
+           #:client-port
+           #:task-client-info
+           #:client-message-timestamp
+           #:client-last-change
+           #:client-load))
+
 (defpackage #:lodds.watcher
   (:use #:cl)
   (:export #:watcher
@@ -103,10 +108,18 @@
            #:get-interface-info
            #:get-broadcast-address
            #:get-ip-address
-           ;; classes
-           #:subsystem
-           #:lodds-server
+           ;; client-info reader/accessor
+           #:client-info
+           #:c-name
+           #:c-last-message
+           #:c-ip
+           #:c-port
+           #:c-last-change
+           #:c-load
+           #:c-file-table-name
+           #:c-file-table-hash
            ;; lodds-server reader/accessors
+           #:lodds-server
            #:name
            #:broadcast-port
            #:handler-port

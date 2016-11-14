@@ -38,9 +38,9 @@
   (ip-interfaces:ip-interface-address
    (get-interface-info interface)))
 
-(defun event-callback (subsystem event-type)
-  (format t "~a: ~{~a~^ ~}~%"
-          subsystem event-type))
+(defun event-callback (event-type event)
+  (format t "~a: ~a~%"
+          event-type event))
 
 (defmethod initialize-instance ((server lodds-server) &rest initargs)
   (declare (ignorable initargs))
