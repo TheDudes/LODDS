@@ -176,10 +176,10 @@ multiple-value-bind.
    relative pathname.
    TODO: relative pathname link to spec"
   (format socket-stream "~a ~a ~a~%"
-          timestamp
           (if (eql type :all)
               "all"
               "upd")
+          timestamp
           (length file-infos))
   (loop :for (type checksum size name) :in file-infos
         :do (format socket-stream "~a ~a ~a ~a~%"
