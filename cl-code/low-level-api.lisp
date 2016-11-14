@@ -36,7 +36,7 @@ multiple-value-bind.
 (defvar *info-head-scanner*
   (cl-ppcre:create-scanner
    ;; type timestamp count
-   "^(upd|all) \d+ \d+$")
+   "^(upd|all) \\d+ \\d+$")
   "used to scan get info head to check if they are correct")
 
 (defvar *info-body-scanner*
