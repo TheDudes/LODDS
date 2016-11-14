@@ -144,6 +144,7 @@ multiple-value-bind.
    information the client currently holds. If timestamp is zero (0) it will
    request a full list of shared files from the client."
   (format socket-stream "get info ~a~%" timestamp)
+  (force-output socket-stream)
   0)
 
 (defun get-send-permission (socket-stream size timeout filename)
