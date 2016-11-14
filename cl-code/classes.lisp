@@ -101,8 +101,8 @@
 
 (defclass event-queue (lodds.subsystem:subsystem)
   ((queue :accessor queue
-          :initform (make-instance 'stmx.util:tfifo )
-          :type stmx.util:tfifo
+          :initform (lparallel.queue:make-queue)
+          :type lparallel.queue:queue
           :documentation "the actual queue containing events")
    (callbacks :accessor callbacks
               :initform nil
@@ -122,66 +122,60 @@
 
 (in-package #:lodds.watcher)
 
-(stmx:transactional
- (defclass dir-watcher (cl-fs-watcher:watcher)
-   ((root-dir-name :type string
-                   :reader root-dir-name
-                   :transactional nil
-                   :documentation "contains the root directory name of
-                                  the watched dir (DIR), without the
-                                  path and starting with a slash. set
-                                  after initialization. ROOT-DIR-PATH
-                                  concatenated with ROOT-DIR-NAME
-                                  gives DIR. This variable is used to
-                                  calculate the path for
-                                  LIST-OF-CHANGE.")
-    (root-dir-path :type string
-                   :reader root-dir-path
-                   :transactional nil
-                   :documentation "contains the directory name where
-                                  the root-directory is located. set
-                                  after initialization. ROOT-DIR-PATH
-                                  concatenated with ROOT-DIR-NAME
-                                  gives DIR. This variable is used to
-                                  calculate the path for
-                                  LIST-OF-CHANGE.")
-    (file-table-name :type hashtable
-                     :initform (make-hash-table :test 'equal)
-                     :reader file-table-name
-                     :documentation "hashtable of tracked files, with their path as key.
-                                    Value is a list of file checksum and its size.
-                                    Note: this member is STMX:TRANSACTIONAL")
-    (file-table-hash :type hashtable
-                     :initform (make-hash-table :test 'equal)
-                     :reader file-table-hash
-                     :documentation "hashmap of tracked files, with their checksum as key.
-                                    Value is a list of files with the given checksum.
-                                    Note: this member is STMX:TRANSACTIONAL")
-    (change-hook :type function
-                 :initform (error "Specify a :change-hook!")
-                 :initarg :change-hook
-                 :reader change-hook
-                 :transactional nil
-                 :documentation "this hook gets called when a change
-                                 occured and a new change entry was
-                                 generated, its used to put changes
-                                 from multiple watchers into one list
-                                 of changes. Its called with one
-                                 argument, a list of Timestamp, Type,
-                                 checksum, size and name in that
-                                 order."))))
+(defclass dir-watcher (cl-fs-watcher:watcher)
+  ((root-dir-name :type string
+                  :reader root-dir-name
+                  :documentation "contains the root directory name of
+                  the watched dir (DIR), without the path and starting
+                  with a slash. set after
+                  initialization. ROOT-DIR-PATH concatenated with
+                  ROOT-DIR-NAME gives DIR. This variable is used to
+                  calculate the path for LIST-OF-CHANGE.")
+   (root-dir-path :type string
+                  :reader root-dir-path
+                  :documentation "contains the directory name where
+                  the root-directory is located. set after
+                  initialization. ROOT-DIR-PATH concatenated with
+                  ROOT-DIR-NAME gives DIR. This variable is used to
+                  calculate the path for LIST-OF-CHANGE.")
+   (file-table-name :type hashtable
+                    :initform (make-hash-table :test 'equal)
+                    :reader file-table-name
+                    :documentation "hashtable of tracked files, with
+                    their path as key.  Value is a list of file
+                    checksum and its size.")
+   (file-table-hash :type hashtable
+                    :initform (make-hash-table :test 'equal)
+                    :reader file-table-hash
+                    :documentation "hashmap of tracked files, with
+                    their checksum as key.  Value is a list of files
+                    with the given checksum.")
+   (change-hook :type function
+                :initform (error "Specify a :change-hook!")
+                :initarg :change-hook
+                :reader change-hook
+                :documentation "this hook gets called when a change
+                occured and a new change entry was generated, its used
+                to put changes from multiple watchers into one list of
+                changes. Its called with one argument, a list of
+                Timestamp, Type, checksum, size and name in that
+                order.")))
 
 (defclass watcher (lodds.subsystem:subsystem)
   ((dir-watchers :accessor dir-watchers
                  :initform nil
                  :type list
                  :documentation "List of Directory watchers.")
+   (list-of-changes-lock :accessor list-of-changes-lock
+                         :initform (bt:make-lock "list-of-changes-lock")
+                         :documentation "Lock to access list-of-changes")
    (list-of-changes :accessor list-of-changes
-                    :initform (stmx.util:tlist nil)
-                    :type stmx.util:tlist
-                    :documentation "STMX.UTIL:TLIST, List of
-                    changes. Each member is a list of Timestamp, Type,
-                    checksum, size and name in that order.")))
+                    :initform '()
+                    :type list
+                    :documentation "List of changes. Each member is a
+                    list of Timestamp, Type, checksum, size and name
+                    in that order. Lock with LIST-OF-CHANGES-LOCK
+                    before modifying the list.")))
 
 ;; lodds classes
 
@@ -229,7 +223,10 @@
                       :initform (make-hash-table :test 'equal)
                       :type hashtable
                       :documentation "hashmap of clients shared files, with their checksum as key.
-                                    Value is a list of files with the given checksum.")))
+                                    Value is a list of files with the given checksum.")
+   (c-lock :accessor c-lock
+           :initform (bt:make-lock "c-lock")
+           :documentation "Look to access member variables.")))
 
 (defclass lodds-server ()
   ((name :accessor name
@@ -265,22 +262,23 @@
                    is saved with a timestamp, if timestamp is older
                    than CLIENT-TIMEOUT, the client will be deleted.")
    (interface :accessor interface
-              :initform (stmx:tvar nil)
-              :type stmx:tvar
-              :documentation "STMX:TVAR Currently selected
-              interface. To get a list of available interface use
-              GET-INTERFACES. Use SWITCH-INTERFACE to change, or set,
-              the interface. SWITCH-INTERFACE will switch the value
-              inside a STMX:ATOMIC.")
+              :initform nil
+              :type string
+              :documentation "Currently selected interface. To get a
+              list of available interfaces use GET-INTERFACES. Use
+              SWITCH-INTERFACE to change, or set, the interface.")
    (clients :accessor clients
             :initform (make-hash-table :test #'equalp)
             :type hashtable
             :documentation "Hashtable containing all clients which
             their broadcast information. This table is updated by
             LISTENER. TODO: implement something to retrieve a copy.")
+   (current-load-lock :accessor current-load-lock
+                      :initform (bt:make-lock "current-load-lock")
+                      :documentation "Lock to modify CURRENT-LOAD")
    (current-load :accessor current-load
-                 :initform (stmx:tvar 0)
-                 :type stmx:tvar
+                 :initform 0
+                 :type rational
                  :documentation "STMX:TVAR, describes the sum of all
                  outstanding bytes which need to be transfered. Do NOT
                  set this variable, retrieving it should be

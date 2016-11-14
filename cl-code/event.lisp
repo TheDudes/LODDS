@@ -57,16 +57,17 @@
   "Pushes a given given EVENT of type EVENT-TYPE onto the
   event-queue. EVENT-TYPE is a keyword describing the event, EVENT can
   be anything."
-  (stmx:atomic
-   (stmx.util:put (queue (lodds:get-subsystem :event-queue))
-                  (list event-type event))))
+  (lparallel.queue:push-queue (if (listp event)
+                                  (cons event-type event)
+                                  (list event-type event))
+                              (queue (lodds:get-subsystem :event-queue))))
 
 (defun handle-event (event event-queue)
   "handles a single event and calls it inside a RESTART-CASE. If a
   error occures its possible to RETRY, IGNORE or REMOVE the callback."
   (labels ((save-call (name fn &key event-type)
              (restart-case
-                 (apply fn event)
+                 (funcall fn event)
                (retry-calling-callback ()
                  ;; reload function from hashtable and try again
                  (destructuring-bind (new-name . new-fn)
@@ -92,14 +93,14 @@ handle all left events and then return"
   (let ((event-queue (lodds:get-subsystem :event-queue)))
     (when event-queue
       (let ((q (queue event-queue)))
-        (loop :while (not (stmx.util:empty? q))
-              :do (handle-event (stmx.util:take q)
+        (loop :while (not (lparallel.queue:queue-empty-p q))
+              :do (handle-event (lparallel.queue:pop-queue q)
                                 event-queue))))))
 
 (defun run ()
   "init function for Event-Queue subsystem, will run until stopped."
   (loop (let ((event-queue (lodds:get-subsystem :event-queue)))
           (if event-queue
-              (handle-event (stmx.util:take (queue event-queue))
+              (handle-event (lparallel.queue:pop-queue (queue event-queue))
                             event-queue)
               (error "Event-Queue is nil!")))))

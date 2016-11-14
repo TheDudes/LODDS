@@ -58,7 +58,7 @@
     (unwind-protect
          (progn
            (setf socket (usocket:socket-listen
-                         (lodds:get-ip-address (stmx:$ (lodds:interface lodds:*server*)))
+                         (lodds:get-ip-address (lodds:interface lodds:*server*))
                          (lodds:handler-port lodds:*server*)
                          :reuse-address t))
            (loop (handler-callback (usocket:socket-accept socket))))

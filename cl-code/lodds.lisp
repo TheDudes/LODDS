@@ -38,9 +38,8 @@
   (ip-interfaces:ip-interface-address
    (get-interface-info interface)))
 
-(defun event-callback (event-type event)
-  (format t "~a: ~a~%"
-          event-type event))
+(defun event-callback (event)
+  (format t "log: ~a~%" event))
 
 (defmethod initialize-instance ((server lodds-server) &rest initargs)
   (declare (ignorable initargs))
@@ -123,8 +122,7 @@
         (loop :for subsystem :in was-running
               :do (lodds.subsystem:stop subsystem))
 
-        (stmx:atomic
-         (setf (stmx:$ (interface *server*)) interface))
+        (setf (interface *server*) interface)
 
         ;; start all subsystem which where running before
         (loop :for subsystem :in was-running
@@ -148,10 +146,9 @@
 (defun get-timestamp-last-change ()
   "returns the timestamp of the last change, who would have thought?
   :D"
-  (first
-   (stmx.util:tfirst
-    (lodds.watcher:list-of-changes
-     (get-subsystem :watcher)))))
+  (caar
+   (lodds.watcher:list-of-changes
+    (get-subsystem :watcher))))
 
 (defun get-user-list ()
   "Returns List of users who advertised themselfs.
@@ -182,12 +179,7 @@
   timestamp is nil a full list of all files will be returnd"
   (if timestamp
       (reverse
-       (loop :for val = (lodds.watcher:list-of-changes (get-subsystem :watcher))
-             :then (stmx.util:trest val)
-             :for first = (stmx.util:tfirst val)
-             :until (not first)
-             :for ts = (car first)
-             :for change = (cdr first)
+       (loop :for (ts . change) :in (lodds.watcher:list-of-changes (get-subsystem :watcher))
              ;; only collect infos with timestamps not equal to
              ;; CURRENT-TIMESTAMP and which are not older than TIMESTAMP
              :when (and (>= ts timestamp)

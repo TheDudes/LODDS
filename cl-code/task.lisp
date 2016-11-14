@@ -21,13 +21,12 @@
   (declare (ignorable tsk))
   (error "overwrite run-task with ur task!"))
 
-(defun handle-task (event-type task)
-  (declare (ignore event-type))
+(defun handle-task (event)
   (let* ((tasker (lodds:get-subsystem :tasker))
          (lparallel:*kernel* (kernel tasker)))
     (lparallel:submit-task (channel tasker)
                            #'run-task
-                           task)))
+                           (cadr event))))
 
 (defmethod lodds.subsystem:start ((subsys tasker))
   (with-accessors ((kernel kernel)

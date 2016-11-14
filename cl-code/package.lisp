@@ -118,6 +118,7 @@
            #:c-load
            #:c-file-table-name
            #:c-file-table-hash
+           #:c-lock
            ;; lodds-server reader/accessors
            #:lodds-server
            #:name
@@ -127,6 +128,7 @@
            #:interface
            #:clients
            #:current-load
+           #:list-of-changes-lock
            #:list-of-changes
            #:advertise-timeout
            ;; functions using bound *server*

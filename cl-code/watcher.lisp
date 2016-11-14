@@ -20,7 +20,7 @@
               lodds.subsystem:name
               lodds.subsystem:alive-p
               (length dir-watchers)
-              (first (stmx.util:tfirst list-of-changes))))))
+              (caar list-of-changes)))))
 
 (defun get-file-stats (pathname)
   (values
@@ -54,15 +54,14 @@
                  checksum
                  size
                  (subseq pathname (length (root-dir-path dir-watcher)))))
-  (stmx:atomic
-   (let ((ft-hash (file-table-hash dir-watcher)))
-     (setf (gethash pathname (file-table-name dir-watcher))
-           (list checksum size))
-     (let ((val (gethash checksum ft-hash)))
-       (setf (gethash checksum ft-hash)
-             (if val
-                 (cons pathname val)
-                 (list pathname)))))))
+  (let ((ft-hash (file-table-hash dir-watcher)))
+    (setf (gethash pathname (file-table-name dir-watcher))
+          (list checksum size))
+    (let ((val (gethash checksum ft-hash)))
+      (setf (gethash checksum ft-hash)
+            (if val
+                (cons pathname val)
+                (list pathname))))))
 
 (defun remove-file (dir-watcher pathname)
   "removes a file from the dir-watcher, will be called bei
@@ -78,14 +77,13 @@
                      checksum
                      size
                      (subseq pathname (length (root-dir-path dir-watcher))))))
-    (stmx:atomic
-     (let ((new-val (remove pathname (gethash checksum ft-hash)
-                            :test #'string=)))
-       (if new-val
-           (setf (gethash checksum ft-hash)
-                 new-val)
-           (remhash checksum ft-hash)))
-     (remhash pathname ft-name))))
+    (let ((new-val (remove pathname (gethash checksum ft-hash)
+                           :test #'string=)))
+      (if new-val
+          (setf (gethash checksum ft-hash)
+                new-val)
+          (remhash checksum ft-hash)))
+    (remhash pathname ft-name)))
 
 (defun update-file (dir-watcher pathname)
   "checks if the given file under PATHNAME changed (if the checksum is
@@ -146,12 +144,12 @@
                               :del
                               info))))
   (let ((watcher (lodds:get-subsystem :watcher)))
-    (stmx:atomic
-     (setf (dir-watchers watcher)
-           (remove dir-watcher (dir-watchers watcher))))
+    (setf (dir-watchers watcher)
+          (remove dir-watcher (dir-watchers watcher)))
     (unless (dir-watchers watcher)
-      (setf (list-of-changes watcher) (stmx.util:tlist nil)
-            (lodds.subsystem:alive-p watcher) nil)
+      (bt:with-lock-held ((list-of-changes-lock watcher))
+        (setf (list-of-changes watcher) nil))
+      (setf (lodds.subsystem:alive-p watcher) nil)
       (lodds.event:push-event (lodds.subsystem:name watcher)
                               (list "stopped!")))))
 
@@ -186,17 +184,15 @@
     (when (find folder-path (get-shared-folders))
       (error "TODO: the folder you tried to share has the same name"))
     (let* ((hook (lambda (change)
-                   (stmx:atomic
-                    (stmx.util:tpush change
-                                     (list-of-changes watcher)))))
+                   (bt:with-lock-held ((list-of-changes-lock watcher))
+                     (push change (list-of-changes watcher)))))
            (new-dir-watcher
              (make-instance 'dir-watcher
                             :change-hook hook
                             :dir folder-path
                             :recursive-p t)))
-      (stmx:atomic
-       (push new-dir-watcher
-             (dir-watchers watcher)))
+      (push new-dir-watcher
+            (dir-watchers watcher))
       (setf (lodds.subsystem:alive-p watcher) t)
       (lodds.event:push-event (lodds.subsystem:name watcher)
                               (list :watching folder-path)))))

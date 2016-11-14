@@ -12,7 +12,6 @@
                :cl-strings
                :cl-ppcre
                :bordeaux-threads
-               :stmx
                :cffi
                :cl-fs-watcher
                :lparallel)
