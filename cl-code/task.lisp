@@ -51,6 +51,7 @@
     (when alive-p
       (let ((lparallel:*kernel* kernel))
         (lparallel:end-kernel :wait t)
+        (lodds.event:remove-callback :tasker :event-type :task)
         (setf alive-p nil)
         (lodds.event:push-event (lodds.subsystem:name subsys)
                                 (list "stopped!"))))))
