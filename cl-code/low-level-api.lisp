@@ -217,9 +217,9 @@ multiple-value-bind.
         (destructuring-bind (type timestamp count) (cl-strings:split line)
           (values 0
                   (cond
-                    ((equalp type "add") :add)
-                    ((equalp type "del") :del)
-                    (t (error "TODO: handle-info add|del error")))
+                    ((equalp type "all") :all)
+                    ((equalp type "upd") :upd)
+                    (t (error "TODO: handle-info all|upd error ~a" type)))
                   (parse-integer timestamp)
                   (loop :repeat (parse-integer count)
                         :collect (progn
