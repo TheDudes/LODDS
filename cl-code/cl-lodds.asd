@@ -14,12 +14,14 @@
                :bordeaux-threads
                :stmx
                :cffi
-               :cl-fs-watcher)
+               :cl-fs-watcher
+               :lparallel)
   :components ((:file "package")
                (:file "core")
                (:file "low-level-api")
                (:file "classes")
                (:file "subsystem")
+               (:file "task")
                (:file "watcher")
                (:file "event")
                (:file "listener")

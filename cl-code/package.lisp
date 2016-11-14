@@ -45,6 +45,16 @@
            #:start
            #:stop))
 
+(defpackage #:lodds.task
+  (:use #:cl)
+  (:export #:tasker
+           #:task
+           #:name
+           #:run-task
+           #:task-client
+           #:client-name
+           #:client-ip
+           #:client-port))
 (defpackage #:lodds.watcher
   (:use #:cl)
   (:export #:watcher

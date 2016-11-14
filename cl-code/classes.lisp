@@ -38,6 +38,44 @@
                 :documentation "The event-queue where new events are
                 pushed to.")))
 
+;; lodds.task classes
+
+(in-package #:lodds.task)
+
+(defclass tasker (lodds.subsystem:subsystem)
+  ((kernel :accessor kernel
+           :initform nil
+           :type lparallel:kernel
+           :documentation "Tasker lparallel:kernel")
+   (channel :accessor channel
+            :initform nil
+            :type lparallel:channel
+            :documentation "tasker lparallel:channel")))
+
+(defclass task ()
+  ((name :accessor name
+         :initarg :name
+         :initform (error "please specify a task name!")
+         :type string
+         :documentation "Task Name.")))
+
+(defclass task-client (task)
+    ((client-name :reader client-name
+                  :initarg :client-name
+                  :initform (error "Specify client-name")
+                  :type string
+                  :documentation "name of client, for example: d4yus@192.168.2.1:1234")
+     (client-ip :reader client-ip
+                :initarg :client-ip
+                :initform (error "Specify client-ip")
+                :type vector
+                :documentation "Ip of client, for example: #(192 168 2 1)")
+     (client-port :reader client-port
+                  :initarg :client-port
+                  :initform (error "Specify client-port")
+                  :type integer
+                  :documentation "Port of client, for exampe: 1234")))
+
 ;; lodds.event classes
 
 (in-package #:lodds.event)

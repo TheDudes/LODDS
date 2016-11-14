@@ -83,6 +83,13 @@
                   ;; updates/handles local list of shared files
                   (make-instance 'lodds.watcher:watcher
                                  :name :watcher
+                                 :init-fn nil)
+                  ;; TASKER subsystem, handles and schedules several
+                  ;; tasks on a lparrallel:kernel. Waits on
+                  ;; event-queue for :task events and then executes
+                  ;; those.
+                  (make-instance 'lodds.task:tasker
+                                 :name :tasker
                                  :init-fn nil
                                  :event-queue event-queue))))
     (lodds.event:add-callback :lodds #'event-callback)))
