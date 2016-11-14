@@ -121,9 +121,8 @@
   (loop :for file :in (cl-fs-watcher:get-all-tracked-files w)
         :do (add-file w file))
 
-  ;; TODO: replace lambda with direct call
-  (cl-fs-watcher:set-hook w (lambda (a b c)
-                              (hook a b c))))
+  (setf (cl-fs-watcher:hook w)
+        #'hook))
 
 (defun get-all-tracked-file-infos (dir-watcher)
   "returns info about all tracked files."
