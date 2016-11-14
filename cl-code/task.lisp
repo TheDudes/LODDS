@@ -72,7 +72,8 @@
                 channel (lparallel:make-channel)
                 alive-p t)
           (lodds.event:add-callback :tasker
-                                    #'handle-task
+                                    (lambda (event)
+                                      (handle-task event))
                                     :event-type :task)
           (lodds.event:push-event :tasker
                                   (list "started!"))))))

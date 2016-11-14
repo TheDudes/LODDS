@@ -91,7 +91,8 @@
                                  :name :tasker
                                  :init-fn nil
                                  :event-queue event-queue))))
-    (lodds.event:add-callback :lodds #'event-callback)))
+    (lodds.event:add-callback :lodds (lambda (event)
+                                       (event-callback event)))))
 
 (defun get-subsystem (name)
   "returns the requested subsystem, if not found nil will returned"
