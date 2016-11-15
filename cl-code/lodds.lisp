@@ -46,53 +46,49 @@
   (call-next-method)
   (with-server server ;; bind *server* for every subsystem of *server*
     (setf (subsystems server)
-          ;; EVENT-QUEUE subsystem, this one is special to the others,
-          ;; since its used by all the other subsystems. it contains a
-          ;; STMX.util:TFIFO where messages can be added
-          ;; (PUSH-EVENT). its used to transfer messages between
-          ;; subsystems and the server object (or anything that has
-          ;; attached a callback to the queue (ADD-CALLBACK). see
-          ;; event.lisp for more info
-          (let ((event-queue (make-instance 'lodds.event:event-queue
-                                            :name :event-queue
-                                            :cleanup-fn #'lodds.event:cleanup
-                                            :init-fn #'lodds.event:run)))
-            (list event-queue
-                  ;; LISTENER subsystem listens on broadcast address of
-                  ;; the set INTERFACE and BROADCAST-PORT member of
-                  ;; server for advertisements from other clients
-                  (make-instance 'lodds.subsystem:subsystem
-                                 :name :listener
-                                 :init-fn #'lodds.listener:run
-                                 :event-queue event-queue)
-                  ;; ADVERTISER subystem, broadcasts information to
-                  ;; other clients on broadcast address of INTERFACE and
-                  ;; BROADCAST-PORT.
-                  (make-instance 'lodds.subsystem:subsystem
-                                 :name :advertiser
-                                 :init-fn #'lodds.advertiser:run
-                                 :event-queue event-queue)
-                  ;; HANDLER subsystem, listens for incomming
-                  ;; connections and handles those (starts threads etc).
-                  (make-instance 'lodds.subsystem:subsystem
-                                 :name :handler
-                                 :init-fn #'lodds.handler:run
-                                 :event-queue event-queue)
-                  ;; WATCHER subsystem, handles filesystem changes,
-                  ;; updates/handles local list of shared files
-                  (make-instance 'lodds.watcher:watcher
-                                 :name :watcher
-                                 :init-fn nil)
-                  ;; TASKER subsystem, handles and schedules several
-                  ;; tasks on a lparrallel:kernel. Waits on
-                  ;; event-queue for :task events and then executes
-                  ;; those.
-                  (make-instance 'lodds.task:tasker
-                                 :name :tasker
-                                 :init-fn nil
-                                 :event-queue event-queue))))
-    (lodds.event:add-callback :lodds (lambda (event)
-                                       (event-callback event)))))
+          (list
+           ;; EVENT-QUEUE subsystem, this one is special to the
+           ;; others, since its used by all the other subsystems. it
+           ;; contains a lparallel.queue where messages can be added
+           ;; (PUSH-EVENT). its used to transfer messages between
+           ;; subsystems and the server object (or anything that has
+           ;; attached a callback to the queue (ADD-CALLBACK). see
+           ;; event.lisp for more info
+           (make-instance 'lodds.event:event-queue
+                          :name :event-queue
+                          :callbacks (list (cons :lodds (lambda (event)
+                                                          (event-callback event))))
+                          :cleanup-fn #'lodds.event:cleanup
+                          :init-fn #'lodds.event:run)
+           ;; LISTENER subsystem listens on broadcast address of
+           ;; the set INTERFACE and BROADCAST-PORT member of
+           ;; server for advertisements from other clients
+           (make-instance 'lodds.subsystem:subsystem
+                          :name :listener
+                          :init-fn #'lodds.listener:run)
+           ;; ADVERTISER subystem, broadcasts information to
+           ;; other clients on broadcast address of INTERFACE and
+           ;; BROADCAST-PORT.
+           (make-instance 'lodds.subsystem:subsystem
+                          :name :advertiser
+                          :init-fn #'lodds.advertiser:run)
+           ;; HANDLER subsystem, listens for incomming
+           ;; connections and handles those (starts threads etc).
+           (make-instance 'lodds.subsystem:subsystem
+                          :name :handler
+                          :init-fn #'lodds.handler:run)
+           ;; WATCHER subsystem, handles filesystem changes,
+           ;; updates/handles local list of shared files
+           (make-instance 'lodds.watcher:watcher
+                          :name :watcher
+                          :init-fn nil)
+           ;; TASKER subsystem, handles and schedules several
+           ;; tasks on a lparrallel:kernel. Waits on
+           ;; event-queue for :task events and then executes
+           ;; those.
+           (make-instance 'lodds.task:tasker
+                          :name :tasker
+                          :init-fn nil)))))
 
 (defun get-subsystem (name)
   "returns the requested subsystem, if not found nil will returned"

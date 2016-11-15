@@ -30,13 +30,7 @@
                :initarg :cleanup-fn
                :initform nil
                :type function
-               :documentation "Cleanup function, gets called when subsytem is shut down.")
-   (event-queue :accessor event-queue
-                :initarg :event-queue
-                :initform nil
-                :type lodds.event:event-queue
-                :documentation "The event-queue where new events are
-                pushed to.")))
+               :documentation "Cleanup function, gets called when subsytem is shut down.")))
 
 ;; lodds.task classes
 
@@ -156,6 +150,7 @@
           :documentation "the actual queue containing events")
    (callbacks :accessor callbacks
               :initform nil
+              :initarg :callbacks
               :type list
               :documentation "callback functions which will be called
               if a event occures. Functions inside CALLBACKS will
