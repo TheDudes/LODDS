@@ -324,10 +324,10 @@
    (current-load :accessor current-load
                  :initform 0
                  :type rational
-                 :documentation "STMX:TVAR, describes the sum of all
-                 outstanding bytes which need to be transfered. Do NOT
-                 set this variable, retrieving it should be
-                 fine tho. TODO: who sets this?")
+                 :documentation "describes the sum of all outstanding
+                 bytes which need to be transfered. Do NOT set this
+                 variable, retrieving it should be fine tho. TODO: who
+                 sets this?")
    (advertise-timeout :accessor advertise-timeout
                       :initform 1
                       :documentation "Timeout between
