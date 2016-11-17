@@ -6,11 +6,16 @@ import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import javax.inject.Inject;
+
 import javafx.application.Application;
 import javafx.scene.Scene;
+import javafx.stage.Modality;
 import javafx.stage.Stage;
 import studyproject.API.Errors.ErrLog;
 import studyproject.gui.mainWindow.MainWindowView;
+import studyproject.gui.selectedInterface.SelectedInterfaceModel;
+import studyproject.gui.selectedInterface.SelectedInterfaceView;
 import studyproject.logging.APILvl;
 import studyproject.logging.FileLogHandler;
 import studyproject.logging.LogConsoleHandler;
@@ -21,7 +26,11 @@ public class App extends Application{
 	private static Logger logger;
 	public static Properties properties;
 	public static String pathToProperties;
-
+	private MainWindowView mainView;
+	private SelectedInterfaceView selectedInterfaceView;
+	
+	@Inject SelectedInterfaceModel selectedInterfaceModel;
+	
 	public void configureLogging() {
 		logger = Logger.getGlobal();
 		logger.setUseParentHandlers(false);
@@ -48,10 +57,17 @@ public class App extends Application{
 	@Override
 	public void start(Stage mainStage) throws Exception {
 		mainStage.setTitle("Local Open Distributed Data Sharing");
-		MainWindowView mainView = new MainWindowView();
+		mainView = new MainWindowView();
 		Scene mainScene = new Scene(mainView.getView());
 		mainStage.setScene(mainScene);
 		mainStage.show();
+		
+		selectedInterfaceView = new SelectedInterfaceView();
+		Stage interfaceStage = new Stage();
+		interfaceStage.setTitle("Startup...");
+		interfaceStage.setScene(new Scene(selectedInterfaceView.getView()));
+		interfaceStage.initModality(Modality.APPLICATION_MODAL);
+		interfaceStage.showAndWait();
 	}
 	
 
@@ -66,4 +82,7 @@ public class App extends Application{
 		launch(args);
 
 	}
+	
+	
+	
 }
