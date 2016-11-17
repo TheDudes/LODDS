@@ -9,189 +9,197 @@ import java.net.SocketException;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.NoSuchElementException;
+import java.util.logging.Level;
 import java.util.regex.Pattern;
 
 import studyproject.API.Core.BroadcastInfo;
 import studyproject.API.Core.Utils;
+import studyproject.API.Errors.ErrLog;
+import studyproject.logging.APILvl;
+import studyproject.logging.LogKey;
 
 /**
- * Class can send an receive broadcasts that are in
- * accordance with the LODDS specification
- * Can also display all currently active network devices of the local machine
+ * Class can send an receive broadcasts that are in accordance with the LODDS
+ * specification Can also display all currently active network devices of the
+ * local machine
+ * 
  * @author Michael
  *
  */
 public class Broadcast {
-	
+
 	private static final int DEFAULT_PORT = 9002;
 	private static final int DEFAULT_PORT_SENDING = 9003;
 	private static final int DEFAULT_BUFFERSIZE = 2048;
 	private static final String ADVERTISE_BROADCAST_REGEX = "(\\d{1,3}\\.){3}\\d{1,3} \\d{1,5} \\d{1,19} \\d{1,19} \\S*";
 	private static final String IP_REGEX = "(\\d{1,3}\\.){3}\\d{1,3}";
-	
+
 	private static int broadcastPort = DEFAULT_PORT;
 	private static int outgoingPort = DEFAULT_PORT_SENDING;
 	private static int buffersize = DEFAULT_BUFFERSIZE;
 
 	/**
-	 * retrieves a list with all network devices the local machine has that are running and not virtual
+	 * retrieves a list with all network devices the local machine has that are
+	 * running and not virtual
 	 * 
 	 * @param networkAddresses
-	 * 			the list in which the addresses are put into
+	 *            the list in which the addresses are put into
 	 * 
-	 * @return
-	 * 			0 or an error code
+	 * @return 0 or an error code
 	 */
-	public static int getNetworkAddresses(ArrayList<String> networkAddresses){
-		try{
+	public static int getNetworkAddresses(ArrayList<String> networkAddresses) {
+		try {
 			Enumeration<NetworkInterface> networkInterfaces = NetworkInterface.getNetworkInterfaces();
-			while(networkInterfaces.hasMoreElements()){
+			while (networkInterfaces.hasMoreElements()) {
 				NetworkInterface networkInterface = networkInterfaces.nextElement();
-				if(networkInterface.isUp() && !networkInterface.isVirtual()){
+				if (networkInterface.isUp() && !networkInterface.isVirtual()) {
 					networkAddresses.add(networkInterface.getDisplayName());
 				}
 			}
-		} catch(SocketException e){
+		} catch (SocketException e) {
 			return 1;
-		} catch(NoSuchElementException f){
+		} catch (NoSuchElementException f) {
 			return 2;
 		}
 		return 0;
 	}
-	
-	
+
 	/**
-	 * Retrieves the local broadcastAddress, needs an interface for getting the local ip
+	 * Retrieves the local broadcastAddress, needs an interface for getting the
+	 * local ip
 	 * 
 	 * @param interfaceName
-	 * 			the name of the interface to which the ip should be retrieved
+	 *            the name of the interface to which the ip should be retrieved
 	 * 
 	 * @param broadcastAddress
-	 * 			the StringBuilder to store the broadcastAddress in
+	 *            the StringBuilder to store the broadcastAddress in
 	 * 
-	 * @return
-	 * 			0 or an error code
+	 * @return 0 or an error code
 	 */
-	public static int getBroadcastAddress(String interfaceName, StringBuilder broadcastAddress){
+	public static int getBroadcastAddress(String interfaceName, StringBuilder broadcastAddress) {
 		int toReturn = getAddress(interfaceName, broadcastAddress);
-		if(toReturn == 0){
+		if (toReturn == 0) {
 			broadcastAddress.delete(broadcastAddress.length() - 3, broadcastAddress.length());
 			broadcastAddress.append("255");
 		}
 		return toReturn;
 	}
-	
+
 	/**
 	 * Retrieves the ip address of the given interface
 	 * 
-	 * @param interfaceName 
-	 * 			the name of the interface to which the ip should be retrieved
+	 * @param interfaceName
+	 *            the name of the interface to which the ip should be retrieved
 	 * 
-	 * @param broadcastAddress 
-	 * 			the StringBuilder to store the ip in
+	 * @param broadcastAddress
+	 *            the StringBuilder to store the ip in
 	 * 
-	 * @return
-	 * 			0 or an error code
+	 * @return 0 or an error code
 	 */
-	public static int getLocalIp(String interfaceName, StringBuilder networkAddress){
+	public static int getLocalIp(String interfaceName, StringBuilder networkAddress) {
 		return getAddress(interfaceName, networkAddress);
 	}
-	
-	
-	private static int getAddress(String interfaceName, StringBuilder broadcastAddress){
-		try{
+
+	private static int getAddress(String interfaceName, StringBuilder broadcastAddress) {
+		try {
 			Enumeration<NetworkInterface> networkInterfaces = NetworkInterface.getNetworkInterfaces();
-			while(networkInterfaces.hasMoreElements()){
+			while (networkInterfaces.hasMoreElements()) {
 				NetworkInterface networkInterface = networkInterfaces.nextElement();
-				if(networkInterface.isUp() && !networkInterface.isVirtual() 
-						&& networkInterface.getDisplayName().equals(interfaceName)){
+				if (networkInterface.isUp() && !networkInterface.isVirtual()
+						&& networkInterface.getDisplayName().equals(interfaceName)) {
 					Enumeration<InetAddress> inetAddresses = networkInterface.getInetAddresses();
-					while(inetAddresses.hasMoreElements()){
+					while (inetAddresses.hasMoreElements()) {
 						broadcastAddress.delete(0, broadcastAddress.length());
 						broadcastAddress = broadcastAddress.append(inetAddresses.nextElement().getHostAddress());
-						if(Pattern.matches(IP_REGEX, broadcastAddress)){
+						if (Pattern.matches(IP_REGEX, broadcastAddress)) {
 							return 0;
 						}
 					}
 				}
 				broadcastAddress.delete(0, broadcastAddress.length());
 			}
-		} catch(SocketException e){
+		} catch (SocketException e) {
 			return 1;
-		} catch(NoSuchElementException f){
+		} catch (NoSuchElementException f) {
 			return 2;
 		}
 		return 2;
 	}
-	
+
 	/**
-	 * sends out an UDP broadcast to all machines in the local network. This broadcast contains the
-	 * network address of the current machine, the port other machines should contact it from, the timestamp
-	 * of the last change in the tracked filesystem and the name under which this machine shall be displayed
+	 * sends out an UDP broadcast to all machines in the local network. This
+	 * broadcast contains the network address of the current machine, the port
+	 * other machines should contact it from, the timestamp of the last change
+	 * in the tracked filesystem and the name under which this machine shall be
+	 * displayed
 	 * 
 	 * @param broadcastAddress
-	 * 			the address the UDP socket has to broadcast to
+	 *            the address the UDP socket has to broadcast to
 	 * 
 	 * @param networkAddress
-	 * 			the network address of this machine (TCP address)
+	 *            the network address of this machine (TCP address)
 	 * 
 	 * @param ipPort
-	 * 			the port other machines should contact this machine from
+	 *            the port other machines should contact this machine from
 	 * 
 	 * @param timestamp
-	 * 			the time of the last change in the tracked filesystem of this machine
+	 *            the time of the last change in the tracked filesystem of this
+	 *            machine
 	 * 
 	 * @param load
-	 * 			how many bytes the client still has to send to other clients as part of a file transfer
+	 *            how many bytes the client still has to send to other clients
+	 *            as part of a file transfer
 	 * 
 	 * @param name
-	 * 			the name that other machines should display this machine as
+	 *            the name that other machines should display this machine as
 	 * 
-	 * @return
-	 * 			0 or an error code
+	 * @return 0 or an error code
 	 */
-	public static int sendAdvertise(String broadcastAddress, String networkAddress, int ipPort, long timestamp, long load, String name){
-	    DatagramPacket packet;
-	    try(DatagramSocket socket = new DatagramSocket(outgoingPort, InetAddress.getByName(networkAddress))){
-	    	socket.setBroadcast(true);
-	    	byte[] packetContents = (networkAddress + " " + ipPort + " " + timestamp + " " + load + " " + name + "\n").getBytes();
-	    	packet = new DatagramPacket(packetContents, packetContents.length,
-	    			InetAddress.getByName(broadcastAddress), broadcastPort);
-	    	socket.send(packet);
-	    	//socket.disconnect();
-	    } catch(IOException e){
-	    	return 1;
-	    }
-	    return 0;
+	public static int sendAdvertise(String broadcastAddress, String networkAddress, int ipPort, long timestamp,
+			long load, String name) {
+		DatagramPacket packet;
+		try (DatagramSocket socket = new DatagramSocket(outgoingPort, InetAddress.getByName(networkAddress))) {
+			socket.setBroadcast(true);
+			byte[] packetContents = (networkAddress + " " + ipPort + " " + timestamp + " " + load + " " + name + "\n")
+					.getBytes();
+			ErrLog.log(Level.INFO, LogKey.broadcastSent, APILvl.low, "sendAdvertise",
+					networkAddress + " " + ipPort + " " + timestamp + " " + load + " " + name);
+			packet = new DatagramPacket(packetContents, packetContents.length, InetAddress.getByName(broadcastAddress),
+					broadcastPort);
+			socket.send(packet);
+			// socket.disconnect();
+		} catch (IOException e) {
+			return 1;
+		}
+		return 0;
 	}
-	
-	
+
 	/**
-	 * listens on given UPD address for the next UDP packet and then puts the given information in the
-	 * broadcastInfo if the given data matches the specification
+	 * listens on given UPD address for the next UDP packet and then puts the
+	 * given information in the broadcastInfo if the given data matches the
+	 * specification
 	 * 
 	 * @param broadcastAddress
-	 * 			the address to listen to
+	 *            the address to listen to
 	 * 
 	 * @param broadcastInfo
-	 * 			the broadcastInfo to put the read info in
+	 *            the broadcastInfo to put the read info in
 	 * 
-	 * @return
-	 * 			0 or an error value
-	 */	
-	public static int readAdvertise(String localIPAddress, BroadcastInfo broadcastInfo){
-		try(DatagramSocket socket = new DatagramSocket(broadcastPort, InetAddress.getByName(localIPAddress))){
+	 * @return 0 or an error value
+	 */
+	public static int readAdvertise(String localIPAddress, BroadcastInfo broadcastInfo) {
+		try (DatagramSocket socket = new DatagramSocket(broadcastPort, InetAddress.getByName(localIPAddress))) {
 			DatagramPacket packet = new DatagramPacket(new byte[buffersize], buffersize);
 			socket.receive(packet);
 			int index = 0;
-			while(packet.getData()[index] != '\n'){
+			while (packet.getData()[index] != '\n') {
 				index++;
-				if(!(index < buffersize)){
+				if (!(index < buffersize)) {
 					return -2;
 				}
 			}
 			String packetContents = new String(Utils.getBytesFromTo(packet.getData(), 0, index), "UTF-8");
-			if(!Pattern.matches(ADVERTISE_BROADCAST_REGEX, packetContents)){
+			if (!Pattern.matches(ADVERTISE_BROADCAST_REGEX, packetContents)) {
 				return 2;
 			}
 			String[] packetParts = packetContents.split(" ");
@@ -201,16 +209,17 @@ public class Broadcast {
 			broadcastInfo.load = Long.parseLong(packetParts[3]);
 			String clientName = "";
 			clientName += packetParts[4];
-			for(int packetIndex = 5; packetIndex < packetParts.length; packetIndex++){
+			for (int packetIndex = 5; packetIndex < packetParts.length; packetIndex++) {
 				clientName += " " + packetParts[packetIndex];
 			}
-			if(clientName.charAt(clientName.length() - 1) == '\n'){
+			if (clientName.charAt(clientName.length() - 1) == '\n') {
 				clientName = clientName.substring(0, clientName.length() - 2);
 			}
 			broadcastInfo.name = clientName;
-		} catch(IOException e){
+			ErrLog.log(Level.INFO, LogKey.broadcastReceived, APILvl.low, "readAdvertise", broadcastInfo.toString());
+		} catch (IOException e) {
 			return 1;
-		} catch(NumberFormatException f){
+		} catch (NumberFormatException f) {
 			return 2;
 		}
 		return 0;
@@ -218,8 +227,7 @@ public class Broadcast {
 
 	/**
 	 * 
-	 * @return
-	 * 			the port the UDP packets are sent to
+	 * @return the port the UDP packets are sent to
 	 */
 	public static int getBroadcastPort() {
 		return broadcastPort;
@@ -228,7 +236,7 @@ public class Broadcast {
 	/**
 	 * 
 	 * @param broadcastPort
-	 * 			the port the UDP packets are sent to
+	 *            the port the UDP packets are sent to
 	 */
 	public static void setBroadcastPort(int broadcastPort) {
 		Broadcast.broadcastPort = broadcastPort;
@@ -236,8 +244,7 @@ public class Broadcast {
 
 	/**
 	 * 
-	 * @return
-	 * 			the port the UDP socket is bound to locally
+	 * @return the port the UDP socket is bound to locally
 	 */
 	public static int getOutgoingPort() {
 		return outgoingPort;
@@ -246,7 +253,7 @@ public class Broadcast {
 	/**
 	 * 
 	 * @param outgoingPort
-	 * 			the port the UDP socket is bound to locally
+	 *            the port the UDP socket is bound to locally
 	 */
 	public static void setOutgoingPort(int outgoingPort) {
 		Broadcast.outgoingPort = outgoingPort;
@@ -254,8 +261,7 @@ public class Broadcast {
 
 	/**
 	 * 
-	 * @return
-	 * 			the size of the buffer used to read data from the UDP packet
+	 * @return the size of the buffer used to read data from the UDP packet
 	 */
 	public static int getBuffersize() {
 		return buffersize;
@@ -264,11 +270,10 @@ public class Broadcast {
 	/**
 	 * 
 	 * @param buffersize
-	 * 			the size of the buffer used to read data from the UDP packet
+	 *            the size of the buffer used to read data from the UDP packet
 	 */
 	public static void setBuffersize(int buffersize) {
 		Broadcast.buffersize = buffersize;
 	}
-	
-	
+
 }
