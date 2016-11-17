@@ -16,7 +16,7 @@ import studyproject.logging.APILvl;
 public class ErrLog {
 
 	/**
-	 * Creates a {@link Error} logs it to the global logger and returns the
+	 * Creates an {@link Error} logs it to the global logger and returns the
 	 * Object, will format the error message to '{@link LogKey}: {@link APILvl}
 	 * : Thrown By 'functionName': ErrorMessage'
 	 * 
@@ -39,7 +39,53 @@ public class ErrLog {
 	}
 
 	/**
-	 * Creates a {@link Error} and returns the Object, will format the error
+	 * Creates an {@link Error} logs it to the global logger and returns the
+	 * Object, will format the error message to '{@link LogKey}: {@link APILvl}
+	 * : Thrown By 'functionName': ErrorMessage'
+	 * 
+	 * @param level
+	 *            the LogLevel
+	 * @param logKey
+	 *            the LogKey
+	 * @param apiLvl
+	 *            the ApiLvl where the error was thrown
+	 * @param customMsg
+	 *            the custom message to display
+	 * @param functionName
+	 *            the function which have thrown the Error
+	 * @return the Error Object with filled information
+	 */
+	public static Error log(Level level, LogKey logKey, APILvl apiLvl, String functionName, String customMsg) {
+		Error error = getError(level, logKey, apiLvl, customMsg, functionName);
+		Logger.getGlobal().log(error);
+		return error;
+	}
+
+	/**
+	 * Creates an {@link Error} and returns the Object, will format the error
+	 * message to '{@link LogKey}: {@link APILvl} : Thrown By 'functionName':
+	 * ErrorMessage'
+	 * 
+	 * @param level
+	 *            the LogLevel
+	 * @param logKey
+	 *            the LogKey
+	 * @param apiLvl
+	 *            the ApiLvl where the error was thrown
+	 * @param customMsg
+	 *            the custom message to display
+	 * @param functionName
+	 *            the function which have thrown the Error
+	 * 
+	 * @return the Error Object with filled information
+	 */
+	public static Error getError(Level level, LogKey logKey, APILvl apiLvl, String customMsg, String functionName) {
+		return new Error(level, logKey, apiLvl, functionName,
+				getErrorMsgPrefix(logKey, apiLvl, functionName) + ": " + customMsg, customMsg);
+	}
+
+	/**
+	 * Creates an {@link Error} and returns the Object, will format the error
 	 * message to '{@link LogKey}: {@link APILvl} : Thrown By 'functionName':
 	 * ErrorMessage'
 	 * 
@@ -100,7 +146,7 @@ public class ErrLog {
 	/**
 	 * 
 	 * @param logKey
-	 *            the certein {@link LogKey}
+	 *            the certain {@link LogKey}
 	 * @param apiLvl
 	 *            the {@link APILvl} where the error was produced
 	 * @param functionName
