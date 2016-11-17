@@ -1,11 +1,14 @@
 package studyproject.API.Lvl.Mid;
 
+import java.io.IOException;
 import java.net.Socket;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.security.NoSuchAlgorithmException;
 import java.util.Vector;
 
 import studyproject.API.Core.File.FileInfo;
+import studyproject.API.Core.File.Watcher.FileWatcherController;
 import studyproject.API.Loadbalancer.Loadbalancer;
 import studyproject.API.Lvl.Low.Broadcast;
 import studyproject.API.Lvl.Mid.Core.ConnectionInfo;
@@ -44,6 +47,7 @@ public class LODDS {
 	private int ipPort;
 	private int timeInterval;
 	private int parallelDownloads;
+	private FileWatcherController watchService;
 
 	/**
 	 * Initiates all lists and maps, retrieves the local and broadcast IP from
@@ -64,6 +68,7 @@ public class LODDS {
 		advertisePort = DEFAULT_ADVERTISE_PORT;
 		timeInterval = DEFAULT_TIME_INTERVAL;
 		parallelDownloads = DEFAULT_PARALLEL_DOWNLOADS;
+		watchService = new FileWatcherController();
 		this.interfaceName = interfaceName;
 		setNetworkAddresses();
 		this.userName = userName;
@@ -304,7 +309,15 @@ public class LODDS {
 		if (Files.exists(Paths.get(path)) && Files.isDirectory(Paths.get(path))
 				&& !sharedFolders.contains(path)) {
 			sharedFolders.add(path);
-			// TODO tell the fileWatcher to start tracking this dir
+			try {
+				watchService.watchDirectoryRecursively(path);
+			} catch (NoSuchAlgorithmException e) {
+				// TODO Error Handling
+				e.printStackTrace();
+			} catch (IOException e) {
+				e.printStackTrace();
+				return 4;
+			}
 		}
 		return 4;
 	}
@@ -322,7 +335,7 @@ public class LODDS {
 		if (sharedFolders.contains(path)) {
 			sharedFolders.remove(path);
 			setLastChange(System.currentTimeMillis() / 1000);
-			// TODO tell fileWatcher to stop tracking this dir
+			watchService.unwatchDirectory(path);
 			return 0;
 		}
 		return 4;
