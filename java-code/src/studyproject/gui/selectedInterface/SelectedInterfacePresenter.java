@@ -11,9 +11,10 @@ import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Button;
-import javafx.scene.control.CheckBox;
 import javafx.scene.control.ListView;
 import studyproject.API.Lvl.Low.Broadcast;
+import studyproject.API.Lvl.Mid.LODDS;
+import studyproject.gui.mainWindow.MainWindowModel;
 
 public class SelectedInterfacePresenter implements Initializable {
 
@@ -22,12 +23,13 @@ public class SelectedInterfacePresenter implements Initializable {
 	@FXML
 	Button cancelBut;
 	@FXML
-	CheckBox defaultCB;
-	@FXML
 	ListView<String> interfaceList;
 
 	@Inject
 	SelectedInterfaceModel selectedInterfaceModel;
+
+	@Inject
+	MainWindowModel mainWindowModel;
 
 	private ArrayList<String> interfaces;
 	private ObservableList<String> interfacesObs;
@@ -36,7 +38,7 @@ public class SelectedInterfacePresenter implements Initializable {
 	public void initialize(URL location, ResourceBundle resources) {
 		interfaces = new ArrayList<>();
 		interfacesObs = FXCollections.observableArrayList();
-		setOkButAct();
+		okBut.setOnAction(e -> okButClicked());
 		cancelBut.setOnAction(e -> interfaceList.getScene().getWindow().hide());
 
 		Broadcast.getNetworkAddresses(interfaces);
@@ -44,19 +46,18 @@ public class SelectedInterfacePresenter implements Initializable {
 
 		interfaceList.setItems(interfacesObs);
 
-		// TODO add default functionality
 	}
 
-	private void setOkButAct() {
-		okBut.setOnAction(e -> {
-			String selectedInterface = interfaceList.getSelectionModel().getSelectedItem();
-			if (selectedInterface == null || selectedInterface.isEmpty())
-				return;
-			Broadcast.getLocalIp(selectedInterface, selectedInterfaceModel.getNetworkAddress());
-			Broadcast.getBroadcastAddress(selectedInterface, selectedInterfaceModel.getBroadcastAddress());
-			
-			interfaceList.getScene().getWindow().hide();
-		});
+	private void okButClicked() {
+		String selectedInterface = interfaceList.getSelectionModel().getSelectedItem();
+		if (selectedInterface == null || selectedInterface.isEmpty())
+			return;
+		Broadcast.getLocalIp(selectedInterface, selectedInterfaceModel.getNetworkAddress());
+		Broadcast.getBroadcastAddress(selectedInterface, selectedInterfaceModel.getBroadcastAddress());
+		LODDS lodds = new LODDS(selectedInterface, "Nintinugga");
+		mainWindowModel.setLodds(lodds);
+		mainWindowModel.getLodds().startAdvertising();
+		interfaceList.getScene().getWindow().hide();
 	}
 
 }
