@@ -13,6 +13,7 @@ import studyproject.API.Loadbalancer.Loadbalancer;
 import studyproject.API.Lvl.Low.Broadcast;
 import studyproject.API.Lvl.Mid.Core.ConnectionInfo;
 import studyproject.API.Lvl.Mid.Core.UserInfo;
+import studyproject.API.Lvl.Mid.ThreadMonitoring.ThreadExecutor;
 
 /**
  * Main class of the Mid-level API implementation of the LODDS protocol Default
@@ -48,6 +49,7 @@ public class LODDS {
 	private int timeInterval;
 	private int parallelDownloads;
 	private FileWatcherController watchService;
+	private ThreadExecutor threadExecutor;
 
 	/**
 	 * Initiates all lists and maps, retrieves the local and broadcast IP from
@@ -70,6 +72,7 @@ public class LODDS {
 		parallelDownloads = DEFAULT_PARALLEL_DOWNLOADS;
 		watchService = new FileWatcherController();
 		this.interfaceName = interfaceName;
+		threadExecutor = new ThreadExecutor();
 		setNetworkAddresses();
 		this.userName = userName;
 		load = 0;
@@ -87,7 +90,7 @@ public class LODDS {
 			setNetworkAddresses();
 		}
 		broadcastSender = new BroadcastSenderThread(this);
-		broadcastSender.start();
+		threadExecutor.execute(broadcastSender);
 	}
 
 	/**
@@ -104,7 +107,7 @@ public class LODDS {
 	 */
 	public void startListening() {
 		broadcastListener = new BroadcastListenerThread(this);
-		broadcastListener.start();
+		threadExecutor.execute(broadcastListener);
 	}
 
 	/**
@@ -125,9 +128,8 @@ public class LODDS {
 	 *            the FileInfo which specifies the file which shall be sent
 	 */
 	public void sendFile(Socket socket, FileInfo fileInfo) {
-		FileSenderThread fileSenderThread = new FileSenderThread(socket,
-				fileInfo);
-		fileSenderThread.start();
+		FileSenderThread fileSenderThread = new FileSenderThread(socket, fileInfo);
+		threadExecutor.execute(fileSenderThread);
 	}
 
 	/**
@@ -143,11 +145,9 @@ public class LODDS {
 	 * @param endIndex
 	 *            the index(number of byte) where the transaction shall end
 	 */
-	public void sendFile(Socket socket, FileInfo fileInfo, long startIndex,
-			long endIndex) {
-		FileSenderThread fileSenderThread = new FileSenderThread(socket,
-				fileInfo, startIndex, endIndex);
-		fileSenderThread.start();
+	public void sendFile(Socket socket, FileInfo fileInfo, long startIndex, long endIndex) {
+		FileSenderThread fileSenderThread = new FileSenderThread(socket, fileInfo, startIndex, endIndex);
+		threadExecutor.execute(fileSenderThread);
 	}
 
 	/**
@@ -169,12 +169,10 @@ public class LODDS {
 	 * @param endIndex
 	 *            the index at which to stop the file transfer
 	 */
-	public void getFile(String user, String checksum, String localPath,
-			long startIndex, long endIndex) {
-		FileConnectionThread fileConnectionThread = new FileConnectionThread(
-				getUserConnectionInfo(user), checksum, getFileSize(checksum),
-				localPath, startIndex, endIndex);
-		fileConnectionThread.start();
+	public void getFile(String user, String checksum, String localPath, long startIndex, long endIndex) {
+		FileConnectionThread fileConnectionThread = new FileConnectionThread(getUserConnectionInfo(user), checksum,
+				getFileSize(checksum), localPath, startIndex, endIndex);
+		threadExecutor.execute(fileConnectionThread);
 	}
 
 	/**
@@ -197,10 +195,9 @@ public class LODDS {
 	 *            the index at which to stop the file transfer
 	 */
 	public void getFile(String user, String checksum, String localPath) {
-		FileConnectionThread fileConnectionThread = new FileConnectionThread(
-				getUserConnectionInfo(user), checksum, getFileSize(checksum),
-				localPath);
-		fileConnectionThread.start();
+		FileConnectionThread fileConnectionThread = new FileConnectionThread(getUserConnectionInfo(user), checksum,
+				getFileSize(checksum), localPath);
+		threadExecutor.execute(fileConnectionThread);
 	}
 
 	/**
@@ -216,20 +213,16 @@ public class LODDS {
 	 */
 	public void getFileWithLoadBal(String checksum, String localPath) {
 		Vector<UserInfo> owningUsers = getOwningUsers(checksum);
-		if (owningUsers != null && owningUsers.size() == 0
-				|| owningUsers == null) {
+		if (owningUsers != null && owningUsers.size() == 0 || owningUsers == null) {
 			// TODO error handling
 		} else {
 			if (owningUsers.size() == 1) {
 				getFile(owningUsers.get(0).getUserName(), checksum, localPath);
 			} else {
 				if (getFileSize(checksum) < loadBalancingMinumum) {
-					getFile(loadbalancer
-							.getClientMinLoad(owningUsers, checksum),
-							checksum, localPath);
+					getFile(loadbalancer.getClientMinLoad(owningUsers, checksum), checksum, localPath);
 				} else {
-					loadbalancer.splitLoad(getOwningUsers(checksum), checksum,
-							localPath, getFileSize(checksum));
+					loadbalancer.splitLoad(getOwningUsers(checksum), checksum, localPath, getFileSize(checksum));
 				}
 			}
 		}
@@ -242,9 +235,8 @@ public class LODDS {
 	 *            the user of which to update the list of shared files
 	 */
 	public void updateFileInfo(String user) {
-		UpdateFileInfoThread updateFileInfoThread = new UpdateFileInfoThread(
-				getUserConnectionInfo(user));
-		updateFileInfoThread.start();
+		UpdateFileInfoThread updateFileInfoThread = new UpdateFileInfoThread(getUserConnectionInfo(user));
+		threadExecutor.execute(updateFileInfoThread);
 	}
 
 	/**
@@ -256,19 +248,16 @@ public class LODDS {
 	 * @param checksum
 	 */
 	public void sendFileWP(String user, long timeout, FileInfo fileInfo) {
-		SendFileWPThread sendFileWPThread = new SendFileWPThread(
-				getUserConnectionInfo(user), timeout, fileInfo);
-		sendFileWPThread.start();
+		SendFileWPThread sendFileWPThread = new SendFileWPThread(getUserConnectionInfo(user), timeout, fileInfo);
+		threadExecutor.execute(sendFileWPThread);
 	}
 
 	/**
 	 * Gets a file if a SendPermission was received
 	 */
-	public void getFileWP(Socket socket, String pathToSaveTo, String fileName,
-			long fileSize) {
-		GetFileWPThread getFileWPThread = new GetFileWPThread(socket,
-				pathToSaveTo, fileName, fileSize);
-		getFileWPThread.start();
+	public void getFileWP(Socket socket, String pathToSaveTo, String fileName, long fileSize) {
+		GetFileWPThread getFileWPThread = new GetFileWPThread(socket, pathToSaveTo, fileName, fileSize);
+		threadExecutor.execute(getFileWPThread);
 	}
 
 	// /**
@@ -306,8 +295,7 @@ public class LODDS {
 	 * @return 0 or error codes
 	 */
 	public int shareFolder(String path) {
-		if (Files.exists(Paths.get(path)) && Files.isDirectory(Paths.get(path))
-				&& !sharedFolders.contains(path)) {
+		if (Files.exists(Paths.get(path)) && Files.isDirectory(Paths.get(path)) && !sharedFolders.contains(path)) {
 			sharedFolders.add(path);
 			try {
 				watchService.watchDirectoryRecursively(path);
@@ -538,12 +526,9 @@ public class LODDS {
 	 */
 	public long getFileSize(String checksum) {
 		for (UserInfo userInfo : clientList) {
-			if (userInfo.getChecksumToPath() != null
-					&& userInfo.getChecksumToPath().containsKey(checksum)) {
-				return userInfo
-						.getPathToFileInfo()
-						.get(userInfo.getChecksumToPath().get(checksum)
-								.firstElement()).getFilesize();
+			if (userInfo.getChecksumToPath() != null && userInfo.getChecksumToPath().containsKey(checksum)) {
+				return userInfo.getPathToFileInfo().get(userInfo.getChecksumToPath().get(checksum).firstElement())
+						.getFilesize();
 			}
 		}
 		return 0;
@@ -559,8 +544,7 @@ public class LODDS {
 	public Vector<UserInfo> getOwningUsers(String checksum) {
 		Vector<UserInfo> owningUsers = new Vector<UserInfo>();
 		for (UserInfo userInfo : clientList) {
-			if (userInfo.getChecksumToPath() != null
-					&& userInfo.getChecksumToPath().containsKey(checksum)) {
+			if (userInfo.getChecksumToPath() != null && userInfo.getChecksumToPath().containsKey(checksum)) {
 				owningUsers.add(userInfo);
 			}
 		}
