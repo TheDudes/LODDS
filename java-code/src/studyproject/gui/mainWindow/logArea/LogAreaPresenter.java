@@ -128,7 +128,12 @@ public class LogAreaPresenter implements Initializable {
 			c.next();
 			final int size = view.getItems().size();
 			if (size > 0) {
-				view.scrollTo(size - 1);
+				Platform.runLater(new Runnable() {
+					@Override
+					public void run() {
+						view.scrollTo(size - 1);
+					}
+				});
 			}
 		}));
 	}
