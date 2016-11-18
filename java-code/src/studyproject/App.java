@@ -56,18 +56,18 @@ public class App extends Application{
 	
 	@Override
 	public void start(Stage mainStage) throws Exception {
-		mainStage.setTitle("Local Open Distributed Data Sharing");
-		mainView = new MainWindowView();
-		Scene mainScene = new Scene(mainView.getView());
-		mainStage.setScene(mainScene);
-		mainStage.show();
-		
 		selectedInterfaceView = new SelectedInterfaceView();
 		Stage interfaceStage = new Stage();
 		interfaceStage.setTitle("Startup...");
 		interfaceStage.setScene(new Scene(selectedInterfaceView.getView()));
 		interfaceStage.initModality(Modality.APPLICATION_MODAL);
 		interfaceStage.showAndWait();
+		
+		mainStage.setTitle("Local Open Distributed Data Sharing");
+		mainView = new MainWindowView();
+		Scene mainScene = new Scene(mainView.getView());
+		mainStage.setScene(mainScene);
+		mainStage.show();
 	}
 	
 
