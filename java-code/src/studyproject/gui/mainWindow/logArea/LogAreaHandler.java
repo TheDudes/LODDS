@@ -4,6 +4,7 @@ import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
 
+import javafx.application.Platform;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.scene.control.TableView;
 import studyproject.API.Errors.Error;
@@ -66,22 +67,32 @@ public class LogAreaHandler extends Handler {
 			return;
 		if (!isLoggable(record))
 			return;
-		if (shouldBeLogged((Error) record))
-			toLogTo.getItems().add((Error) record);
+		if (shouldBeLogged((Error) record)) {
+			Platform.runLater(new Runnable() {
+
+				@Override
+				public void run() {
+					toLogTo.getItems().add((Error) record);
+
+				}
+			});
+
+		}
 	}
 
 	/**
 	 * Inspects the passed {@link Error}(the LogRecord), returns True if the log
 	 * record is either Level.Info or Severe, and the corresponding check box is
-	 * set to true. Furthermore checks if the {@link Error} got {@link LogKey} broadcast,
-	 * getRec, getSent and the corresponding checkboxes are set. All Errors
-	 * which got other {@link LogKey} are logged to the table view at the moment.
+	 * set to true. Furthermore checks if the {@link Error} got {@link LogKey}
+	 * broadcast, getRec, getSent and the corresponding checkboxes are set. All
+	 * Errors which got other {@link LogKey} are logged to the table view at the
+	 * moment.
 	 * 
 	 * @param record
 	 *            The LogRecord received by the publish function which is
 	 *            instanceof {@link Error}
-	 * @return true if the {@link Error} should be logged to the TableView
-	 *         false if not
+	 * @return true if the {@link Error} should be logged to the TableView false
+	 *         if not
 	 */
 	private boolean shouldBeLogged(Error record) {
 		Level recordLevel = record.getLevel();
