@@ -2,13 +2,16 @@ package studyproject.gui.selectedInterface;
 
 import javax.annotation.PostConstruct;
 
+import javafx.collections.ObservableList;
+
 public class SelectedInterfaceModel {
-	String selectedInterfaceName;
-	StringBuilder networkAddress;
-	StringBuilder broadcastAddress;
-	int bufferSize;
-	int broadcastPort;
-	int outgoingPort;
+	private String selectedInterfaceName;
+	private StringBuilder networkAddress;
+	private StringBuilder broadcastAddress;
+	private int bufferSize;
+	private int broadcastPort;
+	private int outgoingPort;
+	private ObservableList<String> availableInterfaces; 
 
 	@PostConstruct
 	public void init() {
@@ -20,6 +23,20 @@ public class SelectedInterfaceModel {
 		outgoingPort = 0;
 	}
 	
+	
+	
+	public ObservableList<String> getAvailableInterfaces() {
+		return availableInterfaces;
+	}
+
+
+
+	public void setAvailableInterfaces(ObservableList<String> availableInterfaces) {
+		this.availableInterfaces = availableInterfaces;
+	}
+
+
+
 	public StringBuilder getBroadcastAddress() {
 		return broadcastAddress;
 	}

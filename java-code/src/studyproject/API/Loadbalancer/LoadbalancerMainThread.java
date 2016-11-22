@@ -2,12 +2,14 @@ package studyproject.API.Loadbalancer;
 
 import java.util.Collections;
 import java.util.Vector;
+import java.util.concurrent.Executor;
 
 import studyproject.API.Lvl.Mid.FileConnectionThread;
 import studyproject.API.Lvl.Mid.Core.UserInfo;
 
 /**
  * The workhorse of the Loadbalancing module,
+ * 
  * @author Michael
  *
  */
@@ -29,6 +31,7 @@ public class LoadbalancerMainThread extends Thread {
 	private long transmittedData;
 	private int chunknumber;
 	private int parallelDownloads;
+	private Executor executor;
 
 	/**
 	 * 
@@ -44,22 +47,22 @@ public class LoadbalancerMainThread extends Thread {
 	 * @param parallelDownloads
 	 *            the number of maximum concurrent connections to other clients
 	 *            for the download of this file
+	 * @param executor
+	 *            the Executor to execute all threads
 	 */
-	public LoadbalancerMainThread(Vector<UserInfo> owningUsers, String checksum,
-			String localPath, long fileSize, long chunksize,
-			int parallelDownloads) {
+	public LoadbalancerMainThread(Vector<UserInfo> owningUsers, String checksum, String localPath, long fileSize,
+			long chunksize, int parallelDownloads, Executor executor) {
 		this.chunksize = chunksize;
 		this.checksum = checksum;
 		this.localPath = localPath;
 		this.parallelDownloads = parallelDownloads;
 		this.chunkThreads = new Vector<ProgressInfo>(parallelDownloads);
-		fileName = this.localPath.substring(
-				this.localPath.lastIndexOf("/") + 1, this.localPath.length());
+		fileName = this.localPath.substring(this.localPath.lastIndexOf("/") + 1, this.localPath.length());
 		this.owningUsers = owningUsers;
 		loadComparator = new LoadComparator();
-		fileAssembler = new FileAssembler(tmpDirectory + fileName, localPath,
-				(int) (fileSize / chunksize) + 1, chunkThreads);
-		fileAssembler.start();
+		fileAssembler = new FileAssembler(tmpDirectory + fileName, localPath, (int) (fileSize / chunksize) + 1,
+				chunkThreads);
+		executor.execute(fileAssembler);
 	}
 
 	@Override
@@ -69,8 +72,7 @@ public class LoadbalancerMainThread extends Thread {
 		chunknumber = 0;
 		lastStartIndex = 0;
 		while (transmittedData < fileSize) {
-			if (chunkThreads.size() < parallelDownloads
-					|| lastStartIndex == fileSize) {
+			if (chunkThreads.size() < parallelDownloads || lastStartIndex == fileSize) {
 				if (lastStartIndex + chunksize > fileSize) {
 					dataToSend = fileSize - lastStartIndex;
 				} else {
@@ -104,13 +106,11 @@ public class LoadbalancerMainThread extends Thread {
 	 */
 	private void startThread(long startIndex, long dataToSend, int chunknumber) {
 		Collections.sort(owningUsers, loadComparator);
-		FileConnectionThread fileConnectionThread = new FileConnectionThread(
-				owningUsers.get(0), checksum, fileSize, tmpDirectory + fileName
-						+ chunknumber, startIndex, startIndex + dataToSend);
-		fileConnectionThread.start();
-		chunkThreads.add(new ProgressInfo(startIndex, startIndex + dataToSend,
-				chunknumber, tmpDirectory + fileName + chunknumber,
-				fileConnectionThread));
+		FileConnectionThread fileConnectionThread = new FileConnectionThread(owningUsers.get(0), checksum, fileSize,
+				tmpDirectory + fileName + chunknumber, startIndex, startIndex + dataToSend);
+		executor.execute(fileConnectionThread);
+		chunkThreads.add(new ProgressInfo(startIndex, startIndex + dataToSend, chunknumber,
+				tmpDirectory + fileName + chunknumber, fileConnectionThread));
 	}
 
 	/**
@@ -125,10 +125,7 @@ public class LoadbalancerMainThread extends Thread {
 				handleFinishedThread(progressInfo);
 			} else if (progressInfo.getFileConnectionThread() == null
 					|| !progressInfo.getFileConnectionThread().isAlive()) {
-				startThread(
-						progressInfo.getStartBlock(),
-						progressInfo.getEndBlock()
-								- progressInfo.getStartBlock(),
+				startThread(progressInfo.getStartBlock(), progressInfo.getEndBlock() - progressInfo.getStartBlock(),
 						progressInfo.getChunknumber());
 				chunkThreads.remove(progressInfo);
 			}
@@ -146,8 +143,7 @@ public class LoadbalancerMainThread extends Thread {
 	private void handleFinishedThread(ProgressInfo progressInfo) {
 		fileAssembler.setChunkReady(progressInfo.getChunknumber(),
 				progressInfo.getEndBlock() - progressInfo.getStartBlock());
-		transmittedData += (progressInfo.getEndBlock() - progressInfo
-				.getStartBlock());
+		transmittedData += (progressInfo.getEndBlock() - progressInfo.getStartBlock());
 	}
 
 }

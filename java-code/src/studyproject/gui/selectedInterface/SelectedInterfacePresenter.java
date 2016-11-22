@@ -13,7 +13,6 @@ import javafx.fxml.Initializable;
 import javafx.scene.control.Button;
 import javafx.scene.control.ListView;
 import studyproject.API.Lvl.Low.Broadcast;
-import studyproject.API.Lvl.Mid.LODDS;
 import studyproject.gui.mainWindow.MainWindowModel;
 
 public class SelectedInterfacePresenter implements Initializable {
@@ -31,6 +30,8 @@ public class SelectedInterfacePresenter implements Initializable {
 	@Inject
 	MainWindowModel mainWindowModel;
 
+	
+	
 	private ArrayList<String> interfaces;
 	private ObservableList<String> interfacesObs;
 
@@ -43,7 +44,7 @@ public class SelectedInterfacePresenter implements Initializable {
 
 		Broadcast.getNetworkAddresses(interfaces);
 		interfacesObs.addAll(interfaces);
-
+		selectedInterfaceModel.setAvailableInterfaces(interfacesObs);
 		interfaceList.setItems(interfacesObs);
 
 	}
@@ -52,11 +53,8 @@ public class SelectedInterfacePresenter implements Initializable {
 		String selectedInterface = interfaceList.getSelectionModel().getSelectedItem();
 		if (selectedInterface == null || selectedInterface.isEmpty())
 			return;
-		Broadcast.getLocalIp(selectedInterface, selectedInterfaceModel.getNetworkAddress());
-		Broadcast.getBroadcastAddress(selectedInterface, selectedInterfaceModel.getBroadcastAddress());
-		LODDS lodds = new LODDS(selectedInterface, "Nintinugga");
-		mainWindowModel.setLodds(lodds);
-		mainWindowModel.getLodds().startAdvertising();
+		mainWindowModel.getLodds().setInterface(selectedInterface);
+		mainWindowModel.getLodds().setUserName("ninti-lappi");
 		interfaceList.getScene().getWindow().hide();
 	}
 

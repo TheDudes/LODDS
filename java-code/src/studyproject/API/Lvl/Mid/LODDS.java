@@ -52,6 +52,28 @@ public class LODDS {
 	private ThreadExecutor threadExecutor;
 
 	/**
+	 * Initiates all lists and maps, sets the IP and advertise ports to the
+	 * default (9002) Also sets the interval between broadcasts to 1000
+	 * <p>
+	 * <b>Call lodds.startUp() after you used this constructor and set the user
+	 * name and interface name</b>
+	 */
+	public LODDS() {
+		clientList = new Vector<UserInfo>();
+		sharedFolders = new Vector<String>();
+		ipPort = DEFAULT_IP_PORT;
+		advertisePort = DEFAULT_ADVERTISE_PORT;
+		timeInterval = DEFAULT_TIME_INTERVAL;
+		parallelDownloads = DEFAULT_PARALLEL_DOWNLOADS;
+		watchService = new FileWatcherController();
+		this.interfaceName = "no interface selected";
+		threadExecutor = new ThreadExecutor();
+		this.userName = "UserNameNotSet!";
+		load = 0;
+		loadbalancer = new Loadbalancer(loadBalancingMinumum, parallelDownloads, threadExecutor);
+	}
+
+	/**
 	 * Initiates all lists and maps, retrieves the local and broadcast IP from
 	 * the interface name and sets the IP and advertise ports to the default
 	 * (9002) Also sets the interval between broadcasts to 1000
@@ -76,8 +98,7 @@ public class LODDS {
 		setNetworkAddresses();
 		this.userName = userName;
 		load = 0;
-
-		loadbalancer = new Loadbalancer(loadBalancingMinumum, parallelDownloads);
+		loadbalancer = new Loadbalancer(loadBalancingMinumum, parallelDownloads, threadExecutor);
 	}
 
 	/**
@@ -578,6 +599,12 @@ public class LODDS {
 		StringBuilder networkAddr = new StringBuilder();
 		Broadcast.getLocalIp(interfaceName, networkAddr);
 		networkAddress = networkAddr.toString();
+	}
+
+	public void startUp() {
+		setNetworkAddresses();
+		startAdvertising();
+		startListening();
 	}
 
 }

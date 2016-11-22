@@ -1,6 +1,7 @@
 package studyproject.API.Loadbalancer;
 
 import java.util.Vector;
+import java.util.concurrent.Executor;
 
 import studyproject.API.Lvl.Mid.Core.UserInfo;
 
@@ -13,6 +14,7 @@ public class Loadbalancer {
 
 	private long loadBalancingMinumum;
 	private int parallelDownloads;
+	private Executor executor;
 
 	/**
 	 * 
@@ -21,10 +23,13 @@ public class Loadbalancer {
 	 * @param parallelDownloads
 	 *            the maximum number of concurrent downloads used to pull this
 	 *            file
+	 * @param executor
+	 *            the thread executor to execute all threads
 	 */
-	public Loadbalancer(long loadBalancingMinumum, int parallelDownloads) {
+	public Loadbalancer(long loadBalancingMinumum, int parallelDownloads, Executor executor) {
 		this.loadBalancingMinumum = loadBalancingMinumum;
 		this.parallelDownloads = parallelDownloads;
+		this.executor = executor;
 	}
 
 	/**
@@ -39,12 +44,10 @@ public class Loadbalancer {
 	 * @param fileSize
 	 *            the total size of the file
 	 */
-	public synchronized void splitLoad(Vector<UserInfo> owningUsers,
-			String checksum, String localPath, long fileSize) {
-		LoadbalancerMainThread loadbalancerMainThread = new LoadbalancerMainThread(
-				owningUsers, checksum, localPath, fileSize,
-				loadBalancingMinumum, parallelDownloads);
-		loadbalancerMainThread.start();
+	public synchronized void splitLoad(Vector<UserInfo> owningUsers, String checksum, String localPath, long fileSize) {
+		LoadbalancerMainThread loadbalancerMainThread = new LoadbalancerMainThread(owningUsers, checksum, localPath,
+				fileSize, loadBalancingMinumum, parallelDownloads, executor);
+		executor.execute(loadbalancerMainThread);
 	}
 
 	/**
@@ -52,8 +55,7 @@ public class Loadbalancer {
 	 * @return the client that has the specified file and has the lowest amount
 	 *         of load or the first client in the list that has no load
 	 */
-	public synchronized String getClientMinLoad(Vector<UserInfo> owningUsers,
-			String checksum) {
+	public synchronized String getClientMinLoad(Vector<UserInfo> owningUsers, String checksum) {
 		long minLoad = Long.MAX_VALUE;
 		String clientWithLowestLoad = "";
 		for (UserInfo userInfo : owningUsers) {
