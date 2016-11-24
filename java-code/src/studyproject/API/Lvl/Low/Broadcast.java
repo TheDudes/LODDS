@@ -31,7 +31,7 @@ public class Broadcast {
 	private static final int DEFAULT_PORT = 9002;
 	private static final int DEFAULT_PORT_SENDING = 9003;
 	private static final int DEFAULT_BUFFERSIZE = 2048;
-	private static final String ADVERTISE_BROADCAST_REGEX = "(\\d{1,3}\\.){3}\\d{1,3} \\d{1,5} \\d{1,19} \\d{1,19} \\S*";
+	private static final String ADVERTISE_BROADCAST_REGEX = "\\S*@(\\d{1,3}\\.){3}\\d{1,3}:\\d{1,5} \\d{1,19} \\d{1,19}";//"(\\d{1,3}\\.){3}\\d{1,3} \\d{1,5} \\d{1,19} \\d{1,19} \\S*";
 	private static final String IP_REGEX = "(\\d{1,3}\\.){3}\\d{1,3}";
 
 	private static int broadcastPort = DEFAULT_PORT;
@@ -160,7 +160,7 @@ public class Broadcast {
 		DatagramPacket packet;
 		try (DatagramSocket socket = new DatagramSocket(outgoingPort, InetAddress.getByName(networkAddress))) {
 			socket.setBroadcast(true);
-			byte[] packetContents = (networkAddress + " " + ipPort + " " + timestamp + " " + load + " " + name + "\n")
+			byte[] packetContents = (name + "@" + networkAddress + ":" + ipPort + " " + timestamp + " " + load + "\n")
 					.getBytes();
 			ErrLog.log(Level.INFO, LogKey.broadcastSent, APILvl.low, "sendAdvertise",
 					networkAddress + " " + ipPort + " " + timestamp + " " + load + " " + name);
@@ -202,20 +202,12 @@ public class Broadcast {
 			if (!Pattern.matches(ADVERTISE_BROADCAST_REGEX, packetContents)) {
 				return 2;
 			}
-			String[] packetParts = packetContents.split(" ");
-			broadcastInfo.networkAddress = packetParts[0];
-			broadcastInfo.ipPort = Integer.parseInt(packetParts[1]);
-			broadcastInfo.timestamp = Long.parseLong(packetParts[2]);
-			broadcastInfo.load = Long.parseLong(packetParts[3]);
-			String clientName = "";
-			clientName += packetParts[4];
-			for (int packetIndex = 5; packetIndex < packetParts.length; packetIndex++) {
-				clientName += " " + packetParts[packetIndex];
-			}
-			if (clientName.charAt(clientName.length() - 1) == '\n') {
-				clientName = clientName.substring(0, clientName.length() - 2);
-			}
-			broadcastInfo.name = clientName;
+			String[] packetParts = packetContents.split(" |@|:");
+			broadcastInfo.name = packetParts[0];
+			broadcastInfo.networkAddress = packetParts[1];
+			broadcastInfo.ipPort = Integer.parseInt(packetParts[2]);
+			broadcastInfo.timestamp = Long.parseLong(packetParts[3]);
+			broadcastInfo.load = Long.parseLong(packetParts[4]);
 			ErrLog.log(Level.INFO, LogKey.broadcastReceived, APILvl.low, "readAdvertise", broadcastInfo.toString());
 		} catch (IOException e) {
 			return 1;
