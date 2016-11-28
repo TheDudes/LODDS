@@ -2,14 +2,20 @@ package studyproject.API.Lvl.Mid;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.util.ArrayList;
 import java.util.Vector;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.logging.Level;
 
+import javafx.collections.ObservableList;
 import studyproject.API.Core.BroadcastInfo;
+import studyproject.API.Errors.ErrLog;
 import studyproject.API.Lvl.Low.Broadcast;
 import studyproject.API.Lvl.Mid.Core.FileCoreInfo;
 import studyproject.API.Lvl.Mid.Core.UserInfo;
 import studyproject.API.Lvl.Mid.Lodds.Lodds;
+import studyproject.logging.APILvl;
+import studyproject.logging.LogKey;
 
 public class BroadcastListenerThread extends Thread {
 
@@ -47,9 +53,6 @@ public class BroadcastListenerThread extends Thread {
 				}
 				for (UserInfo user : loddsObject.getLoddsModel().getClientList()) {
 					if (user.getIpAddress().equals(inetAddress)) {
-						System.out
-								.println("BroadcastListenerThread: Already in Userlist: "
-										+ brInfo.toString());
 						user.setPort(brInfo.ipPort);
 						user.setLoad(brInfo.load);
 						user.setUserName(brInfo.name);
@@ -60,19 +63,31 @@ public class BroadcastListenerThread extends Thread {
 					}
 				}
 				if (written == false) {
-					System.out
-							.println("BroadcastListenerThread: Added to Userlist: "
-									+ brInfo.toString());
-					userInfo = new UserInfo(inetAddress, brInfo.ipPort,
-							brInfo.name, brInfo.timestamp, brInfo.load,
+					ErrLog.log(Level.INFO, LogKey.info, APILvl.gui, "BroadcastListenerThread.run()",
+							"BroadcastListenerThread: Added to Userlist: " + brInfo.toString());
+					userInfo = new UserInfo(inetAddress, brInfo.ipPort, brInfo.name, brInfo.timestamp, brInfo.load,
 							new ConcurrentHashMap<String, FileCoreInfo>(),
-							new ConcurrentHashMap<String, Vector<String>>(),
-							brInfo.timestamp);
+							new ConcurrentHashMap<String, Vector<String>>(), brInfo.timestamp);
 					loddsObject.getLoddsModel().getClientList().add(userInfo);
 				}
 			} catch (UnknownHostException e) {
 				e.printStackTrace();
 			}
+
+			// Remove users that did not sent a broadcast in the last 5 seconds.
+			// Save them and delete them from the userList afterwards
+			long currentTime = System.currentTimeMillis() / 1000;
+			ObservableList<UserInfo> userList = loddsObject.getLoddsModel().getClientList();
+			ArrayList<UserInfo> arrayList = new ArrayList<UserInfo>();
+			for (UserInfo user : userList) {
+				if (((user.getLastReceivedBroadcast() + 5) < currentTime) && user.getLastReceivedBroadcast() != 0) {
+					arrayList.add(user);
+				}
+			}
+			for (UserInfo user : arrayList) {
+				userList.remove(user);
+			}
+
 			written = false;
 		}
 	}
