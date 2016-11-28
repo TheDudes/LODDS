@@ -5,10 +5,14 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.Socket;
 import java.nio.file.Paths;
+import java.util.logging.Level;
 
 import studyproject.API.Core.File.FileInfo;
+import studyproject.API.Errors.ErrLog;
 import studyproject.API.Lvl.Low.Responses;
 import studyproject.API.Lvl.Mid.Core.UserInfo;
+import studyproject.logging.APILvl;
+import studyproject.logging.LogKey;
 
 /**
  * This Thread class should be used to send a file partly or whole to the User
@@ -35,8 +39,7 @@ public class FileSenderThread extends Thread {
 	 *            the fileInfo which specifies the file which shall be sent
 	 */
 	public FileSenderThread(Socket socket, FileInfo fileInfo) {
-		this.socket = socket;
-		this.fileInfo = fileInfo;
+		this(socket, fileInfo, 0, 0);
 	}
 
 	/**
@@ -58,7 +61,7 @@ public class FileSenderThread extends Thread {
 		this.fileInfo = fileInfo;
 		this.startIndex = startIndex;
 		this.endIndex = endIndex;
-
+		this.size = fileInfo.size;
 	}
 
 	@Override
@@ -74,11 +77,11 @@ public class FileSenderThread extends Thread {
 				returnValue = Responses.respondFile(outStream, fileInStream, startIndex, endIndex);
 			}
 			if (returnValue != 0) {
-				// TODO error handling
+				ErrLog.log(Level.SEVERE, LogKey.filetransferInit, APILvl.mid, "FileSenderThread.run", "Responses.respondFile returned error key " + returnValue);
 			}
 
 		} catch (IOException e) {
-			// TODO error handling
+			ErrLog.log(Level.SEVERE, LogKey.filetransferInit, APILvl.mid, "FileSenderThread.run", e.getMessage());
 		}
 	}
 }
