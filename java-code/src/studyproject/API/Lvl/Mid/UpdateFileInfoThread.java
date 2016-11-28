@@ -101,7 +101,7 @@ public class UpdateFileInfoThread extends Thread {
 			userInfo.getChecksumToPath().get(fileInfo.checksum).add(fileInfo.fileName);
 		}
 		userInfo.getPathToFileInfo().put(fileInfo.fileName,
-				new FileCoreInfo(fileInfo.checksum, fileInfo.size));
+				new FileCoreInfo(fileInfo.checksum, fileInfo.size, fileInfo.fileName));
 	}
 
 }

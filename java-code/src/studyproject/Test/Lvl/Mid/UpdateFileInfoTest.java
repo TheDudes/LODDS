@@ -27,8 +27,7 @@ public class UpdateFileInfoTest {
 
 	@Test
 	public void testUpdateFileInfoThreadUpdAdd() {
-		String message = "upd 1464269498 1\n" + "add " + testChecksum2
-				+ " 421341231 " + testFile2 + "\n";
+		String message = "upd 1464269498 1\n" + "add " + testChecksum2 + " 421341231 " + testFile2 + "\n";
 
 		try {
 			UpdateFileInfoTestServer testFileInfoTestServer = new UpdateFileInfoTestServer(
@@ -44,8 +43,7 @@ public class UpdateFileInfoTest {
 
 			assertEquals(userInfo.getPathToFileInfo().size(), 2);
 			assertTrue(userInfo.getPathToFileInfo().containsKey(testFile2));
-			assertEquals(userInfo.getPathToFileInfo().get(testFile2)
-					.getChecksum(), testChecksum2);
+			assertEquals(userInfo.getPathToFileInfo().get(testFile2).getChecksum(), testChecksum2);
 		} catch (UnknownHostException e) {
 			e.printStackTrace();
 			fail();
@@ -57,8 +55,7 @@ public class UpdateFileInfoTest {
 
 	@Test
 	public void testUpdateFileInfoThreadUpdDel() {
-		String message = "upd 1464269498 1\n" + "del " + testChecksum1
-				+ " 421341231 " + testFile1 + "\n";
+		String message = "upd 1464269498 1\n" + "del " + testChecksum1 + " 421341231 " + testFile1 + "\n";
 
 		try {
 			UpdateFileInfoTestServer testFileInfoTestServer = new UpdateFileInfoTestServer(
@@ -85,9 +82,8 @@ public class UpdateFileInfoTest {
 
 	@Test
 	public void testUpdateFileInfoThreadUpdDelAdd() {
-		String message = "all 1464269498 2\n" + "del " + testChecksum1
-				+ " 421341231 " + testFile1 + "\n"
-				+ "add " + testChecksum2 + " 2234323 " + testFile2 + "\n";
+		String message = "all 1464269498 2\n" + "del " + testChecksum1 + " 421341231 " + testFile1 + "\n" + "add "
+				+ testChecksum2 + " 2234323 " + testFile2 + "\n";
 
 		try {
 			UpdateFileInfoTestServer testFileInfoTestServer = new UpdateFileInfoTestServer(
@@ -116,9 +112,8 @@ public class UpdateFileInfoTest {
 
 	@Test
 	public void testUpdateFileInfoThreadAll() {
-		String message = "all 1464269498 2\n" + "add " + testChecksum1
-				+ " 421341231 " + testFile1 + "\n"
-				+ "add " + testChecksum2 + " 2234323 " + testFile2 + "\n";
+		String message = "all 1464269498 2\n" + "add " + testChecksum1 + " 421341231 " + testFile1 + "\n" + "add "
+				+ testChecksum2 + " 2234323 " + testFile2 + "\n";
 
 		try {
 			UpdateFileInfoTestServer testFileInfoTestServer = new UpdateFileInfoTestServer(
@@ -150,10 +145,10 @@ public class UpdateFileInfoTest {
 		fileNames.add(testFile1);
 		ConcurrentHashMap<String, FileCoreInfo> pathToFileInfo = new ConcurrentHashMap<String, FileCoreInfo>();
 		ConcurrentHashMap<String, Vector<String>> checksumToPath = new ConcurrentHashMap<String, Vector<String>>();
-		pathToFileInfo.put(testFile1, new FileCoreInfo(testChecksum1, 123123));
+		pathToFileInfo.put(testFile1, new FileCoreInfo(testChecksum1, 123123, testFile1));
 		checksumToPath.put(testChecksum1, fileNames);
-		UserInfo userInfo = new UserInfo(InetAddress.getByName(localhost),
-				port, "testUser", 0L, 0L, pathToFileInfo, checksumToPath, 0L);
+		UserInfo userInfo = new UserInfo(InetAddress.getByName(localhost), port, "testUser", 0L, 0L, pathToFileInfo,
+				checksumToPath, 0L);
 		return userInfo;
 	}
 
