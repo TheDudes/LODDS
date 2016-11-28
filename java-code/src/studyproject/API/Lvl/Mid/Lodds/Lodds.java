@@ -7,7 +7,6 @@ import java.nio.file.Paths;
 import java.security.NoSuchAlgorithmException;
 import java.util.Vector;
 
-import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import studyproject.API.Core.File.FileInfo;
 import studyproject.API.Core.File.Watcher.FileWatcherController;
@@ -44,7 +43,6 @@ public class Lodds {
 	private long lastChange;
 	private Loadbalancer loadbalancer;
 	private Vector<String> sharedFolders;
-	private ObservableList<UserInfo> clientList;
 	private long load;
 	private String interfaceName;
 	private int advertisePort;
@@ -70,8 +68,7 @@ public class Lodds {
 	 */
 	public Lodds() {
 		loddsModel = new LoddsModel();
-		clientList = FXCollections.observableArrayList();
-		loddsModel.setClientList(javafx.collections.FXCollections.synchronizedObservableList(clientList));
+		loddsModel.init();
 		sharedFolders = new Vector<String>();
 		ipPort = DEFAULT_IP_PORT;
 		advertisePort = DEFAULT_ADVERTISE_PORT;
@@ -311,7 +308,7 @@ public class Lodds {
 	 *         user
 	 */
 	public UserInfo getUserConnectionInfo(String user) {
-		for (UserInfo currentUser : clientList) {
+		for (UserInfo currentUser : loddsModel.getClientList()) {
 			if (currentUser.getUserName().equals(user))
 				return currentUser;
 		}
@@ -381,8 +378,6 @@ public class Lodds {
 
 	// TODO implement getFileChanges(long timestamp)
 
-	
-
 	/**
 	 * 
 	 * @param interfaceName
@@ -395,7 +390,7 @@ public class Lodds {
 	}
 
 	public ObservableList<UserInfo> getClientList() {
-		return clientList;
+		return loddsModel.getClientList();
 	}
 
 	/**
@@ -555,7 +550,7 @@ public class Lodds {
 	 * @return the size of the file for which the checksum is given
 	 */
 	public long getFileSize(String checksum) {
-		for (UserInfo userInfo : clientList) {
+		for (UserInfo userInfo : loddsModel.getClientList()) {
 			if (userInfo.getChecksumToPath() != null && userInfo.getChecksumToPath().containsKey(checksum)) {
 				return userInfo.getPathToFileInfo().get(userInfo.getChecksumToPath().get(checksum).firstElement())
 						.getFilesize();
@@ -573,7 +568,7 @@ public class Lodds {
 	 */
 	public Vector<UserInfo> getOwningUsers(String checksum) {
 		Vector<UserInfo> owningUsers = new Vector<UserInfo>();
-		for (UserInfo userInfo : clientList) {
+		for (UserInfo userInfo : loddsModel.getClientList()) {
 			if (userInfo.getChecksumToPath() != null && userInfo.getChecksumToPath().containsKey(checksum)) {
 				owningUsers.add(userInfo);
 			}
