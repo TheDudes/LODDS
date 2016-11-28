@@ -1,2 +1,11 @@
+/bin/
 
-java-code/src/studyproject/API/Core/File/Watcher/WatchServiceApp.java
+.classpath
+
+.project
+
+props.properties
+
+.gitignore
+/properties.properties
+/LoddsLogFile.txt
