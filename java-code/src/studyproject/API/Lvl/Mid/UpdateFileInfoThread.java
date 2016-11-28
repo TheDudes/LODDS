@@ -93,13 +93,12 @@ public class UpdateFileInfoThread extends Thread {
 
 	private void addEntry(FileInfo fileInfo) {
 		if (!userInfo.getChecksumToPath().containsKey(fileInfo.checksum)) {
-			userInfo.getChecksumToPath().get(fileInfo.checksum)
-					.add(fileInfo.fileName);
-		} else if (!userInfo.getChecksumToPath().get(fileInfo.checksum)
-				.contains(fileInfo.fileName)) {
 			Vector<String> pathList = new Vector<String>();
 			pathList.add(fileInfo.fileName);
 			userInfo.getChecksumToPath().put(fileInfo.checksum, pathList);
+		} else if (!userInfo.getChecksumToPath().get(fileInfo.checksum)
+				.contains(fileInfo.fileName)) {
+			userInfo.getChecksumToPath().get(fileInfo.checksum).add(fileInfo.fileName);
 		}
 		userInfo.getPathToFileInfo().put(fileInfo.fileName,
 				new FileCoreInfo(fileInfo.checksum, fileInfo.size));

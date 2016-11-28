@@ -40,6 +40,7 @@ public class Handles {
 		FileInfo fileInfo;
 		String currentLine;
 		String[] params;
+		int numberOfLines;
 		try {
 			currentLine = socketStream.readLine();
 			if (!Pattern.matches(GET_INFO_HEAD_REGEX, currentLine)) {
@@ -52,7 +53,8 @@ public class Handles {
 				infoType.type = InfoType.all;
 			}
 			timestamp.value = Long.valueOf(params[1]);
-			for (int i = 0; i < Integer.valueOf(params[2]); i++) {
+			numberOfLines = Integer.parseInt(params[2]);
+			for (int i = 0; i < Integer.valueOf(numberOfLines); i++) {
 				currentLine = socketStream.readLine();
 				if (!Pattern.matches(GET_INFO_BODY_LINE_REGEX, currentLine)) {
 					return 2;
