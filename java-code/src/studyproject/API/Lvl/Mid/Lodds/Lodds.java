@@ -1,7 +1,10 @@
 package studyproject.API.Lvl.Mid.Lodds;
 
 import java.io.IOException;
+import java.net.InetAddress;
+import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.UnknownHostException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.security.NoSuchAlgorithmException;
@@ -17,6 +20,7 @@ import studyproject.API.Lvl.Mid.BroadcastSenderThread;
 import studyproject.API.Lvl.Mid.FileConnectionThread;
 import studyproject.API.Lvl.Mid.FileSenderThread;
 import studyproject.API.Lvl.Mid.GetFileWPThread;
+import studyproject.API.Lvl.Mid.RequestHandlerThread;
 import studyproject.API.Lvl.Mid.SendFileWPThread;
 import studyproject.API.Lvl.Mid.UpdateFileInfoThread;
 import studyproject.API.Lvl.Mid.Core.ConnectionInfo;
@@ -58,6 +62,7 @@ public class Lodds {
 	private FileWatcherController watchService;
 	private ThreadExecutor threadExecutor;
 	private LoddsModel loddsModel;
+	private RequestHandlerThread requestHandlerThread;
 
 	/**
 	 * Initiates all lists and maps, sets the IP and advertise ports to the
@@ -613,10 +618,25 @@ public class Lodds {
 		networkAddress = networkAddr.toString();
 	}
 
+	public void startRequestHandlerThread() {
+		try {
+			requestHandlerThread = new RequestHandlerThread(this, threadExecutor,
+					new ServerSocket(ipPort, 100, InetAddress.getByName(networkAddress)));
+			threadExecutor.execute(requestHandlerThread);
+		} catch (UnknownHostException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+
 	public void startUp() {
 		setNetworkAddresses();
 		startAdvertising();
 		startListening();
+		startRequestHandlerThread();
 	}
 
 	public FileWatcherController getWatchService() {

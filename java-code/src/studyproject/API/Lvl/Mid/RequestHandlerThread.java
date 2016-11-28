@@ -44,41 +44,55 @@ public class RequestHandlerThread extends Thread {
 	public void run() {
 		RequestContainer reqContainer = new RequestContainer();
 		InputStream socketStream;
-		try {
-			socket = serverSocket.accept();
-			socketStream = socket.getInputStream();
-		} catch (IOException e) {
-			// TODO Errorhandling Mid LVL
-			e.printStackTrace();
-			return;
-		}
 		while (run) {
+			try {
+				socket = serverSocket.accept();
+				socketStream = socket.getInputStream();
+			} catch (IOException e) {
+				try {
+					socket.close();
+				} catch (IOException e1) {
+					// TODO ErrorHandling MidLVL
+					e1.printStackTrace();
+				}
+				e.printStackTrace();
+				continue;
+			}
+			reqContainer = new RequestContainer();
 			if (RequestHandler.parseRequest(socketStream, reqContainer) != 0) {
 				// TODO Errorhandling: wrong return value
 				continue;
 			}
+
 			switch (reqContainer.request.getType()) {
 			case GET_FILE:
 				GetFileRequest fileReq = (GetFileRequest) reqContainer.request;
 				FileInfo fileInfo = loddsObj.getWatchService().getFileByChecksum(fileReq.checksum);
-				FileSenderThread fileSenderThread = new FileSenderThread(socket, fileInfo, fileReq.startIndex, fileReq.endIndex);
+				FileSenderThread fileSenderThread = new FileSenderThread(socket, fileInfo, fileReq.startIndex,
+						fileReq.endIndex);
 				threadExecutor.execute(fileSenderThread);
 				break;
 			case GET_INFO:
 				GetInfoRequest infoReq = (GetInfoRequest) reqContainer.request;
-				InfoSenderThread infoSenderThread = new InfoSenderThread(socket, loddsObj.getWatchService(), infoReq.timestamp);
+				InfoSenderThread infoSenderThread = new InfoSenderThread(socket, loddsObj.getWatchService(),
+						infoReq.timestamp);
 				threadExecutor.execute(infoSenderThread);
+
 				break;
-			case GET_SEND_PERMISSION:				
+			case GET_SEND_PERMISSION:
 				// TODO Ask user to receive a file via GUI window
 				GetPermissionRequest permissionReq = (GetPermissionRequest) reqContainer.request;
-				// TODO Ask user where to save the file and under which name via 'save as' GUI
-				// TODO Split the returning path into path and filename, save them in the two variables
+				// TODO Ask user where to save the file and under which name via
+				// 'save as' GUI
+				// TODO Split the returning path into path and filename, save
+				// them in the two variables
 				String pathToSave = "";
 				String fileName = permissionReq.fileName;
-				GetFileWPThread getFileThread = new GetFileWPThread(socket, pathToSave, fileName, permissionReq.fileSize);
+				GetFileWPThread getFileThread = new GetFileWPThread(socket, pathToSave, fileName,
+						permissionReq.fileSize);
 				threadExecutor.execute(getFileThread);
 				break;
+
 			}
 		}
 	}
