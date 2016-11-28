@@ -8,6 +8,8 @@ import javax.inject.Inject;
 import javafx.application.Platform;
 import javafx.beans.property.ListProperty;
 import javafx.beans.property.SimpleListProperty;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
@@ -25,7 +27,7 @@ public class UsersListPresenter implements Initializable {
 	@FXML
 	ListView<UserInfo> usersListV;
 	@Inject
-	UsersListModel userListsModel;
+	UsersListModel userListModel;
 	@Inject
 	MainWindowModel mainWindowModel;
 	private ObservableList<UserInfo> users;
@@ -35,11 +37,21 @@ public class UsersListPresenter implements Initializable {
 	public void initialize(URL location, ResourceBundle resources) {
 		users = FXCollections.observableArrayList();
 		users.addAll(mainWindowModel.getLodds().getLoddsModel().getClientList());
+		userListModel.setUsers(users);
 		linkLoddsUserList();
 		usersListV.setItems(users);
+		addSelectionListener();
 	}
-	
-	private void linkLoddsUserList(){
+
+	private void addSelectionListener() {
+		usersListV.getSelectionModel().selectedItemProperty().addListener(new ChangeListener<UserInfo>() {
+			public void changed(ObservableValue<? extends UserInfo> observable, UserInfo oldValue, UserInfo newValue) {
+				userListModel.setSelectedUser(newValue);
+			}
+		});
+	}
+
+	private void linkLoddsUserList() {
 		mainWindowModel.getLodds().getLoddsModel().getClientList().addListener(new ListChangeListener<UserInfo>() {
 
 			@Override
