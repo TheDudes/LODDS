@@ -274,5 +274,23 @@ public class FileWatcherController {
 		return newFile;
 	}
 	
+	/**
+	 * Get a FileInfo object of the shared file searched by its name.
+	 * @param Name of the wanted file as String
+	 * @return FileInfo object of the shared file
+	 */
+	public FileInfo getFileByName(String fileName) {
+		return (FileInfo) currentFilesListFileNameAsKey.get(fileName);
+	}
+
+	/**
+	 * Get a FileInfo object of the shared file searched by its checksum.
+	 * @param Checksum of the wanted file as String
+	 * @return FileInfo object of the shared file
+	 */
+	public FileInfo getFileByChecksum(String fileChecksum) {
+		return (FileInfo) currentFilesListHashListAsKey.get(fileChecksum).get(0);
+	}
+	
 	
 }
