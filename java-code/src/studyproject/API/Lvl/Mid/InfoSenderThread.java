@@ -34,6 +34,7 @@ public class InfoSenderThread extends Thread {
 	public InfoSenderThread(Socket socket, FileWatcherController fileWatcherController, long timestamp) {
 		this.fileWatcherController = fileWatcherController;
 		this.timestamp = timestamp;
+		this.socket = socket;
 	}
 
 	/**
@@ -42,10 +43,10 @@ public class InfoSenderThread extends Thread {
 	@Override
 	public void run() {
 		byte[] infoBytes = fileWatcherController.getInfo(timestamp).getBytes();
-		BufferedOutputStream bufferedOutputStream;
-		try {
-			bufferedOutputStream = new BufferedOutputStream(socket.getOutputStream());
+		try (BufferedOutputStream bufferedOutputStream = new BufferedOutputStream(socket.getOutputStream())) {
 			bufferedOutputStream.write(infoBytes);
+			bufferedOutputStream.flush();
+			socket.close();
 		} catch (IOException e) {
 			// TODO IOException: Error handling
 			e.printStackTrace();
