@@ -36,6 +36,7 @@ public class BroadcastListenerThread extends Thread {
 		while (run) {
 			Broadcast.getLocalIp(loddsObject.getInterface(), localAddress);
 			if (Broadcast.readAdvertise(localAddress.toString(), brInfo) != 0) {
+				// TODO catch wrong return value
 				// readAdvertise failed
 				continue;
 			}
