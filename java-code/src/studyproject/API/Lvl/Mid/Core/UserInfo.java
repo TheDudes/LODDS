@@ -252,4 +252,12 @@ public class UserInfo {
 		return true;
 	}
 
+	@Override
+	public String toString() {
+		System.out.println(ipAddress);
+		return userName + "@"+ipAddress;
+	}
+	
+	
+
 }
