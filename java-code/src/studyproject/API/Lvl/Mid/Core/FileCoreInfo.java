@@ -12,6 +12,10 @@ public class FileCoreInfo {
 		this.fileName = fileName;
 	}
 
+	public FileCoreInfo(String fileName) {
+		this.fileName = fileName;
+	}
+
 	public String getChecksum() {
 		return checksum;
 	}
