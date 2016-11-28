@@ -41,8 +41,7 @@ public class BroadcastListenerThread extends Thread {
 			}
 			try {
 				inetAddress = InetAddress.getByName(brInfo.networkAddress);
-				if (inetAddress.equals(InetAddress.getByName(localAddress
-						.toString()))) {
+				if (brInfo.networkAddress.equals(localAddress.toString())) {
 					continue;
 				}
 				for (UserInfo user : loddsObject.getLoddsModel().getClientList()) {
@@ -58,7 +57,6 @@ public class BroadcastListenerThread extends Thread {
 						written = true;
 						break;
 					}
-					continue;
 				}
 				if (written == false) {
 					System.out
