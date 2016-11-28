@@ -79,7 +79,7 @@ public class Broadcast {
 	public static int getBroadcastAddress(String interfaceName, StringBuilder broadcastAddress) {
 		int toReturn = getAddress(interfaceName, broadcastAddress);
 		if (toReturn == 0) {
-			broadcastAddress.delete(broadcastAddress.length() - 3, broadcastAddress.length());
+			broadcastAddress.delete(broadcastAddress.lastIndexOf(".") + 1, broadcastAddress.length());
 			broadcastAddress.append("255");
 		}
 		return toReturn;
