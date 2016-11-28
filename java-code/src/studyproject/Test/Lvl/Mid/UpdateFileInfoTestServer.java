@@ -8,13 +8,19 @@ import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 
-public class UpdateFileInfoTestServer extends Thread{
-	
+/**
+ * Dummy Server for the JUnit tests from the UpdateFileInfoTest class
+ * 
+ * @author Michael
+ *
+ */
+public class UpdateFileInfoTestServer extends Thread {
+
 	private int port;
 	private InetAddress ip;
 	private String message;
 
-	public UpdateFileInfoTestServer(InetAddress ip, int port, String message){
+	public UpdateFileInfoTestServer(InetAddress ip, int port, String message) {
 		this.ip = ip;
 		this.port = port;
 		this.message = message;
@@ -22,19 +28,20 @@ public class UpdateFileInfoTestServer extends Thread{
 
 	@Override
 	public void run() {
-		try(ServerSocket serverSocket = new ServerSocket(port, 0, ip);
+		try (ServerSocket serverSocket = new ServerSocket(port, 0, ip);
 				Socket socket = serverSocket.accept();
-				BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-			){
+				BufferedReader in = new BufferedReader(new InputStreamReader(
+						socket.getInputStream()));) {
 			in.readLine();
-			BufferedOutputStream out = new BufferedOutputStream(socket.getOutputStream());
+			BufferedOutputStream out = new BufferedOutputStream(
+					socket.getOutputStream());
 			String[] parts = message.split("\n");
-			for(String line: parts){
+			for (String line : parts) {
 				line += "\n";
 				out.write(line.getBytes());
 				out.flush();
 			}
-		} catch(IOException e){
+		} catch (IOException e) {
 			System.err.println(e.getStackTrace());
 		}
 	}
