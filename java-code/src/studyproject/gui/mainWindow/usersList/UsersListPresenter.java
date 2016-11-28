@@ -5,9 +5,9 @@ import java.util.ResourceBundle;
 
 import javax.inject.Inject;
 
-
 import javafx.beans.property.ListProperty;
 import javafx.beans.property.SimpleListProperty;
+import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
@@ -16,34 +16,64 @@ import javafx.scene.control.TextField;
 import studyproject.API.Lvl.Mid.Core.UserInfo;
 import studyproject.gui.mainWindow.MainWindowModel;
 
-public class UsersListPresenter implements Initializable{
+public class UsersListPresenter implements Initializable {
 
-	@FXML TextField usersSearch;
-	@FXML ListView<UserInfo> usersListV;
-	@Inject UsersListModel userListsModel;
-	@Inject MainWindowModel mainWindowModel;
+	@FXML
+	TextField usersSearch;
+	@FXML
+	ListView<UserInfo> usersListV;
+	@Inject
+	UsersListModel userListsModel;
+	@Inject
+	MainWindowModel mainWindowModel;
 	private ObservableList<UserInfo> users;
 	protected ListProperty<UserInfo> listProperty = new SimpleListProperty<>();
+
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {
 		users = mainWindowModel.getLodds().getLoddsModel().getClientList();
-		
-		userListsModel.setUsers(users);
+		mainWindowModel.getLodds().getLoddsModel().getClientList().addListener(new ListChangeListener<UserInfo>() {
+
+			@Override
+			public void onChanged(Change<? extends UserInfo> c) {
+
+				while (c.next()) {
+					System.out.println("next: ");
+					if (c.wasAdded()) {
+						System.out.println("- wasAdded");
+					}
+					if (c.wasPermutated()) {
+						System.out.println("- wasPermutated");
+					}
+					if (c.wasRemoved()) {
+						System.out.println("- wasRemoved");
+					}
+					if (c.wasReplaced()) {
+						System.out.println("- wasReplaced");
+					}
+					if (c.wasUpdated()) {
+						System.out.println("- wasUpdated");
+					}
+				}
+			}
+		});
 		listProperty.set(users);
+
 		usersListV.itemsProperty().bind(listProperty);
-		//		usersListView.setCellFactory(param -> new ListCell<UserInfo>() {
-//		    @Override
-//		    protected void updateItem(UserInfo item, boolean empty) {
-//		        super.updateItem(item, empty);
-//
-//		        if (empty || item == null || item.getIpAddress() == null || item.getUserName() == null) {
-//		            setText(null);
-//		        } else {
-//		            setText(item.toString());
-//		        }
-//		    }
-//		});
-//		usersListView.setItems(userListsModel.getUsers());
+		// usersListView.setCellFactory(param -> new ListCell<UserInfo>() {
+		// @Override
+		// protected void updateItem(UserInfo item, boolean empty) {
+		// super.updateItem(item, empty);
+		//
+		// if (empty || item == null || item.getIpAddress() == null ||
+		// item.getUserName() == null) {
+		// setText(null);
+		// } else {
+		// setText(item.toString());
+		// }
+		// }
+		// });
+		// usersListView.setItems(userListsModel.getUsers());
 	}
 
 }
