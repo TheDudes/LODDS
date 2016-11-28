@@ -254,7 +254,6 @@ public class UserInfo {
 
 	@Override
 	public String toString() {
-		System.out.println(ipAddress);
 		return userName + "@"+ipAddress;
 	}
 	
