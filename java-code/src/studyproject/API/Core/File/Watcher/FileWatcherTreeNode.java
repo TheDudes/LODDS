@@ -54,8 +54,6 @@ public class FileWatcherTreeNode {
 		System.out.println("Tree:");
 		root.printTree(0);
 		
-		System.out.println("\n\nTest FileInfoListEntry:");
-		FileInfoListEntry found = root.getFileInfoListEntryByFileName(fileName);
 	}
 	
 	/**
@@ -103,7 +101,7 @@ public class FileWatcherTreeNode {
 			System.out.println("File not found: "+fullFileName);
 			return null;
 		} else {
-			System.out.println("File found: "+foundNode.fileName);
+			System.out.println("File found: "+foundNode.fileInfo);
 			return foundNode.fileInfo;		
 		}
 
@@ -137,14 +135,16 @@ public class FileWatcherTreeNode {
 			
 			FileWatcherTreeNode child = children.get(subDirsList.get(0));
 			
-			if (subDirsList.size() == 1)
+			if (subDirsList.size() == 1) {
+				System.out.println("Returning child: "+child.fileName);
 				return child;
-			
-			// Remove first folder
-			subDirsList.remove(0);
-			
-			// Search again
-			return child.getNodeBySubDirs(subDirsList);
+			} else {
+				// Remove first folder
+				subDirsList.remove(0);
+				
+				// Search again
+				return child.getNodeBySubDirs(subDirsList);
+			}
 
 		} else {
 			System.out.println("Node '"+subDirsList.get(0)+"' not found in "+this.fileName);
@@ -182,6 +182,7 @@ public class FileWatcherTreeNode {
 				FileWatcherTreeNode newNode = new FileWatcherTreeNode(false);
 				newNode.fileName = fullPathAsList.get(0);
 				newNode.parent = this;
+				newNode.fileInfo = fileInfo;
 				
 				// Add new node as child to current node
 				children.put(newNode.fileName, newNode);
