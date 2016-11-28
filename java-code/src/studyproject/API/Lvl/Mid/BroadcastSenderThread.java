@@ -2,6 +2,7 @@ package studyproject.API.Lvl.Mid;
 
 import studyproject.API.Lvl.Low.Broadcast;
 import studyproject.API.Lvl.Low.Load;
+import studyproject.API.Lvl.Mid.Lodds.Lodds;
 
 /**
  * Thread that broadcasts the informations about this client
@@ -20,7 +21,7 @@ import studyproject.API.Lvl.Low.Load;
 public class BroadcastSenderThread extends Thread {
 	
 	
-	private LODDS loddsObject;
+	private Lodds loddsObject;
 	
 	/**
 	 * 
@@ -28,7 +29,7 @@ public class BroadcastSenderThread extends Thread {
 	 * 			The lodds object, used to retrieve the necessary
 	 * 			informations to broadcast
 	 */
-	public BroadcastSenderThread(LODDS loddsObject) {
+	public BroadcastSenderThread(Lodds loddsObject) {
 		this.loddsObject = loddsObject;
 	}
 

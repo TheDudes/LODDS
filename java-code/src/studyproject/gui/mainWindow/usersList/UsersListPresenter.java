@@ -8,7 +8,6 @@ import javax.inject.Inject;
 
 import javafx.beans.property.ListProperty;
 import javafx.beans.property.SimpleListProperty;
-import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
@@ -22,12 +21,12 @@ public class UsersListPresenter implements Initializable{
 	@FXML TextField usersSearch;
 	@FXML ListView<UserInfo> usersListV;
 	@Inject UsersListModel userListsModel;
-	@Inject MainWindowModel mainwindowModel;
+	@Inject MainWindowModel mainWindowModel;
 	private ObservableList<UserInfo> users;
 	protected ListProperty<UserInfo> listProperty = new SimpleListProperty<>();
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {
-		users = FXCollections.observableArrayList(mainwindowModel.getLodds().getUsers());
+		users = mainWindowModel.getLodds().getLoddsModel().getClientList();
 		
 		userListsModel.setUsers(users);
 		listProperty.set(users);

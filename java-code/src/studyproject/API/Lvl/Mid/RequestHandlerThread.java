@@ -10,10 +10,11 @@ import java.net.Socket;
 //import studyproject.API.Core.Request.GetPermissionRequest;
 import studyproject.API.Core.Request.RequestContainer;
 import studyproject.API.Lvl.Low.RequestHandler;
+import studyproject.API.Lvl.Mid.Lodds.Lodds;
 
 public class RequestHandlerThread extends Thread {
 
-	LODDS loddsObj;
+	Lodds loddsObj;
 	ServerSocket serverSocket;
 	Socket socket;
 	private boolean run;
@@ -26,7 +27,7 @@ public class RequestHandlerThread extends Thread {
 	 * @param socket
 	 *            ServerSocket to accept incoming requests
 	 */
-	public RequestHandlerThread(LODDS loddsObj, ServerSocket socket) {
+	public RequestHandlerThread(Lodds loddsObj, ServerSocket socket) {
 		this.loddsObj = loddsObj;
 		this.serverSocket = socket;
 		run = true;

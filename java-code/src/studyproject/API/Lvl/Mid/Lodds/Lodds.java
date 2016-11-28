@@ -1,4 +1,4 @@
-package studyproject.API.Lvl.Mid;
+package studyproject.API.Lvl.Mid.Lodds;
 
 import java.io.IOException;
 import java.net.Socket;
@@ -7,10 +7,19 @@ import java.nio.file.Paths;
 import java.security.NoSuchAlgorithmException;
 import java.util.Vector;
 
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import studyproject.API.Core.File.FileInfo;
 import studyproject.API.Core.File.Watcher.FileWatcherController;
 import studyproject.API.Loadbalancer.Loadbalancer;
 import studyproject.API.Lvl.Low.Broadcast;
+import studyproject.API.Lvl.Mid.BroadcastListenerThread;
+import studyproject.API.Lvl.Mid.BroadcastSenderThread;
+import studyproject.API.Lvl.Mid.FileConnectionThread;
+import studyproject.API.Lvl.Mid.FileSenderThread;
+import studyproject.API.Lvl.Mid.GetFileWPThread;
+import studyproject.API.Lvl.Mid.SendFileWPThread;
+import studyproject.API.Lvl.Mid.UpdateFileInfoThread;
 import studyproject.API.Lvl.Mid.Core.ConnectionInfo;
 import studyproject.API.Lvl.Mid.Core.UserInfo;
 import studyproject.API.Lvl.Mid.ThreadMonitoring.ThreadExecutor;
@@ -23,7 +32,7 @@ import studyproject.API.Lvl.Mid.ThreadMonitoring.ThreadExecutor;
  * @author Michael
  *
  */
-public class LODDS {
+public class Lodds {
 
 	private final int DEFAULT_IP_PORT = 9002;
 	private final int DEFAULT_ADVERTISE_PORT = 9002;
@@ -34,8 +43,8 @@ public class LODDS {
 
 	private long lastChange;
 	private Loadbalancer loadbalancer;
-	private Vector<UserInfo> clientList;
 	private Vector<String> sharedFolders;
+	private ObservableList<UserInfo> clientList;
 	private long load;
 	private String interfaceName;
 	private int advertisePort;
@@ -50,6 +59,7 @@ public class LODDS {
 	private int parallelDownloads;
 	private FileWatcherController watchService;
 	private ThreadExecutor threadExecutor;
+	private LoddsModel loddsModel;
 
 	/**
 	 * Initiates all lists and maps, sets the IP and advertise ports to the
@@ -58,8 +68,10 @@ public class LODDS {
 	 * <b>Call lodds.startUp() after you used this constructor and set the user
 	 * name and interface name</b>
 	 */
-	public LODDS() {
-		clientList = new Vector<UserInfo>();
+	public Lodds() {
+		loddsModel = new LoddsModel();
+		clientList = FXCollections.observableArrayList();
+		loddsModel.setClientList(javafx.collections.FXCollections.synchronizedObservableList(clientList));
 		sharedFolders = new Vector<String>();
 		ipPort = DEFAULT_IP_PORT;
 		advertisePort = DEFAULT_ADVERTISE_PORT;
@@ -85,8 +97,7 @@ public class LODDS {
 	 * @param userName
 	 *            the name under which this client will appear to other clients
 	 */
-	public LODDS(String interfaceName, String userName) {
-		clientList = new Vector<UserInfo>();
+	public Lodds(String interfaceName, String userName) {
 		sharedFolders = new Vector<String>();
 		ipPort = DEFAULT_IP_PORT;
 		advertisePort = DEFAULT_ADVERTISE_PORT;
@@ -370,13 +381,7 @@ public class LODDS {
 
 	// TODO implement getFileChanges(long timestamp)
 
-	/**
-	 * 
-	 * @return a list with all known other clients
-	 */
-	public Vector<UserInfo> getUsers() {
-		return clientList;
-	}
+	
 
 	/**
 	 * 
@@ -387,6 +392,10 @@ public class LODDS {
 	public void setInterface(String interfaceName) {
 		this.interfaceName = interfaceName;
 		setNetworkAddresses();
+	}
+
+	public ObservableList<UserInfo> getClientList() {
+		return clientList;
 	}
 
 	/**
@@ -590,6 +599,14 @@ public class LODDS {
 	public void setParallelDownloads(int parallelDownloads) {
 		this.parallelDownloads = parallelDownloads;
 		loadbalancer.setParallelDownloads(parallelDownloads);
+	}
+
+	public LoddsModel getLoddsModel() {
+		return loddsModel;
+	}
+
+	public void setLoddsModel(LoddsModel loddsModel) {
+		this.loddsModel = loddsModel;
 	}
 
 	private void setNetworkAddresses() {

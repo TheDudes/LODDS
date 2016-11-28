@@ -9,10 +9,11 @@ import studyproject.API.Core.BroadcastInfo;
 import studyproject.API.Lvl.Low.Broadcast;
 import studyproject.API.Lvl.Mid.Core.FileCoreInfo;
 import studyproject.API.Lvl.Mid.Core.UserInfo;
+import studyproject.API.Lvl.Mid.Lodds.Lodds;
 
 public class BroadcastListenerThread extends Thread {
 
-	private LODDS loddsObject;
+	private Lodds loddsObject;
 	private StringBuilder broadcastAddress;
 	private StringBuilder localAddress;
 	private BroadcastInfo brInfo;
@@ -21,7 +22,7 @@ public class BroadcastListenerThread extends Thread {
 	private boolean written;
 	private boolean run;
 
-	public BroadcastListenerThread(LODDS loddsObject) {
+	public BroadcastListenerThread(Lodds loddsObject) {
 		this.loddsObject = loddsObject;
 		written = false;
 		run = true;
@@ -44,7 +45,7 @@ public class BroadcastListenerThread extends Thread {
 						.toString()))) {
 					continue;
 				}
-				for (UserInfo user : loddsObject.getUsers()) {
+				for (UserInfo user : loddsObject.getLoddsModel().getClientList()) {
 					if (user.getIpAddress().equals(inetAddress)) {
 						System.out
 								.println("BroadcastListenerThread: Already in Userlist: "
@@ -68,7 +69,7 @@ public class BroadcastListenerThread extends Thread {
 							new ConcurrentHashMap<String, FileCoreInfo>(),
 							new ConcurrentHashMap<String, Vector<String>>(),
 							brInfo.timestamp);
-					loddsObject.getUsers().add(userInfo);
+					loddsObject.getLoddsModel().getClientList().add(userInfo);
 				}
 			} catch (UnknownHostException e) {
 				e.printStackTrace();

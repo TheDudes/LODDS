@@ -2,21 +2,21 @@ package studyproject.gui.mainWindow;
 
 import javax.annotation.PostConstruct;
 
-import studyproject.API.Lvl.Mid.LODDS;
+import studyproject.API.Lvl.Mid.Lodds.Lodds;
 
 public class MainWindowModel {
-	private LODDS lodds;
+	private Lodds lodds;
 
 	@PostConstruct
 	public void init(){
-		lodds = new LODDS();
+		lodds = new Lodds();
 	}
 	
-	public LODDS getLodds() {
+	public Lodds getLodds() {
 		return lodds;
 	}
 
-	public void setLodds(LODDS lodds) {
+	public void setLodds(Lodds lodds) {
 		this.lodds = lodds;
 	}
 	
