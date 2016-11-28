@@ -1,5 +1,6 @@
 package studyproject;
 
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.Properties;
@@ -24,6 +25,7 @@ import studyproject.logging.LogKey;
 public class App extends Application{
 
 	private static Logger logger;
+	public static Properties defaultProperties;
 	public static Properties properties;
 	public static String pathToProperties;
 	private MainWindowView mainView;
@@ -39,16 +41,37 @@ public class App extends Application{
 		logger.setLevel(Level.ALL);
 	}
 
-	public int loadProperties(String pathToUserProperties) {
+//	public int loadProperties(String pathToUserProperties) {
+//		properties = new Properties();
+//		
+//		try {
+//			properties.load(getClass().getResourceAsStream("resources/lodds.properties"));
+//		} catch (FileNotFoundException e) {
+//			return 4;
+//		} catch (IOException e) {
+//			return 4;
+//		}
+//		return 0;
+//	}
+	
+	public int loadProperties() {
+		defaultProperties = new Properties();
 		properties = new Properties();
 		
 		try {
-			properties.load(getClass().getResourceAsStream("resources/lodds.properties"));
-		} catch (FileNotFoundException e) {
-			return 4;
+			defaultProperties.load(getClass().getResourceAsStream("resources/lodds.properties"));
+			String pathToUserProperties = (String) properties.get("pathToUserProperties");
+			if (!pathToUserProperties.isEmpty()) {
+				properties.load(new FileInputStream(pathToUserProperties)); 
+			} else {
+				properties.load(getClass().getResourceAsStream("resources/lodds.properties"));
+			}
 		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 			return 4;
 		}
+		
 		return 0;
 	}
 	
@@ -75,7 +98,7 @@ public class App extends Application{
 		App application = new App();
 		pathToProperties = args[0];
 		int errorCode;
-		if ((errorCode = application.loadProperties(pathToProperties)) > 0) {
+		if ((errorCode = application.loadProperties()) > 0) {
 			ErrLog.log(Level.SEVERE, LogKey.error, APILvl.gui,errorCode, "loadProperties");
 		}
 		application.configureLogging();
