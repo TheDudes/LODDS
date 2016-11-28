@@ -6,8 +6,6 @@ import java.util.ResourceBundle;
 import javax.inject.Inject;
 
 import javafx.application.Platform;
-import javafx.beans.property.ListProperty;
-import javafx.beans.property.SimpleListProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
@@ -31,7 +29,6 @@ public class UsersListPresenter implements Initializable {
 	@Inject
 	MainWindowModel mainWindowModel;
 	private ObservableList<UserInfo> users;
-	protected ListProperty<UserInfo> listProperty = new SimpleListProperty<>();
 
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {
@@ -46,7 +43,7 @@ public class UsersListPresenter implements Initializable {
 	private void addSelectionListener() {
 		usersListV.getSelectionModel().selectedItemProperty().addListener(new ChangeListener<UserInfo>() {
 			public void changed(ObservableValue<? extends UserInfo> observable, UserInfo oldValue, UserInfo newValue) {
-				userListModel.setSelectedUser(newValue);
+				userListModel.getSelectedUser().set(newValue);
 			}
 		});
 	}
