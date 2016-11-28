@@ -624,4 +624,8 @@ public class Lodds {
 		startListening();
 	}
 
+	public FileWatcherController getWatchService() {
+		return watchService;
+	}
+
 }
