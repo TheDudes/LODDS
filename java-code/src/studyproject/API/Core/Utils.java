@@ -39,7 +39,7 @@ public class Utils {
 							+ "length is bigger than the provided array. Offset: " + off + ", len: " + len
 							+ ", arraysize: " + destination.length);
 		}
-		while (readBytes < len) {
+		while (readBytes < len && readBytes != -1) {
 			readBytes = readBytes + inStream.read(destination, off + readBytes, len - readBytes);
 		}
 		return readBytes;
