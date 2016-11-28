@@ -58,11 +58,13 @@ public class App extends Application {
 				propertiesFile.getParentFile().mkdirs();
 				propertiesFile.createNewFile();
 				properties.store(new FileOutputStream(propertiesFile), null);
-				System.out.println("PropertiesFile created at " + propertiesFile.getAbsolutePath());
+				ErrLog.log(Level.INFO, LogKey.info, APILvl.gui, "loadProperties()",
+						"new propertiesfile created at " + propertiesFile.getAbsolutePath());
 			}
 			properties.load(new FileInputStream(propertiesFile));
 			// properties.store(new FileOutputStream(propertiesFile), null);
-			System.out.println("Using properties from " + propertiesFile.getAbsolutePath());
+			ErrLog.log(Level.INFO, LogKey.info, APILvl.gui, "loadProperties()",
+					"using properties from " + propertiesFile.getAbsolutePath());
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
