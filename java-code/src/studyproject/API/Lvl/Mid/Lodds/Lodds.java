@@ -23,7 +23,6 @@ import studyproject.API.Lvl.Mid.GetFileWPThread;
 import studyproject.API.Lvl.Mid.RequestHandlerThread;
 import studyproject.API.Lvl.Mid.SendFileWPThread;
 import studyproject.API.Lvl.Mid.UpdateFileInfoThread;
-import studyproject.API.Lvl.Mid.Core.ConnectionInfo;
 import studyproject.API.Lvl.Mid.Core.UserInfo;
 import studyproject.API.Lvl.Mid.ThreadMonitoring.ThreadExecutor;
 
@@ -371,17 +370,6 @@ public class Lodds {
 	public Vector<String> getSharedFolders() {
 		return sharedFolders;
 	}
-
-	/**
-	 * //TODO wtf did we think here?
-	 * 
-	 * @return
-	 */
-	public Vector<ConnectionInfo> getOutstandingBytes() {
-		return null;
-	}
-
-	// TODO implement getFileChanges(long timestamp)
 
 	/**
 	 * 
