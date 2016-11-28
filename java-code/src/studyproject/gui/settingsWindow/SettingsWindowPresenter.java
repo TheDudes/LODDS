@@ -47,7 +47,14 @@ public class SettingsWindowPresenter implements Initializable {
 	 */
 	private void loadSettings() {
 		int numberOfRows = 0;
+		// load pathToUserProperties only from the deafaultProperties
+		settingsGrid.addRow(numberOfRows++, new Label("pathToUserProperties"), 
+				new TextField(App.defaultProperties.getProperty("pathToUserProperties")));
+		// load other properties from the userProperties
 		for (Entry<Object, Object> entry : App.properties.entrySet()) {
+			if ((String) entry.getKey() == "pathToUserProperties") {
+				continue;
+			}
 			settingsGrid.addRow(numberOfRows++, new Label((String) entry.getKey()),
 					new TextField((String) entry.getValue()));
 		}
@@ -79,16 +86,39 @@ public class SettingsWindowPresenter implements Initializable {
 				continue;
 			label = (Label) l;
 
+			// find the value holding textField which is next to the Label
 			for (Node tf : observList) {
-				if (GridPane.getColumnIndex(tf) == GridPane.getColumnIndex(l) + 1
-						&& GridPane.getRowIndex(tf) == GridPane.getRowIndex(l)) {
+				if (GridPane.getRowIndex(tf) == GridPane.getRowIndex(l)
+						&& GridPane.getColumnIndex(tf) == GridPane.getColumnIndex(l) + 1) {
 					textField = (TextField) tf;
-					App.properties.setProperty(label.getText(), textField.getText());
+					
+					// write pathToUserProperties only to the defaultProperties
+					// This should not be included in the userProperties
+					if (label.getText() == "pathToUserProperties") {
+						App.defaultProperties.setProperty(label.getText(), textField.getText());
+					} else {
+						App.properties.setProperty(label.getText(), textField.getText());
+					}
+					break;
 				}
 			}
 		}
 		try {
-			App.properties.store(new FileOutputStream(App.pathToProperties), null);
+			FileOutputStream out = new FileOutputStream(App.pathToProperties);
+			App.defaultProperties.store(out, null);
+			out.close();
+		} catch (FileNotFoundException e) {
+			// TODO Error handling
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Error handling
+			e.printStackTrace();
+		}
+		try {
+			String path = (String) App.defaultProperties.get("pathToUserProperties");
+			FileOutputStream out = new FileOutputStream(path);
+			App.properties.store(out, null);
+			out.close();
 		} catch (FileNotFoundException e) {
 			// TODO Error handling
 			e.printStackTrace();
