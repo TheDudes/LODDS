@@ -54,7 +54,7 @@ public class BroadcastListenerThread extends Thread {
 						user.setLoad(brInfo.load);
 						user.setUserName(brInfo.name);
 						user.setLastUpdate(brInfo.timestamp);
-						user.setLastReceivedBroadcast(brInfo.timestamp);
+						user.setLastReceivedBroadcast(System.currentTimeMillis() / 1000);
 						written = true;
 						break;
 					}
