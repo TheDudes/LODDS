@@ -5,8 +5,10 @@ import java.util.ResourceBundle;
 
 import javax.inject.Inject;
 
+import javafx.application.Platform;
 import javafx.beans.property.ListProperty;
 import javafx.beans.property.SimpleListProperty;
+import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
@@ -31,49 +33,41 @@ public class UsersListPresenter implements Initializable {
 
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {
-		users = mainWindowModel.getLodds().getLoddsModel().getClientList();
+		users = FXCollections.observableArrayList();
+		users.addAll(mainWindowModel.getLodds().getLoddsModel().getClientList());
+		linkLoddsUserList();
+		usersListV.setItems(users);
+	}
+	
+	private void linkLoddsUserList(){
 		mainWindowModel.getLodds().getLoddsModel().getClientList().addListener(new ListChangeListener<UserInfo>() {
 
 			@Override
 			public void onChanged(Change<? extends UserInfo> c) {
 
 				while (c.next()) {
-					System.out.println("next: ");
-					if (c.wasAdded()) {
-						System.out.println("- wasAdded");
+					for (UserInfo client : c.getAddedSubList()) {
+						Platform.runLater(new Runnable() {
+							@Override
+							public void run() {
+								users.add(client);
+							}
+						});
 					}
-					if (c.wasPermutated()) {
-						System.out.println("- wasPermutated");
+
+					for (UserInfo client : c.getRemoved()) {
+						Platform.runLater(new Runnable() {
+							@Override
+							public void run() {
+								users.remove(client);
+							}
+						});
 					}
-					if (c.wasRemoved()) {
-						System.out.println("- wasRemoved");
-					}
-					if (c.wasReplaced()) {
-						System.out.println("- wasReplaced");
-					}
-					if (c.wasUpdated()) {
-						System.out.println("- wasUpdated");
-					}
+
 				}
 			}
-		});
-		listProperty.set(users);
 
-		usersListV.itemsProperty().bind(listProperty);
-		// usersListView.setCellFactory(param -> new ListCell<UserInfo>() {
-		// @Override
-		// protected void updateItem(UserInfo item, boolean empty) {
-		// super.updateItem(item, empty);
-		//
-		// if (empty || item == null || item.getIpAddress() == null ||
-		// item.getUserName() == null) {
-		// setText(null);
-		// } else {
-		// setText(item.toString());
-		// }
-		// }
-		// });
-		// usersListView.setItems(userListsModel.getUsers());
+		});
 	}
 
 }
