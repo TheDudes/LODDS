@@ -1,18 +1,20 @@
 package studyproject.API.Lvl.Mid;
 
 import java.io.BufferedOutputStream;
-import java.io.BufferedReader;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.net.Socket;
 import java.nio.file.Paths;
+import java.util.logging.Level;
 
 import studyproject.API.Core.File.FileInfo;
+import studyproject.API.Errors.ErrLog;
 import studyproject.API.Lvl.Low.Handles;
 import studyproject.API.Lvl.Low.Requests;
 import studyproject.API.Lvl.Low.Responses;
 import studyproject.API.Lvl.Mid.Core.UserInfo;
+import studyproject.logging.APILvl;
+import studyproject.logging.LogKey;
 
 /**
  * This Thread is used to send a file with permission, which further means this
@@ -50,21 +52,54 @@ public class SendFileWPThread extends Thread {
 	@Override
 	public void run() {
 		try (Socket socket = new Socket(user.getIpAddress(), user.getPort());
-				BufferedOutputStream outStream = new BufferedOutputStream(socket.getOutputStream());
-				BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+				BufferedOutputStream outStream = new BufferedOutputStream(
+						socket.getOutputStream());
 				FileInputStream fileInStream = new FileInputStream(
-						(Paths.get(fileInfo.parentDirectory).resolve(fileInfo.fileName)).toString());) {
-			if (Requests.getSendPermission(outStream, fileInfo.size, timeout, fileInfo.fileName) == 1)
-				;
-			// TODO error handling
-			if (Handles.handleSendPermission(reader, timeout) == 0) {
-				if (Responses.respondFile(outStream, fileInStream, 0, fileInfo.size) != 0)
-					;
-				// TODO error handling
-
+						(Paths.get(fileInfo.parentDirectory)
+								.resolve(fileInfo.fileName)).toString())) {
+			if (Requests.getSendPermission(outStream, fileInfo.size, timeout,
+					fileInfo.fileName) == 1) {
+				ErrLog.log(Level.WARNING, LogKey.sendPermissionSent,
+						APILvl.mid, "SendFileWPThread.run",
+						"Requests.getSendPermission reported IOException");
+			}
+			int errorcode = Handles.handleSendPermission(socket, timeout);
+			if (errorcode == 0) {
+				errorcode = Responses.respondFile(outStream, fileInStream, 0,
+						fileInfo.size);
+				if (errorcode != 0) {
+					ErrLog.log(Level.SEVERE, LogKey.filetransferInit,
+							APILvl.mid, "SendFileWPThread.run",
+							"Responses.respondFile returned error key "
+									+ errorcode);
+				}
+			} else {
+				switch (errorcode) {
+				case 1:
+					ErrLog.log(Level.INFO, LogKey.sendPermissionSent,
+							APILvl.mid, "SendFileWPThread.run",
+							"Handles.handleSendPermission timed out");
+					break;
+				case -2:
+					ErrLog.log(Level.WARNING, LogKey.sendPermissionSent,
+							APILvl.mid, "SendFileWPThread.run",
+							"Handles.handleSendPermission reported IOException");
+					break;
+				case -1:
+					ErrLog.log(Level.WARNING, LogKey.sendPermissionSent,
+							APILvl.mid, "SendFileWPThread.run",
+							"Handles.handleSendPermission read unspecified info from socket");
+					break;
+				default:
+					break;
+				}
+				ErrLog.log(Level.WARNING, LogKey.sendPermissionSent,
+						APILvl.mid, "SendFileWPThread.run",
+						"Handles.handleSendPermission reported IOException");
 			}
 		} catch (IOException e) {
-			// TODO error handling
+			ErrLog.log(Level.WARNING, LogKey.sendPermissionSent, APILvl.mid,
+					"SendFileWPThread.run", e.getMessage());
 		}
 	}
 }
