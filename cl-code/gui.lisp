@@ -29,6 +29,7 @@
 
 (define-slot (main-window start) ()
   (declare (connected start (pressed)))
+  ;; TODO: well, this is not final :D
   (lodds:switch-interface "wlp3s0")
   (lodds.subsystem:start (lodds:get-subsystem :event-queue))
   (lodds.subsystem:start (lodds:get-subsystem :tasker))
@@ -49,7 +50,7 @@
                                                     (root-p nil))
   "loop over childs with get-child-fn and check if current entry (car
   path) is already present, if so call add-node on that entry
-  recursively, if not add a new entry and then call add-node with the
+  recursivly, if not add a new entry and then call add-node with the
   new entry. If add-node returns t, the entry was added, otherwise nil
   is returned. The return is used to check if size on parents needs to
   be increased."
@@ -79,7 +80,7 @@
                 (return-from add-node nil))))
   ;; when we get down here it means there was no matching
   ;; node, so lets add a new one.
-  ;; TODO fix mem leak, finalize new-item when list is destroyed
+  ;; TODO: fix mem leak, finalize new-item when list is destroyed
   (let ((new-entry (q+:make-qtreewidgetitem (funcall get-parent-fn))))
     (q+:set-text new-entry 0 (car path))
     (q+:set-text new-entry 1 size)
@@ -99,9 +100,16 @@
         t)))
 
 (defun remove-node (path child-count get-child-fn remove-child-fn)
+  "loops over children with get-child-fn, and if path matches
+  remove-node is recursivly called on the matching node. Remove node
+  will return a Size if a node was successfull removed. This is used to
+  updated sizes on parents."
   (loop :for i :from 0 :below child-count
         :do (let ((element (funcall get-child-fn i)))
+              ;; check if node matches
               (when (string= (car path) (q+:text element 0))
+                ;; check if we have a path left and need to call
+                ;; remove-node recursivly
                 (if (cdr path)
                     (let ((size (remove-node (cdr path)
                                              (q+:child-count element)
@@ -111,15 +119,20 @@
                                                (parse-integer
                                                 (q+:text (q+:take-child element place) 1))))))
                       ;; remove-node will return the size of the
-                      ;; removed element, if successfull
+                      ;; removed element, if successfull.
                       (when size
+                        ;; If element has no childs left (if the
+                        ;; recursive call removed the last child)
+                        ;; remove element too. If there are childs
+                        ;; left, just update the size.
                         (if (eql 0 (q+:child-count element))
                             (funcall remove-child-fn i)
                             (q+:set-text element 1
                                          (prin1-to-string
                                           (- (parse-integer (q+:text element 1))
                                              size))))
-                        ;; return t here, since recursive remove was successfull
+                        ;; return size here, since recursive remove
+                        ;; was successfull
                         (return-from remove-node size)))
                     ;; return size (will be returned by
                     ;; remove-child-fn) here, since remove was
@@ -149,7 +162,8 @@
                (lambda (place) (q+:take-top-level-item list-of-shares place))))
 
 (defun dump-item (item &optional (depth 0))
-  "dumps given item, and all its childs, if it has any"
+  "dumps given item, and all its childs, if it has any. Just for
+  debugging"
   (format t "ITEM: ~a~a~%"
           (make-string depth :initial-element #\ )
           (q+:text item 0))
