@@ -176,11 +176,6 @@
   (loop :for i :from 0 :below (q+:top-level-item-count list-of-shares)
         :do (dump-item (q+:top-level-item list-of-shares i))))
 
-(defun add-entries (main-window entries)
-  (loop :for (path size checksum) :in entries
-        :do (signal! main-window
-                     (add-entry string string string)
-                     path (prin1-to-string size) checksum)))
 (defun cb-list-update (main-window event)
   "callback which will be called on a :list-update event"
   (destructuring-bind (name type timestamp changes) event
