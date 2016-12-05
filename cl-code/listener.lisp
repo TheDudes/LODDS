@@ -74,8 +74,8 @@
                      (progn
                        (setf (lodds:c-last-message client-info) cmt
                              (lodds:c-load client-info) cl)
-                       (when (< (lodds:c-last-change client-info)
-                                clc)
+                       (when (<= (lodds:c-last-change client-info)
+                                 clc)
                          (update-client-list client-info)))
                    (error (e)
                      (format t "got error inside update-client-list ~a~%" e)))
