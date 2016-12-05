@@ -29,5 +29,7 @@
             result))))))
 
 (defun run ()
-  (loop (try-send) ;; repull timeout to get changes
-        (sleep (lodds:advertise-timeout lodds:*server*))))
+  (loop :while (lodds.subsystem:alive-p (lodds:get-subsystem :advertiser))
+        :do (progn
+              (try-send) ;; repull timeout to get changes
+              (sleep (lodds:advertise-timeout lodds:*server*)))))

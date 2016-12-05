@@ -1,8 +1,5 @@
 (in-package #:lodds.subsystem)
 
-(define-condition shutdown-condition (error)
-  nil)
-
 (defmethod print-object ((object subsystem) stream)
   (print-unreadable-object (object stream :type t :identity t)
     (with-slots (name thread alive-p) object
@@ -25,15 +22,10 @@
              (unwind-protect
                   (progn
                     (setf (alive-p subsystem) t)
-                    (handler-case
-                        (funcall (init-fn subsystem))
-                      (shutdown-condition ())))
+                    (funcall (init-fn subsystem)))
                (lodds.event:push-event (name subsystem)
                                        (list "stopped!"))
-               (setf (alive-p subsystem) nil)
-               (let ((cfn (cleanup-fn subsystem)))
-                 (when cfn
-                   (funcall cfn))))))
+               (setf (alive-p subsystem) nil))))
     (if (alive-p subsystem)
         (lodds.event:push-event (lodds.subsystem:name subsystem)
                                 (list "already running!"))
@@ -52,7 +44,4 @@
 (defmethod stop ((subsys subsystem))
   (when (and subsys
              (alive-p subsys))
-    (bt:interrupt-thread
-     (thread subsys)
-     (lambda ()
-       (signal (make-condition 'shutdown-condition))))))
+    (setf (alive-p subsys) nil)))

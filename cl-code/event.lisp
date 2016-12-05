@@ -99,8 +99,10 @@ handle all left events and then return"
 
 (defun run ()
   "init function for Event-Queue subsystem, will run until stopped."
-  (loop (let ((event-queue (lodds:get-subsystem :event-queue)))
-          (if event-queue
-              (handle-event (lparallel.queue:pop-queue (queue event-queue))
-                            event-queue)
-              (error "Event-Queue is nil!")))))
+  (loop :while (lodds.subsystem:alive-p (lodds:get-subsystem :event-queue))
+        :do (let ((event-queue (lodds:get-subsystem :event-queue)))
+              (if event-queue
+                  (handle-event (lparallel.queue:pop-queue (queue event-queue))
+                                event-queue)
+                  (error "Event-Queue is nil!")))
+        :finally (cleanup)))

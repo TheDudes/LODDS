@@ -116,7 +116,7 @@
         (usocket:wait-for-input socket :timeout 1)
       (declare (ignore return-sockets))
       (if (not real-time)
-          (get-next-message socket)
+          nil
           (multiple-value-bind (recv n remote-host remote-port)
               (usocket:socket-receive socket buffer buffer-size)
             (declare (ignore recv remote-host remote-port))
@@ -135,6 +135,9 @@
                                       (lodds:interface lodds:*server*))
                          :local-port (lodds:broadcast-port lodds:*server*)
                          :protocol :datagram))
-           (loop (handle-message (get-next-message socket))))
+           (loop :while (lodds.subsystem:alive-p (lodds:get-subsystem :listener))
+                 :do (let ((msg (get-next-message socket)))
+                       (when msg
+                         (handle-message msg)))))
       (when socket
         (usocket:socket-close socket)))))

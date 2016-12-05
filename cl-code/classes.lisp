@@ -25,13 +25,7 @@
             :initform (error "please specify a init function which will be run by the subsystem")
             :type function
             :documentation "The 'main' function which will be called
-            by a extra thread.")
-   (cleanup-fn :accessor cleanup-fn
-               :initarg :cleanup-fn
-               :initform nil
-               :type function
-               :documentation "Cleanup function, gets called when
-               subsytem is shut down.")))
+            by a extra thread.")))
 
 ;; lodds.task classes
 

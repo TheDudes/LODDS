@@ -99,6 +99,11 @@
                          (lodds:get-ip-address (lodds:interface lodds:*server*))
                          (lodds:handler-port lodds:*server*)
                          :reuse-address t))
-           (loop (handler-callback (usocket:socket-accept socket))))
+           (loop :while (lodds.subsystem:alive-p (lodds:get-subsystem :handler))
+                 :do (when (and (usocket:wait-for-input socket
+                                                        :timeout 1
+                                                        :ready-only t)
+                                (eql :read (usocket:socket-state socket)))
+                       (handler-callback (usocket:socket-accept socket)))))
       (when socket
         (usocket:socket-close socket)))))

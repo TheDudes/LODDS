@@ -58,7 +58,6 @@
                           :name :event-queue
                           :callbacks (list (cons :lodds (lambda (event)
                                                           (event-callback event))))
-                          :cleanup-fn #'lodds.event:cleanup
                           :init-fn #'lodds.event:run)
            ;; LISTENER subsystem listens on broadcast address of
            ;; the set INTERFACE and BROADCAST-PORT member of
