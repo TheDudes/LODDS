@@ -22,7 +22,7 @@
             and SUBSYSTEM-STOP.")
    (init-fn :accessor init-fn
             :initarg :init-fn
-            :initform (error "please specivy a init function which will be run by the subsystem")
+            :initform (error "please specify a init function which will be run by the subsystem")
             :type function
             :documentation "The 'main' function which will be called
             by a extra thread.")
