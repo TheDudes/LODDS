@@ -181,8 +181,8 @@
         :do (signal! main-window
                      (add-entry string string string)
                      path (prin1-to-string size) checksum)))
-
-(defun callback (main-window event)
+(defun cb-list-update (main-window event)
+  "callback which will be called on a :list-update event"
   (destructuring-bind (name type timestamp changes) event
     (format t "got event-callback from: ~a type: ~a, timestamp: ~a."
             name type timestamp)
@@ -207,7 +207,7 @@
        (lodds:with-server lodds-server
          (with-main-window (window (make-instance 'main-window))
            (lodds.event:add-callback :gui (lambda (event)
-                                            (callback window (cdr event)))
+                                            (cb-list-update window (cdr event)))
                                      :event-type :list-update)
            ;; add known clients
            (maphash (lambda (name info)
