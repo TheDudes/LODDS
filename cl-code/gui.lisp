@@ -95,8 +95,7 @@
     ;; as we successfully added it. We dont have to update size here,
     ;; since its a new node and it will match the elements size.
     (if (cdr path)
-        (add-node (cdr path) size checksum
-                        (lambda () new-entry))
+        (add-node (cdr path) size checksum (lambda () new-entry))
         t)))
 
 (defun remove-node (path child-count get-child-fn remove-child-fn)
