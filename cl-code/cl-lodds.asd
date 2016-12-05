@@ -1,4 +1,4 @@
-;;;; lodds.asd
+;;;; cl-lodds.asd
 
 (asdf:defsystem #:cl-lodds
   :description "Common lisp Implementation of LODDS-Protocol"
@@ -27,4 +27,3 @@
                (:file "advertiser")
                (:file "handler")
                (:file "lodds")))
-
