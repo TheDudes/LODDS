@@ -4,7 +4,8 @@
   (let ((socket nil)
         (stream nil))
     (unwind-protect
-         (with-accessors ((ip lodds:c-ip)
+         (with-accessors ((name lodds:c-name)
+                          (ip lodds:c-ip)
                           (port lodds:c-port)
                           (last-change lodds:c-last-change)
                           (table-hash lodds:c-file-table-hash)
@@ -18,6 +19,8 @@
                (lodds.low-level-api:handle-info stream)
              (unless (eql 0 error)
                (error "low level api threw error ~a in handle-info" error))
+             (lodds.event:push-event :list-update
+                                     (list name type timestamp changes))
              (when (eql type :all)
                (setf table-hash (make-hash-table :test 'equal)
                      table-name (make-hash-table :test 'equal)))
