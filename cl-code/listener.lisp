@@ -9,7 +9,7 @@
                           (last-change lodds:c-last-change)
                           (table-hash lodds:c-file-table-hash)
                           (table-name lodds:c-file-table-name)) client
-           (setf socket (usocket:socket-connect ip port)
+           (setf socket (usocket:socket-connect ip port :timeout 1)
                  stream (usocket:socket-stream socket))
            (let ((error (lodds.low-level-api:get-info stream last-change)))
              (unless (eql 0 error)
