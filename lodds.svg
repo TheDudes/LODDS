@@ -1,0 +1,34 @@
+<?xml version="1.0" standalone="no"?>
+<!DOCTYPE svg
+PUBLIC "-//W3C//DTD SVG 1.1//EN"
+"http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg xmlns="http://www.w3.org/2000/svg"
+     version="1.1"
+     width="500"
+     height="500">
+  <path fill="none"
+        stroke="black"
+        stroke-linecap="round"
+        stroke-width="50"
+        d="M  25, 25 L  50, 25
+           M  50, 25 Q 150, 25 150,125
+           M 150,125 C 150,200  25,250  25,325
+           M  25,325 Q  25,475 150,475
+
+           M 150,475 Q 450,475 375,275
+           M 375,275 Q 350,200 250,200
+           M 250,200 Q 150,200 125,275
+           M 125,275 Q  50,475 350,475
+
+           M 350,475 Q 475,475 475,325
+           M 475,325 C 475,250 350,200 350,125
+           M 350,125 Q 350, 25 450, 25
+           M 450, 25 L 475, 25"/>
+  <line x1="250"
+        x2="250"
+        y1="225"
+        y2="450"
+        stroke="black"
+        stroke-linecap="round"
+        stroke-width="50"/>
+</svg>
