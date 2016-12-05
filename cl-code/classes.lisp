@@ -30,7 +30,8 @@
                :initarg :cleanup-fn
                :initform nil
                :type function
-               :documentation "Cleanup function, gets called when subsytem is shut down.")))
+               :documentation "Cleanup function, gets called when
+               subsytem is shut down.")))
 
 ;; lodds.task classes
 
