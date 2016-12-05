@@ -1,0 +1,210 @@
+(in-package #:lodds-qt)
+
+(in-package #:lodds-qt)
+(in-readtable :qtools)
+
+(define-widget main-window (QWidget)
+  ())
+
+(define-subwidget (main-window start) (q+:make-qpushbutton "Start" main-window))
+(define-subwidget (main-window stop) (q+:make-qpushbutton "Stop" main-window))
+
+(define-subwidget (main-window list-of-shares) (q+:make-qtreewidget main-window)
+  (q+:set-header-labels list-of-shares (list "Name" "Size" "Checksum"))
+  (q+:set-animated list-of-shares t)
+  (q+:set-items-expandable list-of-shares t)
+  (q+:set-expands-on-double-click list-of-shares t))
+
+(define-subwidget (main-window layout) (q+:make-qvboxlayout main-window)
+  (setf (q+:window-title main-window) "LODDS")
+  (let ((inner (q+:make-qhboxlayout)))
+    (q+:add-widget inner start)
+    (q+:add-widget inner stop)
+    (q+:add-item layout inner))
+  (q+:add-widget layout list-of-shares))
+
+(define-signal (main-window add-entry) (string string string))
+(define-signal (main-window remove-entry) (string))
+(define-signal (main-window dump-table) ())
+
+(define-slot (main-window start) ()
+  (declare (connected start (pressed)))
+  (lodds:switch-interface "wlp3s0")
+  (lodds.subsystem:start (lodds:get-subsystem :event-queue))
+  (lodds.subsystem:start (lodds:get-subsystem :tasker))
+  (lodds.subsystem:start (lodds:get-subsystem :listener))
+  (lodds.subsystem:start (lodds:get-subsystem :advertiser))
+  (lodds.subsystem:start (lodds:get-subsystem :handler))
+  (lodds.watcher:share-folder "~/ffff/A/")
+  (lodds.watcher:share-folder "~/ffff/B/")
+  (lodds.watcher:share-folder "~/ffff/C/"))
+
+(define-slot (main-window stop) ()
+  (declare (connected stop (pressed)))
+  (lodds:shutdown))
+
+(defun add-node (path size checksum get-parent-fn &optional
+                                                    (child-count 0)
+                                                    (get-child-fn nil)
+                                                    (root-p nil))
+  "loop over childs with get-child-fn and check if current entry (car
+  path) is already present, if so call add-node on that entry
+  recursively, if not add a new entry and then call add-node with the
+  new entry. If add-node returns t, the entry was added, otherwise nil
+  is returned. The return is used to check if size on parents needs to
+  be increased."
+  (loop :for i :from 0 :below child-count
+        :do (let ((element (funcall get-child-fn i)))
+              ;; check if node matches
+              (when (string= (car path) (q+:text element 0))
+                (unless (cdr path)
+                  ;; if there is no path left but we have a
+                  ;; matching node, it means that the node
+                  ;; we tried to add already exists -> we
+                  ;; return nil to indicate an error
+                  (return-from add-node nil))
+                ;; if add-node was successfull, update size and
+                ;; return t
+                (when (add-node (cdr path) size checksum
+                                (lambda () element)
+                                (q+:child-count element)
+                                (lambda (place) (q+:child element place)))
+                  (q+:set-text element 1
+                               (prin1-to-string
+                                (+ (parse-integer size)
+                                   (parse-integer (q+:text element 1)))))
+                  (return-from add-node t))
+                ;; if add-child-node was not successfull, just return
+                ;; nil
+                (return-from add-node nil))))
+  ;; when we get down here it means there was no matching
+  ;; node, so lets add a new one.
+  ;; TODO fix mem leak, finalize new-item when list is destroyed
+  (let ((new-entry (q+:make-qtreewidgetitem (funcall get-parent-fn))))
+    (q+:set-text new-entry 0 (car path))
+    (q+:set-text new-entry 1 size)
+    ;; only add checksums on files, not on folders
+    (unless (cdr path)
+      (q+:set-text new-entry 2 checksum))
+    ;; only if not root
+    (unless root-p
+      (q+:add-child (funcall get-parent-fn) new-entry))
+    ;; if there is path left, add those under the new node. If there
+    ;; is no path left it means we reached the last node, so return t
+    ;; as we successfully added it. We dont have to update size here,
+    ;; since its a new node and it will match the elements size.
+    (if (cdr path)
+        (add-node (cdr path) size checksum
+                        (lambda () new-entry))
+        t)))
+
+(defun remove-node (path child-count get-child-fn remove-child-fn)
+  (loop :for i :from 0 :below child-count
+        :do (let ((element (funcall get-child-fn i)))
+              (when (string= (car path) (q+:text element 0))
+                (if (cdr path)
+                    (let ((size (remove-node (cdr path)
+                                             (q+:child-count element)
+                                             (lambda (place)
+                                               (q+:child element place))
+                                             (lambda (place)
+                                               (parse-integer
+                                                (q+:text (q+:take-child element place) 1))))))
+                      ;; remove-node will return the size of the
+                      ;; removed element, if successfull
+                      (when size
+                        (if (eql 0 (q+:child-count element))
+                            (funcall remove-child-fn i)
+                            (q+:set-text element 1
+                                         (prin1-to-string
+                                          (- (parse-integer (q+:text element 1))
+                                             size))))
+                        ;; return t here, since recursive remove was successfull
+                        (return-from remove-node size)))
+                    ;; return size (will be returned by
+                    ;; remove-child-fn) here, since remove was
+                    ;; successfull
+                    (return-from remove-node (funcall remove-child-fn i)))))
+        ;; return nil (failed) if loop went through and we did not
+        ;; find the specified node
+        :finally (return nil)))
+
+(define-slot (main-window add-entry) ((path string)
+                                      (size string)
+                                      (checksum string))
+  (declare (connected main-window (add-entry string
+                                             string
+                                             string)))
+  (add-node (cl-strings:split path #\/) size checksum
+            (lambda () list-of-shares)
+            (q+:top-level-item-count list-of-shares)
+            (lambda (place) (q+:top-level-item list-of-shares place))
+            t))
+
+(define-slot (main-window remove-entry) ((path string))
+  (declare (connected main-window (remove-entry string)))
+  (remove-node (cl-strings:split path #\/)
+               (q+:top-level-item-count list-of-shares)
+               (lambda (place) (q+:top-level-item list-of-shares place))
+               (lambda (place) (q+:take-top-level-item list-of-shares place))))
+
+(defun dump-item (item &optional (depth 0))
+  "dumps given item, and all its childs, if it has any"
+  (format t "ITEM: ~a~a~%"
+          (make-string depth :initial-element #\ )
+          (q+:text item 0))
+  (loop :for i :from 0 :below (q+:child-count item)
+        :do (dump-item (q+:child item i)
+                       (+ depth 1))))
+
+(define-slot (main-window dump-table) ()
+  (declare (connected main-window (dump-table)))
+  (loop :for i :from 0 :below (q+:top-level-item-count list-of-shares)
+        :do (dump-item (q+:top-level-item list-of-shares i))))
+
+(defun add-entries (main-window entries)
+  (loop :for (path size checksum) :in entries
+        :do (signal! main-window
+                     (add-entry string string string)
+                     path (prin1-to-string size) checksum)))
+
+(defun callback (main-window event)
+  (destructuring-bind (name type timestamp changes) event
+    (format t "got event-callback from: ~a type: ~a, timestamp: ~a."
+            name type timestamp)
+    (format t "~{change: ~a~%~}" changes)
+    (when (eql type :all)
+      (signal! main-window (remove-entry string) name))
+    (loop :for (type checksum size path) :in changes
+          :do (let ((combined-path (concatenate 'string name path)))
+                (if (eql type :add)
+                    (signal! main-window
+                             (add-entry string string string)
+                             combined-path (prin1-to-string size) checksum)
+                    (signal! main-window
+                             (remove-entry string)
+                             combined-path))))))
+
+(defun main ()
+  (let ((lodds-server lodds:*server*))
+    ;; TODO: thats not supposed to be in a CALL-IN-MAIN-THREAD
+    (trivial-main-thread:call-in-main-thread
+     (lambda ()
+       (lodds:with-server lodds-server
+         (with-main-window (window (make-instance 'main-window))
+           (lodds.event:add-callback :gui (lambda (event)
+                                            (callback window (cdr event)))
+                                     :event-type :list-update)
+           ;; add known clients
+           (maphash (lambda (name info)
+                      (maphash (lambda  (filename file-info)
+                                 (destructuring-bind (checksum size) file-info
+                                   (signal! window
+                                            (add-entry string string string)
+                                            (concatenate 'string name filename)
+                                            (prin1-to-string size)
+                                            checksum)))
+                               (lodds:c-file-table-name info)))
+                    (lodds:clients lodds-server)))
+         (lodds.event:remove-callback :gui
+                                      :event-type :list-update))))))
