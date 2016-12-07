@@ -11,17 +11,24 @@ public class FileInfoListEntry extends FileInfo {
 	
 	public Long timestampAdded;
 	public File file;
+	public String relativeFileNameUnix;
 	
 	public FileInfoListEntry(String fileName, String virtualRoot) throws NoSuchAlgorithmException, IOException {
 		super(fileName, virtualRoot);
 		file = new File(fileName);
-		this.timestampAdded = file.lastModified() / 1000L;
+		timestampAdded = file.lastModified() / 1000L;
+		relativeFileNameUnix = replaceBackslashWithForwardslash(fileName);
 	}
 	
 	public FileInfoListEntry(String checksum, long size, String fileName, FileAction fileAction, long timestamp, String virtualRoot) {
 		super(checksum, size, fileName, virtualRoot, fileAction);
 		file = new File(fileName);
-		this.timestampAdded = timestamp;
+		timestampAdded = timestamp;
+		relativeFileNameUnix = replaceBackslashWithForwardslash(fileName);
+	}
+	
+	private String replaceBackslashWithForwardslash(String fileName) {
+		return fileName.replace("\\", "/");
 	}
 
 	
