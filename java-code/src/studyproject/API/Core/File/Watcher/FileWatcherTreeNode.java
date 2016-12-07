@@ -1,6 +1,7 @@
 package studyproject.API.Core.File.Watcher;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
@@ -12,7 +13,6 @@ import studyproject.API.Core.File.InfoList.FileInfoListEntry;
 /**
  * Tree that stores FileInfoEntry objects, structured by fileNames
  * @author gitmalong
- *
  */
 public class FileWatcherTreeNode {
 
@@ -20,7 +20,7 @@ public class FileWatcherTreeNode {
 	private ConcurrentHashMap<String, FileWatcherTreeNode> children;
 	private FileInfoListEntry fileInfo;
 	private FileWatcherTreeNode parent;
-	private Boolean isRoot;
+	// private Boolean isRoot;
 	
 	/**
 	 * Initializes a new node
@@ -28,7 +28,7 @@ public class FileWatcherTreeNode {
 	 */
 	public FileWatcherTreeNode(boolean isRoot) {
 		children = new ConcurrentHashMap<String, FileWatcherTreeNode>();
-		this.isRoot = isRoot;
+		// this.isRoot = isRoot;
 		
 		if (isRoot) {
 			fileName = "root";
@@ -83,7 +83,7 @@ public class FileWatcherTreeNode {
 	/**
 	 * Searches the tree for a node with the given full fileName
 	 * @param fileName
-	 * @return
+	 * @return returns null if no node was found, otherwise the found FileWatcherTreeNode object
 	 */
 	public FileWatcherTreeNode getNodeByFileName(String fullFileName) {
 		return getNodeBySubDirs(convertFileNameToStringList(fullFileName));
@@ -125,7 +125,7 @@ public class FileWatcherTreeNode {
 	 * @param subDirsList
 	 * @return
 	 */
-	public FileWatcherTreeNode getNodeBySubDirs(List<String> subDirsList) {
+	private FileWatcherTreeNode getNodeBySubDirs(List<String> subDirsList) {
 		
 		System.out.println("SubDirList: "+subDirsList);
 		System.out.println("Current node: "+this.fileName);
@@ -198,5 +198,71 @@ public class FileWatcherTreeNode {
 
 				}	
 		}
+	}
+	
+	/**
+	 * Removes node with fileName fileName
+	 * @param fileName
+	 */
+	private static FileWatcherTreeNode removeFileName(String fileName, FileWatcherTreeNode fromNode) {
+		FileWatcherTreeNode node = fromNode.getNodeByFileName(fileName);
+		FileWatcherTreeNode.removeNodeFromParent(node);
+		return node;
+	}	
+	
+	/**
+	 * Removes node from its parent node
+	 * 1) Remove node from parent
+	 * 2) Set parent node to null
+	 * @param node node that should be removed from it parents node
+	 */
+	private static void removeNodeFromParent(FileWatcherTreeNode node) {	
+		// Get parent node
+		if (node.parent != null) {
+			node.parent.children.remove(node.fileName);
+			node.parent = null;
+		}
+	}
+	
+	/**
+	 * Removes node with fileName and returns all FileInfoListEntry objects that were in this node and its children
+	 * @param fromNode
+	 * @param fileName
+	 * @return
+	 */
+	public static ArrayList<FileInfoListEntry> removeFileNameAndGetRemovedFileInfoListEntries (FileWatcherTreeNode fromNode, String fileName) {
+		FileWatcherTreeNode removedNode = FileWatcherTreeNode.removeFileName(fileName, fromNode);
+		ArrayList<FileInfoListEntry> entries = getAllFileInfoListEntries(removedNode, null);
+		return entries;
+	}
+	
+	/**
+	 * Gets all FileInfoListEntrys that are in the given node
+	 * @param node node that is being walked through
+	 * @param entries must be null on first call 
+	 * @return
+	 */
+	private static ArrayList<FileInfoListEntry> getAllFileInfoListEntries(FileWatcherTreeNode node, ArrayList<FileInfoListEntry> entries) {
+		// Create empty list if list exists not yet
+		if (entries == null)
+			entries = new ArrayList<FileInfoListEntry>();
+		
+		// If node is a file, add fileInfo object to list
+		if (node.fileInfo != null) {
+			System.out.println("Added fileInfo: "+node.fileInfo.fileName);
+			entries.add(node.fileInfo);
+		}
+		
+		// If node is a directory, check children
+		else {
+			// Loop through children
+			for (String fileName:node.children.keySet()) {
+				// Recursive call
+				FileWatcherTreeNode child = node.children.get(fileName);
+				getAllFileInfoListEntries(child, entries);
+			}
+		}
+
+		return entries;
 	}
 }
