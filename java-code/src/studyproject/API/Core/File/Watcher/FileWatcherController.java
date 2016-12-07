@@ -155,22 +155,33 @@ public class FileWatcherController {
 	}
 	
 	/**
-	 * Watches all files and folders from a directory recursively
-	 * @param fileName
+	 * Watches all files and folders from a directory recursively. Virtual root directory will automatically be set to absoluteFileName
+	 * @param absoluteFileName: absolute file name in file system
 	 * @throws NoSuchAlgorithmException
 	 * @throws IOException
 	 */
-	public void watchDirectoryRecursively(String fileName, String virtualRoot) throws NoSuchAlgorithmException, IOException {
-		System.out.println("watchDirectoryRecursively: "+fileName);
+	public void watchDirectoryRecursively(String absoluteFileName) throws NoSuchAlgorithmException, IOException {
+		watchDirectoryRecursively(absoluteFileName,absoluteFileName);
+	}
+	
+	/**
+	 * Watches all files and folders from a directory recursively
+	 * @param absoluteFileName: absolute file name in file system
+	 * @param virtualRoot: virtual root directory (part of absolute filename)
+	 * @throws NoSuchAlgorithmException
+	 * @throws IOException
+	 */
+	public void watchDirectoryRecursively(String absoluteFileName, String virtualRoot) throws NoSuchAlgorithmException, IOException {
+		System.out.println("watchDirectoryRecursively: "+absoluteFileName);
 		
 		// Start to watch directory
-		System.out.println("watchDirRec**: "+fileName);
-		watchDirectory(fileName, true, virtualRoot);
+		System.out.println("watchDirRec**: "+absoluteFileName);
+		watchDirectory(absoluteFileName, true, virtualRoot);
 		
-		if (!watchedInternalDirectories.contains(fileName))
-			watchedInternalDirectories.add(fileName);
+		if (!watchedInternalDirectories.contains(absoluteFileName))
+			watchedInternalDirectories.add(absoluteFileName);
 		
-		File[] files = new File(fileName).listFiles();
+		File[] files = new File(absoluteFileName).listFiles();
 
 		 if (files != null) {
 			 for (File file : files) {
