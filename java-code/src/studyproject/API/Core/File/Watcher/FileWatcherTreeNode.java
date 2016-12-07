@@ -41,10 +41,11 @@ public class FileWatcherTreeNode {
 	 */
 	public static void main(String[] args) throws Exception {
 		String fileName = "/Users/robinhood/Desktop/testData/test.zip";
-		FileInfoListEntry entry = new FileInfoListEntry(fileName);
+		String virtualRoot = "/Users/robinhood/Desktop/testData/";
+		FileInfoListEntry entry = new FileInfoListEntry(fileName, virtualRoot);
 		
 		String fileName2 = "/Users/robinhood/Desktop/testData/ahoi/ahoi.zip";
-		FileInfoListEntry entry2 = new FileInfoListEntry(fileName2);
+		FileInfoListEntry entry2 = new FileInfoListEntry(fileName2, virtualRoot);
 
 		
 		FileWatcherTreeNode root = new FileWatcherTreeNode(true);

@@ -24,10 +24,11 @@ import studyproject.API.Core.File.FileInfo;
 public class FileWatcher implements Runnable {
 
 	private String directoryPath;
+	private String virtualRoot;
 	private Boolean watchForNewFiles;
 	private FileWatcherController controller;
 	
-	public FileWatcher(String path, Boolean watchForNewFiles, FileWatcherController controller) {
+	public FileWatcher(String path, Boolean watchForNewFiles, FileWatcherController controller, String virtualRoot) {
 		super();
 		
         // Sometimes folders don't have / at the end, so fix that
@@ -38,6 +39,7 @@ public class FileWatcher implements Runnable {
 		this.directoryPath = path;
 		this.watchForNewFiles = watchForNewFiles;
 		this.controller = controller;
+		this.virtualRoot = virtualRoot;
 	}
 	
 	/**
@@ -67,7 +69,6 @@ public class FileWatcher implements Runnable {
 					
 					 
 					// Lock semaphore
-					// FileWatcherController.semaphore.acquire();
 					controller.lock.lock();
 					
 					for (WatchEvent<?> event : key.pollEvents()) {
@@ -87,7 +88,7 @@ public class FileWatcher implements Runnable {
 					        System.out.println(fullPath);
 					        
 					    	if (newFile.exists() && !newFile.isDirectory()) {
-						        newFileInfo = new FileInfo(fullPath);
+						        newFileInfo = new FileInfo(fullPath, virtualRoot);
 					    	} 
 
 					        System.out.println("FileWatcher: "+directoryPath);
@@ -102,17 +103,17 @@ public class FileWatcher implements Runnable {
 					        	
 					        	if (newFile.isDirectory()) {
 					        		// controller.watchDirectory(directoryPath, true);
-					        		controller.watchDirectoryRecursively(newFile.getPath());
+					        		controller.watchDirectoryRecursively(newFile.getPath(), virtualRoot);
 					        	} else {
 					        		
 					        		System.out.println("..File is not a directory");
-							        newFileInfo = new FileInfo(fullPath);
+							        newFileInfo = new FileInfo(fullPath, virtualRoot);
 					        		fileFromList = controller.getWatchedFileFromListByHash(newFileInfo.checksum);
 
 					        		// Add file to watchList if its not already inside
 						        	if (!controller.currentFilesListFileNameAsKey.containsKey(fullPath)) {
 						        		System.out.println("..file is not in list so its added");
-						        		controller.watchFile(fullPath, false);
+						        		controller.watchFile(fullPath, false, virtualRoot);
 						        		
 						        	} else {
 						        		System.out.println("..file is already in list so its not added");
@@ -186,7 +187,7 @@ public class FileWatcher implements Runnable {
 							        	controller.deleteFileFromLists(fileFromList);
 							        	
 							        	// ADD
-							        	controller.addFileToLists(fullPath);
+							        	controller.addFileToLists(fullPath, virtualRoot);
 
 							        }
 							        

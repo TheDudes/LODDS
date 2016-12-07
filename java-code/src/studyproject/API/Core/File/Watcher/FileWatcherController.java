@@ -54,8 +54,9 @@ public class FileWatcherController {
 		System.out.println("Start");
 
 		FileWatcherController myWatchService = new FileWatcherController();
+		String virtualRoot = "/Users/robinhood/Desktop/testData/";
 
-		myWatchService.watchDirectoryRecursively("/Users/robinhood/Desktop/testData/");
+		myWatchService.watchDirectoryRecursively("/Users/robinhood/Desktop/testData/", virtualRoot);
 		
 	    try {
 	        while (true) {
@@ -116,7 +117,7 @@ public class FileWatcherController {
 	}
 	
 	public String convertFileInfoToString(FileInfo file) {
-		return file.fileAction.name()+" "+file.checksum+" "+file.size+" "+file.fileName+"\n";		
+		return file.fileAction.name()+" "+file.checksum+" "+file.size+" "+file.relativeFileName+"\n";		
 	}
 	
 	/**
@@ -126,12 +127,11 @@ public class FileWatcherController {
 	 * @throws NoSuchAlgorithmException
 	 * @throws IOException
 	 */
-	public void watchFile(String path, Boolean watchParentFolderForNewFiles) throws NoSuchAlgorithmException, IOException {
+	public void watchFile(String path, Boolean watchParentFolderForNewFiles, String virtualRoot) throws NoSuchAlgorithmException, IOException {
 		System.out.println("watchFile: "+path);
 		
 		// Create new FileInfo object and add it to vector list
-		// System.out.println("watchFile: "+path);
-		FileInfoListEntry newFile = addFileToLists(path);
+		FileInfoListEntry newFile = addFileToLists(path, virtualRoot);
 				
 		// Add parent directory of file to watchedDirectories if its not already inside
 		String parentDirectory = newFile.parentDirectory+"/";
@@ -140,7 +140,7 @@ public class FileWatcherController {
 			watchedInternalDirectories.add(parentDirectory);
 			
 			// Start to watch directory
-			watchDirectory(parentDirectory, watchParentFolderForNewFiles);
+			watchDirectory(parentDirectory, watchParentFolderForNewFiles, virtualRoot);
 		}
 		
 	}
@@ -149,9 +149,9 @@ public class FileWatcherController {
 	 * Starts directory listener thread
 	 * @param path
 	 */
-	public void watchDirectory(String path, Boolean watchForNewFiles) {
+	public void watchDirectory(String path, Boolean watchForNewFiles, String virtualRoot) {
 		System.out.println("watchDirectory(): "+path);
-        (new Thread(new FileWatcher(path, watchForNewFiles, this))).start();
+        (new Thread(new FileWatcher(path, watchForNewFiles, this, virtualRoot))).start();
 	}
 	
 	/**
@@ -160,12 +160,12 @@ public class FileWatcherController {
 	 * @throws NoSuchAlgorithmException
 	 * @throws IOException
 	 */
-	public void watchDirectoryRecursively(String fileName) throws NoSuchAlgorithmException, IOException {
+	public void watchDirectoryRecursively(String fileName, String virtualRoot) throws NoSuchAlgorithmException, IOException {
 		System.out.println("watchDirectoryRecursively: "+fileName);
 		
 		// Start to watch directory
 		System.out.println("watchDirRec**: "+fileName);
-		watchDirectory(fileName, true);
+		watchDirectory(fileName, true, virtualRoot);
 		
 		if (!watchedInternalDirectories.contains(fileName))
 			watchedInternalDirectories.add(fileName);
@@ -175,9 +175,9 @@ public class FileWatcherController {
 		 if (files != null) {
 			 for (File file : files) {
 			        if (file.isDirectory()) {
-			            	watchDirectoryRecursively(file.getPath().toString());
+			            	watchDirectoryRecursively(file.getPath().toString(), virtualRoot);
 					 } else {
-						 	watchFile(file.getPath().toString(), true);
+						 	watchFile(file.getPath().toString(), true, virtualRoot);
 					 }
 			 }
 		 }
@@ -204,20 +204,16 @@ public class FileWatcherController {
 	
 	public void deleteFileFromLists(FileInfo file) {
 		System.out.println("deleteFileFromLists(): "+file.fileName);
-
-		// Create FileInfoListEntry object
-		Long timestamp = System.currentTimeMillis() / 1000L;
-    	FileInfoListEntry deletedFile = new FileInfoListEntry(file.checksum, file.size, file.fileName, FileAction.del, timestamp);
-    	
-    	// Remove from fileInfoList
-    	fileInfoList.add(deletedFile);
-    	
+		
+		String virtualRoot = "";
+		
     	// Remove from currentFilesListHashListAsKey
     	List<FileInfoListEntry> filesToDelete = new ArrayList<FileInfoListEntry>();
     	if (currentFilesListHashListAsKey.containsKey(file.checksum)) {
     		for (FileInfoListEntry listFile:currentFilesListHashListAsKey.get(file.checksum)) {
     			if (listFile.fileName.equals(file.fileName)) {
     				filesToDelete.add(listFile);
+    				virtualRoot = listFile.virtualRoot;
     			}
     		}
     	}
@@ -228,12 +224,20 @@ public class FileWatcherController {
     	
     	// Remove from currentFilesListFileNameAsKey
     	currentFilesListFileNameAsKey.remove(file.fileName);
+
+		// Create FileInfoListEntry object
+		Long timestamp = System.currentTimeMillis() / 1000L;
+    	FileInfoListEntry deletedFile = new FileInfoListEntry(file.checksum, file.size, file.fileName, FileAction.del, timestamp, virtualRoot);
+    	
+    	// Remove from fileInfoList
+    	fileInfoList.add(deletedFile);
+
 	}
 	
-	public FileInfoListEntry addFileToLists(String fileName) throws NoSuchAlgorithmException, IOException {
+	public FileInfoListEntry addFileToLists(String fileName, String virtualRoot) throws NoSuchAlgorithmException, IOException {
 		System.out.println("Add new file: "+fileName);
 		
-		FileInfoListEntry newFile = new FileInfoListEntry(fileName);
+		FileInfoListEntry newFile = new FileInfoListEntry(fileName, virtualRoot);
 		Boolean fileShouldBeAdded = true;
 		
 		// Check if file is already inside the list with same hash to prevent multiple adds
