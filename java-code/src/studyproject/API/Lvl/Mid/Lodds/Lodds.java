@@ -323,7 +323,9 @@ public class Lodds {
 	 * Make a folder and its contents available to other clients
 	 * 
 	 * @param absolutePath
-	 *            the path to the folder
+	 *            the absolute path to the folder
+	 * @param virtualRoot
+	 * 			  the virtual root directory (part of absolute path)
 	 * 
 	 * @return 0 or error codes
 	 */
