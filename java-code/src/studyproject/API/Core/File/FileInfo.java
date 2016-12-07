@@ -9,7 +9,7 @@ public class FileInfo {
 	public long size;
 	public String fileName;
 	public String virtualRoot;
-	public String relativeFileName;
+	public String relativeFileName; // unix format
 	public FileAction fileAction;
 	public String parentDirectory;
 
@@ -58,7 +58,11 @@ public class FileInfo {
 	}
 	
 	private String getRelativeFileName() {
-		return fileName.replace(virtualRoot, "");
+		return replaceBackslashWithForwardslash(fileName.replace(virtualRoot, ""));
+	}
+	
+	protected String replaceBackslashWithForwardslash(String fileName) {
+		return fileName.replace("\\", "/");
 	}
 
 }

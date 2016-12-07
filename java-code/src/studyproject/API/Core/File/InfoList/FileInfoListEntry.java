@@ -26,10 +26,7 @@ public class FileInfoListEntry extends FileInfo {
 		timestampAdded = timestamp;
 		relativeFileNameUnix = replaceBackslashWithForwardslash(fileName);
 	}
-	
-	private String replaceBackslashWithForwardslash(String fileName) {
-		return fileName.replace("\\", "/");
-	}
+
 
 	
 }
