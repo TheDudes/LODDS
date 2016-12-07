@@ -12,6 +12,7 @@ import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Button;
 import javafx.scene.control.ListView;
+import studyproject.App;
 import studyproject.API.Lvl.Low.Broadcast;
 import studyproject.gui.mainWindow.MainWindowModel;
 
@@ -54,7 +55,7 @@ public class SelectedInterfacePresenter implements Initializable {
 		if (selectedInterface == null || selectedInterface.isEmpty())
 			return;
 		mainWindowModel.getLodds().setInterface(selectedInterface);
-		mainWindowModel.getLodds().setUserName("ninti");
+		mainWindowModel.getLodds().setUserName((String) App.properties.get("userName"));
 		mainWindowModel.getLodds().startUp();
 		interfaceList.getScene().getWindow().hide();
 	}
