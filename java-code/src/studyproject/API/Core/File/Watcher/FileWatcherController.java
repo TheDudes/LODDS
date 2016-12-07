@@ -16,10 +16,7 @@ import studyproject.API.Core.File.InfoList.FileInfoListEntry;
 
 /**
  * TODO:
- * - Bug fixed: We don't know if the deleted event was a file or directory
- * - Bug: When a folder is deleted WatchService does not notify about the deleted files that were inside that folder
- * - Bug fixed: removal of empty folder is not recognized -> folder is not removed from watched directories 
- * - Bug fixed: removal of not empty folder is not recognized -> folder is not removed from watched directories 
+ * - Bug: When a folder is deleted WatchService does not notify about the deleted files that were inside that folder 
  */
 public class FileWatcherController {
 
@@ -94,11 +91,14 @@ public class FileWatcherController {
 		String header = "";
 		String body = "";
 		
+		Long currentTimestampSec = System.currentTimeMillis() / 1000L;
+		Long currentTimestampMinusOneSec = currentTimestampSec-1;
+		
 		// Body
 		int filesMatched = 0;
 		for (FileInfoListEntry file:fileInfoList) {
 			
-			if (timestamp == 0 || (((file.file.lastModified()/ 1000L) >= timestamp) || (file.timestampAdded >= timestamp))) {
+			if (timestamp == 0 || (((file.file.lastModified()/ 1000L) >= timestamp) || (file.timestampAdded >= timestamp) && (file.file.lastModified()/ 1000L) < currentTimestampMinusOneSec) || (file.timestampAdded < currentTimestampMinusOneSec)) {
 				body = this.convertFileInfoToString(file)+body;
 				filesMatched++;
 			} 
@@ -107,10 +107,9 @@ public class FileWatcherController {
 		
 		// Header
 		if (timestamp == 0) {
-		   Long timestampNow =  System.currentTimeMillis() / 1000L;
-		   header = "all "+timestampNow+" "+filesMatched+"\n";
+		   header = "all "+currentTimestampSec+" "+filesMatched+"\n";
 		} else {
-		   header = "upd "+timestamp+" "+filesMatched+"\n";
+		   header = "upd "+currentTimestampSec+" "+filesMatched+"\n";
 		}
 		
 		return header+body;
