@@ -8,6 +8,15 @@
 
 (define-subwidget (main-window start) (q+:make-qpushbutton "Start" main-window))
 (define-subwidget (main-window stop) (q+:make-qpushbutton "Stop" main-window))
+(define-subwidget (main-window interfaces) (q+:make-qcombobox main-window)
+  (q+:add-items interfaces (lodds:get-interfaces))
+  (let ((current-interface (lodds:interface lodds:*server*)))
+    (if current-interface
+        (let ((current-interface-index (q+:find-text interfaces
+                                                     current-interface)))
+          (when (> current-interface-index 0)
+            (q+:set-current-index interfaces current-interface-index)))
+        (q+:set-current-index interfaces -1))))
 
 (define-subwidget (main-window list-of-shares) (q+:make-qtreewidget main-window)
   (q+:set-header-labels list-of-shares (list "Name" "Size" "Checksum"))
@@ -20,6 +29,7 @@
   (let ((inner (q+:make-qhboxlayout)))
     (q+:add-widget inner start)
     (q+:add-widget inner stop)
+    (q+:add-widget inner interfaces)
     (q+:add-item layout inner))
   (q+:add-widget layout list-of-shares))
 
@@ -30,7 +40,6 @@
 (define-slot (main-window start) ()
   (declare (connected start (pressed)))
   ;; TODO: well, this is not final :D
-  (lodds:switch-interface "wlp3s0")
   (lodds.subsystem:start (lodds:get-subsystem :event-queue))
   (lodds.subsystem:start (lodds:get-subsystem :tasker))
   (lodds.subsystem:start (lodds:get-subsystem :listener))
@@ -43,6 +52,10 @@
 (define-slot (main-window stop) ()
   (declare (connected stop (pressed)))
   (lodds:shutdown))
+
+(define-slot (main-window interfaces) ((selected-item string))
+  (declare (connected interfaces (current-index-changed string)))
+  (lodds:switch-interface selected-item))
 
 (defun add-node (path size checksum get-parent-fn &optional
                                                     (child-count 0)
