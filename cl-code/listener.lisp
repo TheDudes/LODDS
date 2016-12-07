@@ -48,22 +48,22 @@
         (usocket:socket-close socket)))))
 
 (defmethod lodds.task:run-task ((task lodds.task:task-client-info))
-  (with-accessors ((cn lodds.task:client-name)
-                   (ci lodds.task:client-ip)
-                   (cp lodds.task:client-port)
-                   (cmt lodds.task:client-message-timestamp)
-                   (clc lodds.task:client-last-change)
-                   (cl lodds.task:client-load)) task
-    (let ((client-info (gethash cn (lodds:clients lodds:*server*))))
+  (with-accessors ((c-name lodds.task:client-name)
+                   (c-ip lodds.task:client-ip)
+                   (c-port lodds.task:client-port)
+                   (c-message-timestamp lodds.task:client-message-timestamp)
+                   (c-last-change lodds.task:client-last-change)
+                   (c-load lodds.task:client-load)) task
+    (let ((client-info (gethash c-name (lodds:clients lodds:*server*))))
       (unless client-info
         (setf client-info (make-instance 'lodds:client-info
-                                         :c-name cn
-                                         :c-last-message cmt
-                                         :c-ip ci
-                                         :c-port cp
+                                         :c-name c-name
+                                         :c-last-message c-message-timestamp
+                                         :c-ip c-ip
+                                         :c-port c-port
                                          :c-last-change 0
-                                         :c-load cl)
-              (gethash cn (lodds:clients lodds:*server*)) client-info))
+                                         :c-load c-load)
+              (gethash c-name (lodds:clients lodds:*server*)) client-info))
       (let ((locked (bt:acquire-lock (lodds:c-lock client-info) nil)))
         (if locked
             ;; only go on if we locked, if not, just drop the update, we
@@ -72,10 +72,10 @@
             (unwind-protect
                  (handler-case
                      (progn
-                       (setf (lodds:c-last-message client-info) cmt
-                             (lodds:c-load client-info) cl)
+                       (setf (lodds:c-last-message client-info) c-message-timestamp
+                             (lodds:c-load client-info) c-load)
                        (when (<= (lodds:c-last-change client-info)
-                                 clc)
+                                 c-last-change)
                          (update-client-list client-info)))
                    (error (e)
                      (format t "got error inside update-client-list ~a~%" e)))
