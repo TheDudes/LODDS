@@ -93,7 +93,9 @@
       (maphash (lambda (key client)
                  (when (> (- current-time (lodds:c-last-message client))
                           (lodds:client-timeout lodds:*server*))
-                   (remhash key clients)))
+                   (remhash key clients)
+                   (lodds.event:push-event :client-removed
+                                           key)))
                clients)
       ;; add client
       (destructuring-bind (ip port timestamp-l-c load name) result
@@ -140,4 +142,11 @@
                        (when msg
                          (handle-message msg)))))
       (when socket
-        (usocket:socket-close socket)))))
+        (usocket:socket-close socket))
+      (let ((clients (lodds:clients lodds:*server*)))
+        (maphash (lambda (key client)
+                   (declare (ignore client))
+                   (remhash key clients)
+                   (lodds.event:push-event :client-removed
+                                           key))
+                 clients)))))
