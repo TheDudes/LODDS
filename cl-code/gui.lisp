@@ -209,8 +209,8 @@
     (let* ((scrollbar (q+:vertical-scroll-bar log))
            (position (q+:value scrollbar)))
       (loop :while (> (q+:top-level-item-count log) +log-count+)
-            :do (finalize (q+:take-top-level-item log 0)))
-      (q+:set-value scrollbar (- position 1)))
+            :do (progn (finalize (q+:take-top-level-item log 0))
+                       (q+:set-value scrollbar (- position 1)))))
     (let* ((item-above (q+:item-above log new-entry))
            (visual-rect (q+:visual-item-rect log item-above)))
       (when (and item-above
