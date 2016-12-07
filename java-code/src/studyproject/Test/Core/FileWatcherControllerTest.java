@@ -20,26 +20,20 @@ public class FileWatcherControllerTest {
 	@Test
 	public void listShouldContainOneFile() throws NoSuchAlgorithmException, IOException {
 		FileWatcherController controller = new FileWatcherController();
-		controller.watchDirectoryRecursively(testDirectory+"oneFile");
+		controller.watchDirectoryRecursively(testDirectory+"oneFile",testDirectory);
 		assertEquals(1,controller.fileInfoList.size());
 	}
 	
 	@Test
 	public void listShouldContainTwoFiles() throws NoSuchAlgorithmException, IOException {
 		FileWatcherController controller = new FileWatcherController();
-		controller.watchDirectoryRecursively(testDirectory+"twoFiles");
+		controller.watchDirectoryRecursively(testDirectory+"twoFiles",testDirectory);
 		assertEquals(2,controller.fileInfoList.size());
 	}
 	
 	@Test
 	public void shouldGetCorrectFileInfoString() throws NoSuchAlgorithmException, IOException {
-		// Create dummy FileInfo
-		FileInfo fileInfo = new FileInfo();
-		fileInfo.checksum = "983x89j23897rw9789n87we9r78w798";
-		fileInfo.size = 1000;
-		fileInfo.fileName = "\\home\\peter\\abc\\";
-		fileInfo.fileAction = FileAction.add;
-		fileInfo.parentDirectory = "\\home\\peter\\";
+		FileInfo fileInfo = new FileInfo("983x89j23897rw9789n87we9r78w798", 1000, testDirectory+"oneFile/testFile.txt", testDirectory, FileAction.add);
 		
 		FileWatcherController controller = new FileWatcherController();
 		String actualOutput = controller.convertFileInfoToString(fileInfo);
@@ -50,7 +44,7 @@ public class FileWatcherControllerTest {
 	@Test
 	public void shouldGetCorrectFileInfoMsgWithTimestampZero() throws NoSuchAlgorithmException, IOException {
 		FileWatcherController controller = new FileWatcherController();
-		controller.watchDirectoryRecursively(testDirectory+"oneFile");
+		controller.watchDirectoryRecursively(testDirectory+"oneFile", testDirectory);
 		
 		/**
 		 *  example output
@@ -74,7 +68,7 @@ public class FileWatcherControllerTest {
 	 */
 	public void shouldGetCorrectFileInfoMsgWithTimestampThatMatchesOneOfTwoFiles() throws NoSuchAlgorithmException, IOException {
 		FileWatcherController controller = new FileWatcherController();
-		controller.watchDirectoryRecursively(testDirectory+"twoFiles");
+		controller.watchDirectoryRecursively(testDirectory+"twoFiles", testDirectory);
 	     
 		Date dt = new Date();
 		long millisec = dt.getTime();
@@ -104,7 +98,7 @@ public class FileWatcherControllerTest {
 		String path = testDirectory+"temp/";
 		
 		FileWatcherController controller = new FileWatcherController();
-		controller.watchDirectoryRecursively(path);
+		controller.watchDirectoryRecursively(path, testDirectory);
 		
 		assertEquals(0,controller.fileInfoList.size());
 		
@@ -143,7 +137,7 @@ public class FileWatcherControllerTest {
 		
 		// Start watching
 		FileWatcherController controller = new FileWatcherController();
-		controller.watchDirectoryRecursively(path);
+		controller.watchDirectoryRecursively(path, testDirectory);
 		
 		// Wait short till fileController was initialized
 		Thread.sleep(1000);

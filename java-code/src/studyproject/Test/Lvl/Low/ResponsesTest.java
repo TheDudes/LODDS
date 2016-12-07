@@ -29,9 +29,9 @@ public class ResponsesTest {
 			socketStream = new BufferedOutputStream(new FileOutputStream(
 					readWritePath));
 			inputStream = new BufferedReader(new FileReader(readWritePath));
-			fileInfos.add(new FileInfo("000001", 1000001, "asdf1.txt",
+			fileInfos.add(new FileInfo("000001", 1000001, "asdf1.txt", "",
 					FileAction.add));
-			fileInfos.add(new FileInfo("000002", 1000002, "asdf2.txt",
+			fileInfos.add(new FileInfo("000002", 1000002, "asdf2.txt", "",
 					FileAction.del));
 			if (Responses.respondInfo(socketStream, 0, fileInfos) == 0) {
 				assertEquals("all 0 2", inputStream.readLine());
@@ -57,7 +57,7 @@ public class ResponsesTest {
 			socketStream = new BufferedOutputStream(new FileOutputStream(
 					readWritePath));
 			inputStream = new BufferedReader(new FileReader(readWritePath));
-			fileInfos.add(new FileInfo("000003", 1000003, "FileWithoutDot",
+			fileInfos.add(new FileInfo("000003", 1000003, "FileWithoutDot", "",
 					FileAction.add));
 			if (Responses.respondInfo(socketStream, timestamp, fileInfos) == 0) {
 				assertEquals("upd " + timestamp + " 1", inputStream.readLine());

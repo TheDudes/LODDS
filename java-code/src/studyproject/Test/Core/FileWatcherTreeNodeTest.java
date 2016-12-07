@@ -14,7 +14,7 @@ public class FileWatcherTreeNodeTest {
 	@Test
 	public void shouldFindOneFile() throws Exception {
 		String fileName = testDirectory+"oneFile/testFile.txt";
-		FileInfoListEntry entry = new FileInfoListEntry(fileName);
+		FileInfoListEntry entry = new FileInfoListEntry(fileName, testDirectory);
 		
 		FileWatcherTreeNode root = new FileWatcherTreeNode(true);
 		root.addFileInfoEntry(FileWatcherTreeNode.convertFileNameToStringList(entry.fileName), entry);
@@ -27,7 +27,7 @@ public class FileWatcherTreeNodeTest {
 	@Test
 	public void shouldFindNoFile() throws Exception {
 		String fileName = testDirectory+"oneFile/testFile.txt";
-		FileInfoListEntry entry = new FileInfoListEntry(fileName);
+		FileInfoListEntry entry = new FileInfoListEntry(fileName, testDirectory);
 		
 		FileWatcherTreeNode root = new FileWatcherTreeNode(true);
 		root.addFileInfoEntry(FileWatcherTreeNode.convertFileNameToStringList(entry.fileName), entry);

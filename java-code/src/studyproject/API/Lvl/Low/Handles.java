@@ -63,15 +63,16 @@ public class Handles {
 					return 2;
 				}
 				params = currentLine.split(" ");
-				fileInfo = new FileInfo();
+				
+				FileAction fileInfoFileAction;
+				
 				if (params[0].equals(FileAction.add.toString())) {
-					fileInfo.fileAction = FileAction.add;
+					fileInfoFileAction = FileAction.add;
 				} else {
-					fileInfo.fileAction = FileAction.del;
+					fileInfoFileAction = FileAction.del;
 				}
-				fileInfo.checksum = params[1];
-				fileInfo.size = Long.valueOf(params[2]);
-				fileInfo.fileName = params[3];
+				
+				fileInfo = new FileInfo(params[1], Long.valueOf(params[2]), params[3], "", fileInfoFileAction);
 				fileInfos.add(fileInfo);
 			}
 		} catch (IOException e) {

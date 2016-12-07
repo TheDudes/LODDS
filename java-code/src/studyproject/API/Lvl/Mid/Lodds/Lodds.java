@@ -322,16 +322,16 @@ public class Lodds {
 	/**
 	 * Make a folder and its contents available to other clients
 	 * 
-	 * @param path
+	 * @param absolutePath
 	 *            the path to the folder
 	 * 
 	 * @return 0 or error codes
 	 */
-	public int shareFolder(String path) {
-		if (Files.exists(Paths.get(path)) && Files.isDirectory(Paths.get(path)) && !sharedFolders.contains(path)) {
-			sharedFolders.add(path);
+	public int shareFolder(String absolutePath, String virtualRoot) {
+		if (Files.exists(Paths.get(absolutePath)) && Files.isDirectory(Paths.get(absolutePath)) && !sharedFolders.contains(absolutePath)) {
+			sharedFolders.add(absolutePath);
 			try {
-				watchService.watchDirectoryRecursively(path);
+				watchService.watchDirectoryRecursively(absolutePath, virtualRoot);
 			} catch (NoSuchAlgorithmException e) {
 				// TODO Error Handling
 				e.printStackTrace();

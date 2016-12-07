@@ -49,7 +49,7 @@ public class FileSenderTest {
 			testClient.start();
 
 			FileInfo fileInfo = new FileInfo(originHash, file.length(),
-					FileUtil.sourceFile, null);
+					FileUtil.sourceFile, "", null);
 			fileInfo.parentDirectory = file.getParent();
 
 			Socket socket = new Socket(InetAddress.getByName(ip), port);
@@ -92,7 +92,7 @@ public class FileSenderTest {
 			testClient.start();
 
 			FileInfo fileInfo = new FileInfo(originHash, file.length(),
-					FileUtil.sourceFile, null);
+					FileUtil.sourceFile, "", null);
 			fileInfo.parentDirectory = file.getParent();
 
 			Socket socket = new Socket(InetAddress.getByName(ip), port);
@@ -142,7 +142,7 @@ public class FileSenderTest {
 			testClient.start();
 
 			FileInfo fileInfo = new FileInfo(originHash, file.length(),
-					FileUtil.sourceFile, null);
+					FileUtil.sourceFile, "", null);
 			fileInfo.parentDirectory = file.getParent();
 
 			Socket socket = new Socket(InetAddress.getByName(ip), port);

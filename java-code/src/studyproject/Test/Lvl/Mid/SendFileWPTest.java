@@ -41,7 +41,7 @@ public class SendFileWPTest {
 			String originHash = FileHasher.getFileHash(FileUtil.dir + "/"
 					+ FileUtil.sourceFile);
 			FileInfo fileInfo = new FileInfo(originHash, file.length(),
-					FileUtil.sourceFile, null);
+					FileUtil.sourceFile, "", null);
 			fileInfo.parentDirectory = file.getParent();
 
 			UserInfo user = new UserInfo(InetAddress.getByName(ip), port,
@@ -83,7 +83,7 @@ public class SendFileWPTest {
 			String originHash = FileHasher.getFileHash(FileUtil.dir + "/"
 					+ FileUtil.sourceFile);
 			FileInfo fileInfo = new FileInfo(originHash, file.length(),
-					FileUtil.sourceFile, null);
+					FileUtil.sourceFile, "", null);
 			fileInfo.parentDirectory = file.getParent();
 
 			UserInfo user = new UserInfo(InetAddress.getByName(ip), port,
