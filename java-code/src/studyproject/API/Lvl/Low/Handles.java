@@ -8,6 +8,7 @@ import java.io.InputStreamReader;
 import java.net.Socket;
 import java.net.SocketTimeoutException;
 import java.util.ArrayList;
+import java.util.logging.Level;
 import java.util.regex.Pattern;
 
 import studyproject.API.Core.Timestamp;
@@ -16,12 +17,15 @@ import studyproject.API.Core.File.FileAction;
 import studyproject.API.Core.File.FileInfo;
 import studyproject.API.Core.File.InfoList.FileInfoListType;
 import studyproject.API.Core.File.InfoList.InfoType;
+import studyproject.API.Errors.ErrLog;
+import studyproject.logging.APILvl;
+import studyproject.logging.LogKey;
 
 public class Handles {
 
 	private static final int BUFFERSIZE = 4096;
 	private static final String GET_INFO_HEAD_REGEX = "(upd|all) \\d{1,19} \\d{1,19}";
-	private static final String GET_INFO_BODY_LINE_REGEX = "(add|del) \\w{64} \\d{1,19} [^/\\\\:*?\"<>|%]*";
+	private static final String GET_INFO_BODY_LINE_REGEX = "(add|del) \\w{64} \\d{1,19} [^\\\\:*?\"<>|%]*";
 
 	/**
 	 * Handles incoming info responses to the getInfoUp request
@@ -46,6 +50,7 @@ public class Handles {
 		int numberOfLines;
 		try {
 			currentLine = socketStream.readLine();
+			ErrLog.log(Level.INFO, LogKey.info, APILvl.mid, "handleInfo", currentLine);
 			if (!Pattern.matches(GET_INFO_HEAD_REGEX, currentLine)) {
 				return 2;
 			}
@@ -59,6 +64,8 @@ public class Handles {
 			numberOfLines = Integer.parseInt(params[2]);
 			for (int i = 0; i < Integer.valueOf(numberOfLines); i++) {
 				currentLine = socketStream.readLine();
+				ErrLog.log(Level.INFO, LogKey.info, APILvl.mid, "handleInfo", currentLine);
+
 				if (!Pattern.matches(GET_INFO_BODY_LINE_REGEX, currentLine)) {
 					return 2;
 				}
