@@ -29,6 +29,18 @@
   (q+:set-style-sheet list-of-shares "QTreeView {
                                         alternate-background-color: #eeeeef;
                                         background-color: #ffffff;
+                                      }
+
+                                      QTreeView::branch:has-children:!has-siblings:closed,
+                                      QTreeView::branch:closed:has-children:has-siblings {
+                                        border-image: none;
+                                        image: url(folder-closed.png);
+                                      }
+
+                                      QTreeView::branch:open:has-children:!has-siblings,
+                                      QTreeView::branch:open:has-children:has-siblings  {
+                                        border-image: none;
+                                        image: url(folder-open.png);
                                       }"))
 
 (define-subwidget (main-window log) (q+:make-qtreewidget main-window)
