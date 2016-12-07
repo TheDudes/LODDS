@@ -15,6 +15,7 @@ import org.junit.Test;
 import studyproject.API.Core.File.FileHasher;
 import studyproject.API.Core.File.FileInfo;
 import studyproject.API.Lvl.Mid.FileSenderThread;
+import studyproject.Test.FileUtil;
 
 /**
  * Junit tests for the FileSenderThread
@@ -37,7 +38,7 @@ public class FileSenderTest {
 	@Test
 	public void testSendFile() {
 		String originHash;
-		FileUtil.createFile();
+		FileUtil.createFile(FileUtil.fileContents);
 		File file = new File(FileUtil.dir + "/" + FileUtil.sourceFile);
 
 		try {
@@ -46,6 +47,7 @@ public class FileSenderTest {
 			FileSenderTestClient testClient = new FileSenderTestClient(
 					InetAddress.getByName(ip), port, FileUtil.dir + "/" + FileUtil.destFile,
 					file.length());
+			FileUtil.addToCleanUp(FileUtil.destFile);
 			testClient.start();
 
 			FileInfo fileInfo = new FileInfo(originHash, file.length(),
@@ -80,7 +82,7 @@ public class FileSenderTest {
 	@Test
 	public void testSendFileFirstPart() {
 		String originHash;
-		FileUtil.createFile();
+		FileUtil.createFile(FileUtil.fileContents);
 		File file = new File(FileUtil.dir + "/" + FileUtil.sourceFile);
 
 		try {
@@ -89,6 +91,7 @@ public class FileSenderTest {
 			FileSenderTestClient testClient = new FileSenderTestClient(
 					InetAddress.getByName(ip), port, FileUtil.dir + "/" + FileUtil.destFile,
 					endIndex);
+			FileUtil.addToCleanUp(FileUtil.destFile);
 			testClient.start();
 
 			FileInfo fileInfo = new FileInfo(originHash, file.length(),
@@ -130,7 +133,7 @@ public class FileSenderTest {
 	@Test
 	public void testSendFileLastPart() {
 		String originHash;
-		FileUtil.createFile();
+		FileUtil.createFile(FileUtil.fileContents);
 		File file = new File(FileUtil.dir + "/" + FileUtil.sourceFile);
 
 		try {
@@ -139,6 +142,7 @@ public class FileSenderTest {
 			FileSenderTestClient testClient = new FileSenderTestClient(
 					InetAddress.getByName(ip), port, FileUtil.dir + "/" + FileUtil.destFile,
 					file.length() - startIndex);
+			FileUtil.addToCleanUp(FileUtil.destFile);
 			testClient.start();
 
 			FileInfo fileInfo = new FileInfo(originHash, file.length(),

@@ -15,6 +15,7 @@ import studyproject.API.Core.File.FileHasher;
 import studyproject.API.Core.File.FileInfo;
 import studyproject.API.Lvl.Mid.SendFileWPThread;
 import studyproject.API.Lvl.Mid.Core.UserInfo;
+import studyproject.Test.FileUtil;
 
 /**
  * Junit tests for the SendFileWPThread class
@@ -34,7 +35,7 @@ public class SendFileWPTest {
 	 */
 	@Test
 	public void testSendFileWP() {
-		FileUtil.createFile();
+		FileUtil.createFile(FileUtil.fileContents);
 
 		try {
 			File file = new File(FileUtil.dir + "/" + FileUtil.sourceFile);
@@ -50,6 +51,7 @@ public class SendFileWPTest {
 			SendFileWPTestClient testClient = new SendFileWPTestClient(
 					InetAddress.getByName(ip), port, FileUtil.dir + "/"
 							+ FileUtil.destFile, file.length(), 0);
+			FileUtil.addToCleanUp(FileUtil.destFile);
 			testClient.start();
 
 			SendFileWPThread sendFileWP = new SendFileWPThread(user, timeout,
@@ -76,7 +78,7 @@ public class SendFileWPTest {
 	 */
 	@Test
 	public void testSendFileWPTimeout() {
-		FileUtil.createFile();
+		FileUtil.createFile(FileUtil.fileContents);
 
 		try {
 			File file = new File(FileUtil.dir + "/" + FileUtil.sourceFile);
@@ -92,6 +94,7 @@ public class SendFileWPTest {
 			SendFileWPTestClient testClient = new SendFileWPTestClient(
 					InetAddress.getByName(ip), port, FileUtil.dir + "/"
 							+ FileUtil.destFile, file.length(), timeout + 1000);
+			FileUtil.addToCleanUp(FileUtil.destFile);
 			testClient.start();
 
 			SendFileWPThread sendFileWP = new SendFileWPThread(user, timeout,
