@@ -57,6 +57,7 @@ public class App extends Application {
 				Files.createDirectories(Paths.get(propertiesFile.getParent()));
 				propertiesFile.getParentFile().mkdirs();
 				propertiesFile.createNewFile();
+				properties.put("userName", System.getProperty("user.name"));
 				properties.store(new FileOutputStream(propertiesFile), null);
 				ErrLog.log(Level.INFO, LogKey.info, APILvl.gui, "loadProperties()",
 						"new propertiesfile created at " + propertiesFile.getAbsolutePath());
