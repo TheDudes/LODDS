@@ -38,7 +38,7 @@ public class FilesTreePresenter implements Initializable {
 		userListModel.getSelectedUser().addListener(new ChangeListener<UserInfo>() {
 			@Override
 			public void changed(ObservableValue<? extends UserInfo> observable, UserInfo oldValue, UserInfo newValue) {
-				createTree(newValue);
+//				createTree(newValue);
 				System.out.println(newValue);
 			}
 		});
