@@ -53,7 +53,7 @@ public class FileWatcherTreeNode {
 		root.addFileInfoEntry(convertFileNameToStringList(entry.fileName), entry);
 		root.addFileInfoEntry(convertFileNameToStringList(entry2.fileName), entry2);
 
-		System.out.println("Tree:");
+		// System.out.println("Tree:");
 		root.printTree(0);
 		
 	}
@@ -133,12 +133,12 @@ public class FileWatcherTreeNode {
 
 		// Check if child contains first folder
 		if (children.containsKey(subDirsList.get(0))) {
-			System.out.println("getNodeBySubDirs. File found: "+subDirsList.get(0));
+			// System.out.println("getNodeBySubDirs. File found: "+subDirsList.get(0));
 			
 			FileWatcherTreeNode child = children.get(subDirsList.get(0));
 			
 			if (subDirsList.size() == 1) {
-				System.out.println("Returning child: "+child.fileName);
+				// System.out.println("Returning child: "+child.fileName);
 				return child;
 			} else {
 				// Remove first folder
@@ -254,7 +254,7 @@ public class FileWatcherTreeNode {
 		
 		// If node is a file, add fileInfo object to list
 		if (node.fileInfo != null) {
-			System.out.println("Added fileInfo: "+node.fileInfo.fileName);
+			// System.out.println("Added fileInfo: "+node.fileInfo.fileName);
 			entries.add(node.fileInfo);
 		}
 		

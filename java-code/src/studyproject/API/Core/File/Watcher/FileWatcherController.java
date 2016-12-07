@@ -5,7 +5,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Vector;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.Semaphore;
 import java.util.concurrent.locks.ReentrantLock;
 
 import studyproject.API.Core.File.FileAction;
@@ -47,7 +46,7 @@ public class FileWatcherController {
 	 * @throws Exception 
 	 */
 	public static void main(String[] args) throws Exception {
-		System.out.println("Start");
+		// System.out.println("Start");
 
 		FileWatcherController myWatchService = new FileWatcherController();
 		String virtualRoot = "/Users/robinhood/Desktop/testData/";
@@ -56,11 +55,14 @@ public class FileWatcherController {
 		
 	    try {
 	        while (true) {
+	        	
 	    		System.out.println("");
 	    		System.out.println(myWatchService.getInfo(0));
 	    		System.out.println("Watched directories:");
 	    		System.out.println(myWatchService.watchedInternalDirectories);
 	            Thread.sleep(5 * 1000);
+	            myWatchService.currentFiles.printTree();
+	            
 	        }
 	    } catch (InterruptedException e) {
 	        e.printStackTrace();
@@ -69,7 +71,7 @@ public class FileWatcherController {
 	}
 	
 	public void unwatchDirectory(String directory) {
-		System.out.println("Unwatch: "+directory);
+		// System.out.println("Unwatch: "+directory);
 		watchedInternalDirectories.remove(directory);
 	}
 	
@@ -86,7 +88,7 @@ public class FileWatcherController {
 	 */
 	public String getInfo(long timestamp) {
 		
-		System.out.println("getInfo(): "+timestamp);
+		// System.out.println("getInfo(): "+timestamp);
 		
 		String header = "";
 		String body = "";
@@ -108,7 +110,7 @@ public class FileWatcherController {
 			
 			if (timestamp == 0 || lastModifiedCheck || timestampAddedCheck) {
 
-				System.out.println("fileLastModifiedSec: "+fileLastModifiedSec);
+				// System.out.println("fileLastModifiedSec: "+fileLastModifiedSec);
 
 				body = this.convertFileInfoToString(file)+body;
 				filesMatched++;
@@ -137,7 +139,7 @@ public class FileWatcherController {
 	 * @throws Exception 
 	 */
 	public void watchFile(String path, Boolean watchParentFolderForNewFiles, String virtualRoot) throws Exception {
-		System.out.println("watchFile: "+path);
+		// System.out.println("watchFile: "+path);
 		
 		// Create new FileInfo object and add it to vector list
 		FileInfoListEntry newFile = addFileToLists(path, virtualRoot);
@@ -159,7 +161,7 @@ public class FileWatcherController {
 	 * @param path
 	 */
 	public void watchDirectory(String path, Boolean watchForNewFiles, String virtualRoot) {
-		System.out.println("watchDirectory(): "+path);
+		// System.out.println("watchDirectory(): "+path);
         (new Thread(new FileWatcher(path, watchForNewFiles, this, virtualRoot))).start();
 	}
 	
@@ -179,21 +181,23 @@ public class FileWatcherController {
 	 * @throws Exception 
 	 */
 	public void watchDirectoryRecursively(String absoluteFileName, String virtualRoot) throws Exception {
-		System.out.println("watchDirectoryRecursively: "+absoluteFileName);
+		// System.out.println("watchDirectoryRecursively: "+absoluteFileName);
 		
 		// Start to watch directory
-		System.out.println("watchDirRec**: "+absoluteFileName);
+		// System.out.println("watchDirRec**: "+absoluteFileName);
 		watchDirectory(absoluteFileName, true, virtualRoot);
 		
-		if (!watchedInternalDirectories.contains(absoluteFileName))
+		if (!watchedInternalDirectories.contains(absoluteFileName)) {
+			System.out.println("New directory will be watched: "+absoluteFileName);
 			watchedInternalDirectories.add(absoluteFileName);
+		}
 		
 		File[] files = new File(absoluteFileName).listFiles();
 
 		 if (files != null) {
 			 for (File file : files) {
 			        if (file.isDirectory()) {
-			            	watchDirectoryRecursively(file.getPath().toString(), virtualRoot);
+			            	watchDirectoryRecursively(file.getPath().toString()+File.separator, virtualRoot);
 					 } else {
 						 	watchFile(file.getPath().toString(), true, virtualRoot);
 					 }
@@ -221,7 +225,7 @@ public class FileWatcherController {
 	}
 	
 	public void deleteFileFromLists(FileInfo file) {
-		System.out.println("deleteFileFromLists(): "+file.fileName);
+		// System.out.println("deleteFileFromLists(): "+file.fileName);
 		
 		String virtualRoot = "";
 		
@@ -253,14 +257,14 @@ public class FileWatcherController {
 	}
 	
 	public FileInfoListEntry addFileToLists(String fileName, String virtualRoot) throws Exception {
-		System.out.println("Add new file: "+fileName);
+		// System.out.println("Add new file: "+fileName);
 		
 		FileInfoListEntry newFile = new FileInfoListEntry(fileName, virtualRoot);
 		Boolean fileShouldBeAdded = currentFiles.getNodeByFileName(fileName) == null;
 
 		if (fileShouldBeAdded) {
 			
-			System.out.println("File will really be added");
+			// System.out.println("File will really be added");
 
 			// Add to tree
 			currentFiles.addFileInfoEntry(newFile.fileName, newFile);
