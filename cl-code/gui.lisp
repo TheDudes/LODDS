@@ -3,6 +3,8 @@
 (in-package #:lodds-qt)
 (in-readtable :qtools)
 
+(defparameter +log-count+ 1000)
+
 (define-widget main-window (QWidget)
   ())
 
@@ -29,6 +31,14 @@
                                         background-color: #ffffff;
                                       }"))
 
+(define-subwidget (main-window log) (q+:make-qtreewidget main-window)
+  (q+:set-header-labels log (list "Event" "Message"))
+  (q+:set-alternating-row-colors log t)
+  (q+:set-style-sheet log "QTreeView {
+                             alternate-background-color: #eeeeef;
+                             background-color: #ffffff;
+                           }"))
+
 (define-subwidget (main-window layout) (q+:make-qvboxlayout main-window)
   (setf (q+:window-title main-window) "LODDS")
   (let ((inner (q+:make-qhboxlayout)))
@@ -36,11 +46,16 @@
     (q+:add-widget inner stop)
     (q+:add-widget inner interfaces)
     (q+:add-item layout inner))
-  (q+:add-widget layout list-of-shares))
+  (let ((splitter (q+:make-qsplitter)))
+     (q+:set-orientation splitter (#_Vertical "Qt"))
+    (q+:add-widget splitter list-of-shares)
+    (q+:add-widget splitter log)
+    (q+:add-widget layout splitter)))
 
 (define-signal (main-window add-entry) (string string string))
 (define-signal (main-window remove-entry) (string))
 (define-signal (main-window dump-table) ())
+(define-signal (main-window add-log-msg) (string string))
 
 (define-slot (main-window start) ()
   (declare (connected start (pressed)))
@@ -184,6 +199,26 @@
                (lambda (place) (q+:top-level-item list-of-shares place))
                (lambda (place) (q+:take-top-level-item list-of-shares place))))
 
+(define-slot (main-window add-log-msg) ((event string)
+                                        (msg string))
+  (declare (connected main-window (add-log-msg string
+                                               string)))
+  (let ((new-entry (q+:make-qtreewidgetitem log)))
+    (q+:set-text new-entry 0 event)
+    (q+:set-text new-entry 1 msg)
+    (let* ((scrollbar (q+:vertical-scroll-bar log))
+           (position (q+:value scrollbar)))
+      (loop :while (> (q+:top-level-item-count log) +log-count+)
+            :do (finalize (q+:take-top-level-item log 0)))
+      (q+:set-value scrollbar (- position 1)))
+    (let* ((item-above (q+:item-above log new-entry))
+           (visual-rect (q+:visual-item-rect log item-above)))
+      (when (and item-above
+                 (< (- (q+:bottom visual-rect)
+                       (q+:height (q+:viewport log)))
+                    (q+:height visual-rect)))
+        (q+:scroll-to-item log new-entry)))))
+
 (defun dump-item (item &optional (depth 0))
   "dumps given item, and all its childs, if it has any. Just for
   debugging"
@@ -234,6 +269,11 @@
            (lodds.event:add-callback :gui (lambda (event)
                                             (cb-client-removed window (second event)))
                                      :event-type :client-removed)
+           (lodds.event:add-callback :gui (lambda (event)
+                                            (signal! window
+                                                     (add-log-msg string string)
+                                                     (format nil "~a" (first event))
+                                                     (format nil "~a" (cdr event)))))
            ;; add known clients
            (maphash (lambda (name info)
                       (maphash (lambda  (filename file-info)
@@ -248,4 +288,5 @@
          (lodds.event:remove-callback :gui
                                       :event-type :list-update)
          (lodds.event:remove-callback :gui
-                                      :event-type :client-removed))))))
+                                      :event-type :client-removed)
+         (lodds.event:remove-callback :gui))))))
