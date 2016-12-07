@@ -56,7 +56,9 @@ public class BroadcastListenerThread extends Thread {
 						user.setPort(brInfo.ipPort);
 						user.setLoad(brInfo.load);
 						user.setUserName(brInfo.name);
-						user.setLastUpdate(brInfo.timestamp);
+						user.setFileListTimestamp(brInfo.timestamp);
+						if (user.getLastUpdate() <= brInfo.timestamp)
+							loddsObject.updateFileInfo(user.getUserName());
 						user.setLastReceivedBroadcast(System.currentTimeMillis() / 1000);
 						written = true;
 						break;
@@ -65,10 +67,11 @@ public class BroadcastListenerThread extends Thread {
 				if (written == false) {
 					ErrLog.log(Level.INFO, LogKey.info, APILvl.gui, "BroadcastListenerThread.run()",
 							"BroadcastListenerThread: Added to Userlist: " + brInfo.toString());
-					userInfo = new UserInfo(inetAddress, brInfo.ipPort, brInfo.name, brInfo.timestamp, brInfo.load,
+					userInfo = new UserInfo(inetAddress, brInfo.ipPort, brInfo.name, 0, brInfo.load,
 							new ConcurrentHashMap<String, FileCoreInfo>(),
 							new ConcurrentHashMap<String, Vector<String>>(), brInfo.timestamp);
 					loddsObject.getLoddsModel().getClientList().add(userInfo);
+					loddsObject.updateFileInfo(userInfo.getUserName());
 				}
 			} catch (UnknownHostException e) {
 				e.printStackTrace();
