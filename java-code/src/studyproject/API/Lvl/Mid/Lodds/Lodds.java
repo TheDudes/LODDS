@@ -329,11 +329,11 @@ public class Lodds {
 	 * 
 	 * @return 0 or error codes
 	 */
-	public int shareFolder(String absolutePath, String virtualRoot) {
+	public int shareFolder(String absolutePath) {
 		if (Files.exists(Paths.get(absolutePath)) && Files.isDirectory(Paths.get(absolutePath)) && !sharedFolders.contains(absolutePath)) {
 			sharedFolders.add(absolutePath);
 			try {
-				watchService.watchDirectoryRecursively(absolutePath, virtualRoot);
+				watchService.watchDirectoryRecursively(absolutePath, absolutePath);
 			} catch (NoSuchAlgorithmException e) {
 				// TODO Error Handling
 				e.printStackTrace();

@@ -49,7 +49,7 @@ public class TopMenuPresenter implements Initializable {
 		Task<Void> shareFolderTask = new Task<Void>() {
 			@Override
 			protected Void call() throws Exception {
-				mainWindowModel.getLodds().shareFolder(chosenFolder.getAbsolutePath(), chosenFolder.getAbsolutePath());
+				mainWindowModel.getLodds().shareFolder(chosenFolder.getAbsolutePath());
 				return null;
 			}
 		};
