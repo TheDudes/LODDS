@@ -1,5 +1,8 @@
 package studyproject.gui.selectedInterface;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.ResourceBundle;
@@ -58,6 +61,12 @@ public class SelectedInterfacePresenter implements Initializable {
 			return;
 		if (defaultCB.isSelected()) {
 			App.properties.setProperty("defaultInterface", selectedInterface);
+			try {
+			App.properties.store(new FileOutputStream(new File(App.pathToProperties)), null);
+			} catch (IOException e) {
+				// TODO Unhandled FileNotFound or IOException Exception
+				e.printStackTrace();
+			}
 		}
 		mainWindowModel.getLodds().startUp(selectedInterface, (String) App.properties.get("userName"));
 		interfaceList.getScene().getWindow().hide();
