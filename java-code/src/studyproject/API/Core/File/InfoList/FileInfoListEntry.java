@@ -17,14 +17,14 @@ public class FileInfoListEntry extends FileInfo {
 		super(fileName, virtualRoot);
 		file = new File(fileName);
 		timestampAdded = file.lastModified() / 1000L;
-		relativeFileNameUnix = replaceBackslashWithForwardslash(fileName);
+		// relativeFileNameUnix = getRelativeFileName();
 	}
 	
 	public FileInfoListEntry(String checksum, long size, String fileName, FileAction fileAction, long timestamp, String virtualRoot) {
 		super(checksum, size, fileName, virtualRoot, fileAction);
 		file = new File(fileName);
 		timestampAdded = timestamp;
-		relativeFileNameUnix = replaceBackslashWithForwardslash(fileName);
+		// relativeFileNameUnix = getRelativeFileName();
 	}
 
 

@@ -49,14 +49,14 @@ public class FileInfo {
 		this.fileAction = FileAction.add;
 		this.parentDirectory = file.getParent();
 		this.virtualRoot = virtualRoot;
-		this.relativeFileName = getRelativeFileName();
+		this.relativeFileName = getRelativeFileName(); // unix
 	}
 	
 	private String getRelativeFileName() {
 		return replaceBackslashWithForwardslash(fileName.replace(virtualRoot, ""));
 	}
 	
-	protected String replaceBackslashWithForwardslash(String fileName) {
+	private String replaceBackslashWithForwardslash(String fileName) {
 		return fileName.replace("\\", "/");
 	}
 

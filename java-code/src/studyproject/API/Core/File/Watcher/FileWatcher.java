@@ -142,7 +142,7 @@ public class FileWatcher implements Runnable {
 
 								// File does not exist anymore -> It was deleted
 								if (!probablyDeletedFile.exists()) {
-									controller.deleteFileFromLists(fileFromList);
+									controller.deleteFileFromLists(fileFromList, false);
 
 									System.out.println("File was deleted: " + fileFromList.fileName);
 
@@ -157,9 +157,11 @@ public class FileWatcher implements Runnable {
 									 */
 								}
 
-							} else {
+							}
+							
+							// File is not in list, so it could be a folder
+							else {
 
-								// File is not in list, so it could be a folder
 								System.out.println("FileWatcher: File is not in list, so it could be a folder");
 
 								// Check if folder is in our list
@@ -171,6 +173,7 @@ public class FileWatcher implements Runnable {
 
 									// Check if folder does still exist
 									System.out.println("Check if folder does still exist");
+									
 									if (!probablyDeletedFolder.exists()) {
 										controller.watchedInternalDirectories.remove(fullPath);
 										controller.watchedInternalDirectories.remove(fullPath + "/");
@@ -184,9 +187,10 @@ public class FileWatcher implements Runnable {
 												System.out.println("Subfolder deleted: " + subfolder);
 											}
 										}
-
-										// Delete all files from that folder
 									}
+									
+									// Delete all files of that folder
+									
 								}
 
 							}
@@ -197,7 +201,7 @@ public class FileWatcher implements Runnable {
 							System.out.println("FileWatcher: Detected MODIFY event");
 
 							// DEL
-							controller.deleteFileFromLists(fileFromList);
+							controller.deleteFileFromLists(fileFromList, false);
 
 							// ADD
 							controller.addFileToLists(fullPath, virtualRoot);

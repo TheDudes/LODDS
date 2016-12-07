@@ -227,7 +227,7 @@ public class FileWatcherTreeNode {
 	 */
 	private static void removeNodeFromParent(FileWatcherTreeNode node) {	
 		// Get parent node
-		if (node.parent != null) {
+		if (node != null && node.parent != null) {
 			node.parent.children.remove(node.fileName);
 			node.parent = null;
 		}
@@ -241,8 +241,16 @@ public class FileWatcherTreeNode {
 	 */
 	public static ArrayList<FileInfoListEntry> removeFileNameAndGetRemovedFileInfoListEntries (FileWatcherTreeNode fromNode, String fileName) {
 		FileWatcherTreeNode removedNode = FileWatcherTreeNode.removeFileName(fileName, fromNode);
-		ArrayList<FileInfoListEntry> entries = getAllFileInfoListEntries(removedNode, null);
-		return entries;
+		
+		if (removedNode == null) {
+			System.out.println("Removed Node could not be found: "+fileName);
+			ArrayList<FileInfoListEntry> empty = new ArrayList<FileInfoListEntry>();
+			return empty;
+		} else {
+			ArrayList<FileInfoListEntry> entries = getAllFileInfoListEntries(removedNode, null);
+			return entries;	
+		}
+
 	}
 	
 	/**
