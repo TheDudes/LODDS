@@ -29,10 +29,9 @@ public class UsersListPresenter implements Initializable {
 	MainWindowModel mainWindowModel;
 
 	private FilteredList<UserInfo> filteredList;
-	
+
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {
-		userListModel.getUsers().addAll(mainWindowModel.getLodds().getLoddsModel().getClientList());
 		linkLoddsUserList();
 		addSelectionListener();
 		filteredList = new FilteredList<UserInfo>(userListModel.getUsers(), s -> true);
@@ -55,15 +54,6 @@ public class UsersListPresenter implements Initializable {
 			public void onChanged(Change<? extends UserInfo> c) {
 
 				while (c.next()) {
-					for (UserInfo client : c.getAddedSubList()) {
-						Platform.runLater(new Runnable() {
-							@Override
-							public void run() {
-								userListModel.getUsers().add(client);
-							}
-						});
-					}
-
 					for (UserInfo client : c.getRemoved()) {
 						if (!userListModel.getUsers().contains(client))
 							continue;
@@ -71,6 +61,14 @@ public class UsersListPresenter implements Initializable {
 							@Override
 							public void run() {
 								userListModel.getUsers().remove(client);
+							}
+						});
+					}
+					for (UserInfo client : c.getAddedSubList()) {
+						Platform.runLater(new Runnable() {
+							@Override
+							public void run() {
+								userListModel.getUsers().add(client);
 							}
 						});
 					}
@@ -82,8 +80,8 @@ public class UsersListPresenter implements Initializable {
 	}
 
 	private void addUsersSearchListener() {
-		usersSearch.textProperty().addListener(l ->{
-			if(usersSearch.textProperty().get() == null | usersSearch.textProperty().get().isEmpty()) {
+		usersSearch.textProperty().addListener(l -> {
+			if (usersSearch.textProperty().get() == null | usersSearch.textProperty().get().isEmpty()) {
 				filteredList.setPredicate(s -> true);
 			} else {
 				filteredList.setPredicate(s -> s.getUserName().contains(usersSearch.textProperty().get()));
