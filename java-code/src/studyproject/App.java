@@ -12,12 +12,11 @@ import java.util.logging.Logger;
 import javax.inject.Inject;
 import javafx.application.Application;
 import javafx.scene.Scene;
-import javafx.stage.Modality;
 import javafx.stage.Stage;
 import studyproject.API.Errors.ErrLog;
+import studyproject.gui.mainWindow.MainWindowPresenter;
 import studyproject.gui.mainWindow.MainWindowView;
 import studyproject.gui.selectedInterface.SelectedInterfaceModel;
-import studyproject.gui.selectedInterface.SelectedInterfaceView;
 import studyproject.logging.APILvl;
 import studyproject.logging.FileLogHandler;
 import studyproject.logging.LogConsoleHandler;
@@ -29,7 +28,6 @@ public class App extends Application {
 	public static Properties properties;
 	public static String pathToProperties = System.getProperty("user.home") + "/.lodds/config.properties";
 	private MainWindowView mainView;
-	private SelectedInterfaceView selectedInterfaceView;
 
 	@Inject
 	SelectedInterfaceModel selectedInterfaceModel;
@@ -67,7 +65,6 @@ public class App extends Application {
 			ErrLog.log(Level.INFO, LogKey.info, APILvl.gui, "loadProperties()",
 					"using properties from " + propertiesFile.getAbsolutePath());
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 			return 1; // TODO check ErrLog value
 		}
@@ -77,18 +74,13 @@ public class App extends Application {
 
 	@Override
 	public void start(Stage mainStage) throws Exception {
-		selectedInterfaceView = new SelectedInterfaceView();
-		Stage interfaceStage = new Stage();
-		interfaceStage.setTitle("Startup...");
-		interfaceStage.setScene(new Scene(selectedInterfaceView.getView()));
-		interfaceStage.initModality(Modality.APPLICATION_MODAL);
-		interfaceStage.showAndWait();
-
 		mainStage.setTitle("Local Open Distributed Data Sharing");
 		mainView = new MainWindowView();
 		Scene mainScene = new Scene(mainView.getView());
 		mainStage.setScene(mainScene);
 		mainStage.show();
+		MainWindowPresenter mainWindowPresenter = (MainWindowPresenter) mainView.getPresenter();
+		mainWindowPresenter.loadInterface();
 	}
 
 	public static void main(String... args) {

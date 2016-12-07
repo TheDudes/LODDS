@@ -11,6 +11,7 @@ import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Button;
+import javafx.scene.control.CheckBox;
 import javafx.scene.control.ListView;
 import studyproject.App;
 import studyproject.API.Lvl.Low.Broadcast;
@@ -24,7 +25,8 @@ public class SelectedInterfacePresenter implements Initializable {
 	Button cancelBut;
 	@FXML
 	ListView<String> interfaceList;
-
+	@FXML
+	CheckBox defaultCB;
 	@Inject
 	SelectedInterfaceModel selectedInterfaceModel;
 
@@ -54,6 +56,9 @@ public class SelectedInterfacePresenter implements Initializable {
 		String selectedInterface = interfaceList.getSelectionModel().getSelectedItem();
 		if (selectedInterface == null || selectedInterface.isEmpty())
 			return;
+		if (defaultCB.isSelected()) {
+			App.properties.setProperty("defaultInterface", selectedInterface);
+		}
 		mainWindowModel.getLodds().startUp(selectedInterface, (String) App.properties.get("userName"));
 		interfaceList.getScene().getWindow().hide();
 	}
