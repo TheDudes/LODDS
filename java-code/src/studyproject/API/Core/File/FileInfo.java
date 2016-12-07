@@ -12,11 +12,6 @@ public class FileInfo {
 	public String relativeFileName; // unix format
 	public FileAction fileAction;
 	public String parentDirectory;
-
-	/*
-	public FileInfo() {
-		
-	}*/
 	
 	/**
 	 * 

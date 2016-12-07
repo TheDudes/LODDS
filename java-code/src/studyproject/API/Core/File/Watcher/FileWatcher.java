@@ -127,6 +127,8 @@ public class FileWatcher implements Runnable {
 
 						// File or folder was deleted
 						if (eventType == OVERFLOW || eventType == ENTRY_DELETE) {
+							
+							System.out.println("FileWatcher: Detected DEL event");
 
 							// DEL
 							// We don't know if a directory or file was deleted
@@ -158,7 +160,7 @@ public class FileWatcher implements Runnable {
 							} else {
 
 								// File is not in list, so it could be a folder
-								System.out.println("File is not in list, so it could be a folder");
+								System.out.println("FileWatcher: File is not in list, so it could be a folder");
 
 								// Check if folder is in our list
 								System.out.println("Check if folder is in our list: " + fullPath);
@@ -189,10 +191,10 @@ public class FileWatcher implements Runnable {
 
 							}
 
-							// File was modified
+						 // File was modified
 						} else if (fileFromList != null && eventType == ENTRY_MODIFY) {
 
-							System.out.println("..File was modified");
+							System.out.println("FileWatcher: Detected MODIFY event");
 
 							// DEL
 							controller.deleteFileFromLists(fileFromList);

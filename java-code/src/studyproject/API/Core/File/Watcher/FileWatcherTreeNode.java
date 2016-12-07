@@ -128,18 +128,22 @@ public class FileWatcherTreeNode {
 	 */
 	private FileWatcherTreeNode getNodeBySubDirs(List<String> subDirsList) {
 		
-		System.out.println("SubDirList: "+subDirsList);
-		System.out.println("Current node: "+this.fileName);
+		System.out.println("TreeNode: getNodeBySubDirs()");
+		System.out.println("TreeNode: SubDirList: "+subDirsList);
+		System.out.println("TreeNode: Current node: "+this.fileName);
 
 		// Check if child contains first folder
 		if (children.containsKey(subDirsList.get(0))) {
-			// System.out.println("getNodeBySubDirs. File found: "+subDirsList.get(0));
 			
+			System.out.println("TreeNode: getNodeBySubDirs. File found: "+subDirsList.get(0));
+			
+			// Get child node
 			FileWatcherTreeNode child = children.get(subDirsList.get(0));
 			
 			if (subDirsList.size() == 1) {
-				// System.out.println("Returning child: "+child.fileName);
+				System.out.println("TreeNode: Returning child: "+child.fileName);
 				return child;
+				
 			} else {
 				// Remove first folder
 				subDirsList.remove(0);
