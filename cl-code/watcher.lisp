@@ -201,14 +201,13 @@
                               (list :watching folder-path)))))
 
 (defun unshare-folder (folder-path)
-  "unshare the given folder, if folder-path is nil (or not specified)
-   all folders will be removed"
+  "unshare the given folder"
   (let ((watcher (lodds:get-subsystem :watcher)))
-    (if folder-path
-        (let ((rem-watcher (find (format nil "~a" (car (directory folder-path)))
-                                 (dir-watchers watcher )
-                                 :key #'cl-fs-watcher:dir
-                                 :test #'string=)))
-          (if rem-watcher
-              (stop-dir-watcher rem-watcher)
-              (error "TODO: could not find watcher to unshare with given folder-path"))))))
+    (when folder-path
+      (let ((rem-watcher (find (format nil "~a" (car (directory folder-path)))
+                               (dir-watchers watcher )
+                               :key #'cl-fs-watcher:dir
+                               :test #'string=)))
+        (if rem-watcher
+            (stop-dir-watcher rem-watcher)
+            (error "TODO: could not find watcher to unshare with given folder-path"))))))
