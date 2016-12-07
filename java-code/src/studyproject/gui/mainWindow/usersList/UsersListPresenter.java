@@ -8,9 +8,8 @@ import javax.inject.Inject;
 import javafx.application.Platform;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
-import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
-import javafx.collections.ObservableList;
+import javafx.collections.transformation.FilteredList;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.ListView;
@@ -28,16 +27,17 @@ public class UsersListPresenter implements Initializable {
 	UsersListModel userListModel;
 	@Inject
 	MainWindowModel mainWindowModel;
-	private ObservableList<UserInfo> users;
 
+	private FilteredList<UserInfo> filteredList;
+	
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {
-		users = FXCollections.observableArrayList();
-		users.addAll(mainWindowModel.getLodds().getLoddsModel().getClientList());
-		userListModel.setUsers(users);
+		userListModel.getUsers().addAll(mainWindowModel.getLodds().getLoddsModel().getClientList());
 		linkLoddsUserList();
-		usersListV.setItems(users);
 		addSelectionListener();
+		filteredList = new FilteredList<UserInfo>(userListModel.getUsers(), s -> true);
+		usersListV.setItems(filteredList);
+		addUsersSearchListener();
 	}
 
 	private void addSelectionListener() {
@@ -59,16 +59,18 @@ public class UsersListPresenter implements Initializable {
 						Platform.runLater(new Runnable() {
 							@Override
 							public void run() {
-								users.add(client);
+								userListModel.getUsers().add(client);
 							}
 						});
 					}
 
 					for (UserInfo client : c.getRemoved()) {
+						if (!userListModel.getUsers().contains(client))
+							continue;
 						Platform.runLater(new Runnable() {
 							@Override
 							public void run() {
-								users.remove(client);
+								userListModel.getUsers().remove(client);
 							}
 						});
 					}
@@ -76,6 +78,16 @@ public class UsersListPresenter implements Initializable {
 				}
 			}
 
+		});
+	}
+
+	private void addUsersSearchListener() {
+		usersSearch.textProperty().addListener(l ->{
+			if(usersSearch.textProperty().get() == null | usersSearch.textProperty().get().isEmpty()) {
+				filteredList.setPredicate(s -> true);
+			} else {
+				filteredList.setPredicate(s -> s.getUserName().contains(usersSearch.textProperty().get()));
+			}
 		});
 	}
 
