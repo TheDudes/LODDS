@@ -273,7 +273,7 @@
                                             (signal! window
                                                      (add-log-msg string string)
                                                      (format nil "~a" (first event))
-                                                     (format nil "~a" (cdr event)))))
+                                                     (format nil "~{~a~^ ~}" (cdr event)))))
            ;; add known clients
            (maphash (lambda (name info)
                       (maphash (lambda  (filename file-info)
