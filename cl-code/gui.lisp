@@ -20,9 +20,14 @@
 
 (define-subwidget (main-window list-of-shares) (q+:make-qtreewidget main-window)
   (q+:set-header-labels list-of-shares (list "Name" "Size" "Checksum"))
+  (q+:set-alternating-row-colors list-of-shares t)
   (q+:set-animated list-of-shares t)
   (q+:set-items-expandable list-of-shares t)
-  (q+:set-expands-on-double-click list-of-shares t))
+  (q+:set-expands-on-double-click list-of-shares t)
+  (q+:set-style-sheet list-of-shares "QTreeView {
+                                        alternate-background-color: #eeeeef;
+                                        background-color: #ffffff;
+                                      }"))
 
 (define-subwidget (main-window layout) (q+:make-qvboxlayout main-window)
   (setf (q+:window-title main-window) "LODDS")
