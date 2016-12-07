@@ -324,8 +324,7 @@ public class Lodds {
 	 * 
 	 * @param absolutePath
 	 *            the absolute path to the folder
-	 * @param virtualRoot
-	 * 			  the virtual root directory (part of absolute path)
+	 * 
 	 * 
 	 * @return 0 or error codes
 	 * @throws Exception 
@@ -335,6 +334,7 @@ public class Lodds {
 			sharedFolders.add(absolutePath);
 			try {
 				watchService.watchDirectoryRecursively(absolutePath, absolutePath);
+				setLastChange(System.currentTimeMillis() / 1000);
 			} catch (NoSuchAlgorithmException e) {
 				// TODO Error Handling
 				e.printStackTrace();
