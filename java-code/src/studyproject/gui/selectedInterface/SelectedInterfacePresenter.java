@@ -54,9 +54,7 @@ public class SelectedInterfacePresenter implements Initializable {
 		String selectedInterface = interfaceList.getSelectionModel().getSelectedItem();
 		if (selectedInterface == null || selectedInterface.isEmpty())
 			return;
-		mainWindowModel.getLodds().setInterface(selectedInterface);
-		mainWindowModel.getLodds().setUserName((String) App.properties.get("userName"));
-		mainWindowModel.getLodds().startUp();
+		mainWindowModel.getLodds().startUp(selectedInterface, (String) App.properties.get("userName"));
 		interfaceList.getScene().getWindow().hide();
 	}
 
