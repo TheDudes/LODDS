@@ -19,14 +19,14 @@ public class FileWatcherControllerTest {
 	private String testDirectory = "java-code/testData/FileWatcherController/";
 
 	@Test
-	public void listShouldContainOneFile() throws NoSuchAlgorithmException, IOException {
+	public void listShouldContainOneFile() throws Exception {
 		FileWatcherController controller = new FileWatcherController();
 		controller.watchDirectoryRecursively(testDirectory+"oneFile",testDirectory);
 		assertEquals(1,controller.fileInfoList.size());
 	}
 	
 	@Test
-	public void listShouldContainTwoFiles() throws NoSuchAlgorithmException, IOException {
+	public void listShouldContainTwoFiles() throws Exception {
 		FileWatcherController controller = new FileWatcherController();
 		controller.watchDirectoryRecursively(testDirectory+"twoFiles",testDirectory);
 		assertEquals(2,controller.fileInfoList.size());
@@ -43,7 +43,7 @@ public class FileWatcherControllerTest {
 	}	
 	
 	@Test
-	public void shouldGetCorrectFileInfoMsgWithTimestampZero() throws NoSuchAlgorithmException, IOException {
+	public void shouldGetCorrectFileInfoMsgWithTimestampZero() throws Exception {
 		FileWatcherController controller = new FileWatcherController();
 		controller.watchDirectoryRecursively(testDirectory+"oneFile", testDirectory);
 		
@@ -67,7 +67,7 @@ public class FileWatcherControllerTest {
 	 * @throws NoSuchAlgorithmException
 	 * @throws IOException
 	 */
-	public void shouldGetCorrectFileInfoMsgWithTimestampThatMatchesOneOfTwoFiles() throws NoSuchAlgorithmException, IOException, InterruptedException {
+	public void shouldGetCorrectFileInfoMsgWithTimestampThatMatchesOneOfTwoFiles() throws Exception {
 		cleanupTempFolder();
 		
 		System.out.println("\n\nshouldGetCorrectFileInfoMsgWithTimestampThatMatchesOneOfTwoFiles:\n");
@@ -99,13 +99,13 @@ public class FileWatcherControllerTest {
 		assertEquals(expectedLineTwo,actualLineTwo);
 		
 		// Should be only two lines long cause header + one file
-		assertEquals(actualResponseLines.length,2);
+		assertEquals(2, actualResponseLines.length);
 		
 		cleanupTempFolder();
 	}
 	
 	@Test(timeout=20000)
-	public void shouldDetectFileAddedDuringRuntime() throws NoSuchAlgorithmException, IOException, InterruptedException {
+	public void shouldDetectFileAddedDuringRuntime() throws Exception {
 		System.out.println("shouldGetListWithOneFileAddedDuringRuntime");
 		
 		cleanupTempFolder();
@@ -141,7 +141,7 @@ public class FileWatcherControllerTest {
 	}
 	
 	@Test(timeout=20000)
-	public void shouldDetectFileDeletedDuringRuntime() throws NoSuchAlgorithmException, IOException, InterruptedException {
+	public void shouldDetectFileDeletedDuringRuntime() throws Exception {
 		cleanupTempFolder();
 		
 		// Create dummy file

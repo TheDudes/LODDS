@@ -20,7 +20,8 @@ public class FileWatcherTreeNode {
 	private ConcurrentHashMap<String, FileWatcherTreeNode> children;
 	private FileInfoListEntry fileInfo;
 	private FileWatcherTreeNode parent;
-	// private Boolean isRoot;
+	@SuppressWarnings("unused")
+	private Boolean isRoot;
 	
 	/**
 	 * Initializes a new node
@@ -28,7 +29,7 @@ public class FileWatcherTreeNode {
 	 */
 	public FileWatcherTreeNode(boolean isRoot) {
 		children = new ConcurrentHashMap<String, FileWatcherTreeNode>();
-		// this.isRoot = isRoot;
+		this.isRoot = isRoot;
 		
 		if (isRoot) {
 			fileName = "root";
@@ -152,6 +153,10 @@ public class FileWatcherTreeNode {
 		}
 		
 		return null;
+	}
+	
+	public void addFileInfoEntry(String absoluteFileName, FileInfoListEntry fileInfo) throws Exception {
+		addFileInfoEntry(FileWatcherTreeNode.convertFileNameToStringList(absoluteFileName), fileInfo);
 	}
 
 	/**

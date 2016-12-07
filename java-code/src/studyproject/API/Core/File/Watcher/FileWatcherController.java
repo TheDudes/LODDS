@@ -1,8 +1,6 @@
 package studyproject.API.Core.File.Watcher;
 
 import java.io.File;
-import java.io.IOException;
-import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Vector;
@@ -24,10 +22,10 @@ public class FileWatcherController {
 	public ConcurrentHashMap<String, Vector<FileInfoListEntry>> currentFilesListHashListAsKey = new ConcurrentHashMap<String, Vector<FileInfoListEntry>>();
 	
 	// Hash map that contains all files that are actively being watched, fileName as key
-	public ConcurrentHashMap<String, FileInfoListEntry> currentFilesListFileNameAsKey = new ConcurrentHashMap<String, FileInfoListEntry>();
+	// public ConcurrentHashMap<String, FileInfoListEntry> currentFilesListFileNameAsKey = new ConcurrentHashMap<String, FileInfoListEntry>();
 	
-	// Tree map that contains all files that are actively being watched, fileName as key
-	// public DefaultMutableTreeNode currentFilesTree = new DefaultMutableTreeNode(null);
+	// Tree that contains all files that are being watched
+	public FileWatcherTreeNode currentFiles = new FileWatcherTreeNode(true);
 
 	// History of all file modifications as specified in the protocol
 	public Vector<FileInfoListEntry> fileInfoList = new Vector<FileInfoListEntry>();
@@ -38,7 +36,7 @@ public class FileWatcherController {
 	public Vector<String> watchedInternalDirectories = new Vector<String>();
 	
 	// Helps to prevent that files are added multiple times
-	static Semaphore semaphore = new Semaphore(0);
+	// static Semaphore semaphore = new Semaphore(0);
 	
 	public ReentrantLock lock = new ReentrantLock();
 
@@ -46,11 +44,9 @@ public class FileWatcherController {
 	/**
 	 * Test code
 	 * @param args
-	 * @throws NoSuchAlgorithmException
-	 * @throws IOException
-	 * @throws InterruptedException 
+	 * @throws Exception 
 	 */
-	public static void main(String[] args) throws NoSuchAlgorithmException, IOException, InterruptedException {
+	public static void main(String[] args) throws Exception {
 		System.out.println("Start");
 
 		FileWatcherController myWatchService = new FileWatcherController();
@@ -92,7 +88,6 @@ public class FileWatcherController {
 		
 		System.out.println("getInfo(): "+timestamp);
 		
-		
 		String header = "";
 		String body = "";
 		
@@ -105,12 +100,16 @@ public class FileWatcherController {
 			
 			Long fileLastModifiedSec = file.file.lastModified()/ 1000L;
 			
-			System.out.println("fileLastModifiedSec: "+fileLastModifiedSec);
-
+			// Check if file was added after given timestamp but not during last sec
+			Boolean timestampAddedCheck = file.timestampAdded >= timestamp && file.timestampAdded < currentTimestampMinusOneSec;
 			
-			if (timestamp == 0 || ((fileLastModifiedSec >= timestamp) || (file.timestampAdded >= timestamp) && (fileLastModifiedSec < currentTimestampMinusOneSec) || (file.timestampAdded < currentTimestampMinusOneSec))) {
-				
-				
+			// Check if file was last modified after given timestamp but not during last sec
+			Boolean lastModifiedCheck = fileLastModifiedSec >= timestamp && fileLastModifiedSec < currentTimestampMinusOneSec;
+			
+			if (timestamp == 0 || lastModifiedCheck || timestampAddedCheck) {
+
+				System.out.println("fileLastModifiedSec: "+fileLastModifiedSec);
+
 				body = this.convertFileInfoToString(file)+body;
 				filesMatched++;
 			} 
@@ -135,10 +134,9 @@ public class FileWatcherController {
 	 * Adds new file to watcher
 	 * @param path
 	 * @param watchParentFolderForNewFiles
-	 * @throws NoSuchAlgorithmException
-	 * @throws IOException
+	 * @throws Exception 
 	 */
-	public void watchFile(String path, Boolean watchParentFolderForNewFiles, String virtualRoot) throws NoSuchAlgorithmException, IOException {
+	public void watchFile(String path, Boolean watchParentFolderForNewFiles, String virtualRoot) throws Exception {
 		System.out.println("watchFile: "+path);
 		
 		// Create new FileInfo object and add it to vector list
@@ -168,10 +166,9 @@ public class FileWatcherController {
 	/**
 	 * Watches all files and folders from a directory recursively. Virtual root directory will automatically be set to absoluteFileName
 	 * @param absoluteFileName: absolute file name in file system
-	 * @throws NoSuchAlgorithmException
-	 * @throws IOException
+	 * @throws Exception 
 	 */
-	public void watchDirectoryRecursively(String absoluteFileName) throws NoSuchAlgorithmException, IOException {
+	public void watchDirectoryRecursively(String absoluteFileName) throws Exception {
 		watchDirectoryRecursively(absoluteFileName,absoluteFileName);
 	}
 	
@@ -179,10 +176,9 @@ public class FileWatcherController {
 	 * Watches all files and folders from a directory recursively
 	 * @param absoluteFileName: absolute file name in file system
 	 * @param virtualRoot: virtual root directory (part of absolute filename)
-	 * @throws NoSuchAlgorithmException
-	 * @throws IOException
+	 * @throws Exception 
 	 */
-	public void watchDirectoryRecursively(String absoluteFileName, String virtualRoot) throws NoSuchAlgorithmException, IOException {
+	public void watchDirectoryRecursively(String absoluteFileName, String virtualRoot) throws Exception {
 		System.out.println("watchDirectoryRecursively: "+absoluteFileName);
 		
 		// Start to watch directory
@@ -221,7 +217,7 @@ public class FileWatcherController {
 	}
 	
 	public FileInfo getWatchedFileFromListByFileName(String fileName) {
-    	return currentFilesListFileNameAsKey.get(fileName);
+		return (FileInfo) currentFiles.getFileInfoListEntryByFileName(fileName);
 	}
 	
 	public void deleteFileFromLists(FileInfo file) {
@@ -244,8 +240,8 @@ public class FileWatcherController {
     		currentFilesListHashListAsKey.get(file.checksum).remove(fileToDelete);
     	}
     	
-    	// Remove from currentFilesListFileNameAsKey
-    	currentFilesListFileNameAsKey.remove(file.fileName);
+    	// Remove from tree
+    	FileWatcherTreeNode.removeFileNameAndGetRemovedFileInfoListEntries(currentFiles, file.fileName);
 
 		// Create FileInfoListEntry object
 		Long timestamp = System.currentTimeMillis() / 1000L;
@@ -256,26 +252,18 @@ public class FileWatcherController {
 
 	}
 	
-	public FileInfoListEntry addFileToLists(String fileName, String virtualRoot) throws NoSuchAlgorithmException, IOException {
+	public FileInfoListEntry addFileToLists(String fileName, String virtualRoot) throws Exception {
 		System.out.println("Add new file: "+fileName);
 		
 		FileInfoListEntry newFile = new FileInfoListEntry(fileName, virtualRoot);
-		Boolean fileShouldBeAdded = true;
-		
-		// Check if file is already inside the list with same hash to prevent multiple adds
-		if (currentFilesListFileNameAsKey.containsKey(fileName)) {
-			if (currentFilesListHashListAsKey.containsKey(newFile.checksum)) {
-				if (currentFilesListHashListAsKey.get(newFile.checksum).get(0).fileName == newFile.fileName) {
-					fileShouldBeAdded = false;
-				}
-			} 
-		}
-		
+		Boolean fileShouldBeAdded = currentFiles.getNodeByFileName(fileName) == null;
+
 		if (fileShouldBeAdded) {
 			
-			System.out.println("File will be added");
-			// Add to currentFilesListFileNameAsKey
-			currentFilesListFileNameAsKey.put(newFile.fileName, newFile);
+			System.out.println("File will really be added");
+
+			// Add to tree
+			currentFiles.addFileInfoEntry(newFile.fileName, newFile);
 
 			// Add to file info list
 			fileInfoList.add(newFile);
@@ -289,10 +277,7 @@ public class FileWatcherController {
 				Vector<FileInfoListEntry> fileList = new Vector<FileInfoListEntry>();
 				fileList.add(newFile);
 				currentFilesListHashListAsKey.put(newFile.checksum, fileList);
-			}
-			
-			// Add to tree map
-			// addNewFileToTree(newFile);
+			};
 
 		}
 
@@ -305,7 +290,7 @@ public class FileWatcherController {
 	 * @return FileInfo object of the shared file
 	 */
 	public FileInfo getFileByName(String fileName) {
-		return (FileInfo) currentFilesListFileNameAsKey.get(fileName);
+		return (FileInfo) currentFiles.getFileInfoListEntryByFileName(fileName);
 	}
 
 	/**

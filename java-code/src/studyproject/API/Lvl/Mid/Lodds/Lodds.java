@@ -328,8 +328,9 @@ public class Lodds {
 	 * 			  the virtual root directory (part of absolute path)
 	 * 
 	 * @return 0 or error codes
+	 * @throws Exception 
 	 */
-	public int shareFolder(String absolutePath) {
+	public int shareFolder(String absolutePath) throws Exception {
 		if (Files.exists(Paths.get(absolutePath)) && Files.isDirectory(Paths.get(absolutePath)) && !sharedFolders.contains(absolutePath)) {
 			sharedFolders.add(absolutePath);
 			try {

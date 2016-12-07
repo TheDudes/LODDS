@@ -101,15 +101,18 @@ public class FileWatcher implements Runnable {
 					        	
 					        	System.out.println("..New file was created -> Add to list: "+newFile.getPath());
 					        	
+					        	// New directory was created
 					        	if (newFile.isDirectory()) {
-					        		// controller.watchDirectory(directoryPath, true);
 					        		controller.watchDirectoryRecursively(newFile.getPath(), virtualRoot);
-					        	} else {
-					        		
-					        		System.out.println("..File is not a directory");
+					        	}
+					        	// New file was created
+					        	else {
+	
 							        newFileInfo = new FileInfo(fullPath, virtualRoot);
 					        		fileFromList = controller.getWatchedFileFromListByHash(newFileInfo.checksum);
-
+					        		controller.addFileToLists(fullPath, virtualRoot);
+					        		
+					        		/*
 					        		// Add file to watchList if its not already inside
 						        	if (!controller.currentFilesListFileNameAsKey.containsKey(fullPath)) {
 						        		System.out.println("..file is not in list so its added");
@@ -117,7 +120,8 @@ public class FileWatcher implements Runnable {
 						        		
 						        	} else {
 						        		System.out.println("..file is already in list so its not added");
-						        	}
+						        	}*/
+					        		
 					        	}
 					        } else {
 					        	fileFromList = controller.getWatchedFileFromListByFileName(fullPath);
@@ -216,7 +220,10 @@ public class FileWatcher implements Runnable {
 	  } catch (NoSuchAlgorithmException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-		}
+		} catch (Exception e) {
+		// TODO Auto-generated catch block
+		e.printStackTrace();
+	}
 	}
 
 }
