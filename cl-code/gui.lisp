@@ -211,6 +211,10 @@
                              (remove-entry string)
                              combined-path))))))
 
+(defun cb-client-removed (main-window client-name)
+  "callback which will get called if a client was removed"
+  (signal! main-window (remove-entry string) client-name))
+
 (defun main ()
   (let ((lodds-server lodds:*server*))
     ;; TODO: thats not supposed to be in a CALL-IN-MAIN-THREAD
@@ -221,6 +225,9 @@
            (lodds.event:add-callback :gui (lambda (event)
                                             (cb-list-update window (cdr event)))
                                      :event-type :list-update)
+           (lodds.event:add-callback :gui (lambda (event)
+                                            (cb-client-removed window (second event)))
+                                     :event-type :client-removed)
            ;; add known clients
            (maphash (lambda (name info)
                       (maphash (lambda  (filename file-info)
@@ -233,4 +240,6 @@
                                (lodds:c-file-table-name info)))
                     (lodds:clients lodds-server)))
          (lodds.event:remove-callback :gui
-                                      :event-type :list-update))))))
+                                      :event-type :list-update)
+         (lodds.event:remove-callback :gui
+                                      :event-type :client-removed))))))
