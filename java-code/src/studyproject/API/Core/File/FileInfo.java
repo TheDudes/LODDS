@@ -53,7 +53,9 @@ public class FileInfo {
 	}
 	
 	private String getRelativeFileName() {
-		return replaceBackslashWithForwardslash(fileName.replace(virtualRoot, ""));
+		String[] parentDirectorySplit = virtualRoot.split(File.separator);
+		String onlyParentDir = parentDirectorySplit[parentDirectorySplit.length-1];
+		return onlyParentDir+"/"+replaceBackslashWithForwardslash(fileName.replace(virtualRoot, ""));
 	}
 	
 	private String replaceBackslashWithForwardslash(String fileName) {
