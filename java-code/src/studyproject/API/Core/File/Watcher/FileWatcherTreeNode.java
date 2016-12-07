@@ -16,9 +16,9 @@ import studyproject.API.Core.File.InfoList.FileInfoListEntry;
  */
 public class FileWatcherTreeNode {
 
-	private String fileName;
+	public String fileName;
 	private ConcurrentHashMap<String, FileWatcherTreeNode> children;
-	private FileInfoListEntry fileInfo;
+	public FileInfoListEntry fileInfo;
 	private FileWatcherTreeNode parent;
 	@SuppressWarnings("unused")
 	private Boolean isRoot;
@@ -87,13 +87,14 @@ public class FileWatcherTreeNode {
 	 * @return returns null if no node was found, otherwise the found FileWatcherTreeNode object
 	 */
 	public FileWatcherTreeNode getNodeByFileName(String fullFileName) {
+		System.out.println("getNodeByFileName: "+fullFileName);
 		return getNodeBySubDirs(convertFileNameToStringList(fullFileName));
 	}
 	
 	/**
 	 * Searches the tree for a node with the given full fileName and returns the associated FileInfoListEntry of that node
 	 * @param fullFileName
-	 * @return
+	 * @return can be null if file is a folder
 	 */
 	public FileInfoListEntry getFileInfoListEntryByFileName(String fullFileName) {
 		System.out.println("Searching for file: "+fullFileName);
@@ -103,7 +104,7 @@ public class FileWatcherTreeNode {
 			System.out.println("File not found: "+fullFileName);
 			return null;
 		} else {
-			System.out.println("File found: "+foundNode.fileInfo);
+			System.out.println("File found: "+foundNode.fileInfo.fileName);
 			return foundNode.fileInfo;		
 		}
 
@@ -117,7 +118,8 @@ public class FileWatcherTreeNode {
 	public static List<String> convertFileNameToStringList(String fullFileName) {
 		String[] subDirs = fullFileName.split(Pattern.quote(File.separator));
 		List<String> list = new LinkedList<String>(Arrays.asList(subDirs));
-		list.remove(0);
+		if (list.size() != 1)
+			list.remove(0);
 		return list;
 	}
 	
@@ -135,13 +137,13 @@ public class FileWatcherTreeNode {
 		// Check if child contains first folder
 		if (children.containsKey(subDirsList.get(0))) {
 			
-			System.out.println("TreeNode: getNodeBySubDirs. File found: "+subDirsList.get(0));
+			// System.out.println("TreeNode: getNodeBySubDirs. File found: "+subDirsList.get(0));
 			
 			// Get child node
 			FileWatcherTreeNode child = children.get(subDirsList.get(0));
 			
 			if (subDirsList.size() == 1) {
-				System.out.println("TreeNode: Returning child: "+child.fileName);
+				// System.out.println("TreeNode: Returning child: "+child.fileName);
 				return child;
 				
 			} else {
@@ -192,11 +194,11 @@ public class FileWatcherTreeNode {
 				FileWatcherTreeNode newNode = new FileWatcherTreeNode(false);
 				newNode.fileName = fullPathAsList.get(0);
 				newNode.parent = this;
-				newNode.fileInfo = fileInfo;
 				
 				// Add new node as child to current node
 				children.put(newNode.fileName, newNode);
 				
+				// If it was not the last element continue
 				if (fullPathAsList.size() != 1) {
 					
 					// Remove current entry from list
@@ -205,7 +207,10 @@ public class FileWatcherTreeNode {
 					// Start new add process from newNode
 					newNode.addFileInfoEntry(fullPathAsList, fileInfo);	
 
-				}	
+				} else {
+					// Only last elements should have a valid fileInfo element
+					newNode.fileInfo = fileInfo;
+				}
 		}
 	}
 	

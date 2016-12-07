@@ -241,12 +241,34 @@ public class FileWatcherController {
 	public FileInfo getWatchedFileFromListByFileName(String fileName) {
 		return (FileInfo) currentFiles.getFileInfoListEntryByFileName(fileName);
 	}
+	
+	/**
+	 * Deletes folder including all subdirectories and files from list
+	 * @param node
+	 */
+	public void deleteFolderFromLists(String fileName) {		
+		
+		// Get all fileInfoList entries
+		ArrayList<FileInfoListEntry> entries = FileWatcherTreeNode.removeFileNameAndGetRemovedFileInfoListEntries(currentFiles, fileName);
+		
+		if (entries.size() > 1) {
+			// Call deleteFileFromLists for all fileInfoListEntries inside that dir but not the parent one cause it's a dir
+			int i = 0;
+			for (FileInfoListEntry entry:entries) {
+				if (i > 0) {
+					System.out.println("Recursive delete call: "+entry.fileName);
+					deleteFileFromLists(entry);
+				}
+				i++;
+			}
+		}
+	}
 
-	public void deleteFileFromLists(FileInfo file, Boolean skipRecursiveDelete) {
+	public void deleteFileFromLists(FileInfo file) {
 		System.out.println("\ndeleteFileFromLists(): "+file.fileName);
 
 		String virtualRoot = "";
-		// Boolean foundInList = false;
+		Boolean foundInList = false;
 
 		// Remove from currentFilesListHashListAsKey
 		List<FileInfoListEntry> filesToDelete = new ArrayList<FileInfoListEntry>();
@@ -255,7 +277,7 @@ public class FileWatcherController {
 				if (listFile.fileName.equals(file.fileName)) {
 					filesToDelete.add(listFile);
 					virtualRoot = listFile.virtualRoot;
-					// foundInList = true;
+					foundInList = true;
 				}
 			}
 		}
@@ -263,32 +285,19 @@ public class FileWatcherController {
 		for (FileInfoListEntry fileToDelete : filesToDelete) {
 			currentFilesListHashListAsKey.get(file.checksum).remove(fileToDelete);
 		}
-
-		// Remove from tree
-		ArrayList<FileInfoListEntry> entries = FileWatcherTreeNode.removeFileNameAndGetRemovedFileInfoListEntries(currentFiles, file.fileName);
 		
-		if (skipRecursiveDelete == false && entries.size() > 1) {
-			// Remove all files inside that dir but not the parent one
-			int i = 0;
-			for (FileInfoListEntry entry:entries) {
-				if (i > 0) {
-					System.out.println("Recursive delete call: "+entry.fileName);
-					deleteFileFromLists(entry, true);
-				}
-				i++;
-			}
+		if (foundInList) {
+			// Create DEL entry for FileInfoList
+			
+			// Create FileInfoListEntry object
+			Long timestamp = System.currentTimeMillis() / 1000L;
+			System.out.println("Create deleted file for "+file.fileName+" VR: "+virtualRoot);
+			FileInfoListEntry deletedFile = new FileInfoListEntry(file.checksum, file.size, file.fileName, FileAction.del,
+					timestamp, virtualRoot);
+
+			// Add to FileInfoList
+			fileInfoList.add(deletedFile);	
 		}
-
-		// Create DEL entry for FileInfoList
-		
-		// Create FileInfoListEntry object
-		Long timestamp = System.currentTimeMillis() / 1000L;
-		System.out.println("Create deleted file for "+file.fileName+" VR: "+virtualRoot);
-		FileInfoListEntry deletedFile = new FileInfoListEntry(file.checksum, file.size, file.fileName, FileAction.del,
-				timestamp, virtualRoot);
-
-		// Add to FileInfoList
-		fileInfoList.add(deletedFile);
 
 	}
 
