@@ -202,7 +202,15 @@
                 order.")))
 
 (defclass watcher (lodds.subsystem:subsystem)
-  ((dir-watchers :accessor dir-watchers
+  ((started-tracking :accessor started-tracking
+                     :initform 0
+                     :type integer
+                     :documentation "When the first Directory is
+                     shared start-tracking will be set to the current
+                     timestamp. This is used to check if a timestamp
+                     describes a time before the watcher tracked
+                     files. Will be set to 0 if watcher is stopped.")
+   (dir-watchers :accessor dir-watchers
                  :initform nil
                  :type list
                  :documentation "List of Directory watchers.")

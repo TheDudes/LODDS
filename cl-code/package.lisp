@@ -81,6 +81,7 @@
 (defpackage #:lodds.watcher
   (:use #:cl)
   (:export #:watcher
+           #:started-tracking
            #:dir-watchers
            #:list-of-changes
            ;; #:file-table-name

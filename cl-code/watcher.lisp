@@ -147,7 +147,8 @@
           (remove dir-watcher (dir-watchers watcher)))
     (unless (dir-watchers watcher)
       (bt:with-lock-held ((list-of-changes-lock watcher))
-        (setf (list-of-changes watcher) nil))
+        (setf (list-of-changes watcher) nil
+              (started-tracking watcher) 0))
       (setf (lodds.subsystem:alive-p watcher) nil)
       (lodds.event:push-event (lodds.subsystem:name watcher)
                               (list "stopped!")))))
@@ -190,6 +191,9 @@
                             :change-hook hook
                             :dir folder-path
                             :recursive-p t)))
+      (when (eql 0 (started-tracking watcher))
+        (setf (started-tracking watcher)
+              (lodds.core:get-timestamp)))
       (push new-dir-watcher
             (dir-watchers watcher))
       (setf (lodds.subsystem:alive-p watcher) t)

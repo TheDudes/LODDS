@@ -209,7 +209,9 @@
       (lodds.subsystem:stop event-queue))))
 
 (defun generate-info-response (timestamp)
-  (let* ((type (if (eql 0 timestamp)
+  (let* ((started-tracking (lodds.watcher:started-tracking (get-subsystem :watcher)))
+         (type (if (or (eql 0 timestamp)
+                       (< timestamp started-tracking))
                    :all
                    :upd))
          (current-timestamp (lodds.core:get-timestamp))
