@@ -86,9 +86,13 @@ public class FileWatcherController {
       the last timestamp of A he saw. So A will respond with all his
       updates since the given timestamp. If timestamp is 0, a complete
       list of shared files from the specific client is requested.
-	 * @param timestamp
+	 * @param timestamp unix timestamp in seconds
 	 */
 	public String getInfo(long timestamp) {
+		
+		System.out.println("getInfo(): "+timestamp);
+		
+		
 		String header = "";
 		String body = "";
 		
@@ -99,7 +103,14 @@ public class FileWatcherController {
 		int filesMatched = 0;
 		for (FileInfoListEntry file:fileInfoList) {
 			
-			if (timestamp == 0 || (((file.file.lastModified()/ 1000L) >= timestamp) || (file.timestampAdded >= timestamp) && (file.file.lastModified()/ 1000L) < currentTimestampMinusOneSec) || (file.timestampAdded < currentTimestampMinusOneSec)) {
+			Long fileLastModifiedSec = file.file.lastModified()/ 1000L;
+			
+			System.out.println("fileLastModifiedSec: "+fileLastModifiedSec);
+
+			
+			if (timestamp == 0 || ((fileLastModifiedSec >= timestamp) || (file.timestampAdded >= timestamp) && (fileLastModifiedSec < currentTimestampMinusOneSec) || (file.timestampAdded < currentTimestampMinusOneSec))) {
+				
+				
 				body = this.convertFileInfoToString(file)+body;
 				filesMatched++;
 			} 

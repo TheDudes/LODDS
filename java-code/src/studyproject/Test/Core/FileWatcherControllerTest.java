@@ -3,6 +3,7 @@ package studyproject.Test.Core;
 import static org.junit.Assert.*;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.security.NoSuchAlgorithmException;
 import java.util.Date;
@@ -37,7 +38,7 @@ public class FileWatcherControllerTest {
 		
 		FileWatcherController controller = new FileWatcherController();
 		String actualOutput = controller.convertFileInfoToString(fileInfo);
-		String expectedOutput = "add "+fileInfo.checksum+" "+fileInfo.size+" "+fileInfo.fileName+"\n";
+		String expectedOutput = "add "+fileInfo.checksum+" "+fileInfo.size+" "+fileInfo.relativeFileName+"\n";
 		assertEquals(expectedOutput, actualOutput);
 	}	
 	
@@ -55,38 +56,52 @@ public class FileWatcherControllerTest {
 		String actualResponse = controller.getInfo(0);
 		String expectedResponse = 
 				"all "+System.currentTimeMillis() / 1000L+" 1\n"
-				+ "add 736bf95996d40c71307e3727931b721dfb17bd27c441b903a6dd483b37021ac1 8 "+testDirectory+"oneFile/testFile.txt\n";
+				+ "add 736bf95996d40c71307e3727931b721dfb17bd27c441b903a6dd483b37021ac1 8 oneFile/testFile.txt\n";
 		
 		assertEquals(expectedResponse,actualResponse);
 	}
 	
-	@Test
+	@Test(timeout=20000)
 	/**
-	 * We only want to match one file out of two that was modified after our time stamp
+	 * We only want to match one file out of two
 	 * @throws NoSuchAlgorithmException
 	 * @throws IOException
 	 */
-	public void shouldGetCorrectFileInfoMsgWithTimestampThatMatchesOneOfTwoFiles() throws NoSuchAlgorithmException, IOException {
+	public void shouldGetCorrectFileInfoMsgWithTimestampThatMatchesOneOfTwoFiles() throws NoSuchAlgorithmException, IOException, InterruptedException {
+		cleanupTempFolder();
+		
+		System.out.println("\n\nshouldGetCorrectFileInfoMsgWithTimestampThatMatchesOneOfTwoFiles:\n");
+		
 		FileWatcherController controller = new FileWatcherController();
-		controller.watchDirectoryRecursively(testDirectory+"twoFiles", testDirectory);
-	     
-		Date dt = new Date();
-		long millisec = dt.getTime();
-				
-		File file = new File(testDirectory+"twoFiles/1.txt");
-		file.setLastModified(millisec);
+		controller.watchDirectoryRecursively(testDirectory+"temp", testDirectory);
 		
-		File file2 = new File(testDirectory+"twoFiles/2.txt");
-		file2.setLastModified(millisec+5000);
+		// Create first file
+		Long firstFileCreatedTimestampSec = new Date().getTime() / 1000L;
+		touch(testDirectory+"temp/1.txt");
 		
-		Long lastModTime = (millisec+3000) / 1000L;
+		// Sleep 5 seconds (give FileWatcher time to detect the change & to make the second file be added on another time)
+		Thread.sleep(5000);
 		
-		String actualResponse = controller.getInfo(lastModTime);
-		String expectedResponse = 
-				"upd "+lastModTime+" 1\n"
-				+ "add 7c52011daa0bf2983c4687c2ee6a8d7759503a29f64624fa52970516d9ec45b2 9 "+testDirectory+"twoFiles/2.txt\n";
+		// Create second file
+		touch(testDirectory+"temp/2.txt");
 		
-		assertEquals(expectedResponse,actualResponse);
+		// Sleep 5 seconds (give FileWatcher time to detect the change)
+		Thread.sleep(10000);
+		
+		// Split response by line
+		String response = controller.getInfo(firstFileCreatedTimestampSec+1);
+		System.out.println("Debug response: "+response);
+		String[] actualResponseLines = response.split("\n");
+		
+		// Get second line and compare with expected response	
+		String actualLineTwo = actualResponseLines[1]; 	
+		String expectedLineTwo = "add e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855 0 temp/2.txt";
+		assertEquals(expectedLineTwo,actualLineTwo);
+		
+		// Should be only two lines long cause header + one file
+		assertEquals(actualResponseLines.length,2);
+		
+		cleanupTempFolder();
 	}
 	
 	@Test(timeout=20000)
@@ -118,7 +133,7 @@ public class FileWatcherControllerTest {
 		String actualResponse = controller.getInfo(0);
 		String expectedResponse = 
 				"all "+System.currentTimeMillis() / 1000L+" 1\n"
-				+ "add e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855 0 "+testDirectory+"temp/temp.txt\n";
+				+ "add e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855 0 temp/temp.txt\n";
 		
 		assertEquals(expectedResponse,actualResponse);
 		
@@ -157,10 +172,23 @@ public class FileWatcherControllerTest {
 		String actualResponse = controller.getInfo(0);
 		String expectedResponse = 
 				"all "+System.currentTimeMillis() / 1000L+" 2\n"
-				+ "del e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855 0 "+testDirectory+"temp/temp.txt\n"
-				+ "add e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855 0 "+testDirectory+"temp/temp.txt\n";
+				+ "del e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855 0 temp/temp.txt\n"
+				+ "add e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855 0 temp/temp.txt\n";
 		
 		assertEquals(expectedResponse,actualResponse);
+	}
+	
+	private void touch(String fileName) throws IOException{
+		File newFile = new File(fileName);
+	    touch(newFile, System.currentTimeMillis());
+	}
+	
+	private void touch(File file, long timestamp) throws IOException{
+	    if (!file.exists()) {
+	       new FileOutputStream(file).close();
+	    }
+
+	    file.setLastModified(timestamp);
 	}
 	
 	private void cleanupTempFolder() {
