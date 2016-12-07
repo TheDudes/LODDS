@@ -59,11 +59,13 @@ public class Loadbalancer {
 		long minLoad = Long.MAX_VALUE;
 		String clientWithLowestLoad = "";
 		for (UserInfo userInfo : owningUsers) {
-			if (userInfo.getLoad() == 0) {
-				return userInfo.getUserName();
-			} else if (userInfo.getLoad() < minLoad) {
-				clientWithLowestLoad = userInfo.getUserName();
-				minLoad = userInfo.getLoad();
+			if(userInfo.getChecksumToPath().containsKey(checksum)){
+				if (userInfo.getLoad() == 0) {
+					return userInfo.getUserName();
+				} else if (userInfo.getLoad() < minLoad) {
+					clientWithLowestLoad = userInfo.getUserName();
+					minLoad = userInfo.getLoad();
+				}
 			}
 		}
 		return clientWithLowestLoad;
