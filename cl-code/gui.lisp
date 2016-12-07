@@ -56,7 +56,13 @@
 
 (define-slot (main-window stop) ()
   (declare (connected stop (pressed)))
-  (lodds:shutdown))
+  (lodds.subsystem:stop (lodds:get-subsystem :tasker))
+  (lodds.subsystem:stop (lodds:get-subsystem :listener))
+  (lodds.subsystem:stop (lodds:get-subsystem :advertiser))
+  (lodds.subsystem:stop (lodds:get-subsystem :handler))
+  (lodds.watcher:unshare-folder "~/ffff/A/")
+  (lodds.watcher:unshare-folder "~/ffff/B/")
+  (lodds.watcher:unshare-folder "~/ffff/C/"))
 
 (define-slot (main-window interfaces) ((selected-item string))
   (declare (connected interfaces (current-index-changed string)))
