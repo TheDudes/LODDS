@@ -26,7 +26,8 @@ public class App extends Application {
 
 	private static Logger logger;
 	public static Properties properties;
-	public static String pathToProperties = System.getProperty("user.home") + "/.lodds/config.properties";
+	public static String pathToProperties = System.getProperty("user.home") + System.getProperty("file.separator")
+			+ ".lodds" + System.getProperty("file.separator") + "config.properties";
 	private MainWindowView mainView;
 
 	@Inject
@@ -41,8 +42,9 @@ public class App extends Application {
 	}
 
 	/**
-	 * Create a properties file if not existent in the home directory of the user
-	 * Load default properties first then load properties changed by the user
+	 * Create a properties file if not existent in the home directory of the
+	 * user Load default properties first then load properties changed by the
+	 * user
 	 * 
 	 * @return ErrLog value
 	 */
