@@ -56,8 +56,6 @@
            ;; event.lisp for more info
            (make-instance 'lodds.event:event-queue
                           :name :event-queue
-                          :callbacks (list (cons :lodds (lambda (event)
-                                                          (event-callback event))))
                           :init-fn #'lodds.event:run)
            ;; LISTENER subsystem listens on broadcast address of
            ;; the set INTERFACE and BROADCAST-PORT member of
