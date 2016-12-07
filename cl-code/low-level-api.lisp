@@ -21,7 +21,7 @@ multiple-value-bind.
 (defvar *advertise-scanner*
   (cl-ppcre:create-scanner
    ;; name@ip:port timestamp load
-   "^([a-z]|[A-Z]|[0-9])+@(\\d{1,3}\\.){3}\\d{1,3}:\\d{1,5} \\d+ \\d+\\n$")
+   "^([a-z]|[A-Z]|[0-9]|_|-)+@(\\d{1,3}\\.){3}\\d{1,3}:\\d{1,5} \\d+ \\d+\\n$")
   "used to scan advertise strings to check if they are correct")
 
 (defvar *get-scanner*
