@@ -330,7 +330,8 @@ public class Lodds {
 	 * @throws Exception 
 	 */
 	public int shareFolder(String absolutePath) throws Exception {
-		if (Files.exists(Paths.get(absolutePath)) && Files.isDirectory(Paths.get(absolutePath)) && !sharedFolders.contains(absolutePath)) {
+		if (Files.exists(Paths.get(absolutePath)) && Files.isDirectory(Paths.get(absolutePath))
+				&& !sharedFolders.contains(absolutePath)) {
 			sharedFolders.add(absolutePath);
 			try {
 				watchService.watchDirectoryRecursively(absolutePath, absolutePath);
@@ -623,7 +624,9 @@ public class Lodds {
 		}
 	}
 
-	public void startUp() {
+	public void startUp(String interf, String userName) {
+		setInterface(interf);
+		setUserName(userName);
 		setNetworkAddresses();
 		startAdvertising();
 		startListening();
