@@ -3,14 +3,17 @@ package studyproject.Test.Lvl.Low;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
 
 public class SocketInheritor extends Socket {
 
-	String readWritePath;
-	String readPath;
+	private String readWritePath;
+	private String readPath;
+	private FileOutputStream outputStream;
+	private FileInputStream inputStream;
 	
 	public SocketInheritor(String readWritePath, String readPath) {
 		this.readWritePath = readWritePath;
@@ -19,7 +22,8 @@ public class SocketInheritor extends Socket {
 	
 	public OutputStream getOutputStream() {
 		try {
-			return new FileOutputStream(readWritePath);
+			outputStream = new FileOutputStream(readWritePath);
+			return outputStream;
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
 		}
@@ -28,10 +32,22 @@ public class SocketInheritor extends Socket {
 	
 	public InputStream getInputStream() {
 		try {
-			return new FileInputStream(readPath);
+			inputStream = new FileInputStream(readPath);
+			return inputStream;
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
 		}
 		return null;
+	}
+
+	@Override
+	public synchronized void close() throws IOException {
+		if(inputStream != null){
+			inputStream.close();
+		}
+		if(outputStream != null){
+			outputStream.close();
+		}
+		super.close();
 	}
 }
