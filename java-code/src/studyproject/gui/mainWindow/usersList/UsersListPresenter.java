@@ -6,8 +6,6 @@ import java.util.ResourceBundle;
 import javax.inject.Inject;
 
 import javafx.application.Platform;
-import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
 import javafx.collections.ListChangeListener;
 import javafx.collections.transformation.FilteredList;
 import javafx.fxml.FXML;
@@ -33,16 +31,17 @@ public class UsersListPresenter implements Initializable {
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {
 		linkLoddsUserList();
-		addSelectionListener();
+		addUserListMouseClickSelection();
 		filteredList = new FilteredList<UserInfo>(userListModel.getUsers(), s -> true);
 		usersListV.setItems(filteredList);
 		addUsersSearchListener();
 	}
 
-	private void addSelectionListener() {
-		usersListV.getSelectionModel().selectedItemProperty().addListener(new ChangeListener<UserInfo>() {
-			public void changed(ObservableValue<? extends UserInfo> observable, UserInfo oldValue, UserInfo newValue) {
-				userListModel.getSelectedUser().set(newValue);
+	private void addUserListMouseClickSelection() {
+		usersListV.setOnMouseClicked(e -> {
+			if (userListModel.getSelectedUser().get() == null || !userListModel.getSelectedUser().get()
+					.equals(usersListV.getSelectionModel().getSelectedItem())) {
+				userListModel.getSelectedUser().set(usersListV.getSelectionModel().getSelectedItem());
 			}
 		});
 	}
@@ -81,7 +80,7 @@ public class UsersListPresenter implements Initializable {
 
 	private void addUsersSearchListener() {
 		usersSearch.textProperty().addListener(l -> {
-			if (usersSearch.textProperty().get() == null | usersSearch.textProperty().get().isEmpty()) {
+			if (usersSearch.textProperty().get() == null || usersSearch.textProperty().get().isEmpty()) {
 				filteredList.setPredicate(s -> true);
 			} else {
 				filteredList.setPredicate(s -> s.getUserName().contains(usersSearch.textProperty().get()));
