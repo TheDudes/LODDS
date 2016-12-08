@@ -30,7 +30,7 @@ public class FileInfo {
 		
 		File file = new File(fileName);
 		this.parentDirectory = file.getParent();
-		this.relativeFileName = getRelativeFileName();
+		this.relativeFileName = getRelativeFilePath();
 	}
 	
 	/**
@@ -49,13 +49,13 @@ public class FileInfo {
 		this.fileAction = FileAction.add;
 		this.parentDirectory = file.getParent();
 		this.virtualRoot = virtualRoot;
-		this.relativeFileName = getRelativeFileName(); // unix
+		this.relativeFileName = getRelativeFilePath(); // unix
 	}
 	
-	private String getRelativeFileName() {
+	private String getRelativeFilePath() {
 		String[] parentDirectorySplit = virtualRoot.split(File.separator);
 		String onlyParentDir = parentDirectorySplit[parentDirectorySplit.length-1];
-		return onlyParentDir+"/"+replaceBackslashWithForwardslash(fileName.replace(virtualRoot, ""));
+		return "/"+onlyParentDir+replaceBackslashWithForwardslash(fileName.replace(virtualRoot, ""));
 	}
 	
 	private String replaceBackslashWithForwardslash(String fileName) {
