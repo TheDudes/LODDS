@@ -1,5 +1,7 @@
 package studyproject.gui.settingsWindow;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -102,6 +104,7 @@ public class SettingsWindowPresenter implements Initializable {
 			App.properties.store(new FileOutputStream(App.pathToProperties), null);
 			ErrLog.log(Level.INFO, LogKey.info, APILvl.gui, "applySettings",
 					"Saved properties to " + App.pathToProperties);
+			App.properties.load(new FileInputStream(new File(App.pathToProperties)));
 		} catch (FileNotFoundException e) {
 			// TODO Error handling
 			e.printStackTrace();
