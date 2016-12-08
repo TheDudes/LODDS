@@ -99,15 +99,15 @@
                clients)
       ;; add client
       (destructuring-bind (ip port timestamp-l-c load name) result
-        (lodds.event:push-event :task
-                                (make-instance 'lodds.task:task-client-info
-                                               :name "update-client-info"
-                                               :client-name name
-                                               :client-ip ip
-                                               :client-port port
-                                               :client-message-timestamp current-time
-                                               :client-last-change timestamp-l-c
-                                               :client-load load))))))
+        (lodds.task:submit-task
+         (make-instance 'lodds.task:task-client-info
+                        :name "update-client-info"
+                        :client-name name
+                        :client-ip ip
+                        :client-port port
+                        :client-message-timestamp current-time
+                        :client-last-change timestamp-l-c
+                        :client-load load))))))
 
 (defun get-next-message (socket)
   (let* ((buffer-size 2048) ;; TODO: move to config

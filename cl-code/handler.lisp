@@ -62,33 +62,29 @@
   (multiple-value-bind (error request)
       (lodds.low-level-api:parse-request (usocket:socket-stream socket))
     (if (eql 0 error)
-        (let ((new-task nil))
+        (lodds.task:submit-task
           (case (car request)
             (:file
              (destructuring-bind (checksum start end) (cdr request)
-               (setf new-task
-                     (make-instance 'lodds.task:task-request-file
-                                    :name "request-file"
-                                    :request-socket socket
-                                    :request-checksum checksum
-                                    :request-start start
-                                    :request-end end))))
+               (make-instance 'lodds.task:task-request-file
+                              :name "request-file"
+                              :request-socket socket
+                              :request-checksum checksum
+                              :request-start start
+                              :request-end end)))
             (:info
-             (setf new-task
-                   (make-instance 'lodds.task:task-request-info
-                                  :name "request-info"
-                                  :request-socket socket
-                                  :request-timestamp (cadr request))))
+             (make-instance 'lodds.task:task-request-info
+                            :name "request-info"
+                            :request-socket socket
+                            :request-timestamp (cadr request)))
             (:send-permission
              (destructuring-bind (size timeout filename) (cdr request)
-               (setf new-task
-                     (make-instance 'lodds.task:task-request-send-permission
-                                    :name "request-send-permission"
-                                    :request-socket socket
-                                    :request-size size
-                                    :request-timeout timeout
-                                    :request-filename filename)))))
-          (lodds.event:push-event :task new-task))
+               (make-instance 'lodds.task:task-request-send-permission
+                              :name "request-send-permission"
+                              :request-socket socket
+                              :request-size size
+                              :request-timeout timeout
+                              :request-filename filename)))))
         (error "low level api Returned error ~a~%" error))))
 
 (defun run ()

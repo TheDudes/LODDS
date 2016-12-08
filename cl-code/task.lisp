@@ -53,12 +53,14 @@
   (declare (ignorable tsk))
   (error "overwrite run-task with ur task!"))
 
-(defun handle-task (event)
+(defun submit-task (task)
+  "Adds a new task which will be added to the lparallel:channel."
   (let* ((tasker (lodds:get-subsystem :tasker))
          (lparallel:*kernel* (kernel tasker)))
-    (lparallel:submit-task (channel tasker)
-                           #'run-task
-                           (cadr event))))
+    (when (lodds.subsystem:alive-p tasker)
+      (lparallel:submit-task (channel tasker)
+                             #'run-task
+                             task))))
 
 (defmethod lodds.subsystem:start ((subsys tasker))
   (with-accessors ((kernel kernel)
@@ -71,10 +73,6 @@
           (setf kernel  lparallel:*kernel*
                 channel (lparallel:make-channel)
                 alive-p t)
-          (lodds.event:add-callback :tasker
-                                    (lambda (event)
-                                      (handle-task event))
-                                    :event-type :task)
           (lodds.event:push-event :tasker
                                   (list "started!"))))))
 
@@ -84,7 +82,6 @@
     (when alive-p
       (let ((lparallel:*kernel* kernel))
         (lparallel:end-kernel :wait t)
-        (lodds.event:remove-callback :tasker :event-type :task)
         (setf alive-p nil)
         (lodds.event:push-event (lodds.subsystem:name subsys)
                                 (list "stopped!"))))))

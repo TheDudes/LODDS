@@ -51,6 +51,7 @@
            #:task
            #:name
            #:run-task
+           #:submit-task
            ;; task-client and accessors
            #:task-client
            #:client-name
