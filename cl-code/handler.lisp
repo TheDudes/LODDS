@@ -1,28 +1,27 @@
 (in-package #:lodds.handler)
 
 (defmacro with-socket (socket close-socket-p &body body)
-  `(progn
-     (handler-case
-         (progn
-           (unless ,socket
-             (error "Could not access socket, nil."))
-           ,@body)
-       (end-of-file ()
-         (lodds.event:push-event :error
-                                 (list :end-of-file))
-         (when ,socket
-           (close (usocket:socket-stream ,socket))
-           (usocket:socket-close ,socket)))
-       (error (e)
-         (lodds.event:push-event :error
-                                 (list e))
-         (when ,socket
-           (close (usocket:socket-stream ,socket))
-           (usocket:socket-close ,socket))))
-     ,(when close-socket-p
-        `(when ,socket
-           (close (usocket:socket-stream ,socket))
-           (usocket:socket-close ,socket)))))
+  `(let ((is-closed nil))
+     (labels ((cleanup-socket () (when ,socket
+                                   (close (usocket:socket-stream ,socket))
+                                   (usocket:socket-close ,socket)
+                                   (setf is-closed t))))
+       (handler-case
+           (progn
+             (unless ,socket
+               (error "Could not access socket, nil."))
+             ,@body)
+         (end-of-file ()
+           (lodds.event:push-event :error
+                                   (list :end-of-file))
+           (cleanup-socket))
+         (error (e)
+           (lodds.event:push-event :error
+                                   (list e))
+           (cleanup-socket)))
+       ,(when close-socket-p
+          `(unless is-closed
+             (cleanup-socket))))))
 
 (defmethod lodds.task:run-task ((task lodds.task:task-request))
   (let ((socket (lodds.task:request-socket task)))
