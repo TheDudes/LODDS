@@ -280,6 +280,25 @@
   "callback which will get called if a client was removed"
   (signal! main-window (remove-entry string) client-name))
 
+(defparameter *ignored-log-events*
+  (list :listener
+        :advertiser))
+
+(defun cb-log-messages (main-window event)
+  (let ((event-type (first event))
+        (event-msg (cdr event)))
+    (unless (find event-type *ignored-log-events*)
+      (signal! main-window
+               (add-log-msg string string)
+               (format nil "~a" event-type)
+               (case event-type
+                 (:list-update
+                  (destructuring-bind (name type ts changes)
+                      event-msg
+                    (format nil "~a ~a ~a~%~{~{~a~^ ~}~%~}"
+                            name type ts changes)))
+                 (t (format nil "~{~a~^ ~}" event-msg)))))))
+
 (defun main ()
   (let ((lodds-server lodds:*server*))
     ;; TODO: thats not supposed to be in a CALL-IN-MAIN-THREAD
@@ -294,10 +313,7 @@
                                             (cb-client-removed window (second event)))
                                      :event-type :client-removed)
            (lodds.event:add-callback :gui (lambda (event)
-                                            (signal! window
-                                                     (add-log-msg string string)
-                                                     (format nil "~a" (first event))
-                                                     (format nil "~{~a~^ ~}" (cdr event)))))
+                                            (cb-log-messages window event)))
            ;; add known clients
            (maphash (lambda (name info)
                       (maphash (lambda  (filename file-info)
