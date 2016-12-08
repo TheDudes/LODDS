@@ -29,43 +29,42 @@ public class FilesTreePresenter implements Initializable {
 
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {
-		// TODO Auto-generated method stub
 		filesTreeView.setShowRoot(false);
-		// final TreeItem<FileCoreInfo> test = new TreeItem<FileCoreInfo>(new
-		// FileCoreInfo("aslkdgoiaweqo", 20000));
-		// root.getChildren().add(test);
 		filesTreeView.setRoot(root);
 		userListModel.getSelectedUser().addListener(new ChangeListener<UserInfo>() {
 			@Override
 			public void changed(ObservableValue<? extends UserInfo> observable, UserInfo oldValue, UserInfo newValue) {
-//				createTree(newValue);
-				System.out.println(newValue);
+				createTree(newValue);
 			}
 		});
 	}
 
 	public void createTree(UserInfo userInfo) {
-		System.out.println("create tree");
 		root.getChildren().clear();
 		String[] subpaths = null;
 		FileCoreInfo infoToAdd = null;
-		System.out.println("before getUserinfoslist");
+		int startIndex = 0;
 		for (String path : userInfo.getPathToFileInfo().keySet()) {
 			infoToAdd = userInfo.getPathToFileInfo().get(path);
 			subpaths = path.split("/");
-			addTreeItem(infoToAdd, subpaths, 0, root);
+			if (subpaths[0].isEmpty())
+				startIndex = 1;
+			addTreeItem(infoToAdd, subpaths, startIndex, root);
 		}
-		System.out.println(userInfo.getPathToFileInfo());
-
 	}
 
 	private void addTreeItem(FileCoreInfo infoToAdd, String[] subPaths, int index, TreeItem<FileCoreInfo> parent) {
 		boolean found = false;
+		String fileName = subPaths[subPaths.length - 1];
 		TreeItem<FileCoreInfo> folderToAdd = null;
 
 		found = false;
+		if (parent.getValue() != null && subPaths[index].equals(parent.getValue().getFileName())) {
+			found = true;
+			folderToAdd = parent;
+		}
 		for (TreeItem<FileCoreInfo> item : parent.getChildren()) {
-			if (subPaths.equals(item.getValue().getFileName())) {
+			if (subPaths[index].equals(item.getValue().getFileName())) {
 				found = true;
 				folderToAdd = item;
 			}
@@ -73,14 +72,14 @@ public class FilesTreePresenter implements Initializable {
 		if (!found) {
 			folderToAdd = new TreeItem<FileCoreInfo>(new FileCoreInfo(subPaths[index]));
 			parent.getChildren().add(folderToAdd);
-			if (!subPaths.equals(infoToAdd.getFileName())) {
-				addTreeItem(infoToAdd, subPaths, index++, folderToAdd);
+			if (!subPaths[index].equals(fileName)) {
+				addTreeItem(infoToAdd, subPaths, ++index, folderToAdd);
 			}
 		} else {
-			if (subPaths.equals(infoToAdd.getFileName())) {
+			if (subPaths[index].equals(fileName)) {
 				parent.getChildren().add(new TreeItem<FileCoreInfo>(infoToAdd));
 			}
-			addTreeItem(infoToAdd, subPaths, index++, folderToAdd);
+			addTreeItem(infoToAdd, subPaths, ++index, folderToAdd);
 		}
 
 	}
