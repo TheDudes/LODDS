@@ -5,8 +5,7 @@
 
 (defparameter +log-count+ 1000)
 
-(define-widget main-window (QWidget)
-  ())
+(define-widget main-window (QWidget) ())
 
 (define-subwidget (main-window start) (q+:make-qpushbutton "Start" main-window))
 (define-subwidget (main-window stop) (q+:make-qpushbutton "Stop" main-window))
@@ -21,7 +20,10 @@
         (q+:set-current-index interfaces -1))))
 
 (define-subwidget (main-window list-of-shares) (q+:make-qtreewidget main-window)
+  (q+:set-column-count list-of-shares 3)
   (q+:set-header-labels list-of-shares (list "Name" "Size" "Checksum"))
+  (q+:set-column-width list-of-shares 0 400)
+  (q+:set-column-width list-of-shares 1 70)
   (q+:set-alternating-row-colors list-of-shares t)
   (q+:set-animated list-of-shares t)
   (q+:set-items-expandable list-of-shares t)
@@ -44,7 +46,11 @@
                                       }"))
 
 (define-subwidget (main-window log) (q+:make-qtreewidget main-window)
+  (q+:set-column-count log 3)
   (q+:set-header-labels log (list "Event" "Message" ""))
+  (q+:set-column-width log 0 90)
+  (q+:set-column-width log 1 640)
+  (q+:set-column-width log 2 15)
   (q+:set-alternating-row-colors log t)
   (q+:set-style-sheet log "QTreeView {
                              alternate-background-color: #eeeeef;
@@ -53,6 +59,7 @@
 
 (define-subwidget (main-window layout) (q+:make-qvboxlayout main-window)
   (setf (q+:window-title main-window) "LODDS")
+  (setf (q+:fixed-size main-window) (values 800 450))
   (let ((inner (q+:make-qhboxlayout)))
     (q+:add-widget inner start)
     (q+:add-widget inner stop)
