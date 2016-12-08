@@ -47,7 +47,8 @@ public class BroadcastTest {
 			System.err.println("Could not determine a suitable interface");
 			fail();
 		} else {
-			Lodds loddsObject = new Lodds(chosenInterface, username);
+			Lodds loddsObject = new Lodds(chosenInterface);
+			loddsObject.setUserName(username);
 			BroadcastSenderThread sender = new BroadcastSenderThread(
 					loddsObject);
 			sender.start();

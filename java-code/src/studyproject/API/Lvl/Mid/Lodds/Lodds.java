@@ -11,6 +11,7 @@ import java.security.NoSuchAlgorithmException;
 import java.util.Vector;
 
 import javafx.collections.ObservableList;
+import studyproject.App;
 import studyproject.API.Core.File.FileInfo;
 import studyproject.API.Core.File.Watcher.FileWatcherController;
 import studyproject.API.Loadbalancer.Loadbalancer;
@@ -50,7 +51,6 @@ public class Lodds {
 	private String interfaceName;
 	private int advertisePort;
 	private int listenPort;
-	private String userName;
 	private BroadcastSenderThread broadcastSender;
 	private BroadcastListenerThread broadcastListener;
 	private String broadcastAddress;
@@ -81,7 +81,6 @@ public class Lodds {
 		watchService = new FileWatcherController();
 		this.interfaceName = "no interface selected";
 		threadExecutor = new ThreadExecutor();
-		this.userName = "UserNameNotSet!";
 		load = 0;
 		loadbalancer = new Loadbalancer(loadBalancingMinumum, parallelDownloads, threadExecutor);
 	}
@@ -98,7 +97,7 @@ public class Lodds {
 	 * @param userName
 	 *            the name under which this client will appear to other clients
 	 */
-	public Lodds(String interfaceName, String userName) {
+	public Lodds(String interfaceName) {
 		sharedFolders = new Vector<String>();
 		ipPort = DEFAULT_IP_PORT;
 		advertisePort = DEFAULT_ADVERTISE_PORT;
@@ -108,7 +107,6 @@ public class Lodds {
 		this.interfaceName = interfaceName;
 		threadExecutor = new ThreadExecutor();
 		setNetworkAddresses();
-		this.userName = userName;
 		load = 0;
 		loadbalancer = new Loadbalancer(loadBalancingMinumum, parallelDownloads, threadExecutor);
 	}
@@ -441,7 +439,7 @@ public class Lodds {
 	 *            the name this client should be displayed as on other clients
 	 */
 	public void setUserName(String userName) {
-		this.userName = userName;
+		App.properties.setProperty("userName", userName);
 	}
 
 	/**
@@ -509,7 +507,7 @@ public class Lodds {
 	 * @return the name that this client is currently know as in the network
 	 */
 	public synchronized String getUserName() {
-		return userName;
+		return (String) App.properties.get("userName");
 	}
 
 	/**
