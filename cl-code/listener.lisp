@@ -85,7 +85,11 @@
 (defun handle-message (message)
   (multiple-value-bind (error result) (lodds.low-level-api:read-advertise message)
     (unless (eql error 0)
-      (error "TODO: remove me: ERROR from low-level-api: ~a~%" error))
+      (lodds.event:push-event :error
+                              (list (format nil
+                                            "low-level-api:read-advertise returned ~a"
+                                            error)))
+      (return-from handle-message))
     (lodds.event:push-event :listener result)
     (let ((current-time (lodds.core:get-timestamp))
           (clients (lodds:clients lodds:*server*)))
