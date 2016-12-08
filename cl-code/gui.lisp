@@ -135,6 +135,7 @@
   (let ((new-entry (q+:make-qtreewidgetitem (funcall get-parent-fn))))
     (q+:set-text new-entry 0 (car path))
     (q+:set-text new-entry 1 size)
+    (q+:set-text-alignment new-entry 1 (q+:qt.align-right))
     ;; only add checksums on files, not on folders
     (unless (cdr path)
       (q+:set-text new-entry 2 checksum))
