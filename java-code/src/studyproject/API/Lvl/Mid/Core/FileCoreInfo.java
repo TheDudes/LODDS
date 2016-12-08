@@ -42,7 +42,8 @@ public class FileCoreInfo {
 
 	@Override
 	public String toString() {
-		return getFileName();
+		//TODO this is not how it's supposed to be
+		return fileName.split("/")[(fileName.split("/")).length - 1];
 	}
 
 }

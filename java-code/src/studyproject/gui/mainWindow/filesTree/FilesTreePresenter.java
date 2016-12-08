@@ -37,6 +37,15 @@ public class FilesTreePresenter implements Initializable {
 				createTree(newValue);
 			}
 		});
+		filesTreeView.getSelectionModel().selectedItemProperty()
+				.addListener(new ChangeListener<TreeItem<FileCoreInfo>>() {
+
+					@Override
+					public void changed(ObservableValue<? extends TreeItem<FileCoreInfo>> observable,
+							TreeItem<FileCoreInfo> oldValue, TreeItem<FileCoreInfo> newValue) {
+						System.out.println(newValue.getValue().getFileName() + newValue.getValue().getChecksum());
+					}
+				});
 	}
 
 	public void createTree(UserInfo userInfo) {
@@ -54,31 +63,25 @@ public class FilesTreePresenter implements Initializable {
 	}
 
 	private void addTreeItem(FileCoreInfo infoToAdd, String[] subPaths, int index, TreeItem<FileCoreInfo> parent) {
-		boolean found = false;
-		String fileName = subPaths[subPaths.length - 1];
 		TreeItem<FileCoreInfo> folderToAdd = null;
 
-		found = false;
-		if (parent.getValue() != null && subPaths[index].equals(parent.getValue().getFileName())) {
-			found = true;
-			folderToAdd = parent;
-		}
 		for (TreeItem<FileCoreInfo> item : parent.getChildren()) {
 			if (subPaths[index].equals(item.getValue().getFileName())) {
-				found = true;
-				folderToAdd = item;
+				addTreeItem(infoToAdd, subPaths, ++index, item);
+				return;
+				// size = addTreeItem(infoToAdd, subPaths, ++index, item);
+				// item.getValue().increment size
+
 			}
 		}
-		if (!found) {
+		if (index == subPaths.length - 1) {
+			// ADD THE FILE YOU RETARDED FUCK
+			parent.getChildren().add(new TreeItem<FileCoreInfo>(infoToAdd));
+			// return child.size();
+		} else {
+			// ADD new folder and recur with it
 			folderToAdd = new TreeItem<FileCoreInfo>(new FileCoreInfo(subPaths[index]));
 			parent.getChildren().add(folderToAdd);
-			if (!subPaths[index].equals(fileName)) {
-				addTreeItem(infoToAdd, subPaths, ++index, folderToAdd);
-			}
-		} else {
-			if (subPaths[index].equals(fileName)) {
-				parent.getChildren().add(new TreeItem<FileCoreInfo>(infoToAdd));
-			}
 			addTreeItem(infoToAdd, subPaths, ++index, folderToAdd);
 		}
 
