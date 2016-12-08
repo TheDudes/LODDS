@@ -42,7 +42,7 @@ public class FileCoreInfo {
 
 	@Override
 	public String toString() {
-		return getFileName() + ":" + getChecksum() + ":" + getFilesize();
+		return getFileName();
 	}
 
 }
