@@ -59,7 +59,7 @@
     (q+:add-widget inner interfaces)
     (q+:add-item layout inner))
   (let ((splitter (q+:make-qsplitter)))
-     (q+:set-orientation splitter (#_Vertical "Qt"))
+    (q+:set-orientation splitter (q+:qt.vertical))
     (q+:add-widget splitter list-of-shares)
     (q+:add-widget splitter log)
     (q+:add-widget layout splitter)))
