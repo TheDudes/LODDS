@@ -44,7 +44,7 @@
                                       }"))
 
 (define-subwidget (main-window log) (q+:make-qtreewidget main-window)
-  (q+:set-header-labels log (list "Event" "Message"))
+  (q+:set-header-labels log (list "Event" "Message" "Count"))
   (q+:set-alternating-row-colors log t)
   (q+:set-style-sheet log "QTreeView {
                              alternate-background-color: #eeeeef;
@@ -216,21 +216,35 @@
                                         (msg string))
   (declare (connected main-window (add-log-msg string
                                                string)))
-  (let ((new-entry (q+:make-qtreewidgetitem log)))
-    (q+:set-text new-entry 0 event)
-    (q+:set-text new-entry 1 msg)
-    (let* ((scrollbar (q+:vertical-scroll-bar log))
-           (position (q+:value scrollbar)))
-      (loop :while (> (q+:top-level-item-count log) +log-count+)
-            :do (progn (finalize (q+:take-top-level-item log 0))
-                       (q+:set-value scrollbar (- position 1)))))
-    (let* ((item-above (q+:item-above log new-entry))
-           (visual-rect (q+:visual-item-rect log item-above)))
-      (when (and item-above
-                 (< (- (q+:bottom visual-rect)
-                       (q+:height (q+:viewport log)))
-                    (q+:height visual-rect)))
-        (q+:scroll-to-item log new-entry)))))
+  (let* ((items (q+:top-level-item-count log))
+         (last-item (if (> items 0)
+                        (q+:top-level-item log (- items 1))
+                        nil)))
+    (if (and last-item
+             (string= (q+:text last-item 0)
+                      event)
+             (string= (q+:text last-item 1)
+                      msg))
+        (q+:set-text last-item 2 (prin1-to-string
+                                  (+ 1 (parse-integer (q+:text last-item 2)))))
+        (let ((new-entry (q+:make-qtreewidgetitem log)))
+          (q+:set-text new-entry 0 event)
+          (q+:set-text new-entry 1 msg)
+          (q+:set-text new-entry 2 "1")
+          (q+:set-text-alignment new-entry 2 (q+:qt.align-right))
+          (let* ((scrollbar (q+:vertical-scroll-bar log))
+                 (position (q+:value scrollbar)))
+            (loop :while (> (q+:top-level-item-count log) +log-count+)
+                  :do (progn (finalize (q+:take-top-level-item log 0))
+                             (q+:set-value scrollbar (- position 1)))))
+          (let ((visual-rect (if last-item
+                                 (q+:visual-item-rect log last-item)
+                                 nil)))
+            (when (and visual-rect
+                       (< (- (q+:bottom visual-rect)
+                             (q+:height (q+:viewport log)))
+                          (q+:height visual-rect)))
+              (q+:scroll-to-item log new-entry)))))))
 
 (defun dump-item (item &optional (depth 0))
   "dumps given item, and all its childs, if it has any. Just for
