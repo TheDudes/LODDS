@@ -7,7 +7,6 @@ import java.util.Vector;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 
-import javafx.collections.ObservableList;
 import studyproject.API.Core.BroadcastInfo;
 import studyproject.API.Errors.ErrLog;
 import studyproject.API.Lvl.Low.Broadcast;
@@ -53,6 +52,7 @@ public class BroadcastListenerThread extends Thread {
 				}
 				for (UserInfo user : loddsObject.getLoddsModel().getClientList()) {
 					if (user.getIpAddress().equals(inetAddress)) {
+						written = true;
 						user.setPort(brInfo.ipPort);
 						user.setLoad(brInfo.load);
 						user.setUserName(brInfo.name);
@@ -60,7 +60,6 @@ public class BroadcastListenerThread extends Thread {
 						if (user.getLastUpdate() <= brInfo.timestamp)
 							loddsObject.updateFileInfo(user.getUserName());
 						user.setLastReceivedBroadcast(System.currentTimeMillis() / 1000);
-						written = true;
 						break;
 					}
 				}
@@ -69,7 +68,7 @@ public class BroadcastListenerThread extends Thread {
 							"BroadcastListenerThread: Added to Userlist: " + brInfo.toString());
 					userInfo = new UserInfo(inetAddress, brInfo.ipPort, brInfo.name, 0, brInfo.load,
 							new ConcurrentHashMap<String, FileCoreInfo>(),
-							new ConcurrentHashMap<String, Vector<String>>(), brInfo.timestamp);
+							new ConcurrentHashMap<String, Vector<String>>());
 					loddsObject.getLoddsModel().getClientList().add(userInfo);
 					loddsObject.updateFileInfo(userInfo.getUserName());
 				}
@@ -79,16 +78,17 @@ public class BroadcastListenerThread extends Thread {
 
 			// Remove users that did not sent a broadcast in the last 5 seconds.
 			// Save them and delete them from the userList afterwards
-			long currentTime = System.currentTimeMillis() / 1000;
-			ObservableList<UserInfo> userList = loddsObject.getLoddsModel().getClientList();
 			ArrayList<UserInfo> arrayList = new ArrayList<UserInfo>();
-			for (UserInfo user : userList) {
-				if (((user.getLastReceivedBroadcast() + 5) < currentTime) && user.getLastReceivedBroadcast() != 0) {
+			long currentTime = System.currentTimeMillis() / 1000;
+			for (UserInfo user : loddsObject.getLoddsModel().getClientList()) {
+				if (((user.getLastReceivedBroadcast() + 5) < currentTime) && (user.getLastReceivedBroadcast() != 0)) {
 					arrayList.add(user);
 				}
 			}
 			for (UserInfo user : arrayList) {
-				userList.remove(user);
+				ErrLog.log(Level.SEVERE, LogKey.error, APILvl.mid, getName() + getId() + ": broadCastListener",
+						"Removed User :" + user.toString());
+				loddsObject.getLoddsModel().getClientList().remove(user);
 			}
 
 			written = false;

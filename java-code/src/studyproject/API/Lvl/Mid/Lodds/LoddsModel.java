@@ -14,11 +14,11 @@ public class LoddsModel {
 		clientList = javafx.collections.FXCollections.synchronizedObservableList(FXCollections.observableArrayList());
 	}
 
-	public ObservableList<UserInfo> getClientList() {
+	public synchronized ObservableList<UserInfo> getClientList() {
 		return clientList;
 	}
 
-	public void setClientList(ObservableList<UserInfo> clientList) {
+	public synchronized void setClientList(ObservableList<UserInfo> clientList) {
 		this.clientList = clientList;
 	}
 

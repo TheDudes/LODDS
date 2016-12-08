@@ -48,8 +48,7 @@ public class UserInfo {
 	 *            the mapping of the checksums of the shared files of this user
 	 *            to the paths of the files
 	 */
-	public UserInfo(InetAddress ipAddress, int port, String userName,
-			long lastUpdate, long load,
+	public UserInfo(InetAddress ipAddress, int port, String userName, long lastUpdate, long load,
 			ConcurrentHashMap<String, FileCoreInfo> pathToFileInfo,
 			ConcurrentHashMap<String, Vector<String>> checksumToPath) {
 		this.ipAddress = ipAddress;
@@ -92,13 +91,10 @@ public class UserInfo {
 	 * @param lastReceivedBroadcast
 	 *            the time of the last received broadcast of the other client
 	 */
-	public UserInfo(InetAddress ipAddress, int port, String userName,
-			long lastUpdate, long load,
+	public UserInfo(InetAddress ipAddress, int port, String userName, long lastUpdate, long load,
 			ConcurrentHashMap<String, FileCoreInfo> pathToFileInfo,
-			ConcurrentHashMap<String, Vector<String>> checksumToPath,
-			long lastReceivedBroadcast) {
-		this(ipAddress, port, userName, lastUpdate, load, pathToFileInfo,
-				checksumToPath);
+			ConcurrentHashMap<String, Vector<String>> checksumToPath, long lastReceivedBroadcast) {
+		this(ipAddress, port, userName, lastUpdate, load, pathToFileInfo, checksumToPath);
 		this.lastReceivedBroadcast = lastReceivedBroadcast;
 	}
 
@@ -106,7 +102,7 @@ public class UserInfo {
 	 * 
 	 * @return the IP address of the other client
 	 */
-	public InetAddress getIpAddress() {
+	public synchronized InetAddress getIpAddress() {
 		return ipAddress;
 	}
 
@@ -115,7 +111,7 @@ public class UserInfo {
 	 * @param ipAddress
 	 *            the ip address of the other client
 	 */
-	public void setIpAddress(InetAddress ipAddress) {
+	public synchronized void setIpAddress(InetAddress ipAddress) {
 		this.ipAddress = ipAddress;
 	}
 
@@ -123,7 +119,7 @@ public class UserInfo {
 	 * 
 	 * @return the port on which to contact the other client
 	 */
-	public int getPort() {
+	public synchronized int getPort() {
 		return port;
 	}
 
@@ -132,7 +128,7 @@ public class UserInfo {
 	 * @param port
 	 *            the port on which to contact the other client
 	 */
-	public void setPort(int port) {
+	public synchronized void setPort(int port) {
 		this.port = port;
 	}
 
@@ -140,7 +136,7 @@ public class UserInfo {
 	 * 
 	 * @return the name that the other client wants to be displayed as
 	 */
-	public String getUserName() {
+	public synchronized String getUserName() {
 		return userName;
 	}
 
@@ -149,7 +145,7 @@ public class UserInfo {
 	 * @param userName
 	 *            the name that the other client wants to be displayed as
 	 */
-	public void setUserName(String userName) {
+	public synchronized void setUserName(String userName) {
 		this.userName = userName;
 	}
 
@@ -158,7 +154,7 @@ public class UserInfo {
 	 * @return the time stamp of the last time the local client updated its
 	 *         files
 	 */
-	public long getLastUpdate() {
+	public synchronized long getLastUpdate() {
 		return lastUpdate;
 	}
 
@@ -168,7 +164,7 @@ public class UserInfo {
 	 *            the time stamp of the last time the local client updated its
 	 *            files
 	 */
-	public void setLastUpdate(long lastUpdate) {
+	public synchronized void setLastUpdate(long lastUpdate) {
 		this.lastUpdate = lastUpdate;
 	}
 
@@ -193,7 +189,7 @@ public class UserInfo {
 	 * @return the time stamp of the last change in the file system of the other
 	 *         client
 	 */
-	public long getFileListTimestamp() {
+	public synchronized long getFileListTimestamp() {
 		return fileListTimestamp;
 	}
 
@@ -202,14 +198,14 @@ public class UserInfo {
 	 *            the time stamp of the last change in the file system of the
 	 *            other client
 	 */
-	public void setFileListTimestamp(long fileListTimestamp) {
+	public synchronized void setFileListTimestamp(long fileListTimestamp) {
 		this.fileListTimestamp = fileListTimestamp;
 	}
 
 	/**
 	 * @return the time of the last received broadcast of the other client
 	 */
-	public long getLastReceivedBroadcast() {
+	public synchronized long getLastReceivedBroadcast() {
 		return lastReceivedBroadcast;
 	}
 
@@ -217,25 +213,23 @@ public class UserInfo {
 	 * @param lastReceivedBroadcast
 	 *            the time of the last received broadcast of the other client
 	 */
-	public void setLastReceivedBroadcast(long lastReceivedBroadcast) {
+	public synchronized void setLastReceivedBroadcast(long lastReceivedBroadcast) {
 		this.lastReceivedBroadcast = lastReceivedBroadcast;
 	}
 
-	public ConcurrentHashMap<String, FileCoreInfo> getPathToFileInfo() {
+	public synchronized ConcurrentHashMap<String, FileCoreInfo> getPathToFileInfo() {
 		return pathToFileInfo;
 	}
 
-	public void setPathToFileInfo(
-			ConcurrentHashMap<String, FileCoreInfo> pathToFileInfo) {
+	public void setPathToFileInfo(ConcurrentHashMap<String, FileCoreInfo> pathToFileInfo) {
 		this.pathToFileInfo = pathToFileInfo;
 	}
 
-	public ConcurrentHashMap<String, Vector<String>> getChecksumToPath() {
+	public synchronized ConcurrentHashMap<String, Vector<String>> getChecksumToPath() {
 		return checksumToPath;
 	}
 
-	public void setChecksumToPath(
-			ConcurrentHashMap<String, Vector<String>> checksumToPath) {
+	public void setChecksumToPath(ConcurrentHashMap<String, Vector<String>> checksumToPath) {
 		this.checksumToPath = checksumToPath;
 	}
 
@@ -254,9 +248,7 @@ public class UserInfo {
 
 	@Override
 	public String toString() {
-		return userName + "@"+ipAddress;
+		return userName + "@" + ipAddress;
 	}
-	
-	
 
 }
