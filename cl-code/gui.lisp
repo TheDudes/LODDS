@@ -264,9 +264,6 @@
 (defun cb-list-update (main-window event)
   "callback which will be called on a :list-update event"
   (destructuring-bind (name type timestamp changes) event
-    (format t "got event-callback from: ~a type: ~a, timestamp: ~a."
-            name type timestamp)
-    (format t "~{change: ~a~%~}" changes)
     (when (eql type :all)
       (signal! main-window (remove-entry string) name))
     (loop :for (type checksum size path) :in changes

@@ -78,7 +78,8 @@
                                  c-last-change)
                          (update-client-list client-info)))
                    (error (e)
-                     (format t "got error inside update-client-list ~a~%" e)))
+                     (lodds.event:push-event :error (list "error inside update-client-list"
+                                                          e))))
               (bt:release-lock (lodds:c-lock client-info)))
             (lodds.event:push-event :info (list :dropped task)))))))
 
