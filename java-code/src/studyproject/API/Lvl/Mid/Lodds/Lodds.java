@@ -47,6 +47,7 @@ public class Lodds {
 	private long lastChange;
 	private Loadbalancer loadbalancer;
 	private Vector<String> sharedFolders;
+	@Deprecated
 	private long load;
 	private String interfaceName;
 	private int advertisePort;
@@ -462,6 +463,7 @@ public class Lodds {
 	/**
 	 * @return the number of bytes that this client still has to send
 	 */
+	@Deprecated
 	public synchronized long getLoad() {
 		return load;
 	}
@@ -479,6 +481,7 @@ public class Lodds {
 	 * @param load
 	 *            the number of bytes that should be added to the current load
 	 */
+	@Deprecated
 	public synchronized void incrementLoad(long load) {
 		this.load += load;
 	}
