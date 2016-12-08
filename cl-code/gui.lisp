@@ -44,7 +44,7 @@
                                       }"))
 
 (define-subwidget (main-window log) (q+:make-qtreewidget main-window)
-  (q+:set-header-labels log (list "Event" "Message" "Count"))
+  (q+:set-header-labels log (list "Event" "Message" ""))
   (q+:set-alternating-row-colors log t)
   (q+:set-style-sheet log "QTreeView {
                              alternate-background-color: #eeeeef;
@@ -225,12 +225,17 @@
                       event)
              (string= (q+:text last-item 1)
                       msg))
-        (q+:set-text last-item 2 (prin1-to-string
-                                  (+ 1 (parse-integer (q+:text last-item 2)))))
+        (q+:set-text last-item
+                     2
+                     (prin1-to-string
+                      (let ((current (q+:text last-item 2)))
+                        (if (string= current "")
+                            2
+                            (+ 1 (parse-integer current))))))
         (let ((new-entry (q+:make-qtreewidgetitem log)))
           (q+:set-text new-entry 0 event)
           (q+:set-text new-entry 1 msg)
-          (q+:set-text new-entry 2 "1")
+          (q+:set-text new-entry 2 "")
           (q+:set-text-alignment new-entry 2 (q+:qt.align-right))
           (let* ((scrollbar (q+:vertical-scroll-bar log))
                  (position (q+:value scrollbar)))
