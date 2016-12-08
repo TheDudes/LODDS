@@ -181,7 +181,7 @@ public class FileWatcherController {
 	 * Watches all files and folders from a directory recursively. Virtual root
 	 * directory will automatically be set to absoluteFileName
 	 * 
-	 * @param absoluteFileName:
+	 * @param absoluteFileName
 	 *            absolute file name in file system
 	 * @throws Exception
 	 */
@@ -192,9 +192,9 @@ public class FileWatcherController {
 	/**
 	 * Watches all files and folders from a directory recursively
 	 * 
-	 * @param absoluteFileName:
+	 * @param absoluteFileName
 	 *            absolute file name in file system
-	 * @param virtualRoot:
+	 * @param virtualRoot
 	 *            virtual root directory (part of absolute filename)
 	 * @throws Exception
 	 */
