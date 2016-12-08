@@ -15,8 +15,6 @@ import java.nio.file.WatchKey;
 import java.nio.file.WatchService;
 import java.security.NoSuchAlgorithmException;
 
-import studyproject.API.Core.File.FileInfo;
-
 /**
  * Watches a specific folder for changes and executes handlers for updating the
  * list
@@ -90,20 +88,18 @@ public class FileWatcher implements Runnable {
 					WatchEvent<Path> ev = (WatchEvent<Path>) event;
 					Path fileName = ev.context();
 					String fullPath = directoryPath + fileName.toString();
-					FileInfo newFileInfo = null;
+//					FileInfo newFileInfo = null;
 
 					File newFile = new File(fullPath);
 
 					System.out.println("FileWatcher detected event for: "+fullPath);
 
-					if (newFile.exists() && !newFile.isDirectory()) {
-						newFileInfo = new FileInfo(fullPath, virtualRoot);
-					}
+//					if (newFile.exists() && !newFile.isDirectory()) {
+//						newFileInfo = new FileInfo(fullPath, virtualRoot);
+//					}
 
 					System.out.println("FileWatcher instance: " + directoryPath);
 					System.out.println(eventType.name() + ": " + fullPath);
-
-					FileInfo fileFromList = null;
 
 					// New file was created -> Add to list
 					if (watchForNewFiles && eventType == ENTRY_CREATE) {
@@ -118,8 +114,8 @@ public class FileWatcher implements Runnable {
 						// New file was created
 						else {
 
-							newFileInfo = new FileInfo(fullPath, virtualRoot);
-							fileFromList = controller.getWatchedFileFromListByHash(newFileInfo.checksum);
+//							newFileInfo = new FileInfo(fullPath, virtualRoot);
+//							FileInfo fileFromList = controller.getWatchedFileFromListByHash(newFileInfo.checksum);
 							controller.addFileToLists(fullPath, virtualRoot);
 						}
 					} else {
