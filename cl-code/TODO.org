@@ -1,6 +1,22 @@
 * General
-** TODO missing [0/1]
+** TODO missing [0/2]
    - [ ] File Header with Description
+
+* GUI
+** TODO missing [0/13]
+   - [ ] Share Directory Functionality
+   - [ ] Display of Shared Directories
+   - [ ] Info about found Users
+   - [ ] Infobar with Current Transfers, Load, Connections, ...
+   - [ ] Tooltips
+   - [ ] Log message filtering
+   - [ ] Display Sizes in readable format
+   - [ ] Settings
+   - [ ] Edit/Reload Style
+   - [ ] Error Dialogs
+   - [ ] Label & more Info on Interface ComboBox
+   - [ ] Download File/Folder from a User
+   - [ ] colorize logmessage count
 
 * Lodds Lib
 ** TODO missing [1/4]
@@ -8,6 +24,7 @@
    - [ ] Error Handling
    - [X] directory watcher (cl-async)
    - [ ] initargs (interface -> overwrite initialize-instance)
+   - [ ] Get file with load balancing
 
 ** TODO Code changes [4/5]
    - [X] rename and export accessors
@@ -28,8 +45,9 @@
      - [ ] 5: connection denied (needs to be added)
      - [ ] 6: network-unreachable
    - [ ] some error-code-to-string functionality
-   - [ ] tests
+   - [ ] tests (Prove)
 
-** TODO BUGS [0/2]
+** TODO BUGS [0/3]
    - [ ] readline on sockets should timeout and stop after specified amount
    - [ ] replace ~a with fitting format specifier
+   - [ ] "could not determine file type" occured on cl-fs-watcher
