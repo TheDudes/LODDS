@@ -17,6 +17,7 @@ import org.junit.Test;
 
 import studyproject.API.Core.File.FileAction;
 import studyproject.API.Core.File.FileInfo;
+import studyproject.API.Lvl.Low.Load;
 import studyproject.API.Lvl.Low.Responses;
 import studyproject.Test.FileUtil;
 
@@ -103,6 +104,7 @@ public class ResponsesTest {
 				assertEquals("Lorem ipsum dolor sit amet, consetetur sadipscing elitr, "
 						+ "sed diam nonumy eirmod tempor invidunt ut l", inputStream.readLine());
 			}
+			assertEquals(0, Load.getCurrentLoad());
 		} catch (IOException e) {
 			e.printStackTrace();
 			fail();
