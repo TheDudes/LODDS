@@ -5,6 +5,24 @@
 
 (defparameter +log-count+ 1000)
 
+(defparameter *style-sheet*
+  "QTreeView {
+     alternate-background-color: #eeeeef;
+     background-color: #ffffff;
+   }
+
+  QTreeView::branch:has-children:!has-siblings:closed,
+  QTreeView::branch:closed:has-children:has-siblings {
+    border-image: none;
+    image: url(folder-closed.png);
+  }
+
+  QTreeView::branch:open:has-children:!has-siblings,
+  QTreeView::branch:open:has-children:has-siblings  {
+    border-image: none;
+    image: url(folder-open.png);
+  }")
+
 (define-widget main-window (QWidget) ())
 
 (define-subwidget (main-window start) (q+:make-qpushbutton "Start" main-window))
@@ -27,23 +45,7 @@
   (q+:set-alternating-row-colors list-of-shares t)
   (q+:set-animated list-of-shares t)
   (q+:set-items-expandable list-of-shares t)
-  (q+:set-expands-on-double-click list-of-shares t)
-  (q+:set-style-sheet list-of-shares "QTreeView {
-                                        alternate-background-color: #eeeeef;
-                                        background-color: #ffffff;
-                                      }
-
-                                      QTreeView::branch:has-children:!has-siblings:closed,
-                                      QTreeView::branch:closed:has-children:has-siblings {
-                                        border-image: none;
-                                        image: url(folder-closed.png);
-                                      }
-
-                                      QTreeView::branch:open:has-children:!has-siblings,
-                                      QTreeView::branch:open:has-children:has-siblings  {
-                                        border-image: none;
-                                        image: url(folder-open.png);
-                                      }"))
+  (q+:set-expands-on-double-click list-of-shares t))
 
 (define-subwidget (main-window log) (q+:make-qtreewidget main-window)
   (q+:set-column-count log 3)
@@ -51,15 +53,12 @@
   (q+:set-column-width log 0 90)
   (q+:set-column-width log 1 640)
   (q+:set-column-width log 2 15)
-  (q+:set-alternating-row-colors log t)
-  (q+:set-style-sheet log "QTreeView {
-                             alternate-background-color: #eeeeef;
-                             background-color: #ffffff;
-                           }"))
+  (q+:set-alternating-row-colors log t))
 
 (define-subwidget (main-window layout) (q+:make-qvboxlayout main-window)
   (setf (q+:window-title main-window) "LODDS")
   (setf (q+:fixed-size main-window) (values 800 450))
+  (q+:set-style-sheet main-window *style-sheet*)
   (let ((inner (q+:make-qhboxlayout)))
     (q+:add-widget inner start)
     (q+:add-widget inner stop)
@@ -75,6 +74,7 @@
 (define-signal (main-window remove-entry) (string))
 (define-signal (main-window dump-table) ())
 (define-signal (main-window add-log-msg) (string string))
+(define-signal (main-window reload-stylesheet) ())
 
 (define-slot (main-window start) ()
   (declare (connected start (pressed)))
@@ -272,6 +272,11 @@
   (declare (connected main-window (dump-table)))
   (loop :for i :from 0 :below (q+:top-level-item-count list-of-shares)
         :do (dump-item (q+:top-level-item list-of-shares i))))
+
+
+(define-slot (main-window reload-stylesheet) ()
+  (declare (connected main-window (reload-stylesheet)))
+  (q+:set-style-sheet main-window *style-sheet*))
 
 (defun cb-list-update (main-window event)
   "callback which will be called on a :list-update event"
