@@ -64,7 +64,7 @@ public class FileInfo {
 			parentDirectorySplit = virtualRoot.split(File.separator);
 		}
 		String onlyParentDir = parentDirectorySplit[parentDirectorySplit.length - 1];
-		return "/" + onlyParentDir + replaceBackslashWithForwardslash(fileName.replace(virtualRoot, ""));
+		return onlyParentDir + "/" + replaceBackslashWithForwardslash(fileName.replace(virtualRoot, ""));
 	}
 
 	private String replaceBackslashWithForwardslash(String fileName) {

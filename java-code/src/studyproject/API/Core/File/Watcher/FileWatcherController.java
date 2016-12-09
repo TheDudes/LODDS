@@ -92,8 +92,6 @@ public class FileWatcherController {
 	 */
 	public String getInfo(long timestamp) {
 
-		// System.out.println("getInfo(): "+timestamp);
-
 		String header = "";
 		String body = "";
 
@@ -108,19 +106,19 @@ public class FileWatcherController {
 
 			// Check if file was added after given timestamp but not during last
 			// sec
-			Boolean timestampAddedCheck = file.timestampAdded >= timestamp
+			Boolean addedCheck = file.timestampAdded >= timestamp
 					&& file.timestampAdded < currentTimestampMinusOneSec;
 
 			// Check if file was last modified after given timestamp but not
 			// during last sec
 			Boolean lastModifiedCheck = fileLastModifiedSec >= timestamp
 					&& fileLastModifiedSec < currentTimestampMinusOneSec;
+			
+			// If requested timestamp < file was monitored we always add it to the list
+			Boolean timestampBeforeFileWasAdded = timestamp < file.timestampAdded;
 
-			if (timestamp == 0 || lastModifiedCheck || timestampAddedCheck) {
-
-				// System.out.println("fileLastModifiedSec:
-				// "+fileLastModifiedSec);
-
+			if (timestamp == 0 || lastModifiedCheck || addedCheck || timestampBeforeFileWasAdded) {
+				
 				body = this.convertFileInfoToString(file) + body;
 				filesMatched++;
 			}
@@ -199,7 +197,6 @@ public class FileWatcherController {
 	 * @throws Exception
 	 */
 	public void watchDirectoryRecursively(String absoluteFileName, String virtualRoot) throws Exception {
-		// System.out.println("watchDirectoryRecursively: "+absoluteFileName);
 
 		// Start to watch directory
 		// System.out.println("watchDirRec**: "+absoluteFileName);

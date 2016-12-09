@@ -185,7 +185,6 @@ public class FileWatcher implements Runnable {
 											}
 										}
 										
-										// TODO
 										controller.deleteFolderFromLists(fullPath);
 										
 									}
