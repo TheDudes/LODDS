@@ -7,6 +7,7 @@ import java.util.ArrayList;
 
 import org.junit.Test;
 
+import studyproject.App;
 import studyproject.API.Core.BroadcastInfo;
 import studyproject.API.Lvl.Low.Broadcast;
 import studyproject.API.Lvl.Mid.BroadcastSenderThread;
@@ -29,6 +30,10 @@ public class BroadcastTest {
 	 */
 	@Test
 	public void testBroadcasting() {
+		
+		App app = new App();
+		app.loadProperties();
+		
 		String username = "junit";
 		ArrayList<String> networkAddresses = new ArrayList<String>();
 		Broadcast.getNetworkAddresses(networkAddresses);
