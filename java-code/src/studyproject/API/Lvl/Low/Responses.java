@@ -89,7 +89,6 @@ public class Responses {
 		try {
 			byte[] readBuffer = new byte[BUFFERSIZE];
 			int toRead;
-			long sentBytes = 0;
 			long currentPosition = 0;
 			// go to the starting index and skip all info until then
 			while (currentPosition < startIndex) {
@@ -101,18 +100,18 @@ public class Responses {
 				currentPosition += fileStream.read(readBuffer, 0, toRead);
 			}
 			Load.incrementLoad(endIndex - startIndex);
-			while (sentBytes < endIndex - startIndex) {
-				if ((endIndex - (currentPosition + startIndex)) > BUFFERSIZE) {
+			while (currentPosition < endIndex) {
+				if (endIndex - currentPosition > BUFFERSIZE) {
 					toRead = BUFFERSIZE;
 				} else {
-					toRead = (int) (endIndex - (currentPosition + startIndex));
+					toRead = (int) (endIndex - currentPosition);
 				}
 				Utils.readThisLength(fileStream, readBuffer, 0, toRead);
 				// write the number of bytes we just read to the socketStream
 				socketStream.write(readBuffer, 0, toRead);
 				socketStream.flush();
 				Load.decrementLoad(toRead);
-				sentBytes += toRead;
+				currentPosition += toRead;
 			}
 		} catch (IOException e) {
 			return 1;
