@@ -41,7 +41,7 @@ public class Load {
 	 */
 	public static synchronized void decrementLoad(long load) {
 		if(currentLoad >= load){
-			currentLoad =- load;
+			currentLoad -= load;
 		}
 	}
 	
