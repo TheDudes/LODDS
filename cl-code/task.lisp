@@ -45,6 +45,18 @@
               timeout
               filename))))
 
+(defmethod print-object ((object task-get-file-from-user) stream)
+  (print-unreadable-object (object stream :type t :identity t)
+    (with-accessors ((name name)
+                     (local-file-path get-local-file-path)
+                     (user get-user)
+                     (checksum get-checksum)) object
+      (format stream "~a :local-file-path ~a :user ~a :checksum ~a"
+              name
+              local-file-path
+              user
+              checksum))))
+
 (defgeneric run-task (task)
   (:documentation "Generic Function which will be called if task was
   added to thread-pool"))

@@ -134,6 +134,65 @@
                      :type string
                      :documentation "Name of the File requested to send")))
 
+(defclass task-get-file-from-user (task)
+  ((get-local-file-path :accessor get-local-file-path
+                        :initform (error "Specify a local-file-path pls.")
+                        :initarg :local-file-path
+                        :type string
+                        :documentation "String describing the local
+                        file path. The Path describes where the file,
+                        which is getting downloaded from another
+                        client, is getting saved on the local
+                        filesystem.")
+   (get-user :accessor get-user
+             :initform (error "Specify a user pls.")
+             :initarg :user
+             :type string
+             :documentation "The User where the file is getting
+             downloaded from. User has to be specified with his ip and
+             port in the following format: username@ip:port, for
+             example: d4ryus@192.168.2.101:1234")
+   (get-ip :accessor get-ip
+           :initform nil
+           :type string
+           :documentation "Ip of User, will be set on initialize
+           instance. Can be parsed from get-user.")
+   (get-port :accessor get-port
+             :initform nil
+             :type fixnum
+             :documentation "Port of User, will be set on initialize
+             instance. Can be parsed from get-user.")
+   (get-checksum :accessor get-checksum
+                 :initform (error "Specify a checksum pls.")
+                 :initarg :checksum
+                 :type string
+                 :documentation "Checksum to identify the File. Used
+                 to request the File from the user and find all users
+                 who hold the file.")
+   (get-size :accessor get-size
+             :initform 0
+             :type bignum
+             :documentation "Size of specified File, will be set on
+             initialize instance")
+   (get-socket :accessor get-socket
+               :initform nil
+               :type usocket:socket
+               :documentation "If connection is established socket is
+               set. It will then be read for information.")
+   (get-local-file-stream :accessor get-local-file-stream
+                          :initform nil
+                          :type file-stream
+                          :documentation "If connection is established
+                          and transfer has started file-stream will
+                          point to local-file-path. Everything read
+                          from socket will be saved to file-stream.")
+   (get-read-bytes :accessor get-read-bytes
+                   :initform 0
+                   :type bignum
+                   :documentation "Bignum describing how many bytes
+                   have been read from the socket and saved to the
+                   file.")))
+
 ;; lodds.event classes
 
 (in-package #:lodds.event)

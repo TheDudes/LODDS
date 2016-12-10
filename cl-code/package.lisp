@@ -77,7 +77,18 @@
            #:task-request-send-permission
            #:request-size
            #:request-timeout
-           #:request-filename))
+           #:request-filename
+           ;; task-get-file and accerssors
+           #:task-get-file-from-user
+           #:get-local-file-path
+           #:get-user
+           #:get-ip
+           #:get-port
+           #:get-checksum
+           #:get-size
+           #:get-socket
+           #:get-local-file-stream
+           #:get-read-bytes))
 
 (defpackage #:lodds.watcher
   (:use #:cl)
@@ -159,4 +170,5 @@
            #:get-file-info
            #:get-file-changes
            #:shutdown
-           #:generate-info-response))
+           #:generate-info-response
+           #:get-file))

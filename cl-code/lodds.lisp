@@ -253,3 +253,76 @@
     (list type
           current-timestamp
           file-infos)))
+
+(defun get-file (local-file-path checksum &optional user)
+  (lodds.task:submit-task
+   (if user
+       (make-instance 'lodds.task:task-get-file-from-user
+                      :name "get-file"
+                      :checksum checksum
+                      :user user
+                      :local-file-path local-file-path)
+       (error "get-file without user given is not implemented yet."))))
+
+(defmethod initialize-instance ((task lodds.task:task-get-file-from-user) &rest initargs)
+  (call-next-method)
+  (with-accessors ((t-ip lodds.task:get-ip)
+                   (t-port lodds.task:get-port)
+                   (t-size lodds.task:get-size)) task
+    (let ((user (getf initargs :user))
+          (checksum (getf initargs :checksum)))
+      (destructuring-bind (ip port) (cl-strings:split (second (cl-strings:split user #\@))
+                                                      #\:)
+        (setf t-ip ip
+              t-port (parse-integer port)))
+      (setf t-size
+            (car (get-file-info checksum user))))))
+
+(defmethod lodds.task:run-task ((task lodds.task:task-get-file-from-user))
+  (with-accessors ((local-file-path lodds.task:get-local-file-path)
+                   (user lodds.task:get-user)
+                   (ip lodds.task:get-ip)
+                   (port lodds.task:get-port)
+                   (checksum lodds.task:get-checksum)
+                   (size lodds.task:get-size)
+                   (read-bytes lodds.task:get-read-bytes)
+                   (socket lodds.task:get-socket)
+                   (local-file-stream lodds.task:get-local-file-stream)
+                   (get-read-bytes lodds.task:get-read-bytes)) task
+    (labels ((cleanup (&optional error-occured)
+               (unless error-occured
+                 (lodds.event:push-event :info (list "file transfer completed.")))
+               (when socket
+                 (usocket:socket-close socket))
+               (when local-file-stream
+                 (close local-file-stream :abort error-occured))))
+      (handler-case
+          (let ((chunk-size 8388608))
+            (unless socket
+              (setf socket
+                    (usocket:socket-connect ip port
+                                            :element-type '(unsigned-byte 8)))
+              (lodds.low-level-api:get-file (usocket:socket-stream socket) checksum 0 size))
+            (unless local-file-stream
+              (setf local-file-stream
+                    (open local-file-path :direction :output
+                                          :if-does-not-exist :create
+                                          :element-type '(unsigned-byte 8)
+                                          ;; here we could ask the user, overwrite?
+                                          :if-exists :supersede)))
+            (let ((left-to-download (- size read-bytes)))
+              (lodds.core:copy-stream (usocket:socket-stream socket)
+                                      local-file-stream
+                                      (if (> left-to-download chunk-size)
+                                          (progn (incf read-bytes chunk-size)
+                                                 chunk-size)
+                                          (progn (incf read-bytes left-to-download)
+                                                 left-to-download)))
+              (finish-output local-file-stream)
+              (if (eql size read-bytes)
+                  (cleanup)
+                  (lodds.task:submit-task task))))
+        (error (e)
+          (cleanup t)
+          (lodds.event:push-event :error
+                                  (list "on get file" local-file-path ":" e)))))))
