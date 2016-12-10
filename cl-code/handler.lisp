@@ -3,7 +3,6 @@
 (defmacro with-socket (socket close-socket-p &body body)
   `(let ((is-closed nil))
      (labels ((cleanup-socket () (when ,socket
-                                   (close (usocket:socket-stream ,socket))
                                    (usocket:socket-close ,socket)
                                    (setf is-closed t))))
        (handler-case
