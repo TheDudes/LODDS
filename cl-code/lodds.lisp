@@ -146,9 +146,12 @@
 
 (defun get-user-list ()
   "Returns List of users who advertised themselfs.
+  lodds:*server* needs to be bound.
 
-  CL-USER> (get-user-list *lodds-server*)
-  => (\"peter\" \"steve\" \"josh\")
+  CL-USER> (get-user-list)
+  => (\"peter@123.321.2.1:1234\"
+      \"steve@123.321.2.2:1234\"
+      \"josh@123.321.2.3:1234\")
 
   Use GET-USER-INFO to get information about a user."
   (loop :for key :being :the :hash-key :of (clients *server*)
@@ -157,13 +160,10 @@
 (defun get-user-info (user)
   "Returns List with information about an given user.
   To get a list of available users see get-user-list.
+  lodds:*server* needs to be bound.
 
-  CL-USER> (get-user-info *lodds-server* \"someUser\")
-  => (1475670931 #(172 19 246 14) 4567 0 0 \"someUser\")
-
-  List contains timestamp-received, ip, port, timestamp-client,
-  load, name in that order. The first timestamp describes a local
-  timestamp when the message was received.
+  CL-USER> (get-user-info \"someUser@123.123.123.1:1234\")
+  => #<LODDS:CLIENT-INFO>
 
   Returns nil if user is not found."
   (gethash user (clients *server*)))
