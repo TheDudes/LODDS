@@ -168,6 +168,37 @@
   Returns nil if user is not found."
   (gethash user (clients *server*)))
 
+(defun get-file-info (checksum &optional user)
+  "Returns information about the given checksum.
+  If user is left out it will return a list of user who own the given
+  file. The Size and a list of Filenames matching the checksum is
+  also returned.
+
+  CL-USER> (get-file-info \"03x87fjlwd...\")
+  => ((\"d4ryus@192.168.2.2:4567\" 1234 (\"/shares/a.txt\"
+                                         \"/shares/subfolder/x.txt\"))
+      (\"pete@192.168.2.4:1234\" 1234 (\"/public/z.txt\")))
+
+  CL-USER> (get-file-info \"03x87fjlwd...\" \"d4ryus@192.168.2.2:4567\")
+  => (1234 (\"/shares/a.txt\" \"/shares/subfolder/x.txt\"))"
+  (if user
+      (let ((user-info (get-user-info user)))
+        (unless user-info
+          (return-from get-file-info nil))
+        (let ((locations (gethash checksum (c-file-table-hash user-info))))
+          (unless locations
+            (return-from get-file-info nil))
+          (destructuring-bind (checksum size) (gethash (car locations) (c-file-table-name user-info))
+            (declare (ignore checksum))
+            (list size
+                  locations))))
+      (remove-if
+       #'null
+       (loop :for user :in (get-user-list)
+             :collect (let ((info (get-file-info checksum user)))
+                        (when info
+                          (cons user info)))))))
+
 (defun get-file-changes (current-timestamp &optional (timestamp nil))
   "returns a list of all changes since the given timestamp. if
   timestamp is nil a full list of all files will be returnd"

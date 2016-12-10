@@ -158,6 +158,7 @@
            #:get-timestamp-last-change
            #:get-user-list
            #:get-user-info
+           #:get-file-info
            #:get-file-changes
            #:shutdown
            #:generate-info-response))
