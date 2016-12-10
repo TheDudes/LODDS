@@ -57,7 +57,7 @@
 
 (define-subwidget (main-window layout) (q+:make-qvboxlayout main-window)
   (setf (q+:window-title main-window) "LODDS")
-  (setf (q+:fixed-size main-window) (values 800 450))
+  (q+:resize main-window 800 450)
   (q+:set-style-sheet main-window *style-sheet*)
   (let ((inner (q+:make-qhboxlayout)))
     (q+:add-widget inner start)
