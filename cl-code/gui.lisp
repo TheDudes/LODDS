@@ -5,6 +5,16 @@
 
 (defparameter +log-count+ 1000)
 
+;; list-of-shares columns
+(defvar +name+ 0)
+(defvar +size+ 1)
+(defvar +checksum+ 2)
+
+;; log columns
+(defvar +event+ 0)
+(defvar +msg+ 1)
+(defvar +count+ 2)
+
 (defparameter *style-sheet*
   "QTreeView {
      alternate-background-color: #eeeeef;
@@ -40,8 +50,8 @@
 (define-subwidget (main-window list-of-shares) (q+:make-qtreewidget main-window)
   (q+:set-column-count list-of-shares 3)
   (q+:set-header-labels list-of-shares (list "Name" "Size" "Checksum"))
-  (q+:set-column-width list-of-shares 0 400)
-  (q+:set-column-width list-of-shares 1 70)
+  (q+:set-column-width list-of-shares +name+ 400)
+  (q+:set-column-width list-of-shares +size+ 70)
   (q+:set-alternating-row-colors list-of-shares t)
   (q+:set-animated list-of-shares t)
   (q+:set-items-expandable list-of-shares t)
@@ -50,9 +60,9 @@
 (define-subwidget (main-window log) (q+:make-qtreewidget main-window)
   (q+:set-column-count log 3)
   (q+:set-header-labels log (list "Event" "Message" ""))
-  (q+:set-column-width log 0 90)
-  (q+:set-column-width log 1 640)
-  (q+:set-column-width log 2 15)
+  (q+:set-column-width log +event+ 90)
+  (q+:set-column-width log +msg+ 640)
+  (q+:set-column-width log +count+ 15)
   (q+:set-alternating-row-colors log t))
 
 (define-subwidget (main-window layout) (q+:make-qvboxlayout main-window)
@@ -115,7 +125,7 @@
   (loop :for i :from 0 :below child-count
         :do (let ((element (funcall get-child-fn i)))
               ;; check if node matches
-              (when (string= (car path) (q+:text element 0))
+              (when (string= (car path) (q+:text element +name+))
                 (unless (cdr path)
                   ;; if there is no path left but we have a
                   ;; matching node, it means that the node
@@ -128,10 +138,10 @@
                                 (lambda () element)
                                 (q+:child-count element)
                                 (lambda (place) (q+:child element place)))
-                  (q+:set-text element 1
+                  (q+:set-text element +size+
                                (prin1-to-string
                                 (+ (parse-integer size)
-                                   (parse-integer (q+:text element 1)))))
+                                   (parse-integer (q+:text element +size+)))))
                   (return-from add-node t))
                 ;; if add-child-node was not successfull, just return
                 ;; nil
@@ -140,12 +150,12 @@
   ;; node, so lets add a new one.
   ;; TODO: fix mem leak, finalize new-item when list is destroyed
   (let ((new-entry (q+:make-qtreewidgetitem (funcall get-parent-fn))))
-    (q+:set-text new-entry 0 (car path))
-    (q+:set-text new-entry 1 size)
-    (q+:set-text-alignment new-entry 1 (q+:qt.align-right))
+    (q+:set-text new-entry +name+ (car path))
+    (q+:set-text new-entry +size+ size)
+    (q+:set-text-alignment new-entry +size+ (q+:qt.align-right))
     ;; only add checksums on files, not on folders
     (unless (cdr path)
-      (q+:set-text new-entry 2 checksum))
+      (q+:set-text new-entry +checksum+ checksum))
     ;; only if not root
     (unless root-p
       (q+:add-child (funcall get-parent-fn) new-entry))
@@ -165,7 +175,7 @@
   (loop :for i :from 0 :below child-count
         :do (let ((element (funcall get-child-fn i)))
               ;; check if node matches
-              (when (string= (car path) (q+:text element 0))
+              (when (string= (car path) (q+:text element +name+))
                 ;; check if we have a path left and need to call
                 ;; remove-node recursivly
                 (if (cdr path)
@@ -175,7 +185,7 @@
                                                (q+:child element place))
                                              (lambda (place)
                                                (parse-integer
-                                                (q+:text (q+:take-child element place) 1))))))
+                                                (q+:text (q+:take-child element place) +size+))))))
                       ;; remove-node will return the size of the
                       ;; removed element, if successfull.
                       (when size
@@ -185,9 +195,9 @@
                         ;; left, just update the size.
                         (if (eql 0 (q+:child-count element))
                             (funcall remove-child-fn i)
-                            (q+:set-text element 1
+                            (q+:set-text element +size+
                                          (prin1-to-string
-                                          (- (parse-integer (q+:text element 1))
+                                          (- (parse-integer (q+:text element +size+))
                                              size))))
                         ;; return size here, since recursive remove
                         ;; was successfull
@@ -228,22 +238,22 @@
                         (q+:top-level-item log (- items 1))
                         nil)))
     (if (and last-item
-             (string= (q+:text last-item 0)
+             (string= (q+:text last-item +event+)
                       event)
-             (string= (q+:text last-item 1)
+             (string= (q+:text last-item +msg+)
                       msg))
         (q+:set-text last-item
-                     2
+                     +count+
                      (prin1-to-string
-                      (let ((current (q+:text last-item 2)))
+                      (let ((current (q+:text last-item +count+)))
                         (if (string= current "")
                             2
                             (+ 1 (parse-integer current))))))
         (let ((new-entry (q+:make-qtreewidgetitem log)))
-          (q+:set-text new-entry 0 event)
-          (q+:set-text new-entry 1 msg)
-          (q+:set-text new-entry 2 "")
-          (q+:set-text-alignment new-entry 2 (q+:qt.align-right))
+          (q+:set-text new-entry +event+ event)
+          (q+:set-text new-entry +msg+ msg)
+          (q+:set-text new-entry +count+ "")
+          (q+:set-text-alignment new-entry +count+ (q+:qt.align-right))
           (let* ((scrollbar (q+:vertical-scroll-bar log))
                  (position (q+:value scrollbar)))
             (loop :while (> (q+:top-level-item-count log) +log-count+)
@@ -263,7 +273,7 @@
   debugging"
   (format t "ITEM: ~a~a~%"
           (make-string depth :initial-element #\ )
-          (q+:text item 0))
+          (q+:text item +name+))
   (loop :for i :from 0 :below (q+:child-count item)
         :do (dump-item (q+:child item i)
                        (+ depth 1))))
