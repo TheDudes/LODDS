@@ -151,6 +151,7 @@ multiple-value-bind.
   "will format and write a 'get file' request onto socket-stream requesting
    the specified (checksum) file's content from start till end"
   (format-to-socket socket-stream "get file ~a ~a ~a~%" checksum start end)
+  (force-output socket-stream)
   0)
 
 (defun get-info (socket-stream timestamp)
