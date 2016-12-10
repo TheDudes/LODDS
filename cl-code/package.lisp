@@ -116,9 +116,7 @@
   (:export #:run))
 
 (defpackage #:lodds
-  (:use #:cl
-        #:lodds.core
-        #:lodds.low-level-api)
+  (:use #:cl)
   (:export ;; global variables and macros
            #:*server*
            #:*event-queue*
