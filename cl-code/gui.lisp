@@ -148,7 +148,6 @@
                 (return-from add-node nil))))
   ;; when we get down here it means there was no matching
   ;; node, so lets add a new one.
-  ;; TODO: fix mem leak, finalize new-item when list is destroyed
   (let ((new-entry (q+:make-qtreewidgetitem (funcall get-parent-fn))))
     (q+:set-text new-entry +name+ (car path))
     (q+:set-text new-entry +size+ size)
@@ -167,6 +166,12 @@
         (add-node (cdr path) size checksum (lambda () new-entry))
         t)))
 
+(defun cleanup-node (node)
+  "calls finalize on node and all its children to cleanup memory."
+  (loop :while (> (q+:child-count node) 0)
+        :do (cleanup-node (q+:child node 0)))
+  (finalize node))
+
 (defun remove-node (path child-count get-child-fn remove-child-fn)
   "loops over children with get-child-fn, and if path matches
   remove-node is recursivly called on the matching node. Remove node
@@ -184,8 +189,11 @@
                                              (lambda (place)
                                                (q+:child element place))
                                              (lambda (place)
-                                               (parse-integer
-                                                (q+:text (q+:take-child element place) +size+))))))
+                                               (let* ((removed-item (q+:take-child element place))
+                                                      (size (parse-integer
+                                                             (q+:text removed-item +size+))))
+                                                 (cleanup-node removed-item)
+                                                 size)))))
                       ;; remove-node will return the size of the
                       ;; removed element, if successfull.
                       (when size
@@ -227,7 +235,7 @@
   (remove-node (cl-strings:split path #\/)
                (q+:top-level-item-count list-of-shares)
                (lambda (place) (q+:top-level-item list-of-shares place))
-               (lambda (place) (q+:take-top-level-item list-of-shares place))))
+               (lambda (place) (cleanup-node (q+:take-top-level-item list-of-shares place)))))
 
 (define-slot (main-window add-log-msg) ((event string)
                                         (msg string))
