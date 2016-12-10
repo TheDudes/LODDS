@@ -45,6 +45,21 @@ multiple-value-bind.
    "^(add|del) [^\\s]{64} \\d+ [^\\n]+$")
   "used to scan get info body to check if they are correct")
 
+(defun format-to-socket (destination control-string &rest format-arguments)
+  "format for socket-streams of type '(unsigned-byte 8)"
+  (write-sequence
+   (flex:string-to-octets
+    (apply #'format nil control-string format-arguments))
+   destination))
+
+(defun read-line-from-socket (socket-stream)
+  "read-line for socket-stream of type '(unsigned-byte 8)"
+  (map 'string
+       #'code-char
+       (loop :for byte = (read-byte socket-stream)
+             :until (eql 10 byte) ;; newline
+             :collect byte)))
+
 ;; broadcast family
 
 (defun send-advertise (broadcast-host broadcast-port ad-info)
@@ -104,7 +119,7 @@ multiple-value-bind.
    (:info timestamp)
    (:send-permission size timeout filename)
    will use *get-scanner* to to check for syntax errors"
-  (let ((line (read-line socket-stream)))
+  (let ((line (read-line-from-socket socket-stream)))
     (unless (cl-ppcre:scan *get-scanner* line)
       (return-from parse-request 2))
     (destructuring-bind (get type . args)
@@ -135,7 +150,7 @@ multiple-value-bind.
 (defun get-file (socket-stream checksum start end)
   "will format and write a 'get file' request onto socket-stream requesting
    the specified (checksum) file's content from start till end"
-  (format socket-stream "get file ~a ~a ~a~%" checksum start end)
+  (format-to-socket socket-stream "get file ~a ~a ~a~%" checksum start end)
   0)
 
 (defun get-info (socket-stream timestamp)
@@ -153,8 +168,11 @@ multiple-value-bind.
    to-be-transfered file. The requested client then has 'timeout' seconds to
    respond with either a OK or a connection close. filename is a string containing
    the filename."
-  (format socket-stream "get send-permission ~a ~a ~a~%"
-          size timeout filename)
+  (format-to-socket socket-stream
+                    "get send-permission ~a ~a ~a~%"
+                    size
+                    timeout
+                    filename)
   0)
 
 ;; response family
@@ -176,26 +194,26 @@ multiple-value-bind.
    file's content. size is, as the name suggests, the file size. name is the
    relative pathname.
    TODO: relative pathname link to spec"
-  (format socket-stream "~a ~a ~a~%"
-          (if (eql type :all)
-              "all"
-              "upd")
-          timestamp
-          (length file-infos))
+  (format-to-socket socket-stream "~a ~a ~a~%"
+                    (if (eql type :all)
+                        "all"
+                        "upd")
+                    timestamp
+                    (length file-infos))
   (loop :for (type checksum size name) :in file-infos
-        :do (format socket-stream "~a ~a ~a ~a~%"
-                    (if (eql type :add)
-                        "add"
-                        "del")
-                    checksum
-                    size
-                    name))
+        :do (format-to-socket socket-stream "~a ~a ~a ~a~%"
+                              (if (eql type :add)
+                                  "add"
+                                  "del")
+                              checksum
+                              size
+                              name))
   0)
 
 (defun respond-send-permission (socket-stream file-stream size)
   "response to a 'get send-permission', will send a OK and copy the
    socket-stream content (max size bytes) to file-stream."
-  (format socket-stream "OK~%")
+  (format-to-socket socket-stream "OK~%")
   (force-output socket-stream)
   (copy-stream socket-stream file-stream size)
   0)
@@ -246,7 +264,7 @@ multiple-value-bind.
   (if (usocket:wait-for-input socket :timeout timeout)
       (let ((socket-stream (usocket:socket-stream socket)))
         (if (string= "OK"
-                     (read-line socket-stream))
+                     (read-line-from-socket socket-stream))
             (copy-stream file-stream
                          socket-stream)
             2)
