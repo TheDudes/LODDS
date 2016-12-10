@@ -331,17 +331,17 @@
                                      :event-type :client-removed)
            (lodds.event:add-callback :gui (lambda (event)
                                             (cb-log-messages window event)))
-           ;; add known clients
-           (maphash (lambda (name info)
-                      (maphash (lambda  (filename file-info)
-                                 (destructuring-bind (checksum size) file-info
-                                   (signal! window
-                                            (add-entry string string string)
-                                            (concatenate 'string name filename)
-                                            (prin1-to-string size)
-                                            checksum)))
-                               (lodds:c-file-table-name info)))
-                    (lodds:clients lodds-server)))
+           ;; add known users
+           (loop :for user :in (lodds:get-user-list)
+                 :do (let ((user-info (lodds:get-user-info user)))
+                       (maphash (lambda  (filename file-info)
+                                  (destructuring-bind (checksum size) file-info
+                                    (signal! window
+                                             (add-entry string string string)
+                                             (concatenate 'string user filename)
+                                             (prin1-to-string size)
+                                             checksum)))
+                                (lodds:c-file-table-name user-info)))))
          (lodds.event:remove-callback :gui
                                       :event-type :list-update)
          (lodds.event:remove-callback :gui
