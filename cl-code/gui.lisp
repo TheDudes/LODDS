@@ -9,11 +9,38 @@
 (defvar +name+ 0)
 (defvar +size+ 1)
 (defvar +checksum+ 2)
+(defvar +id+ 3)
 
 ;; log columns
 (defvar +event+ 0)
 (defvar +msg+ 1)
 (defvar +count+ 2)
+
+(let ((xb (ash 1 53)) ;; 8xb
+      (tb (ash 1 43)) ;; 8tb
+      (gb (ash 1 33)) ;; 8gb
+      (mb (ash 1 23)) ;; 8mb
+      (kb (ash 1 13)));; 8kb
+  (defun format-size (size)
+    "formats given size (number) to a more readable format (string)"
+    (cond
+      ((> size xb) (format nil "~axb" (ash size -50)))
+      ((> size tb) (format nil "~atb" (ash size -40)))
+      ((> size gb) (format nil "~agb" (ash size -30)))
+      ((> size mb) (format nil "~amb" (ash size -20)))
+      ((> size kb) (format nil "~akb" (ash size -10)))
+      (t           (format nil "~ab " size)))))
+
+(defparameter *current-id* 0
+  "each time a new widget gets added it will increment the *curren-id*
+  and take the new value as its own id.")
+
+(defparameter *id-mapper*
+  (make-hash-table :test 'equalp)
+  "hash-table mapping generated widget id's to Information. For
+  example: Each element in list-of-shares has a hidden id column. If a
+  item gets klicked you can get Information like the file owner or the
+  filesize by looking up the id inside *id-mapper*.")
 
 (defparameter *style-sheet*
   "QTreeView {
@@ -48,8 +75,9 @@
         (q+:set-current-index interfaces -1))))
 
 (define-subwidget (main-window list-of-shares) (q+:make-qtreewidget main-window)
-  (q+:set-column-count list-of-shares 3)
-  (q+:set-header-labels list-of-shares (list "Name" "Size" "Checksum"))
+  (q+:set-column-count list-of-shares 4)
+  (q+:set-header-labels list-of-shares (list "Name" "Size" "Checksum" "ID"))
+  (q+:hide-column list-of-shares +id+)
   (q+:set-column-width list-of-shares +name+ 400)
   (q+:set-column-width list-of-shares +size+ 70)
   (q+:set-alternating-row-colors list-of-shares t)
@@ -138,10 +166,13 @@
                                 (lambda () element)
                                 (q+:child-count element)
                                 (lambda (place) (q+:child element place)))
-                  (q+:set-text element +size+
-                               (prin1-to-string
-                                (+ (parse-integer size)
-                                   (parse-integer (q+:text element +size+)))))
+                  (q+:set-text element
+                               +size+
+                               (format-size
+                                (let* ((id (q+:text element +id+))
+                                       (old-size (gethash id *id-mapper*)))
+                                  (setf (gethash id *id-mapper*)
+                                        (+ old-size (parse-integer size))))))
                   (return-from add-node t))
                 ;; if add-child-node was not successfull, just return
                 ;; nil
@@ -149,8 +180,11 @@
   ;; when we get down here it means there was no matching
   ;; node, so lets add a new one.
   (let ((new-entry (q+:make-qtreewidgetitem (funcall get-parent-fn))))
+    (let ((entry-id (prin1-to-string (incf *current-id*))))
+      (q+:set-text new-entry +id+ entry-id)
+      (setf (gethash entry-id *id-mapper*) (parse-integer size)))
     (q+:set-text new-entry +name+ (car path))
-    (q+:set-text new-entry +size+ size)
+    (q+:set-text new-entry +size+ (format-size (parse-integer size)))
     (q+:set-text-alignment new-entry +size+ (q+:qt.align-right))
     ;; only add checksums on files, not on folders
     (unless (cdr path)
@@ -170,6 +204,7 @@
   "calls finalize on node and all its children to cleanup memory."
   (loop :while (> (q+:child-count node) 0)
         :do (cleanup-node (q+:child node 0)))
+  (remhash (q+:text node +id+) *id-mapper*)
   (finalize node))
 
 (defun remove-node (path child-count get-child-fn remove-child-fn)
@@ -190,8 +225,8 @@
                                                (q+:child element place))
                                              (lambda (place)
                                                (let* ((removed-item (q+:take-child element place))
-                                                      (size (parse-integer
-                                                             (q+:text removed-item +size+))))
+                                                      (size (gethash (q+:text removed-item +id+)
+                                                                     *id-mapper*)))
                                                  (cleanup-node removed-item)
                                                  size)))))
                       ;; remove-node will return the size of the
@@ -203,10 +238,13 @@
                         ;; left, just update the size.
                         (if (eql 0 (q+:child-count element))
                             (funcall remove-child-fn i)
-                            (q+:set-text element +size+
-                                         (prin1-to-string
-                                          (- (parse-integer (q+:text element +size+))
-                                             size))))
+                            (q+:set-text element
+                                         +size+
+                                         (format-size
+                                          (let* ((id (q+:text element +id+))
+                                                 (old-size (gethash id *id-mapper*)))
+                                            (setf (gethash id *id-mapper*)
+                                                  (- old-size size))))))
                         ;; return size here, since recursive remove
                         ;; was successfull
                         (return-from remove-node size)))
@@ -349,6 +387,7 @@
                                      :event-type :client-removed)
            (lodds.event:add-callback :gui (lambda (event)
                                             (cb-log-messages window event)))
+           (setf *current-id* 0)
            ;; add known users
            (loop :for user :in (lodds:get-user-list)
                  :do (let ((user-info (lodds:get-user-info user)))
