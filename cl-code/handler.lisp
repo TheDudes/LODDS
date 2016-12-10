@@ -13,11 +13,11 @@
              ,@body)
          (end-of-file ()
            (lodds.event:push-event :error
-                                   (list :end-of-file))
+                                   (list "end-of-file on handler"))
            (cleanup-socket))
          (error (e)
            (lodds.event:push-event :error
-                                   (list e))
+                                   (list "unknown error on handler:" e))
            (cleanup-socket)))
        ,(when close-socket-p
           `(unless is-closed
