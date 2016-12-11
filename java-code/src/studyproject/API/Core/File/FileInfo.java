@@ -58,14 +58,29 @@ public class FileInfo {
 
 	private String getRelativeFilePath() {
 		String[] parentDirectorySplit;
+		
+		// Split virtual Root by File seperator char to get virtualRoot's last folder
 		if (File.separator.equals("\\")) {
 			parentDirectorySplit = virtualRoot.split("\\\\");
 		} else {
 			parentDirectorySplit = virtualRoot.split(File.separator);
-		}
-		String onlyParentDir = parentDirectorySplit[parentDirectorySplit.length - 1];
-		return onlyParentDir + "/" + replaceBackslashWithForwardslash(fileName.replace(virtualRoot, ""));
+		}		
+		String virtualRootLastFolder = parentDirectorySplit[parentDirectorySplit.length - 1];
+		
+		// Remove virtualRoot from fileName
+		String relativeFileNameWithoutVirtualRoot = removeLeadingForwardslash(replaceBackslashWithForwardslash(fileName.replace(virtualRoot, "")));
+		
+		return "/" + virtualRootLastFolder + "/" + relativeFileNameWithoutVirtualRoot;
 	}
+	
+	private String removeLeadingForwardslash(String fileName) {
+		if (fileName.charAt(0) == '/') {
+			return fileName.substring(1);
+		} else {
+			return fileName;
+		}
+	}
+	
 
 	private String replaceBackslashWithForwardslash(String fileName) {
 		return fileName.replace("\\", "/");

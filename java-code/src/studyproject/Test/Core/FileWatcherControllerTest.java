@@ -35,7 +35,7 @@ public class FileWatcherControllerTest {
 	
 	@Test
 	public void shouldGetCorrectFileInfoString() throws NoSuchAlgorithmException, IOException {
-		FileInfo fileInfo = new FileInfo("983x89j23897rw9789n87we9r78w798", 1000, testDirectory+"oneFile/testFile.txt", testDirectory, FileAction.add);
+		FileInfo fileInfo = new FileInfo("983x89j23897rw9789n87we9r78w798", 1000, "/"+testDirectory+"oneFile/testFile.txt", testDirectory, FileAction.add);
 		
 		FileWatcherController controller = new FileWatcherController();
 		String actualOutput = controller.convertFileInfoToString(fileInfo);
@@ -57,7 +57,7 @@ public class FileWatcherControllerTest {
 		String actualResponse = controller.getInfo(0);
 		String expectedResponse = 
 				"all "+System.currentTimeMillis() / 1000L+" 1\n"
-				+ "add 736bf95996d40c71307e3727931b721dfb17bd27c441b903a6dd483b37021ac1 8 "+virtualRoot+"oneFile/testFile.txt\n";
+				+ "add 736bf95996d40c71307e3727931b721dfb17bd27c441b903a6dd483b37021ac1 8 /"+virtualRoot+"oneFile/testFile.txt\n";
 		
 		assertEquals(expectedResponse,actualResponse);
 	}
@@ -96,7 +96,7 @@ public class FileWatcherControllerTest {
 		
 		// Get second line and compare with expected response	
 		String actualLineTwo = actualResponseLines[1]; 	
-		String expectedLineTwo = "add e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855 0 "+virtualRoot+"temp/2.txt";
+		String expectedLineTwo = "add e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855 0 /"+virtualRoot+"temp/2.txt";
 		assertEquals(expectedLineTwo,actualLineTwo);
 		
 		// Should be only two lines long cause header + one file
@@ -134,7 +134,7 @@ public class FileWatcherControllerTest {
 		String actualResponse = controller.getInfo(0);
 		String expectedResponse = 
 				"all "+System.currentTimeMillis() / 1000L+" 1\n"
-				+ "add e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855 0 "+virtualRoot+"temp/temp.txt\n";
+				+ "add e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855 0 /"+virtualRoot+"temp/temp.txt\n";
 		
 		assertEquals(expectedResponse,actualResponse);
 		
@@ -173,8 +173,8 @@ public class FileWatcherControllerTest {
 		String actualResponse = controller.getInfo(0);
 		String expectedResponse = 
 				"all "+System.currentTimeMillis() / 1000L+" 2\n"
-				+ "del e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855 0 "+virtualRoot+"temp/temp.txt\n"
-				+ "add e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855 0 "+virtualRoot+"temp/temp.txt\n";
+				+ "del e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855 0 /"+virtualRoot+"temp/temp.txt\n"
+				+ "add e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855 0 /"+virtualRoot+"temp/temp.txt\n";
 		
 		assertEquals(expectedResponse,actualResponse);
 	}
