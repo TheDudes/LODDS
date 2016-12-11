@@ -62,6 +62,28 @@
 
 (define-widget main-window (QMainWindow) ())
 
+(define-menu (main-window File)
+  (:item ("Run" (ctrl r))
+         (lodds.subsystem:start (lodds:get-subsystem :event-queue))
+         (lodds.subsystem:start (lodds:get-subsystem :tasker))
+         (lodds.subsystem:start (lodds:get-subsystem :listener))
+         (lodds.subsystem:start (lodds:get-subsystem :advertiser))
+         (lodds.subsystem:start (lodds:get-subsystem :handler))
+         (lodds.watcher:share-folder "~/ffff/A/")
+         (lodds.watcher:share-folder "~/ffff/B/")
+         (lodds.watcher:share-folder "~/ffff/C/"))
+  (:item ("Stop" (ctrl s))
+         (lodds.subsystem:stop (lodds:get-subsystem :tasker))
+         (lodds.subsystem:stop (lodds:get-subsystem :listener))
+         (lodds.subsystem:stop (lodds:get-subsystem :advertiser))
+         (lodds.subsystem:stop (lodds:get-subsystem :handler))
+         (lodds.watcher:unshare-folder "~/ffff/A/")
+         (lodds.watcher:unshare-folder "~/ffff/B/")
+         (lodds.watcher:unshare-folder "~/ffff/C/"))
+  (:separator)
+  (:item ("Quit" (ctrl q))
+         (q+:close main-window)))
+
 (define-subwidget (main-window start) (q+:make-qpushbutton "Start" main-window))
 (define-subwidget (main-window stop) (q+:make-qpushbutton "Stop" main-window))
 (define-subwidget (main-window interfaces) (q+:make-qcombobox main-window)
@@ -96,24 +118,33 @@
   (setf (q+:window-title main-window) "LODDS")
   (q+:resize main-window 800 450)
   (q+:set-style-sheet main-window *style-sheet*)
-  (let ((debug-dock (q+:make-qdockwidget "Debug" main-window)))
+  (let ((debug-dock (q+:make-qdockwidget "Debug" main-window))
+        (log-dock (q+:make-qdockwidget "Log" main-window)))
+    ;; debug-dock
     (let* ((dock-content (q+:make-qwidget))
            (dock-layout (q+:make-qhboxlayout dock-content)))
       (q+:add-widget dock-layout start)
       (q+:add-widget dock-layout stop)
       (q+:add-widget dock-layout interfaces)
       (q+:set-widget debug-dock dock-content))
-    (q+:add-dock-widget main-window (q+:qt.top-dock-widget-area) debug-dock))
-  (let ((log-dock (q+:make-qdockwidget "Log" main-window)))
+    (q+:add-dock-widget main-window (q+:qt.top-dock-widget-area) debug-dock)
+
+    ;; log-dock
     (q+:set-widget log-dock log)
-    (q+:add-dock-widget main-window (q+:qt.bottom-dock-widget-area) log-dock))
-    (setf (q+:central-widget main-window) list-of-shares))
+    (q+:add-dock-widget main-window (q+:qt.bottom-dock-widget-area) log-dock)
+    (let* ((menu-bar (q+:menu-bar main-window))
+           (menu (q+:add-menu menu-bar "View")))
+      (q+:add-action menu (q+:toggle-view-action log-dock))
+      (q+:add-action menu (q+:toggle-view-action debug-dock))))
+
+  (setf (q+:central-widget main-window) list-of-shares))
 
 (define-signal (main-window add-entry) (string string string))
 (define-signal (main-window remove-entry) (string))
 (define-signal (main-window dump-table) ())
 (define-signal (main-window add-log-msg) (string string))
 (define-signal (main-window reload-stylesheet) ())
+(define-signal (main-window fix-menubar-order) ())
 
 (define-slot (main-window start) ()
   (declare (connected start (pressed)))
@@ -330,6 +361,21 @@
   (loop :for i :from 0 :below (q+:top-level-item-count list-of-shares)
         :do (dump-item (q+:top-level-item list-of-shares i))))
 
+(define-slot (main-window fix-menubar-order) ()
+  (declare (connected main-window (fix-menubar-order)))
+  (let* ((menu-bar (q+:menu-bar main-window)))
+    (with-finalizing ((menu (q+:make-qmenu)))
+      (let ((order (list (cons "File" nil)
+                         (cons "View" nil))))
+        (loop :for child :in (find-children menu-bar menu)
+              :collect (let ((entry (find (q+:title child) order
+                                          :test (lambda (a b)
+                                                  (string= a (car b))))))
+                         (when entry
+                           (setf (cdr entry) child))))
+        (q+:clear menu-bar)
+        (loop :for (childname . child) :in order
+              :do (q+:add-menu menu-bar child))))))
 
 (define-slot (main-window reload-stylesheet) ()
   (declare (connected main-window (reload-stylesheet)))
@@ -389,6 +435,7 @@
            (lodds.event:add-callback :gui (lambda (event)
                                             (cb-log-messages window event)))
            (setf *current-id* 0)
+           (signal! window (fix-menubar-order))
            ;; add known users
            (loop :for user :in (lodds:get-user-list)
                  :do (let ((user-info (lodds:get-user-info user)))
