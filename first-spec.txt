@@ -27,7 +27,7 @@
   1.2 Checksums
 
     Every file is identified via a checksum. The checksum is
-    calculated by hashing (sha256) the files content. This will allow
+    calculated by hashing (sha1) the files content. This will allow
     the recognition of files independend of their origin or path.
     Files with the same checksum will be 'seen' as equal.
 
