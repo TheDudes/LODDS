@@ -11,9 +11,9 @@
    <center>
       <SplitPane dividerPositions="0.75" orientation="VERTICAL">
          <items>
-            <SplitPane dividerPositions="0.2" prefHeight="160.0" prefWidth="200.0">
+            <SplitPane dividerPositions="0.3" prefHeight="160.0" prefWidth="200.0">
               <items>
-                <AnchorPane fx:id="usersListAnchor" minHeight="0.0" minWidth="0.0" prefHeight="160.0" prefWidth="100.0" />
+                <AnchorPane fx:id="usersListAnchor" maxWidth="350.0" minHeight="0.0" minWidth="0.0" prefHeight="160.0" prefWidth="100.0" />
                 <AnchorPane fx:id="filesTreeAnchor" minHeight="0.0" minWidth="0.0" prefHeight="160.0" prefWidth="100.0" />
               </items>
             </SplitPane>
