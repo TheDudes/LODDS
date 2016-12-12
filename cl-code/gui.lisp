@@ -538,6 +538,62 @@
                               name type ts adds dels))))
                  (t (format nil "~{~a~^ ~}" event-msg)))))))
 
+(defun init-gui (window)
+  ;; add callbacks
+  (lodds.event:add-callback :gui
+                            (lambda (event)
+                              (cb-list-update window (cdr event)))
+                            :event-type :list-update)
+  (lodds.event:add-callback :gui
+                            (lambda (event)
+                              (cb-client-removed window (second event)))
+                            :event-type :client-removed)
+  (lodds.event:add-callback :gui
+                            (lambda (event)
+                              (cb-log-messages window event)))
+  (lodds.event:add-callback :gui
+                            (lambda (event)
+                              (cb-client-added window (cdr event)))
+                            :event-type :client-added)
+  (lodds.event:add-callback :gui
+                            (lambda (event)
+                              (cb-client-updated window (cdr event)))
+                            :event-type :client-updated)
+  ;; reset id
+  (setf *current-id* 0)
+  ;; reorder menubar items
+  (signal! window (fix-menubar-order))
+  ;; add known users and their shared files
+  (loop :for user :in (lodds:get-user-list)
+        :do (let ((user-info (lodds:get-user-info user)))
+              ;; add user
+              (signal! window
+                       (add-user string string string)
+                       user
+                       (prin1-to-string (lodds:c-load user-info))
+                       (prin1-to-string (lodds:c-last-change user-info)))
+              ;; add all files from user
+              (maphash (lambda (filename file-info)
+                         (destructuring-bind (checksum size) file-info
+                           (signal! window
+                                    (add-entry string string string)
+                                    (concatenate 'string user filename)
+                                    (prin1-to-string size)
+                                    checksum)))
+                       (lodds:c-file-table-name user-info)))))
+
+(defun cleanup ()
+  ;; remove all attached callbacks
+  (lodds.event:remove-callback :gui
+                               :event-type :list-update)
+  (lodds.event:remove-callback :gui
+                               :event-type :client-removed)
+  (lodds.event:remove-callback :gui)
+  (lodds.event:remove-callback :gui
+                               :event-type :client-added)
+  (lodds.event:remove-callback :gui
+                               :event-type :client-updated))
+
 (defun main ()
   (let ((lodds-server lodds:*server*))
     ;; TODO: thats not supposed to be in a CALL-IN-MAIN-THREAD
@@ -545,44 +601,5 @@
      (lambda ()
        (lodds:with-server lodds-server
          (with-main-window (window (make-instance 'main-window))
-           (lodds.event:add-callback :gui (lambda (event)
-                                            (cb-list-update window (cdr event)))
-                                     :event-type :list-update)
-           (lodds.event:add-callback :gui (lambda (event)
-                                            (cb-client-removed window (second event)))
-                                     :event-type :client-removed)
-           (lodds.event:add-callback :gui (lambda (event)
-                                            (cb-log-messages window event)))
-           (lodds.event:add-callback :gui (lambda (event)
-                                            (cb-client-added window (cdr event)))
-                                     :event-type :client-added)
-           (lodds.event:add-callback :gui (lambda (event)
-                                            (cb-client-updated window (cdr event)))
-                                     :event-type :client-updated)
-           (setf *current-id* 0)
-           (signal! window (fix-menubar-order))
-           ;; add known users
-           (loop :for user :in (lodds:get-user-list)
-                 :do (let ((user-info (lodds:get-user-info user)))
-                       (signal! window
-                                (add-user string string string)
-                                user
-                                (prin1-to-string (lodds:c-load user-info))
-                                (prin1-to-string (lodds:c-last-change user-info)))
-                       (maphash (lambda (filename file-info)
-                                  (destructuring-bind (checksum size) file-info
-                                    (signal! window
-                                             (add-entry string string string)
-                                             (concatenate 'string user filename)
-                                             (prin1-to-string size)
-                                             checksum)))
-                                (lodds:c-file-table-name user-info)))))
-         (lodds.event:remove-callback :gui
-                                      :event-type :list-update)
-         (lodds.event:remove-callback :gui
-                                      :event-type :client-removed)
-         (lodds.event:remove-callback :gui)
-         (lodds.event:remove-callback :gui
-                                      :event-type :client-added)
-         (lodds.event:remove-callback :gui
-                                      :event-type :client-updated))))))
+           (init-gui window))
+         (cleanup))))))
