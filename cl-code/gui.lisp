@@ -12,9 +12,10 @@
 (defvar +los-id+ 3)
 
 ;; log columns
-(defvar +log-event+ 0)
-(defvar +log-message+ 1)
-(defvar +log-count+ 2)
+(defvar +log-time+ 0)
+(defvar +log-event+ 1)
+(defvar +log-message+ 2)
+(defvar +log-count+ 3)
 
 ;; user-list columns
 (defvar +user-list-name+ 0)
@@ -36,6 +37,14 @@
       ((> size mb) (format nil "~amb" (ash size -20)))
       ((> size kb) (format nil "~akb" (ash size -10)))
       (t           (format nil "~ab " size)))))
+
+(defun generate-timestamp ()
+  "Returns current date as a string."
+  (multiple-value-bind (sec min hr day mon yr dow dst-p tz)
+      (get-decoded-time)
+    (declare (ignore dow dst-p tz))
+    (format nil "~4,'0d-~2,'0d-~2,'0d ~2,'0d:~2,'0d:~2,'0d"
+            yr mon day hr min sec) ))
 
 (defparameter *current-id* 0
   "each time a new widget gets added it will increment the *curren-id*
@@ -103,8 +112,9 @@
         (q+:set-current-index interfaces -1))))
 
 (define-subwidget (main-window log) (q+:make-qtreewidget main-window)
-  (q+:set-column-count log 3)
-  (q+:set-header-labels log (list "Event" "Message" ""))
+  (q+:set-column-count log 4)
+  (q+:set-header-labels log (list "Time" "Event" "Message" ""))
+  (q+:set-column-width log +log-time+ 170)
   (q+:set-column-width log +log-event+ 90)
   (q+:set-column-width log +log-message+ 640)
   (q+:set-column-width log +log-count+ 15)
@@ -344,14 +354,18 @@
                       event)
              (string= (q+:text last-item +log-message+)
                       msg))
-        (q+:set-text last-item
-                     +log-count+
-                     (prin1-to-string
-                      (let ((current (q+:text last-item +log-count+)))
-                        (if (string= current "")
-                            2
-                            (+ 1 (parse-integer current))))))
+
+        (progn
+          (q+:set-text last-item +log-time+ (generate-timestamp))
+          (q+:set-text last-item
+                       +log-count+
+                       (prin1-to-string
+                        (let ((current (q+:text last-item +log-count+)))
+                          (if (string= current "")
+                              2
+                              (+ 1 (parse-integer current)))))))
         (let ((new-entry (q+:make-qtreewidgetitem log)))
+          (q+:set-text new-entry +log-time+ (generate-timestamp))
           (q+:set-text new-entry +log-event+ event)
           (q+:set-text new-entry +log-message+ msg)
           (q+:set-text new-entry +log-count+ "")
