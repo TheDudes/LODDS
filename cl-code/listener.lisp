@@ -54,16 +54,32 @@
                    (c-message-timestamp lodds.task:client-message-timestamp)
                    (c-last-change lodds.task:client-last-change)
                    (c-load lodds.task:client-load)) task
-    (let ((client-info (gethash c-name (lodds:clients lodds:*server*))))
-      (unless client-info
-        (setf client-info (make-instance 'lodds:client-info
-                                         :c-name c-name
-                                         :c-last-message c-message-timestamp
-                                         :c-ip c-ip
-                                         :c-port c-port
-                                         :c-last-change 0
-                                         :c-load c-load)
-              (gethash c-name (lodds:clients lodds:*server*)) client-info))
+    (let ((client-info (lodds:get-user-info c-name)))
+      (if client-info
+          (with-accessors ((old-load lodds:c-load)
+                           (old-last-change lodds:c-last-change))
+              (lodds:get-user-info c-name)
+            (unless (and (eql old-load c-load)
+                         (> old-last-change c-last-change))
+              (lodds.event:push-event :client-updated
+                                      (list c-name
+                                            c-load
+                                            c-last-change))))
+          (progn
+            (setf client-info
+                  (make-instance 'lodds:client-info
+                                 :c-name c-name
+                                 :c-last-message c-message-timestamp
+                                 :c-ip c-ip
+                                 :c-port c-port
+                                 :c-last-change 0
+                                 :c-load c-load))
+            (setf (gethash c-name (lodds:clients lodds:*server*))
+                  client-info)
+            (lodds.event:push-event :client-added
+                                    (list c-name
+                                          c-load
+                                          c-last-change))))
       (let ((locked (bt:acquire-lock (lodds:c-lock client-info) nil)))
         (if locked
             ;; only go on if we locked, if not, just drop the update, we
