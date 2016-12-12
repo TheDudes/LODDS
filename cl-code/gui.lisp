@@ -106,8 +106,6 @@
   (:item ("Quit" (ctrl q))
          (q+:close main-window)))
 
-(define-subwidget (main-window start) (q+:make-qpushbutton "Start" main-window))
-(define-subwidget (main-window stop) (q+:make-qpushbutton "Stop" main-window))
 (define-subwidget (main-window interfaces) (q+:make-qcombobox main-window)
   (q+:add-items interfaces (lodds:get-interfaces))
   (let ((current-interface (lodds:interface lodds:*server*)))
@@ -200,17 +198,15 @@
   (setf (q+:window-title main-window) "LODDS")
   (q+:resize main-window 800 450)
   (q+:set-style-sheet main-window *style-sheet*)
-  (let ((debug-dock (q+:make-qdockwidget "Debug" main-window))
+  (let ((settings-dock (q+:make-qdockwidget "Settings" main-window))
         (log-dock (q+:make-qdockwidget "Log" main-window))
         (user-list-dock (q+:make-qdockwidget "User List" main-window)))
-    ;; debug-dock
+    ;; settings-dock
     (let* ((dock-content (q+:make-qwidget))
-           (dock-layout (q+:make-qhboxlayout dock-content)))
-      (q+:add-widget dock-layout start)
-      (q+:add-widget dock-layout stop)
-      (q+:add-widget dock-layout interfaces)
-      (q+:set-widget debug-dock dock-content))
-    (q+:add-dock-widget main-window (q+:qt.top-dock-widget-area) debug-dock)
+           (dock-layout (q+:make-qformlayout dock-content)))
+      (q+:add-row dock-layout "Interface:" interfaces)
+      (q+:set-widget settings-dock dock-content))
+    (q+:add-dock-widget main-window (q+:qt.left-dock-widget-area) settings-dock)
 
     ;; user-dock
     (q+:set-widget user-list-dock user-list)
@@ -224,7 +220,7 @@
     (let* ((menu-bar (q+:menu-bar main-window))
            (menu (q+:add-menu menu-bar "View")))
       (q+:add-action menu (q+:toggle-view-action log-dock))
-      (q+:add-action menu (q+:toggle-view-action debug-dock))
+      (q+:add-action menu (q+:toggle-view-action settings-dock))
       (q+:add-action menu (q+:toggle-view-action user-list-dock))))
 
   (setf (q+:central-widget main-window) list-of-shares))
