@@ -9,6 +9,7 @@ import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
+import javafx.scene.control.Button;
 import javafx.scene.control.TextField;
 import javafx.scene.control.TreeItem;
 import javafx.scene.control.TreeView;
@@ -24,6 +25,8 @@ public class FilesTreePresenter implements Initializable {
 	TextField filesTreeSearch;
 	@Inject
 	UsersListModel userListModel;
+	@FXML
+	Button downloadButton;
 
 	private final TreeItem<FileCoreInfo> root = new TreeItem<>();
 
@@ -75,7 +78,7 @@ public class FilesTreePresenter implements Initializable {
 			}
 		}
 		if (index == subPaths.length - 1) {
-			// ADD THE FILE YOU RETARDED FUCK
+			// ADD THE FILE 
 			parent.getChildren().add(new TreeItem<FileCoreInfo>(infoToAdd));
 			// return child.size();
 		} else {
