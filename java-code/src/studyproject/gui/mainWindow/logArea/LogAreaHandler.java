@@ -17,7 +17,7 @@ public class LogAreaHandler extends Handler {
 
 	private TableView<Error> toLogTo;
 	private SimpleBooleanProperty error;
-	private final int MAX_LOG_MSG_COUNT = 10000;
+	private final int MAX_LOG_MSG_COUNT = 1000;
 	private SimpleBooleanProperty info;
 	private SimpleBooleanProperty getRec;
 	private SimpleBooleanProperty getSent;
