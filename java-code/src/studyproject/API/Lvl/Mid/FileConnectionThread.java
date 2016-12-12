@@ -140,16 +140,11 @@ public class FileConnectionThread extends Thread {
 				this.getId() + ": start FileConnectionThread");
 		int returnValue;
 		System.out.println("1");
-		try (Socket socket = new Socket(user.getIpAddress(), user.getPort())) {
+		try (Socket socket = new Socket(user.getIpAddress(), user.getPort());
 			BufferedOutputStream outStream = new BufferedOutputStream(socket.getOutputStream());
 			BufferedInputStream inStream = new BufferedInputStream(socket.getInputStream());
-			System.out.println("localPath: " + localPath);
-			if (!localPath.endsWith(File.pathSeparator)) {
-				localPath = localPath + File.pathSeparator;
-			}
 			FileOutputStream fileOutStream = new FileOutputStream(
-					new File(localPath + user.getFileByChecksum(checksum).getFileName()));
-			System.out.println("2");
+					new File(localPath + user.getFileByChecksum(checksum).getFileName()))) {
 			// whole file?
 			if (endIndex == 0) {
 				returnValue = Requests.getFile(outStream, checksum, startIndex, size);
@@ -160,7 +155,6 @@ public class FileConnectionThread extends Thread {
 				ErrLog.log(Level.SEVERE, LogKey.error, APILvl.mid, "FileConnectionThread.run()",
 						"reurnValue after Request.getFile is not equals 0: " + returnValue);
 			}
-			System.out.println("3");
 			// whole file?
 			if (endIndex == 0) {
 				returnValue = Handles.handleFile(inStream, fileOutStream, size);
