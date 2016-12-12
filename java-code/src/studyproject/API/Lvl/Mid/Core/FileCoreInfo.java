@@ -15,7 +15,7 @@ public class FileCoreInfo {
 	}
 
 	public FileCoreInfo(String fileName) {
-		this.filePath = fileName;
+		this.fileName = fileName;
 	}
 
 	public String getChecksum() {
