@@ -100,6 +100,9 @@
          (lodds.watcher:unshare-folder "~/ffff/B/")
          (lodds.watcher:unshare-folder "~/ffff/C/"))
   (:separator)
+  (:item "Reload Stylesheet"
+         (q+:set-style-sheet main-window *style-sheet*))
+  (:separator)
   (:item ("Quit" (ctrl q))
          (q+:close main-window)))
 
