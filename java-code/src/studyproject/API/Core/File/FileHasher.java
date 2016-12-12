@@ -24,7 +24,7 @@ public class FileHasher {
 	public static String getFileHash(String filename) throws IOException, NoSuchAlgorithmException{
 		int bytesRead;
 		byte[] buffer = new byte[buffersize];
-			MessageDigest hashSum = MessageDigest.getInstance("SHA-256");
+			MessageDigest hashSum = MessageDigest.getInstance("SHA1");
 		try(FileInputStream in = new FileInputStream(new File(filename));
 		DigestInputStream digester = new DigestInputStream(in, hashSum)){
 			bytesRead = digester.read(buffer, 0, buffersize);
