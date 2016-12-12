@@ -143,15 +143,15 @@ public class FileUtil {
 	 */
 	public static void cleanUp() {
 		File file;
-		int index = 0, size = filesCreated.size();
+		int size = filesCreated.size(),index = size - 1;
 		for (int counter = 0; counter < size; counter++) {
 			file = new File(dir + "/" + filesCreated.get(index));
 			if (!file.delete()) {
 				System.err.println("could not delete file " + dir + "/" + filesCreated.get(index));
-				index++;
 			} else {
 				filesCreated.remove(index);
 			}
+			index--;
 		}
 		file = new File(dir);
 		if (!file.delete()) {
