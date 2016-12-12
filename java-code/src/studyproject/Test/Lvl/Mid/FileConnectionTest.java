@@ -8,6 +8,8 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.nio.file.Files;
 import java.security.NoSuchAlgorithmException;
+import java.util.Vector;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -15,6 +17,7 @@ import org.junit.Test;
 
 import studyproject.API.Core.File.FileHasher;
 import studyproject.API.Lvl.Mid.FileConnectionThread;
+import studyproject.API.Lvl.Mid.Core.FileCoreInfo;
 import studyproject.API.Lvl.Mid.Core.UserInfo;
 import studyproject.Test.FileUtil;
 
@@ -51,7 +54,13 @@ public class FileConnectionTest {
 					FileUtil.dir + "/" + FileUtil.sourceFile, 0L, file.length());
 			testServer.start();
 
-			UserInfo userInfo = new UserInfo(InetAddress.getByName(ip), port, "test", 0L, 0L, null, null);
+			ConcurrentHashMap<String, FileCoreInfo> pathToFileInfo = new ConcurrentHashMap<String, FileCoreInfo>();
+			pathToFileInfo.put(FileUtil.dir + "/" + completeTest, new FileCoreInfo(originHash, file.length(), FileUtil.dir + "/" + completeTest));
+			ConcurrentHashMap<String, Vector<String>> checksumToPath = new ConcurrentHashMap<String, Vector<String>>();
+			Vector<String> filePaths = new Vector<String>();
+			filePaths.add(FileUtil.dir + "/" + completeTest);
+			checksumToPath.put(originHash, filePaths);
+			UserInfo userInfo = new UserInfo(InetAddress.getByName(ip), port, "test", 0L, 0L, pathToFileInfo, checksumToPath);
 			FileConnectionThread fileThread = new FileConnectionThread(userInfo, originHash, file.length(),
 					FileUtil.dir + "/" + completeTest);
 			fileThread.start();
@@ -79,7 +88,13 @@ public class FileConnectionTest {
 					FileUtil.dir + "/" + FileUtil.sourceFile, 0L, endIndex);
 			testServer.start();
 
-			UserInfo userInfo = new UserInfo(InetAddress.getByName(ip), port, "test", 0L, 0L, null, null);
+			ConcurrentHashMap<String, FileCoreInfo> pathToFileInfo = new ConcurrentHashMap<String, FileCoreInfo>();
+			pathToFileInfo.put(FileUtil.dir + "/" + startTest, new FileCoreInfo(originHash, file.length(), FileUtil.dir + "/" + startTest));
+			ConcurrentHashMap<String, Vector<String>> checksumToPath = new ConcurrentHashMap<String, Vector<String>>();
+			Vector<String> filePaths = new Vector<String>();
+			filePaths.add(FileUtil.dir + "/" + startTest);
+			checksumToPath.put(originHash, filePaths);
+			UserInfo userInfo = new UserInfo(InetAddress.getByName(ip), port, "test", 0L, 0L, pathToFileInfo, checksumToPath);
 			FileConnectionThread fileThread = new FileConnectionThread(userInfo, originHash, file.length(),
 					FileUtil.dir + "/" + startTest, 0L, endIndex);
 			fileThread.start();
@@ -109,7 +124,13 @@ public class FileConnectionTest {
 					FileUtil.dir + "/" + FileUtil.sourceFile, startIndex, file.length());
 			testServer.start();
 
-			UserInfo userInfo = new UserInfo(InetAddress.getByName(ip), port, "test", 0L, 0L, null, null);
+			ConcurrentHashMap<String, FileCoreInfo> pathToFileInfo = new ConcurrentHashMap<String, FileCoreInfo>();
+			pathToFileInfo.put(FileUtil.dir + "/" + endTest, new FileCoreInfo(originHash, file.length(), FileUtil.dir + "/" + endTest));
+			ConcurrentHashMap<String, Vector<String>> checksumToPath = new ConcurrentHashMap<String, Vector<String>>();
+			Vector<String> filePaths = new Vector<String>();
+			filePaths.add(FileUtil.dir + "/" + endTest);
+			checksumToPath.put(originHash, filePaths);
+			UserInfo userInfo = new UserInfo(InetAddress.getByName(ip), port, "test", 0L, 0L, pathToFileInfo, checksumToPath);
 			FileConnectionThread fileThread = new FileConnectionThread(userInfo, originHash, file.length(),
 					FileUtil.dir + "/" + endTest, startIndex, file.length());
 			fileThread.start();
