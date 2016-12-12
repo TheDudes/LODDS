@@ -184,6 +184,11 @@ public class UserInfo {
 	public void setLoad(long load) {
 		this.load = load;
 	}
+	
+	public FileCoreInfo getFileByChecksum(String checksum) {
+		Vector<String> vector = this.checksumToPath.get(checksum);
+		return this.pathToFileInfo.get(vector.get(0));
+	}
 
 	/**
 	 * @return the time stamp of the last change in the file system of the other

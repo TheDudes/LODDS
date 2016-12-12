@@ -100,6 +100,8 @@ public class Requests {
 	 */
 	public static int getSendPermission(BufferedOutputStream socketStream, long size, long timeout, String fileName) {
 		try {
+			ErrLog.log(Level.INFO, LogKey.debug, APILvl.low, "getSendPermission",
+					(GET_SEND_PERMISSION + size + " " + timeout + " " + fileName));
 			socketStream.write((GET_SEND_PERMISSION + size + " " + timeout + " " + fileName + "\n").getBytes());
 			socketStream.flush();
 		} catch (IOException e) {

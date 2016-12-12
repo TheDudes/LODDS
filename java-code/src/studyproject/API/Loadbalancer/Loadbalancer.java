@@ -55,15 +55,15 @@ public class Loadbalancer {
 	 * @return the client that has the specified file and has the lowest amount
 	 *         of load or the first client in the list that has no load
 	 */
-	public synchronized String getClientMinLoad(Vector<UserInfo> owningUsers, String checksum) {
+	public synchronized UserInfo getClientMinLoad(Vector<UserInfo> owningUsers, String checksum) {
 		long minLoad = Long.MAX_VALUE;
-		String clientWithLowestLoad = "";
+		UserInfo clientWithLowestLoad = null;
 		for (UserInfo userInfo : owningUsers) {
 			if(userInfo.getChecksumToPath().containsKey(checksum)){
 				if (userInfo.getLoad() == 0) {
-					return userInfo.getUserName();
+					return userInfo;
 				} else if (userInfo.getLoad() < minLoad) {
-					clientWithLowestLoad = userInfo.getUserName();
+					clientWithLowestLoad = userInfo;
 					minLoad = userInfo.getLoad();
 				}
 			}

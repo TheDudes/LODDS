@@ -40,8 +40,8 @@ public class LoadBalancerTest {
 	public void testGetClientMinLoad() throws UnknownHostException {
 		Vector<UserInfo> owningUsers = createUsers();
 		Loadbalancer loadBalancer = new Loadbalancer(0, 0, null);
-		String result = loadBalancer.getClientMinLoad(owningUsers, testChecksum1);
-		assertEquals("junitTest", result);
+		UserInfo result = loadBalancer.getClientMinLoad(owningUsers, testChecksum1);
+		assertEquals("junitTest", result.getUserName());
 	}
 
 	/**
@@ -54,8 +54,8 @@ public class LoadBalancerTest {
 	public void testGetClientMinLoad2() throws UnknownHostException {
 		Vector<UserInfo> owningUsers = createUsers();
 		Loadbalancer loadBalancer = new Loadbalancer(0, 0, null);
-		String result = loadBalancer.getClientMinLoad(owningUsers, testChecksum2);
-		assertEquals("", result);
+		UserInfo result = loadBalancer.getClientMinLoad(owningUsers, testChecksum2);
+		assertEquals(null, result);
 	}
 
 	/**

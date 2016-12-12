@@ -222,8 +222,8 @@ public class Lodds {
 	 * @param endIndex
 	 *            the index at which to stop the file transfer
 	 */
-	public void getFile(String user, String checksum, String localPath) {
-		FileConnectionThread fileConnectionThread = new FileConnectionThread(getUserConnectionInfo(user), checksum,
+	public void getFile(UserInfo user, String checksum, String localPath) {
+		FileConnectionThread fileConnectionThread = new FileConnectionThread(user, checksum,
 				getFileSize(checksum), localPath);
 		threadExecutor.execute(fileConnectionThread);
 	}
@@ -245,7 +245,7 @@ public class Lodds {
 			// TODO error handling
 		} else {
 			if (owningUsers.size() == 1) {
-				getFile(owningUsers.get(0).getUserName(), checksum, localPath);
+				getFile(owningUsers.get(0), checksum, localPath);
 			} else {
 				if (getFileSize(checksum) < loadBalancingMinumum) {
 					getFile(loadbalancer.getClientMinLoad(owningUsers, checksum), checksum, localPath);

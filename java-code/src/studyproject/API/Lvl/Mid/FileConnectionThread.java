@@ -51,8 +51,7 @@ public class FileConnectionThread extends Thread {
 	 * @param localPath
 	 *            the complete path on which the file should be saved
 	 */
-	public FileConnectionThread(UserInfo user, String checksum, long size,
-			String localPath) {
+	public FileConnectionThread(UserInfo user, String checksum, long size, String localPath) {
 		this.user = user;
 		this.checksum = checksum;
 		this.localPath = localPath;
@@ -82,8 +81,8 @@ public class FileConnectionThread extends Thread {
 	 * @param endIndex
 	 *            the index on which to end the transmission
 	 */
-	public FileConnectionThread(UserInfo user, String checksum, long size,
-			String localPath, long startIndex, long endIndex) {
+	public FileConnectionThread(UserInfo user, String checksum, long size, String localPath, long startIndex,
+			long endIndex) {
 		this.user = user;
 		this.checksum = checksum;
 		this.localPath = localPath;
@@ -120,8 +119,8 @@ public class FileConnectionThread extends Thread {
 	 *            the information about this thread if this thread is called via
 	 *            loadbalancing
 	 */
-	public FileConnectionThread(UserInfo user, String checksum, long size,
-			String localPath, long startIndex, long endIndex, ProgressInfo progressInfo) {
+	public FileConnectionThread(UserInfo user, String checksum, long size, String localPath, long startIndex,
+			long endIndex, ProgressInfo progressInfo) {
 		this.user = user;
 		this.checksum = checksum;
 		this.localPath = localPath;
@@ -137,32 +136,36 @@ public class FileConnectionThread extends Thread {
 	 * starts pulling the file with the parameters set in the constructor
 	 */
 	public void run() {
+		ErrLog.log(Level.INFO, LogKey.getReceived, APILvl.mid, "FileConnectionThread.run()",
+				this.getId() + ": start FileConnectionThread");
 		int returnValue;
-		try (Socket socket = new Socket(user.getIpAddress(), user.getPort());
-				BufferedOutputStream outStream = new BufferedOutputStream(
-						socket.getOutputStream());
-				BufferedInputStream inStream = new BufferedInputStream(
-						socket.getInputStream());
-				FileOutputStream fileOutStream = new FileOutputStream(new File(
-						localPath))) {
+		System.out.println("1");
+		try (Socket socket = new Socket(user.getIpAddress(), user.getPort())) {
+			BufferedOutputStream outStream = new BufferedOutputStream(socket.getOutputStream());
+			BufferedInputStream inStream = new BufferedInputStream(socket.getInputStream());
+			System.out.println("localPath: " + localPath);
+			if (!localPath.endsWith(File.pathSeparator)) {
+				localPath = localPath + File.pathSeparator;
+			}
+			FileOutputStream fileOutStream = new FileOutputStream(
+					new File(localPath + user.getFileByChecksum(checksum).getFileName()));
+			System.out.println("2");
 			// whole file?
 			if (endIndex == 0) {
-				returnValue = Requests.getFile(outStream, checksum, startIndex,
-						size);
+				returnValue = Requests.getFile(outStream, checksum, startIndex, size);
 			} else {
-				returnValue = Requests.getFile(outStream, checksum, startIndex,
-						endIndex);
+				returnValue = Requests.getFile(outStream, checksum, startIndex, endIndex);
 			}
 			if (returnValue != 0) {
 				ErrLog.log(Level.SEVERE, LogKey.error, APILvl.mid, "FileConnectionThread.run()",
 						"reurnValue after Request.getFile is not equals 0: " + returnValue);
 			}
+			System.out.println("3");
 			// whole file?
 			if (endIndex == 0) {
 				returnValue = Handles.handleFile(inStream, fileOutStream, size);
 			} else {
-				returnValue = Handles.handleFile(inStream, fileOutStream,
-						endIndex);
+				returnValue = Handles.handleFile(inStream, fileOutStream, endIndex - startIndex);
 			}
 			if (returnValue != 0) {
 				ErrLog.log(Level.SEVERE, LogKey.error, APILvl.mid, "FileConnectionThread.run()",
@@ -173,9 +176,13 @@ public class FileConnectionThread extends Thread {
 				}
 			}
 		} catch (IOException e) {
+			System.out.println("catch");
 			ErrLog.log(Level.SEVERE, LogKey.error, APILvl.mid, "FileConnectionThread.run()",
-					"IOException thrown: " + e.getStackTrace());
+					"IOException thrown: " + e.getStackTrace().toString());
 		}
+
+		ErrLog.log(Level.INFO, LogKey.getReceived, APILvl.mid, "FileConnectionThread.run()",
+				this.getId() + ": finished FileConnectionThread");
 	}
 
 }
