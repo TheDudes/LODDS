@@ -140,10 +140,9 @@ public class FileConnectionThread extends Thread {
 				this.getId() + ": start FileConnectionThread");
 		int returnValue;
 		try (Socket socket = new Socket(user.getIpAddress(), user.getPort());
-			BufferedOutputStream outStream = new BufferedOutputStream(socket.getOutputStream());
-			BufferedInputStream inStream = new BufferedInputStream(socket.getInputStream());
-			FileOutputStream fileOutStream = new FileOutputStream(
-					new File(localPath + user.getFileByChecksum(checksum).getFileName()))) {
+				BufferedOutputStream outStream = new BufferedOutputStream(socket.getOutputStream());
+				BufferedInputStream inStream = new BufferedInputStream(socket.getInputStream());
+				FileOutputStream fileOutStream = new FileOutputStream(new File(localPath))) {
 			// whole file?
 			if (endIndex == 0) {
 				returnValue = Requests.getFile(outStream, checksum, startIndex, size);

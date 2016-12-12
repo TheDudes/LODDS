@@ -1,21 +1,32 @@
 package studyproject.gui.mainWindow.filesTree;
 
+import java.io.File;
 import java.net.URL;
 import java.util.ResourceBundle;
+import java.util.logging.Level;
 
 import javax.inject.Inject;
 
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
+import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Button;
+import javafx.scene.control.SelectionMode;
 import javafx.scene.control.TextField;
 import javafx.scene.control.TreeItem;
 import javafx.scene.control.TreeView;
+import javafx.stage.DirectoryChooser;
+import javafx.stage.Stage;
+import studyproject.App;
+import studyproject.API.Errors.ErrLog;
 import studyproject.API.Lvl.Mid.Core.FileCoreInfo;
 import studyproject.API.Lvl.Mid.Core.UserInfo;
+import studyproject.gui.mainWindow.MainWindowModel;
 import studyproject.gui.mainWindow.usersList.UsersListModel;
+import studyproject.logging.APILvl;
+import studyproject.logging.LogKey;
 
 public class FilesTreePresenter implements Initializable {
 
@@ -25,6 +36,8 @@ public class FilesTreePresenter implements Initializable {
 	TextField filesTreeSearch;
 	@Inject
 	UsersListModel userListModel;
+	@Inject
+	MainWindowModel mainWindowModel;
 	@FXML
 	Button downloadButton;
 
@@ -32,8 +45,10 @@ public class FilesTreePresenter implements Initializable {
 
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {
+		filesTreeView.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
 		filesTreeView.setShowRoot(false);
 		filesTreeView.setRoot(root);
+		downloadButton.setOnAction(e -> downloadPressed());
 		userListModel.getSelectedUser().addListener(new ChangeListener<UserInfo>() {
 			@Override
 			public void changed(ObservableValue<? extends UserInfo> observable, UserInfo oldValue, UserInfo newValue) {
@@ -78,7 +93,7 @@ public class FilesTreePresenter implements Initializable {
 			}
 		}
 		if (index == subPaths.length - 1) {
-			// ADD THE FILE 
+			// ADD THE FILE
 			parent.getChildren().add(new TreeItem<FileCoreInfo>(infoToAdd));
 			// return child.size();
 		} else {
@@ -88,6 +103,40 @@ public class FilesTreePresenter implements Initializable {
 			addTreeItem(infoToAdd, subPaths, ++index, folderToAdd);
 		}
 
+	}
+
+	private void downloadPressed() {
+		ObservableList<TreeItem<FileCoreInfo>> itemsList = filesTreeView.getSelectionModel().getSelectedItems();
+		Stage stage = new Stage();
+		DirectoryChooser directoryChooser = new DirectoryChooser();
+		String absolutePath;
+		String defaultSavePath = (String) App.properties.get("defaultSavePath");
+		File chosenFolder;
+		File savePathFile = new File(defaultSavePath);
+		
+		if (savePathFile.exists()) {
+			directoryChooser.setInitialDirectory(savePathFile);
+		}
+		chosenFolder = directoryChooser.showDialog(stage);
+		stage.hide();
+
+		if (chosenFolder == null) {
+			ErrLog.log(Level.INFO, LogKey.info, APILvl.mid, "downloadPressed",
+					"Non folder choosen. Download aborted.");
+			return;
+		}
+		System.out.println("before replace: " + chosenFolder.getAbsolutePath());
+		absolutePath = chosenFolder.getAbsolutePath().replace("\\", "/");
+		System.out.println("absolutePath: " + absolutePath);
+		for (TreeItem<FileCoreInfo> treeItem : itemsList) {
+			FileCoreInfo fileCoreInfo = treeItem.getValue();
+			if (fileCoreInfo.getChecksum() == null) {
+				continue;
+			}
+			mainWindowModel.getLodds().getFile(userListModel.getSelectedUser().get(), fileCoreInfo.getChecksum(),
+					absolutePath);
+		}
+		return;
 	}
 
 }
