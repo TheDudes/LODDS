@@ -47,8 +47,6 @@ public class Lodds {
 	private long lastChange;
 	private Loadbalancer loadbalancer;
 	private Vector<String> sharedFolders;
-	@Deprecated
-	private long load;
 	private String interfaceName;
 	private int advertisePort;
 	private int listenPort;
@@ -82,7 +80,6 @@ public class Lodds {
 		watchService = new FileWatcherController();
 		this.interfaceName = "no interface selected";
 		threadExecutor = new ThreadExecutor();
-		load = 0;
 		loadbalancer = new Loadbalancer(loadBalancingMinumum, parallelDownloads, threadExecutor);
 	}
 
@@ -108,7 +105,6 @@ public class Lodds {
 		this.interfaceName = interfaceName;
 		threadExecutor = new ThreadExecutor();
 		setNetworkAddresses();
-		load = 0;
 		loadbalancer = new Loadbalancer(loadBalancingMinumum, parallelDownloads, threadExecutor);
 	}
 
@@ -458,43 +454,6 @@ public class Lodds {
 	 */
 	public synchronized void setLastChange(long lastChange) {
 		this.lastChange = lastChange;
-	}
-
-	/**
-	 * @return the number of bytes that this client still has to send
-	 */
-	@Deprecated
-	public synchronized long getLoad() {
-		return load;
-	}
-
-	/**
-	 * @param load
-	 *            the number of bytes that this client still has to send
-	 */
-	@Deprecated
-	public synchronized void setLoad(long load) {
-		this.load = load;
-	}
-
-	/**
-	 * @param load
-	 *            the number of bytes that should be added to the current load
-	 */
-	@Deprecated
-	public synchronized void incrementLoad(long load) {
-		this.load += load;
-	}
-
-	/**
-	 * @param load
-	 *            the number of bytes that should be subtracted from the current
-	 *            load
-	 */
-	public synchronized void decrementLoad(long load) {
-		if (this.load >= load) {
-			this.load = -load;
-		}
 	}
 
 	/**
