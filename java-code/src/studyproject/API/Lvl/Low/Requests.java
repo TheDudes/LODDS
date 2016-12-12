@@ -2,6 +2,11 @@ package studyproject.API.Lvl.Low;
 
 import java.io.BufferedOutputStream;
 import java.io.IOException;
+import java.util.logging.Level;
+
+import studyproject.API.Errors.ErrLog;
+import studyproject.logging.APILvl;
+import studyproject.logging.LogKey;
 
 /**
  * Class that sends requests to other clients,
@@ -34,6 +39,8 @@ public class Requests {
 			socketStream.write((GET_INFO_UP + timestamp + "\n").getBytes());
 			socketStream.flush();
 		} catch (IOException e) {
+			ErrLog.log(Level.SEVERE, LogKey.error, APILvl.low, "getInfo",
+					"IOException thrown: " + e.getStackTrace());
 			return 1;
 		}
 		return 0;
@@ -65,6 +72,8 @@ public class Requests {
 			socketStream.write((GET_FILE + checksum + " " + startIndex + " " + endIndex + "\n").getBytes());
 			socketStream.flush();
 		} catch (IOException e) {
+			ErrLog.log(Level.SEVERE, LogKey.error, APILvl.low, "getInfo",
+					"IOException thrown: " + e.getStackTrace());
 			return 1;
 		}
 		return 0;
@@ -94,6 +103,8 @@ public class Requests {
 			socketStream.write((GET_SEND_PERMISSION + size + " " + timeout + " " + fileName + "\n").getBytes());
 			socketStream.flush();
 		} catch (IOException e) {
+			ErrLog.log(Level.SEVERE, LogKey.error, APILvl.low, "getInfo",
+					"IOException thrown: " + e.getStackTrace());
 			return 1;
 		}
 		return 0;
