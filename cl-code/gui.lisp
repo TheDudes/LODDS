@@ -3,7 +3,7 @@
 (in-package #:lodds-qt)
 (in-readtable :qtools)
 
-(defparameter +log-count+ 1000)
+(defparameter +log-message-maximum+ 1000)
 
 ;; list-of-shares columns
 (defvar +los-name+ 0)
@@ -358,7 +358,7 @@
           (q+:set-text-alignment new-entry +log-count+ (q+:qt.align-right))
           (let* ((scrollbar (q+:vertical-scroll-bar log))
                  (position (q+:value scrollbar)))
-            (loop :while (> (q+:top-level-item-count log) +log-count+)
+            (loop :while (> (q+:top-level-item-count log) +log-message-maximum+)
                   :do (progn (finalize (q+:take-top-level-item log 0))
                              (q+:set-value scrollbar (- position 1)))))
           (let ((visual-rect (if last-item
