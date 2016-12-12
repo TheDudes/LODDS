@@ -33,14 +33,16 @@ public class Utils {
 	public static int readThisLength(InputStream inStream, byte[] destination, int off, int len)
 			throws IOException, IndexOutOfBoundsException {
 		int readBytes = 0;
+		int returnValue = 0;
 		if (off + len > destination.length) {
 			throw new IndexOutOfBoundsException(
 					"Can not read the specified length from the stream since the offset plus "
 							+ "length is bigger than the provided array. Offset: " + off + ", len: " + len
 							+ ", arraysize: " + destination.length);
 		}
-		while (readBytes < len && readBytes != -1) {
-			readBytes = readBytes + inStream.read(destination, off + readBytes, len - readBytes);
+		while (readBytes < len && returnValue != -1) {
+			returnValue = inStream.read(destination, off + readBytes, len - readBytes);
+			readBytes = readBytes + returnValue;
 		}
 		return readBytes;
 	}
