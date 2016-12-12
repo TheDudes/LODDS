@@ -1,21 +1,36 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<?import java.lang.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
 <?import javafx.scene.control.SplitPane?>
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.layout.BorderPane?>
 
-<BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/8.0.65" xmlns:fx="http://javafx.com/fxml/1" fx:controller="studyproject.gui.mainWindow.MainWindowPresenter">
+<BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/8.0.76-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="studyproject.gui.mainWindow.MainWindowPresenter">
    <center>
       <SplitPane dividerPositions="0.75" orientation="VERTICAL">
          <items>
-            <SplitPane dividerPositions="0.2, 0.8" prefHeight="160.0" prefWidth="200.0">
+            <SplitPane dividerPositions="0.2" prefHeight="160.0" prefWidth="200.0">
               <items>
                 <AnchorPane fx:id="usersListAnchor" minHeight="0.0" minWidth="0.0" prefHeight="160.0" prefWidth="100.0" />
                 <AnchorPane fx:id="filesTreeAnchor" minHeight="0.0" minWidth="0.0" prefHeight="160.0" prefWidth="100.0" />
-                  <AnchorPane fx:id="tasksListAnchor" layoutX="10.0" layoutY="10.0" minHeight="0.0" minWidth="0.0" prefHeight="160.0" prefWidth="100.0" />
               </items>
             </SplitPane>
-            <AnchorPane fx:id="logAreaAnchor" prefHeight="90.0" />
+            <TabPane tabClosingPolicy="UNAVAILABLE">
+               <tabs>
+                  <Tab closable="false" text="Log">
+                     <content>
+                        <AnchorPane fx:id="logAreaAnchor" prefHeight="90.0" />
+                     </content>
+                  </Tab>
+                  <Tab closable="false" text="Downloads">
+                     <content>
+                        <AnchorPane fx:id="tasksListAnchor" prefHeight="90.0" />
+                     </content>
+                  </Tab>
+               </tabs>
+            </TabPane>
          </items>
       </SplitPane>
    </center>

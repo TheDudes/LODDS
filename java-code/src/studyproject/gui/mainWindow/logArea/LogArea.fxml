@@ -15,53 +15,26 @@
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
 
-<BorderPane prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/8.0.76-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="studyproject.gui.mainWindow.logArea.LogAreaPresenter">
-   <top>
-      <HBox spacing="5.0" BorderPane.alignment="CENTER">
-         <children>
-            <VBox fillWidth="false" HBox.hgrow="ALWAYS">
-               <children>
-                  <Label text="Basic Logs" />
-                  <HBox spacing="5.0">
-                     <children>
-                        <CheckBox fx:id="errorCB" mnemonicParsing="false" text="Error" />
-                        <CheckBox fx:id="infoCB" mnemonicParsing="false" text="Info" />
-                     </children>
-                     <padding>
-                        <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
-                     </padding>
-                  </HBox>
-               </children>
-            </VBox>
-            <Canvas height="25.0" width="100.0" HBox.hgrow="ALWAYS" />
-            <VBox fillWidth="false" prefHeight="44.0" prefWidth="275.0" HBox.hgrow="NEVER">
-               <children>
-                  <Label alignment="TOP_LEFT" prefHeight="17.0" prefWidth="248.0" text="Protocoll" textAlignment="CENTER" />
-                  <HBox spacing="5.0">
-                     <children>
-                        <CheckBox fx:id="getRecCB" mnemonicParsing="false" text="get Rec." />
-                        <CheckBox fx:id="getSentCB" layoutX="10.0" layoutY="10.0" mnemonicParsing="false" text="get Sent" />
-                        <CheckBox fx:id="broadcastCB" layoutX="83.0" layoutY="10.0" mnemonicParsing="false" text="broadcast" />
-                     </children>
-                     <padding>
-                        <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
-                     </padding>
-                  </HBox>
-               </children>
-            </VBox>
-         </children>
-      </HBox>
-   </top>
-   <center>
-      <TableView fx:id="logTableView" tableMenuButtonVisible="true" BorderPane.alignment="CENTER">
-        <columns>
-            <TableColumn fx:id="timestampCol" maxWidth="-1.0" minWidth="100.0" prefWidth="100.0" text="Timestamp" />
-            <TableColumn fx:id="logLvlCol" maxWidth="-1.0" minWidth="100.0" prefWidth="100.0" text="LogLvl" />
-          <TableColumn fx:id="logKeyCol" minWidth="100.0" prefWidth="150.0" text="LogKey" />
-          <TableColumn fx:id="apiLvlCol" minWidth="75.0" prefWidth="75.0" text="APILvl" />
-            <TableColumn fx:id="thrownByCol" minWidth="100.0" prefWidth="100.0" text="Thrown By" />
-            <TableColumn fx:id="msgCol" minWidth="100.0" prefWidth="500.0" text="Message" />
-        </columns>
-      </TableView>
-   </center>
-</BorderPane>
+
+<TableView fx:id="logTableView" tableMenuButtonVisible="true" xmlns="http://javafx.com/javafx/8.0.76-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="studyproject.gui.mainWindow.logArea.LogAreaPresenter">
+  <columns>
+      <TableColumn fx:id="timestampCol" maxWidth="-1.0" minWidth="100.0" prefWidth="100.0" text="Timestamp" />
+      <TableColumn fx:id="logLvlCol" maxWidth="-1.0" minWidth="100.0" prefWidth="100.0" text="LogLvl" />
+    <TableColumn fx:id="logKeyCol" minWidth="100.0" prefWidth="150.0" text="LogKey" />
+    <TableColumn fx:id="apiLvlCol" minWidth="75.0" prefWidth="75.0" text="APILvl" />
+      <TableColumn fx:id="thrownByCol" minWidth="100.0" prefWidth="158.0" text="Thrown By" />
+      <TableColumn fx:id="msgCol" minWidth="100.0" prefWidth="442.0" text="Message" />
+  </columns>
+   <contextMenu>
+      <ContextMenu>
+        <items>
+            <CheckMenuItem fx:id="errorCB" mnemonicParsing="false" text="Error" />
+            <CheckMenuItem fx:id="infoCB" mnemonicParsing="false" text="Info" />
+            <SeparatorMenuItem mnemonicParsing="false" />
+            <CheckMenuItem fx:id="getRecCB" mnemonicParsing="false" text="get Received" />
+            <CheckMenuItem fx:id="getSentCB" mnemonicParsing="false" text="get Sent" />
+            <CheckMenuItem fx:id="broadcastCB" mnemonicParsing="false" text="Broadcast" />
+        </items>
+      </ContextMenu>
+   </contextMenu>
+</TableView>

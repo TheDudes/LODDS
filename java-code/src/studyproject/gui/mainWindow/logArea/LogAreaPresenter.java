@@ -13,7 +13,7 @@ import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
-import javafx.scene.control.CheckBox;
+import javafx.scene.control.CheckMenuItem;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.cell.PropertyValueFactory;
@@ -23,15 +23,15 @@ import studyproject.API.Errors.Error;
 public class LogAreaPresenter implements Initializable {
 
 	@FXML
-	CheckBox errorCB;
+	CheckMenuItem errorCB;
 	@FXML
-	CheckBox infoCB;
+	CheckMenuItem infoCB;
 	@FXML
-	CheckBox getRecCB;
+	CheckMenuItem getRecCB;
 	@FXML
-	CheckBox getSentCB;
+	CheckMenuItem getSentCB;
 	@FXML
-	CheckBox broadcastCB;
+	CheckMenuItem broadcastCB;
 	@FXML
 	TableView<Error> logTableView;
 	@FXML
