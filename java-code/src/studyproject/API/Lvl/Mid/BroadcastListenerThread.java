@@ -2,11 +2,11 @@ package studyproject.API.Lvl.Mid;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-import java.util.ArrayList;
 import java.util.Vector;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 
+import javafx.collections.ObservableList;
 import studyproject.API.Core.BroadcastInfo;
 import studyproject.API.Errors.ErrLog;
 import studyproject.API.Lvl.Low.Broadcast;
@@ -77,18 +77,18 @@ public class BroadcastListenerThread extends Thread {
 			}
 
 			// Remove users that did not sent a broadcast in the last 5 seconds.
-			// Save them and delete them from the userList afterwards
-			ArrayList<UserInfo> arrayList = new ArrayList<UserInfo>();
+			ObservableList<UserInfo> clientList = loddsObject.getLoddsModel().getClientList();
 			long currentTime = System.currentTimeMillis() / 1000;
-			for (UserInfo user : loddsObject.getLoddsModel().getClientList()) {
-				if (((user.getLastReceivedBroadcast() + 5) < currentTime) && (user.getLastReceivedBroadcast() != 0)) {
-					arrayList.add(user);
+
+			for (int index = 0; index < clientList.size();) {
+				if (((clientList.get(index).getLastReceivedBroadcast() + 5) < currentTime)
+						&& (clientList.get(index).getLastReceivedBroadcast() != 0)) {
+					ErrLog.log(Level.SEVERE, LogKey.error, APILvl.mid, getName() + getId() + ": broadCastListener",
+							"Removed User :" + clientList.get(index).toString());
+					clientList.remove(index);
+				} else {
+					index++;
 				}
-			}
-			for (UserInfo user : arrayList) {
-				ErrLog.log(Level.SEVERE, LogKey.error, APILvl.mid, getName() + getId() + ": broadCastListener",
-						"Removed User :" + user.toString());
-				loddsObject.getLoddsModel().getClientList().remove(user);
 			}
 
 			written = false;
