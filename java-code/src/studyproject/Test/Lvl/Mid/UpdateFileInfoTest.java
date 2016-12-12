@@ -26,9 +26,9 @@ public class UpdateFileInfoTest {
 
 	private String localhost = "127.0.0.1";
 	private int port = 9002;
-	private String testChecksum1 = "96fa8f226d3801741e807533552bc4b177ac4544d834073b6a5298934d34b40b";
+	private String testChecksum1 = "96fa8f226d3801741e807533552bc4b177ac4544";
 	private String testFile1 = "testFile1";
-	private String testChecksum2 = "1d98362d093cb271d4f03f89b4af93996b3bf43aae6294fef3bc4e4b61234f31";
+	private String testChecksum2 = "1d98362d093cb271d4f03f89b4af93996b3bf43a";
 	private String testFile2 = "testFile2";
 
 	/**

@@ -36,18 +36,18 @@ public class HandlesTest {
 	private String filePath2 = "testFile2";
 	private String filePath3 = "testFile3";
 	private String message = "upd 1464269498 6\n"
-			  + "del bf43aae6294fef31d4f03f8a8f226d380b3bf43aae6294fef3bc4e4b61234f31 23411123 /some-file.txt\n"
-		      + "add 1d98362d093cb271d4f03f89b4af93996b3bf43aae6294fef3bc4e4b61234f31 421341231 /some-file.txt\n"
-		      + "del 96fa8f226d3801741e807533552bc4b177ac4544d834073b6a5298934d34b40b 99344121 /some/directory/file.pdf\n"
-		      + "del b42e80cfd93cb271d4f03f89b4af93996b3bf43aae6294fef3bc4e4b61234f31 843418123 /some/other/directory/foo.bar\n"
-		      + "add a29b6e31593cb271d4f03f89b4af93996b3bf43aae6294fef3bc4e4b61234f31 123123 /bar.foo\n"
-		      + "add 28ad16dcd93cb271d4f03f89b4af93996b3bf43aae6294fef3bc4e4b61234f31 3214178546 /new-file.zip\n";
+			  + "del bf43aae6294fef31d4f03f8a8f226d380b3bf43a 23411123 /some-file.txt\n"
+		      + "add 1d98362d093cb271d4f03f89b4af93996b3bf43a 421341231 /some-file.txt\n"
+		      + "del 96fa8f226d3801741e807533552bc4b177ac4544 99344121 /some/directory/file.pdf\n"
+		      + "del b42e80cfd93cb271d4f03f89b4af93996b3bf43a 843418123 /some/other/directory/foo.bar\n"
+		      + "add a29b6e31593cb271d4f03f89b4af93996b3bf43a 123123 /bar.foo\n"
+		      + "add 28ad16dcd93cb271d4f03f89b4af93996b3bf43a 3214178546 /new-file.zip\n";
 	private String messageAll = "all 1464269498 5\n"
-		      + "add 1d98362d093cb271d4f03f89b4af93996b3bf43aae6294fef3bc4e4b61234f31 421341231 /some-file.txt\n"
-		      + "add 96fa8f226d3801741e807533552bc4b177ac4544d834073b6a5298934d34b40b 99344121 /some/directory/file.pdf\n"
-		      + "add b42e80cfd93cb271d4f03f89b4af93996b3bf43aae6294fef3bc4e4b61234f31 843418123 /some/other/directory/foo.bar\n"
-		      + "add a29b6e31593cb271d4f03f89b4af93996b3bf43aae6294fef3bc4e4b61234f31 123123 /bar.foo\n"
-		      + "add 28ad16dcd93cb271d4f03f89b4af93996b3bf43aae6294fef3bc4e4b61234f31 3214178546 /new-file.zip\n";
+		      + "add 1d98362d093cb271d4f03f89b4af93996b3bf43a 421341231 /some-file.txt\n"
+		      + "add 96fa8f226d3801741e807533552bc4b177ac4544 99344121 /some/directory/file.pdf\n"
+		      + "add b42e80cfd93cb271d4f03f89b4af93996b3bf43a 843418123 /some/other/directory/foo.bar\n"
+		      + "add a29b6e31593cb271d4f03f89b4af93996b3bf43a 123123 /bar.foo\n"
+		      + "add 28ad16dcd93cb271d4f03f89b4af93996b3bf43a 3214178546 /new-file.zip\n";
 	
 	/**
 	 * create a file for the testHandleFile method to read from
@@ -104,7 +104,7 @@ public class HandlesTest {
 			assertEquals(1464269498L, timestamp.value);
 			assertEquals(InfoType.upd, infoType.type);
 			assertEquals(6, fileInfos.size());
-			assertEquals("bf43aae6294fef31d4f03f8a8f226d380b3bf43aae6294fef3bc4e4b61234f31", fileInfos.get(0).checksum);
+			assertEquals("bf43aae6294fef31d4f03f8a8f226d380b3bf43a", fileInfos.get(0).checksum);
 			assertEquals("/new-file.zip", fileInfos.get(5).fileName);
 			assertEquals(843418123L, fileInfos.get(3).size);
 			
@@ -132,7 +132,7 @@ public class HandlesTest {
 			assertEquals(1464269498L, timestamp.value);
 			assertEquals(InfoType.all, infoType.type);
 			assertEquals(5, fileInfos.size());
-			assertEquals("1d98362d093cb271d4f03f89b4af93996b3bf43aae6294fef3bc4e4b61234f31", fileInfos.get(0).checksum);
+			assertEquals("1d98362d093cb271d4f03f89b4af93996b3bf43a", fileInfos.get(0).checksum);
 			assertEquals("/new-file.zip", fileInfos.get(4).fileName);
 			assertEquals(843418123L, fileInfos.get(2).size);
 			
