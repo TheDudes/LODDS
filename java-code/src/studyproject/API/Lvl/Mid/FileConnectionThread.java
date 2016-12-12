@@ -143,6 +143,8 @@ public class FileConnectionThread extends Thread {
 				BufferedOutputStream outStream = new BufferedOutputStream(socket.getOutputStream());
 				BufferedInputStream inStream = new BufferedInputStream(socket.getInputStream());
 				FileOutputStream fileOutStream = new FileOutputStream(new File(localPath))) {
+			System.out.println("lcoalPath: " + localPath);
+			new File(localPath).mkdirs();
 			// whole file?
 			if (endIndex == 0) {
 				returnValue = Requests.getFile(outStream, checksum, startIndex, size);
@@ -170,7 +172,7 @@ public class FileConnectionThread extends Thread {
 		} catch (IOException e) {
 			System.out.println("catch");
 			ErrLog.log(Level.SEVERE, LogKey.error, APILvl.mid, "FileConnectionThread.run()",
-					"IOException thrown: " + e.getStackTrace().toString());
+					"IOException thrown: " + e.getMessage());
 		}
 
 		ErrLog.log(Level.INFO, LogKey.getReceived, APILvl.mid, "FileConnectionThread.run()",
