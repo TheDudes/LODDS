@@ -235,28 +235,6 @@
 (define-signal (main-window remove-user) (string))
 (define-signal (main-window update-user) (string string string))
 
-(define-slot (main-window start) ()
-  (declare (connected start (pressed)))
-  ;; TODO: well, this is not final :D
-  (lodds.subsystem:start (lodds:get-subsystem :event-queue))
-  (lodds.subsystem:start (lodds:get-subsystem :tasker))
-  (lodds.subsystem:start (lodds:get-subsystem :listener))
-  (lodds.subsystem:start (lodds:get-subsystem :advertiser))
-  (lodds.subsystem:start (lodds:get-subsystem :handler))
-  (lodds.watcher:share-folder "~/ffff/A/")
-  (lodds.watcher:share-folder "~/ffff/B/")
-  (lodds.watcher:share-folder "~/ffff/C/"))
-
-(define-slot (main-window stop) ()
-  (declare (connected stop (pressed)))
-  (lodds.subsystem:stop (lodds:get-subsystem :tasker))
-  (lodds.subsystem:stop (lodds:get-subsystem :listener))
-  (lodds.subsystem:stop (lodds:get-subsystem :advertiser))
-  (lodds.subsystem:stop (lodds:get-subsystem :handler))
-  (lodds.watcher:unshare-folder "~/ffff/A/")
-  (lodds.watcher:unshare-folder "~/ffff/B/")
-  (lodds.watcher:unshare-folder "~/ffff/C/"))
-
 (define-slot (main-window interfaces) ((selected-item string))
   (declare (connected interfaces (current-index-changed string)))
   (lodds:switch-interface selected-item))
