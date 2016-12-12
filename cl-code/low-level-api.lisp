@@ -30,7 +30,7 @@ multiple-value-bind.
    ;; get file checksum start end
    ;; get info timestamp
    ;; get send-permission size timeout filename
-   "^get ((file [^\\s]{64} \\d+ \\d+)|(info \\d+)|(send-permission \\d+ \\d+ [^\\n]+))$")
+   "^get ((file [^\\s]{40} \\d+ \\d+)|(info \\d+)|(send-permission \\d+ \\d+ [^\\n]+))$")
   "used to scan get requests to check if they are correct")
 
 (defvar *info-head-scanner*
@@ -42,7 +42,7 @@ multiple-value-bind.
 (defvar *info-body-scanner*
   (cl-ppcre:create-scanner
    ;; type checksum size realtive-filename
-   "^(add|del) [^\\s]{64} \\d+ [^\\n]+$")
+   "^(add|del) [^\\s]{40} \\d+ [^\\n]+$")
   "used to scan get info body to check if they are correct")
 
 (defun format-to-socket (destination control-string &rest format-arguments)
@@ -191,7 +191,7 @@ multiple-value-bind.
    file-infos and write it onto socket-stream. type can be either :all or :upt.
    timestamp is a fixnum somewhat like a 'revision', describing the current state.
    file-infos a list containing lists with type, checksum, size and name describing
-   all files. type will either be :add or :del and checksum is a sha-256 of the
+   all files. type will either be :add or :del and checksum is a sha1 of the
    file's content. size is, as the name suggests, the file size. name is the
    relative pathname.
    TODO: relative pathname link to spec"
@@ -254,7 +254,7 @@ multiple-value-bind.
                                                checksum
                                                (parse-integer size)
                                                (cl-strings:join name :separator " ")))
-                                       2)))))
+                                       (return-from handle-info 2))))))
         2)))
 
 (defun handle-send-permission (socket timeout file-stream)

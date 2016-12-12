@@ -24,7 +24,7 @@
 
 (defun get-file-stats (pathname)
   (values
-   (lodds.core:sha-256 pathname)
+   (lodds.core:generate-checksum pathname)
    (with-open-file (stream pathname
                            :direction :input
                            :if-does-not-exist nil)

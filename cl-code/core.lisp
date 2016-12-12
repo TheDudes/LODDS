@@ -4,10 +4,10 @@
 
 ;;; "lodds.core" goes here. Hacks and glory await!
 
-(defun sha-256 (pathname)
-  "generates sha-256 sum out of given pathname, will return a string"
+(defun generate-checksum (pathname)
+  "generates sha1 sum out of given pathname, will return a string"
   (ironclad:byte-array-to-hex-string
-   (ironclad:digest-file :sha256 pathname)))
+   (ironclad:digest-file :sha1 pathname)))
 
 (defun copy-stream (stream-from stream-to &optional size)
   "will read from stream-from and write to stream-to size bytes"

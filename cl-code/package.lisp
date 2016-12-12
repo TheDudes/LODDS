@@ -2,7 +2,7 @@
 
 (defpackage #:lodds.core
   (:use #:cl)
-  (:export #:sha-256
+  (:export #:generate-checksum
            #:copy-stream
            #:get-timestamp
            #:str-case
