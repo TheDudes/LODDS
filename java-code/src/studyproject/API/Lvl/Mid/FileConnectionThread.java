@@ -139,7 +139,6 @@ public class FileConnectionThread extends Thread {
 		ErrLog.log(Level.INFO, LogKey.getReceived, APILvl.mid, "FileConnectionThread.run()",
 				this.getId() + ": start FileConnectionThread");
 		int returnValue;
-		System.out.println("1");
 		try (Socket socket = new Socket(user.getIpAddress(), user.getPort());
 			BufferedOutputStream outStream = new BufferedOutputStream(socket.getOutputStream());
 			BufferedInputStream inStream = new BufferedInputStream(socket.getInputStream());
