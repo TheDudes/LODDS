@@ -53,6 +53,8 @@ public class Handles {
 			currentLine = socketStream.readLine();
 			ErrLog.log(Level.INFO, LogKey.info, APILvl.mid, "handleInfo", currentLine);
 			if (!Pattern.matches(GET_INFO_HEAD_REGEX, currentLine)) {
+				ErrLog.log(Level.WARNING, LogKey.warning, APILvl.low, "handleInfo",
+						"Pattern does not match. Return value not equals zero");
 				return 2;
 			}
 			params = currentLine.split(" ");
@@ -68,6 +70,8 @@ public class Handles {
 				ErrLog.log(Level.INFO, LogKey.info, APILvl.mid, "handleInfo", currentLine);
 
 				if (!Pattern.matches(GET_INFO_BODY_LINE_REGEX, currentLine)) {
+					ErrLog.log(Level.WARNING, LogKey.warning, APILvl.low, "handleInfo",
+							"Pattern does not match. Return value not equals zero");
 					return 2;
 				}
 				params = currentLine.split(" ");
@@ -84,8 +88,12 @@ public class Handles {
 				fileInfos.add(fileInfo);
 			}
 		} catch (IOException e) {
+			ErrLog.log(Level.SEVERE, LogKey.error, APILvl.low, "handleInfo",
+					"IOException thrown: " + e.getStackTrace());
 			return -1;
 		} catch (NumberFormatException e) {
+			ErrLog.log(Level.SEVERE, LogKey.error, APILvl.low, "handleInfo",
+					"NumberFormatException thrown: " + e.getStackTrace());
 			return -2;
 		}
 		return 0;
@@ -116,6 +124,8 @@ public class Handles {
 				size -= readSize;
 			}
 		} catch (IOException e) {
+			ErrLog.log(Level.SEVERE, LogKey.error, APILvl.low, "handleFile",
+					"IOException thrown: " + e.getStackTrace());
 			return -2;
 		}
 		return 0;
@@ -139,11 +149,17 @@ public class Handles {
 			if (readLine.equals("OK")) {
 				return 0;
 			} else {
+				ErrLog.log(Level.WARNING, LogKey.warning, APILvl.low, "handleSendPermission",
+						"handleSendPermission failed. Return negative value");
 				return -1;
 			}
 		} catch (SocketTimeoutException s) {
+			ErrLog.log(Level.SEVERE, LogKey.error, APILvl.low, "handleSendPermission",
+					"SocketTimeoutException thrown: " + s.getStackTrace());
 			return 1;
 		} catch (IOException e) {
+			ErrLog.log(Level.SEVERE, LogKey.error, APILvl.low, "handleSendPermission",
+					"IOException thrown: " + e.getStackTrace());
 			return -2;
 		}
 	}
