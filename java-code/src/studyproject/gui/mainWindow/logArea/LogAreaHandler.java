@@ -17,7 +17,7 @@ public class LogAreaHandler extends Handler {
 
 	private TableView<Error> toLogTo;
 	private SimpleBooleanProperty error;
-
+	private final int MAX_LOG_MSG_COUNT = 10000;
 	private SimpleBooleanProperty info;
 	private SimpleBooleanProperty getRec;
 	private SimpleBooleanProperty getSent;
@@ -72,9 +72,12 @@ public class LogAreaHandler extends Handler {
 			return;
 		if (shouldBeLogged((Error) record)) {
 			Platform.runLater(new Runnable() {
-
+				
 				@Override
 				public void run() {
+					if (toLogTo.getItems().size() > MAX_LOG_MSG_COUNT) {
+						toLogTo.getItems().remove(1);
+					}
 					toLogTo.getItems().add((Error) record);
 
 				}

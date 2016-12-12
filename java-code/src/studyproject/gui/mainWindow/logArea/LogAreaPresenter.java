@@ -14,6 +14,7 @@ import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.CheckMenuItem;
+import javafx.scene.control.ScrollBar;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.cell.PropertyValueFactory;
@@ -64,6 +65,7 @@ public class LogAreaPresenter implements Initializable {
 		bindSelectedPropertiesToModel();
 
 		Logger.getGlobal().addHandler(new LogAreaHandler(Level.ALL, logTableView, logAreaModel));
+
 	}
 
 	/**
@@ -112,11 +114,11 @@ public class LogAreaPresenter implements Initializable {
 
 	/**
 	 * Adds an auto scroll property to the in the parameter list passed
-	 * TableView, which causes the TableView to automaticly scroll down if an
-	 * entry is made
+	 * TableView, which causes the TableView to automatically scroll down if an
+	 * entry is made and the scroll bar is at the bottom of the view
 	 * 
 	 * @param view
-	 *            The TableView where the autoscroll functionality shall be
+	 *            The TableView where the auto scroll functionality shall be
 	 *            added
 	 */
 	public static <S> void addAutoScroll(final TableView<S> view) {
@@ -126,8 +128,9 @@ public class LogAreaPresenter implements Initializable {
 
 		view.getItems().addListener((ListChangeListener<S>) (c -> {
 			c.next();
+			final ScrollBar scrollBar = (ScrollBar) view.lookup(".scroll-bar:vertical");
 			final int size = view.getItems().size();
-			if (size > 0) {
+			if ((size > 0 && (scrollBar.valueProperty().get() >= scrollBar.getMax())) || size > 0 && size < 20) {
 				Platform.runLater(new Runnable() {
 					@Override
 					public void run() {
