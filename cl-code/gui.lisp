@@ -5,6 +5,10 @@
 
 (defparameter +log-message-maximum+ 1000)
 
+(defparameter *ignored-log-events*
+  (list :listener
+        :advertiser))
+
 ;; list-of-shares columns
 (defvar +los-name+ 0)
 (defvar +los-size+ 1)
@@ -120,6 +124,56 @@
   (q+:set-column-width log +log-count+ 15)
   (q+:set-alternating-row-colors log t))
 
+(defun update-ignored-log (checked-or-unchecked event-type)
+  (case checked-or-unchecked
+    (0 (push event-type *ignored-log-events*))
+    (2 (setf *ignored-log-events*
+             (remove event-type *ignored-log-events*)))))
+
+(defmacro gen-log-checkbox (event-type widget-name title slot-name)
+  `(progn
+     (define-subwidget (main-window ,widget-name) (q+:make-qcheckbox ,title main-window)
+       (q+:set-check-state ,widget-name
+                           (if (find ,event-type *ignored-log-events*)
+                               (q+:qt.unchecked)
+                               (q+:qt.checked))))
+     (define-slot (main-window ,slot-name) ((new-state int))
+       (declare (connected ,widget-name (state-changed int)))
+       (update-ignored-log new-state ,event-type))))
+
+(gen-log-checkbox :advertiser log-check-advertiser "Advertiser" log-check-advertiser-changed)
+(gen-log-checkbox :listener log-check-listener "Listener" log-check-listener-changed)
+(gen-log-checkbox :info log-check-info "Info" log-check-info-changed)
+(gen-log-checkbox :cliend-added log-check-client-added "Client Added" log-check-cliend-added-changed)
+(gen-log-checkbox :cliend-removed log-check-client-removed "Client Removed" log-check-cliend-removed-changed)
+(gen-log-checkbox :cliend-updated log-check-client-updated "Client Updated" log-check-cliend-updated-changed)
+(gen-log-checkbox :debug log-check-debug "Debug" log-check-debug-changed)
+(gen-log-checkbox :watcher log-check-watcher "Watcher" log-check-watcher-changed)
+(gen-log-checkbox :tasker log-check-watcher "Tasker" log-check-tasker-changed)
+(gen-log-checkbox :handler log-check-handler "Handler" log-check-handler-changed)
+(gen-log-checkbox :list-update log-check-list-update "List Update" log-check-list-update-changed)
+
+(define-subwidget (main-window log-checkboxes-widget) (q+:make-qwidget main-window)
+  (let ((layout (q+:make-qhboxlayout main-window)))
+    (q+:set-layout log-checkboxes-widget layout)
+    (q+:add-widget layout log-check-advertiser)
+    (q+:add-widget layout log-check-listener)
+    (q+:add-widget layout log-check-info)
+    (q+:add-widget layout log-check-client-added)
+    (q+:add-widget layout log-check-client-removed)
+    (q+:add-widget layout log-check-client-updated)
+    (q+:add-widget layout log-check-debug)
+    (q+:add-widget layout log-check-watcher)
+    (q+:add-widget layout log-check-watcher)
+    (q+:add-widget layout log-check-handler)
+    (q+:add-widget layout log-check-list-update)))
+
+(define-subwidget (main-window log-widget) (q+:make-qwidget main-window)
+  (let ((layout (q+:make-qvboxlayout main-window)))
+    (q+:set-layout log-widget layout)
+    (q+:add-widget layout log-checkboxes-widget)
+    (q+:add-widget layout log)))
+
 (define-subwidget (main-window user-list) (q+:make-qtreewidget main-window)
   (q+:set-column-count user-list 4)
   (q+:set-header-labels user-list (list "User" "Load" "Last Change" ""))
@@ -160,8 +214,10 @@
     (q+:add-dock-widget main-window (q+:qt.left-dock-widget-area) user-list-dock)
 
     ;; log-dock
-    (q+:set-widget log-dock log)
+    (q+:set-widget log-dock log-widget)
     (q+:add-dock-widget main-window (q+:qt.bottom-dock-widget-area) log-dock)
+
+    ;; add view-toggle to View MenuBar Item
     (let* ((menu-bar (q+:menu-bar main-window))
            (menu (q+:add-menu menu-bar "View")))
       (q+:add-action menu (q+:toggle-view-action log-dock))
@@ -477,6 +533,7 @@
 (defun cb-list-update (main-window event)
   "callback which will be called on a :list-update event"
   (destructuring-bind (name type timestamp changes) event
+    (declare (ignore timestamp))
     (when (eql type :all)
       (signal! main-window (remove-entry string) name))
     (loop :for (type checksum size path) :in changes
@@ -511,10 +568,6 @@
              name
              (prin1-to-string load)
              (prin1-to-string last-change))))
-
-(defparameter *ignored-log-events*
-  (list :listener
-        :advertiser))
 
 (defun cb-log-messages (main-window event)
   (let ((event-type (first event))
