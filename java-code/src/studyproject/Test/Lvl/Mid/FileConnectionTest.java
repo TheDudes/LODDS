@@ -38,7 +38,7 @@ public class FileConnectionTest {
 	
 	@AfterClass
 	public static void cleanUp(){
-		//FileUtil.cleanUp();
+		FileUtil.cleanUp();
 	}
 	
 
