@@ -6,15 +6,15 @@
 (defparameter +log-count+ 1000)
 
 ;; list-of-shares columns
-(defvar +name+ 0)
-(defvar +size+ 1)
-(defvar +checksum+ 2)
-(defvar +id+ 3)
+(defvar +los-name+ 0)
+(defvar +los-size+ 1)
+(defvar +los-checksum+ 2)
+(defvar +los-id+ 3)
 
 ;; log columns
-(defvar +event+ 0)
-(defvar +msg+ 1)
-(defvar +count+ 2)
+(defvar +log-event+ 0)
+(defvar +log-message+ 1)
+(defvar +log-count+ 2)
 
 (let ((xb (ash 1 53)) ;; 8xb
       (tb (ash 1 43)) ;; 8tb
@@ -99,17 +99,17 @@
 (define-subwidget (main-window log) (q+:make-qtreewidget main-window)
   (q+:set-column-count log 3)
   (q+:set-header-labels log (list "Event" "Message" ""))
-  (q+:set-column-width log +event+ 90)
-  (q+:set-column-width log +msg+ 640)
-  (q+:set-column-width log +count+ 15)
+  (q+:set-column-width log +log-event+ 90)
+  (q+:set-column-width log +log-message+ 640)
+  (q+:set-column-width log +log-count+ 15)
   (q+:set-alternating-row-colors log t))
 
 (define-subwidget (main-window list-of-shares) (q+:make-qtreewidget main-window)
   (q+:set-column-count list-of-shares 4)
   (q+:set-header-labels list-of-shares (list "Name" "Size" "Checksum" "ID"))
-  (q+:hide-column list-of-shares +id+)
-  (q+:set-column-width list-of-shares +name+ 400)
-  (q+:set-column-width list-of-shares +size+ 70)
+  (q+:hide-column list-of-shares +los-id+)
+  (q+:set-column-width list-of-shares +los-name+ 400)
+  (q+:set-column-width list-of-shares +los-size+ 70)
   (q+:set-alternating-row-colors list-of-shares t)
   (q+:set-animated list-of-shares t)
   (q+:set-items-expandable list-of-shares t)
@@ -199,9 +199,9 @@
                                 (q+:child-count element)
                                 (lambda (place) (q+:child element place)))
                   (q+:set-text element
-                               +size+
+                               +los-size+
                                (format-size
-                                (let* ((id (q+:text element +id+))
+                                (let* ((id (q+:text element +los-id+))
                                        (old-size (gethash id *id-mapper*)))
                                   (setf (gethash id *id-mapper*)
                                         (+ old-size (parse-integer size))))))
@@ -213,14 +213,14 @@
   ;; node, so lets add a new one.
   (let ((new-entry (q+:make-qtreewidgetitem (funcall get-parent-fn))))
     (let ((entry-id (prin1-to-string (incf *current-id*))))
-      (q+:set-text new-entry +id+ entry-id)
+      (q+:set-text new-entry +los-id+ entry-id)
       (setf (gethash entry-id *id-mapper*) (parse-integer size)))
-    (q+:set-text new-entry +name+ (car path))
-    (q+:set-text new-entry +size+ (format-size (parse-integer size)))
-    (q+:set-text-alignment new-entry +size+ (q+:qt.align-right))
+    (q+:set-text new-entry +los-name+ (car path))
+    (q+:set-text new-entry +los-size+ (format-size (parse-integer size)))
+    (q+:set-text-alignment new-entry +los-size+ (q+:qt.align-right))
     ;; only add checksums on files, not on folders
     (unless (cdr path)
-      (q+:set-text new-entry +checksum+ checksum))
+      (q+:set-text new-entry +los-checksum+ checksum))
     ;; only if not root
     (unless root-p
       (q+:add-child (funcall get-parent-fn) new-entry))
@@ -236,7 +236,7 @@
   "calls finalize on node and all its children to cleanup memory."
   (loop :while (> (q+:child-count node) 0)
         :do (cleanup-node (q+:child node 0)))
-  (remhash (q+:text node +id+) *id-mapper*)
+  (remhash (q+:text node +los-id+) *id-mapper*)
   (finalize node))
 
 (defun remove-node (path child-count get-child-fn remove-child-fn)
@@ -247,7 +247,7 @@
   (loop :for i :from 0 :below child-count
         :do (let ((element (funcall get-child-fn i)))
               ;; check if node matches
-              (when (string= (car path) (q+:text element +name+))
+              (when (string= (car path) (q+:text element +los-name+))
                 ;; check if we have a path left and need to call
                 ;; remove-node recursivly
                 (if (cdr path)
@@ -257,7 +257,7 @@
                                                (q+:child element place))
                                              (lambda (place)
                                                (let* ((removed-item (q+:take-child element place))
-                                                      (size (gethash (q+:text removed-item +id+)
+                                                      (size (gethash (q+:text removed-item +los-id+)
                                                                      *id-mapper*)))
                                                  (cleanup-node removed-item)
                                                  size)))))
@@ -271,9 +271,9 @@
                         (if (eql 0 (q+:child-count element))
                             (funcall remove-child-fn i)
                             (q+:set-text element
-                                         +size+
+                                         +los-size+
                                          (format-size
-                                          (let* ((id (q+:text element +id+))
+                                          (let* ((id (q+:text element +los-id+))
                                                  (old-size (gethash id *id-mapper*)))
                                             (setf (gethash id *id-mapper*)
                                                   (- old-size size))))))
@@ -316,22 +316,22 @@
                         (q+:top-level-item log (- items 1))
                         nil)))
     (if (and last-item
-             (string= (q+:text last-item +event+)
+             (string= (q+:text last-item +log-event+)
                       event)
-             (string= (q+:text last-item +msg+)
+             (string= (q+:text last-item +log-message+)
                       msg))
         (q+:set-text last-item
-                     +count+
+                     +log-count+
                      (prin1-to-string
-                      (let ((current (q+:text last-item +count+)))
+                      (let ((current (q+:text last-item +log-count+)))
                         (if (string= current "")
                             2
                             (+ 1 (parse-integer current))))))
         (let ((new-entry (q+:make-qtreewidgetitem log)))
-          (q+:set-text new-entry +event+ event)
-          (q+:set-text new-entry +msg+ msg)
-          (q+:set-text new-entry +count+ "")
-          (q+:set-text-alignment new-entry +count+ (q+:qt.align-right))
+          (q+:set-text new-entry +log-event+ event)
+          (q+:set-text new-entry +log-message+ msg)
+          (q+:set-text new-entry +log-count+ "")
+          (q+:set-text-alignment new-entry +log-count+ (q+:qt.align-right))
           (let* ((scrollbar (q+:vertical-scroll-bar log))
                  (position (q+:value scrollbar)))
             (loop :while (> (q+:top-level-item-count log) +log-count+)
@@ -351,7 +351,7 @@
   debugging"
   (format t "ITEM: ~a~a~%"
           (make-string depth :initial-element #\ )
-          (q+:text item +name+))
+          (q+:text item +los-name+))
   (loop :for i :from 0 :below (q+:child-count item)
         :do (dump-item (q+:child item i)
                        (+ depth 1))))
