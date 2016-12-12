@@ -3,11 +3,11 @@
    - [ ] File Header with Description
 
 * GUI
-** TODO missing [1/13]
+** TODO missing [2/13]
    - [ ] Share Directory Functionality
    - [ ] Display of Shared Directories
-   - [ ] Info about found Users
-   - [ ] Infobar with Current Transfers, Load, Connections, ...
+   - [X] Info about found Users
+   - [ ] Infobar (Statusbar) with Current Transfers, Load, Connections, ...
    - [ ] Tooltips
    - [ ] Log message filtering
    - [X] Display Sizes in readable format
