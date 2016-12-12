@@ -6,6 +6,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.regex.Pattern;
 
+import studyproject.API.Core.File.FileHasher;
 import studyproject.API.Core.File.InfoList.InfoType;
 import studyproject.API.Core.Request.GetFileRequest;
 import studyproject.API.Core.Request.GetInfoRequest;
@@ -23,8 +24,9 @@ import studyproject.API.Core.Request.RequestContainer;
 public class RequestHandler {
 
 	private static final String GET_INFO_REGEX = "get info \\d{1,19}";
-	private static final String GET_FILE_REGEX = "get file \\w{40} \\d{1,19} \\d{1,19}";
-	private static final String GET_SEND_PERMISSION_REGEX = "get send-permission \\w{40} \\d{1, 19} \\d{1,19} .*";
+	private static final String GET_FILE_REGEX = "get file " + FileHasher.getHashRegex() + " \\d{1,19} \\d{1,19}";
+	private static final String GET_SEND_PERMISSION_REGEX = "get send-permission " + FileHasher.getHashRegex()
+			+ " \\d{1, 19} \\d{1,19} .*";
 
 	/**
 	 * Reads the next line from the InputStream, matches it with regular

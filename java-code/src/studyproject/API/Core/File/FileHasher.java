@@ -14,7 +14,8 @@ import java.security.NoSuchAlgorithmException;
  */
 public class FileHasher {
 	
-	private static final int buffersize = 16384; 
+	private static String hashRegex = "\\w{40}";
+	private static final int buffersize = 16384;
 
 	/**
 	 * Calculates and returns the hash for a given file
@@ -38,6 +39,15 @@ public class FileHasher {
 	    	}
 	    	return hexString.toString();
 		}
+	}
+
+	/**
+	 * the regex for checking if a String can be a hash of this hashfunction
+	 * change the length of this in the class if you change the hash function
+	 * @return
+	 */
+	public static String getHashRegex() {
+		return hashRegex;
 	}
 	
 }

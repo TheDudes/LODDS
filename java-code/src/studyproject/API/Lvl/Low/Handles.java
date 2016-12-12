@@ -14,6 +14,7 @@ import java.util.regex.Pattern;
 import studyproject.API.Core.Timestamp;
 import studyproject.API.Core.Utils;
 import studyproject.API.Core.File.FileAction;
+import studyproject.API.Core.File.FileHasher;
 import studyproject.API.Core.File.FileInfo;
 import studyproject.API.Core.File.InfoList.FileInfoListType;
 import studyproject.API.Core.File.InfoList.InfoType;
@@ -25,7 +26,8 @@ public class Handles {
 
 	private static final int BUFFERSIZE = 4096;
 	private static final String GET_INFO_HEAD_REGEX = "(upd|all) \\d{1,19} \\d{1,19}";
-	private static final String GET_INFO_BODY_LINE_REGEX = "(add|del) \\w{40} \\d{1,19} [^\\\\:*?\"<>|%]*";
+	private static final String GET_INFO_BODY_LINE_REGEX = "(add|del) " + FileHasher.getHashRegex()
+			+ " \\d{1,19} [^\\\\:*?\"<>|%]*";
 
 	/**
 	 * Handles incoming info responses to the getInfoUp request
@@ -41,8 +43,7 @@ public class Handles {
 	 *            FileInfoListType object containing the info type
 	 * @return integer representing the result. Negative value if function fails
 	 */
-	public static int handleInfo(BufferedReader socketStream,
-			ArrayList<FileInfo> fileInfos, Timestamp timestamp,
+	public static int handleInfo(BufferedReader socketStream, ArrayList<FileInfo> fileInfos, Timestamp timestamp,
 			FileInfoListType infoType) {
 		FileInfo fileInfo;
 		String currentLine;
@@ -70,15 +71,15 @@ public class Handles {
 					return 2;
 				}
 				params = currentLine.split(" ");
-				
+
 				FileAction fileInfoFileAction;
-				
+
 				if (params[0].equals(FileAction.add.toString())) {
 					fileInfoFileAction = FileAction.add;
 				} else {
 					fileInfoFileAction = FileAction.del;
 				}
-				
+
 				fileInfo = new FileInfo(params[1], Long.valueOf(params[2]), params[3], "", fileInfoFileAction);
 				fileInfos.add(fileInfo);
 			}
@@ -101,18 +102,15 @@ public class Handles {
 	 *            in bytes to read from BufferedInputStream
 	 * @return integer representing the result. Negative value if function fails
 	 */
-	public static int handleFile(BufferedInputStream socketStream,
-			FileOutputStream fileStream, long size) {
+	public static int handleFile(BufferedInputStream socketStream, FileOutputStream fileStream, long size) {
 		int readSize;
 		try {
 			byte[] byteArray = new byte[BUFFERSIZE];
 			while (size > 0) {
 				if (size < byteArray.length) {
-					readSize = Utils.readThisLength(socketStream, byteArray, 0,
-							(int) size);
+					readSize = Utils.readThisLength(socketStream, byteArray, 0, (int) size);
 				} else {
-					readSize = Utils.readThisLength(socketStream, byteArray, 0,
-							byteArray.length);
+					readSize = Utils.readThisLength(socketStream, byteArray, 0, byteArray.length);
 				}
 				fileStream.write(byteArray, 0, readSize);
 				size -= readSize;
@@ -135,8 +133,7 @@ public class Handles {
 	public static int handleSendPermission(Socket socket, long timeout) {
 		String readLine = "";
 		try {
-			BufferedReader reader = new BufferedReader(new InputStreamReader(
-					socket.getInputStream()));
+			BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 			socket.setSoTimeout((int) timeout);
 			readLine = reader.readLine();
 			if (readLine.equals("OK")) {
