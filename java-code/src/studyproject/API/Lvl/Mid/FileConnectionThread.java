@@ -6,11 +6,15 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.Socket;
+import java.util.logging.Level;
 
+import studyproject.API.Errors.ErrLog;
 import studyproject.API.Loadbalancer.ProgressInfo;
 import studyproject.API.Lvl.Low.Handles;
 import studyproject.API.Lvl.Low.Requests;
 import studyproject.API.Lvl.Mid.Core.UserInfo;
+import studyproject.logging.APILvl;
+import studyproject.logging.LogKey;
 
 /**
  * Thread to get a file from another client After creating a new instance of
@@ -150,7 +154,8 @@ public class FileConnectionThread extends Thread {
 						endIndex);
 			}
 			if (returnValue != 0) {
-				// TODO error handling
+				ErrLog.log(Level.SEVERE, LogKey.error, APILvl.mid, "FileConnectionThread.run()",
+						"reurnValue after Request.getFile is not equals 0: " + returnValue);
 			}
 			// whole file?
 			if (endIndex == 0) {
@@ -160,14 +165,16 @@ public class FileConnectionThread extends Thread {
 						endIndex);
 			}
 			if (returnValue != 0) {
-				// TODO error handling
+				ErrLog.log(Level.SEVERE, LogKey.error, APILvl.mid, "FileConnectionThread.run()",
+						"reurnValue after Handles.handleFile is not equals 0: " + returnValue);
 			} else {
 				if (supportLoadbalancing) {
 					progressInfo.setFinishedSuccessfully(true);
 				}
 			}
 		} catch (IOException e) {
-			// TODO error handling
+			ErrLog.log(Level.SEVERE, LogKey.error, APILvl.mid, "FileConnectionThread.run()",
+					"IOException thrown: " + e.getStackTrace());
 		}
 	}
 
