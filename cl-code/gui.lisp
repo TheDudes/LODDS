@@ -16,6 +16,12 @@
 (defvar +log-message+ 1)
 (defvar +log-count+ 2)
 
+;; user-list columns
+(defvar +user-list-name+ 0)
+(defvar +user-list-load+ 1)
+(defvar +user-list-last-change+ 2)
+(defvar +user-list-id+ 3)
+
 (let ((xb (ash 1 53)) ;; 8xb
       (tb (ash 1 43)) ;; 8tb
       (gb (ash 1 33)) ;; 8gb
@@ -104,6 +110,15 @@
   (q+:set-column-width log +log-count+ 15)
   (q+:set-alternating-row-colors log t))
 
+(define-subwidget (main-window user-list) (q+:make-qtreewidget main-window)
+  (q+:set-column-count user-list 4)
+  (q+:set-header-labels user-list (list "User" "Load" "Last Change" ""))
+  (q+:hide-column user-list +user-list-id+)
+  (q+:set-column-width user-list +user-list-name+ 200)
+  (q+:set-column-width user-list +user-list-load+ 70)
+  (q+:set-column-width user-list +user-list-last-change+ 120)
+  (q+:set-alternating-row-colors user-list t))
+
 (define-subwidget (main-window list-of-shares) (q+:make-qtreewidget main-window)
   (q+:set-column-count list-of-shares 4)
   (q+:set-header-labels list-of-shares (list "Name" "Size" "Checksum" "ID"))
@@ -119,7 +134,8 @@
   (q+:resize main-window 800 450)
   (q+:set-style-sheet main-window *style-sheet*)
   (let ((debug-dock (q+:make-qdockwidget "Debug" main-window))
-        (log-dock (q+:make-qdockwidget "Log" main-window)))
+        (log-dock (q+:make-qdockwidget "Log" main-window))
+        (user-list-dock (q+:make-qdockwidget "User List" main-window)))
     ;; debug-dock
     (let* ((dock-content (q+:make-qwidget))
            (dock-layout (q+:make-qhboxlayout dock-content)))
@@ -129,13 +145,18 @@
       (q+:set-widget debug-dock dock-content))
     (q+:add-dock-widget main-window (q+:qt.top-dock-widget-area) debug-dock)
 
+    ;; user-dock
+    (q+:set-widget user-list-dock user-list)
+    (q+:add-dock-widget main-window (q+:qt.left-dock-widget-area) user-list-dock)
+
     ;; log-dock
     (q+:set-widget log-dock log)
     (q+:add-dock-widget main-window (q+:qt.bottom-dock-widget-area) log-dock)
     (let* ((menu-bar (q+:menu-bar main-window))
            (menu (q+:add-menu menu-bar "View")))
       (q+:add-action menu (q+:toggle-view-action log-dock))
-      (q+:add-action menu (q+:toggle-view-action debug-dock))))
+      (q+:add-action menu (q+:toggle-view-action debug-dock))
+      (q+:add-action menu (q+:toggle-view-action user-list-dock))))
 
   (setf (q+:central-widget main-window) list-of-shares))
 
@@ -145,6 +166,9 @@
 (define-signal (main-window add-log-msg) (string string))
 (define-signal (main-window reload-stylesheet) ())
 (define-signal (main-window fix-menubar-order) ())
+(define-signal (main-window add-user) (string string string))
+(define-signal (main-window remove-user) (string))
+(define-signal (main-window update-user) (string string string))
 
 (define-slot (main-window start) ()
   (declare (connected start (pressed)))
@@ -185,7 +209,7 @@
   (loop :for i :from 0 :below child-count
         :do (let ((element (funcall get-child-fn i)))
               ;; check if node matches
-              (when (string= (car path) (q+:text element +name+))
+              (when (string= (car path) (q+:text element +los-name+))
                 (unless (cdr path)
                   ;; if there is no path left but we have a
                   ;; matching node, it means that the node
@@ -381,6 +405,61 @@
   (declare (connected main-window (reload-stylesheet)))
   (q+:set-style-sheet main-window *style-sheet*))
 
+(define-slot (main-window add-user) ((user string)
+                                     (load string)
+                                     (last-change string))
+  (declare (connected main-window (add-user string
+                                            string
+                                            string)))
+  (let ((new-entry (q+:make-qtreewidgetitem user-list)))
+    (let ((entry-id (concatenate 'string "user:" user)))
+      (q+:set-text new-entry +los-id+ entry-id)
+      (setf (gethash entry-id *id-mapper*)
+            new-entry)
+      (q+:set-text new-entry +user-list-name+ user)
+      (q+:set-text new-entry +user-list-load+ (format-size (parse-integer load)))
+      (q+:set-text new-entry +user-list-last-change+ last-change)
+      (q+:set-text new-entry +user-list-id+ entry-id)
+      (q+:set-text-alignment new-entry +user-list-load+ (q+:qt.align-right)))))
+
+(define-slot (main-window remove-user) ((user string))
+  (declare (connected main-window (remove-user string)))
+  (loop :for i :from 0 :to (q+:top-level-item-count user-list)
+        :do (let* ((child (q+:top-level-item user-list i))
+                   (child-name (q+:text child +user-list-name+)))
+              (when (string= child-name user)
+                (remhash (q+:text child +user-list-id+)
+                         *id-mapper*)
+                (q+:take-top-level-item user-list i)
+                (return)))))
+
+(define-slot (main-window update-user) ((user string)
+                                        (load string)
+                                        (last-change string))
+  (declare (connected main-window (update-user string
+                                               string
+                                               string)))
+  (let ((entry (gethash (concatenate 'string "user:" user)
+                        *id-mapper*)))
+    (when entry
+      (q+:set-text entry
+                   +user-list-load+
+                   (format-size (parse-integer load)))
+      (q+:set-text entry
+                   +user-list-last-change+
+                   last-change))))
+
+(define-slot (main-window remove-user) ((user string))
+  (declare (connected main-window (remove-user string)))
+  (loop :for i :from 0 :to (q+:top-level-item-count user-list)
+        :do (let* ((child (q+:top-level-item user-list i))
+                   (child-name (q+:text child +user-list-name+)))
+              (when (string= child-name user)
+                (remhash (q+:text child +user-list-id+)
+                         *id-mapper*)
+                (q+:take-top-level-item user-list i)
+                (return)))))
+
 (defun cb-list-update (main-window event)
   "callback which will be called on a :list-update event"
   (destructuring-bind (name type timestamp changes) event
@@ -398,7 +477,26 @@
 
 (defun cb-client-removed (main-window client-name)
   "callback which will get called if a client was removed"
-  (signal! main-window (remove-entry string) client-name))
+  (signal! main-window (remove-entry string) client-name)
+  (signal! main-window (remove-user string) client-name))
+
+(defun cb-client-added (main-window data)
+  "callback which will get called if a client was removed"
+  (destructuring-bind (name load last-change) data
+    (signal! main-window
+             (add-user string string string)
+             name
+             (prin1-to-string load)
+             (prin1-to-string last-change))))
+
+(defun cb-client-updated (main-window data)
+  "callback which will get called if a client was removed"
+  (destructuring-bind (name load last-change) data
+    (signal! main-window
+             (update-user string string string)
+             name
+             (prin1-to-string load)
+             (prin1-to-string last-change))))
 
 (defparameter *ignored-log-events*
   (list :listener
@@ -434,12 +532,23 @@
                                      :event-type :client-removed)
            (lodds.event:add-callback :gui (lambda (event)
                                             (cb-log-messages window event)))
+           (lodds.event:add-callback :gui (lambda (event)
+                                            (cb-client-added window (cdr event)))
+                                     :event-type :client-added)
+           (lodds.event:add-callback :gui (lambda (event)
+                                            (cb-client-updated window (cdr event)))
+                                     :event-type :client-updated)
            (setf *current-id* 0)
            (signal! window (fix-menubar-order))
            ;; add known users
            (loop :for user :in (lodds:get-user-list)
                  :do (let ((user-info (lodds:get-user-info user)))
-                       (maphash (lambda  (filename file-info)
+                       (signal! window
+                                (add-user string string string)
+                                user
+                                (prin1-to-string (lodds:c-load user-info))
+                                (prin1-to-string (lodds:c-last-change user-info)))
+                       (maphash (lambda (filename file-info)
                                   (destructuring-bind (checksum size) file-info
                                     (signal! window
                                              (add-entry string string string)
@@ -451,4 +560,8 @@
                                       :event-type :list-update)
          (lodds.event:remove-callback :gui
                                       :event-type :client-removed)
-         (lodds.event:remove-callback :gui))))))
+         (lodds.event:remove-callback :gui)
+         (lodds.event:remove-callback :gui
+                                      :event-type :client-added)
+         (lodds.event:remove-callback :gui
+                                      :event-type :client-updated))))))
