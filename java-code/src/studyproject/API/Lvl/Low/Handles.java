@@ -125,7 +125,7 @@ public class Handles {
 			}
 		} catch (IOException e) {
 			ErrLog.log(Level.SEVERE, LogKey.error, APILvl.low, "handleFile",
-					"IOException thrown: " + e.getStackTrace());
+					"IOException thrown: " + e.getMessage());
 			return -2;
 		}
 		return 0;
