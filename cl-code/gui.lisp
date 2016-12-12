@@ -513,8 +513,15 @@
                  (:list-update
                   (destructuring-bind (name type ts changes)
                       event-msg
-                    (format nil "~a ~a ~a~%~{~{~a~^ ~}~%~}"
-                            name type ts changes)))
+                    (let ((adds 0)
+                          (dels 0))
+                      (loop :for (type . rest) :in changes
+                            :if (eql type :add)
+                            :do (incf adds)
+                            :else
+                            :do (incf dels))
+                      (format nil "~a ~a ~a adds: ~a dels: ~a"
+                              name type ts adds dels))))
                  (t (format nil "~{~a~^ ~}" event-msg)))))))
 
 (defun main ()
