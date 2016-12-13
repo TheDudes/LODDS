@@ -204,6 +204,7 @@
     ;; settings-dock
     (let* ((dock-content (q+:make-qwidget))
            (dock-layout (q+:make-qformlayout dock-content)))
+      (q+:set-maximum-height dock-content 48)
       (q+:add-row dock-layout "Interface:" interfaces)
       (q+:set-widget settings-dock dock-content))
     (q+:add-dock-widget main-window (q+:qt.left-dock-widget-area) settings-dock)
