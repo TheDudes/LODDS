@@ -146,18 +146,23 @@
 
 (defun run ()
   (let ((socket nil))
-    (unwind-protect
-         (progn
-           (setf socket (usocket:socket-connect
-                         nil nil
-                         :local-host (lodds:get-broadcast-address
-                                      (lodds:interface lodds:*server*))
-                         :local-port (lodds:broadcast-port lodds:*server*)
-                         :protocol :datagram))
-           (loop :while (lodds.subsystem:alive-p (lodds:get-subsystem :listener))
-                 :do (let ((msg (get-next-message socket)))
-                       (when msg
-                         (handle-message msg)))))
+    (labels ((get-socket ()
+               (usocket:socket-connect
+                nil nil
+                :local-host (lodds:get-broadcast-address
+                             (lodds:interface lodds:*server*))
+                :local-port (lodds:broadcast-port lodds:*server*)
+                :protocol :datagram)))
+      (handler-case
+          (progn
+            (setf socket (get-socket))
+            (loop :while (lodds.subsystem:alive-p (lodds:get-subsystem :listener))
+                  :do (let ((msg (get-next-message socket)))
+                        (when msg
+                          (handle-message msg)))))
+        (error (e)
+          (when socket
+            (usocket:socket-close socket))))
       (when socket
         (usocket:socket-close socket))
       (let ((clients (lodds:clients lodds:*server*)))
