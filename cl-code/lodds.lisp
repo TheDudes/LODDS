@@ -29,14 +29,16 @@
 (defun get-broadcast-address (interface)
   "returns the broadcast address of the specified interface.
    to get a list of available interfaces use 'get-interfaces'"
-  (ip-interfaces:ip-interface-broadcast-address
-   (get-interface-info interface)))
+  (let ((info (get-interface-info interface)))
+    (when info
+      (ip-interfaces:ip-interface-broadcast-address info))))
 
 (defun get-ip-address (interface)
   "returns the ip address of the specified interface.
    to get a list of available interfaces use 'get-interfaces'"
-  (ip-interfaces:ip-interface-address
-   (get-interface-info interface)))
+  (let ((info (get-interface-info interface)))
+    (when info
+      (ip-interfaces:ip-interface-address info))))
 
 (defun event-callback (event)
   (format t "log: ~a~%" event))
