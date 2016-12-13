@@ -159,7 +159,7 @@ multiple-value-bind.
    information about shared files. timestamp describes the last requested
    information the client currently holds. If timestamp is zero (0) it will
    request a full list of shared files from the client."
-  (format socket-stream "get info ~a~%" timestamp)
+  (format-to-socket socket-stream "get info ~a~%" timestamp)
   (force-output socket-stream)
   0)
 
@@ -232,7 +232,7 @@ multiple-value-bind.
   "handles a successfull 'get info' request and returns (as second
    value) a list containing the parsed data. The list has the same format
    as 'file-infos' argument from respond-info function"
-  (let ((line (read-line socket-stream)))
+  (let ((line (read-line-from-socket socket-stream)))
     (if (cl-ppcre:scan *info-head-scanner* line)
         (destructuring-bind (type timestamp count) (cl-strings:split line)
           (values 0
@@ -243,7 +243,7 @@ multiple-value-bind.
                   (parse-integer timestamp)
                   (loop :repeat (parse-integer count)
                         :collect (progn
-                                   (setf line (read-line socket-stream))
+                                   (setf line (read-line-from-socket socket-stream))
                                    (if (cl-ppcre:scan *info-body-scanner* line)
                                        (destructuring-bind (type checksum size . name)
                                            (cl-strings:split line)
