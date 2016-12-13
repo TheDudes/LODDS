@@ -2,9 +2,19 @@
 
 (defmacro with-socket (socket close-socket-p &body body)
   `(let ((is-closed nil))
-     (labels ((cleanup-socket () (when ,socket
-                                   (usocket:socket-close ,socket)
-                                   (setf is-closed t))))
+     (labels ((cleanup-socket ()
+                (when ,socket
+                  (handler-case
+                      (close (usocket:socket-stream ,socket))
+                    (error (e)
+                      (lodds.event:push-event :error
+                                              (list "could not close socket stream" e))))
+                  (handler-case
+                      (usocket:socket-close ,socket)
+                    (error (e)
+                      (lodds.event:push-event :error
+                                              (list "could not close socket" e))))
+                  (setf is-closed t))))
        (handler-case
            (progn
              (unless ,socket
