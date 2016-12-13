@@ -1,8 +1,7 @@
 (in-package lodds.listener)
 
 (defun update-client-list (client)
-  (let ((socket nil)
-        (stream nil))
+  (let ((socket nil))
     (unwind-protect
          (with-accessors ((name lodds:c-name)
                           (ip lodds:c-ip)
@@ -10,13 +9,12 @@
                           (last-change lodds:c-last-change)
                           (table-hash lodds:c-file-table-hash)
                           (table-name lodds:c-file-table-name)) client
-           (setf socket (usocket:socket-connect ip port :timeout 1)
-                 stream (usocket:socket-stream socket))
-           (let ((error (lodds.low-level-api:get-info stream last-change)))
+           (setf socket (usocket:socket-connect ip port :timeout 1 :element-type '(unsigned-byte 8)))
+           (let ((error (lodds.low-level-api:get-info (usocket:socket-stream socket) last-change)))
              (unless (eql 0 error)
                (error "low level api threw error ~a in get-info" error)))
            (multiple-value-bind (error type timestamp changes)
-               (lodds.low-level-api:handle-info stream)
+               (lodds.low-level-api:handle-info (usocket:socket-stream socket))
              (unless (eql 0 error)
                (error "low level api threw error ~a in handle-info" error))
              (lodds.event:push-event :list-update
@@ -42,8 +40,6 @@
                              (remhash cs table-hash))
                          (remhash name table-name)))
              (setf last-change timestamp)))
-      (when stream
-        (close stream))
       (when socket
         (usocket:socket-close socket)))))
 
