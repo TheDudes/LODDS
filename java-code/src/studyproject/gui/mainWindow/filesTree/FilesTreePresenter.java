@@ -107,34 +107,33 @@ public class FilesTreePresenter implements Initializable {
 
 	private void downloadPressed() {
 		ObservableList<TreeItem<FileCoreInfo>> itemsList = filesTreeView.getSelectionModel().getSelectedItems();
-		Stage stage = new Stage();
 		DirectoryChooser directoryChooser = new DirectoryChooser();
 		String absolutePath;
-		String defaultSavePath = (String) App.properties.get("defaultSavePath");
 		File chosenFolder;
-		File savePathFile = new File(defaultSavePath);
-		
+		File savePathFile = new File((String) App.properties.get("defaultSavePath"));
+
+		System.out.println(itemsList);
 		if (savePathFile.exists()) {
 			directoryChooser.setInitialDirectory(savePathFile);
 		}
-		chosenFolder = directoryChooser.showDialog(stage);
-		stage.hide();
-
+		chosenFolder = directoryChooser.showDialog(new Stage());
 		if (chosenFolder == null) {
-			ErrLog.log(Level.INFO, LogKey.info, APILvl.mid, "downloadPressed",
-					"Non folder choosen. Download aborted.");
+			ErrLog.log(Level.INFO, LogKey.info, APILvl.mid, "downloadPressed", "Non folder choosen. Download aborted.");
 			return;
 		}
-		System.out.println("before replace: " + chosenFolder.getAbsolutePath());
 		absolutePath = chosenFolder.getAbsolutePath().replace("\\", "/");
-		System.out.println("absolutePath: " + absolutePath);
+		if (absolutePath.endsWith("/")) {
+			absolutePath.substring(0, absolutePath.length() - 1);
+		}
 		for (TreeItem<FileCoreInfo> treeItem : itemsList) {
 			FileCoreInfo fileCoreInfo = treeItem.getValue();
 			if (fileCoreInfo.getChecksum() == null) {
+				// continue because this item is a folder. it has no checksum.
 				continue;
 			}
+			System.out.println("FilePath: " + absolutePath + fileCoreInfo.getFilePath());
 			mainWindowModel.getLodds().getFile(userListModel.getSelectedUser().get(), fileCoreInfo.getChecksum(),
-					absolutePath);
+					absolutePath + fileCoreInfo.getFilePath());
 		}
 		return;
 	}

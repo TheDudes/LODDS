@@ -141,10 +141,12 @@ public class FileConnectionThread extends Thread {
 		int returnValue;
 		try (Socket socket = new Socket(user.getIpAddress(), user.getPort());
 				BufferedOutputStream outStream = new BufferedOutputStream(socket.getOutputStream());
-				BufferedInputStream inStream = new BufferedInputStream(socket.getInputStream());
-				FileOutputStream fileOutStream = new FileOutputStream(new File(localPath))) {
-			System.out.println("lcoalPath: " + localPath);
-			new File(localPath).mkdirs();
+				BufferedInputStream inStream = new BufferedInputStream(socket.getInputStream())) {
+			File file = new File(localPath);
+			if (file.getParentFile() != null) {
+				file.getParentFile().mkdirs();
+			}
+			FileOutputStream fileOutStream = new FileOutputStream(file);
 			// whole file?
 			if (endIndex == 0) {
 				returnValue = Requests.getFile(outStream, checksum, startIndex, size);
@@ -169,6 +171,7 @@ public class FileConnectionThread extends Thread {
 					progressInfo.setFinishedSuccessfully(true);
 				}
 			}
+			fileOutStream.close();
 		} catch (IOException e) {
 			System.out.println("catch");
 			ErrLog.log(Level.SEVERE, LogKey.error, APILvl.mid, "FileConnectionThread.run()",
