@@ -155,7 +155,7 @@
 (gen-log-checkbox :list-update log-check-list-update "List Update" log-check-list-update-changed)
 
 (define-subwidget (main-window log-checkboxes-widget) (q+:make-qscrollarea main-window)
-  (let ((container (q+:make-qwidget main-window))
+  (let ((container (q+:make-qgroupbox "Log Settings" main-window))
         (layout (q+:make-qvboxlayout main-window)))
     (q+:set-layout container layout)
     (q+:add-widget layout log-check-advertiser)
