@@ -174,6 +174,48 @@
     (q+:add-widget layout log-check-list-update)
     (q+:set-widget log-checkboxes-widget container)))
 
+(define-subwidget (main-window download-file) (q+:make-qlineedit main-window))
+(define-subwidget (main-window download-checksum) (q+:make-qlabel main-window))
+(define-subwidget (main-window download-user-selection) (q+:make-qcombobox main-window)
+  (q+:add-item download-user-selection "Any"))
+
+(define-subwidget (main-window download) (q+:make-qwidget main-window)
+  (let ((download-layout (q+:make-qvboxlayout main-window)))
+    (q+:set-layout download download-layout)
+    (q+:add-widget download-layout download-checksum)
+    (let ((file-selection (q+:make-qwidget main-window))
+          (layout (q+:make-qhboxlayout main-window))
+          (folder-selection-button (q+:make-qpushbutton "Change Directory" main-window))
+          (folder-edit (q+:make-qlineedit main-window))
+          (download-button (q+:make-qpushbutton "Download" main-window)))
+      (connect folder-selection-button "pressed()"
+               (lambda ()
+                 (let ((result (q+:qfiledialog-get-existing-directory)))
+                   (when (> (length result) 0)
+                     (q+:set-text folder-edit result)))))
+      (q+:set-layout file-selection layout)
+      (q+:add-widget layout folder-selection-button)
+      (q+:add-widget layout folder-edit)
+      (q+:add-widget layout download-file)
+      (q+:add-widget download-layout file-selection)
+      (q+:add-widget download-layout download-user-selection)
+      (connect download-button "pressed()"
+               (lambda ()
+                 (let ((user (q+:current-text download-user-selection))
+                       (directory (q+:text folder-edit))
+                       (filename (q+:text download-file)))
+                   (unless (char= #\/
+                                  (char directory (- (length directory) 1))))
+                   (lodds:get-file (concatenate 'string
+                                                (if (char= #\/ (char directory (- (length directory) 1)))
+                                                    directory
+                                                    (concatenate 'string directory "/"))
+                                                filename)
+                                   (q+:text download-checksum)
+                                   (unless (string= user "Any")
+                                     user)))))
+      (q+:add-widget download-layout download-button))))
+
 (define-subwidget (main-window log-widget) (q+:make-qsplitter main-window)
   (q+:add-widget log-widget log-checkboxes-widget)
   (q+:add-widget log-widget log))
@@ -191,6 +233,16 @@
     (q+:set-resize-mode header +user-list-last-change+ (q+:qheaderview.resize-to-contents))))
 
 (define-subwidget (main-window list-of-shares) (q+:make-qtreewidget main-window)
+  (connect list-of-shares "itemClicked(QTreeWidgetItem *, int)"
+           (lambda (item column)
+             (declare (ignore column))
+             (let ((checksum (q+:text item +los-checksum+)))
+               (q+:set-text download-file (q+:text item +los-name+))
+               (q+:set-text download-checksum checksum)
+               (loop :repeat (- (q+:count download-user-selection) 1)
+                     :do (q+:remove-item download-user-selection 1))
+               (loop :for (user . rest) :in (lodds:get-file-info checksum)
+                     :do (q+:add-item download-user-selection user)))))
   (q+:set-column-count list-of-shares 4)
   (q+:set-header-labels list-of-shares (list "Name" "Size" "Checksum" "ID"))
   (q+:hide-column list-of-shares +los-id+)
@@ -212,7 +264,13 @@
 
   (let ((settings-dock (q+:make-qdockwidget "Settings" main-window))
         (log-dock (q+:make-qdockwidget "Log" main-window))
-        (user-list-dock (q+:make-qdockwidget "User List" main-window)))
+        (user-list-dock (q+:make-qdockwidget "User List" main-window))
+        (download-dock (q+:make-qdockwidget "Download File" main-window)))
+
+    ;; download-file dock
+    (q+:set-widget download-dock download)
+    (q+:add-dock-widget main-window (q+:qt.left-dock-widget-area) download-dock)
+
     ;; settings-dock
     (let* ((dock-content (q+:make-qwidget))
            (dock-layout (q+:make-qformlayout dock-content)))
@@ -234,7 +292,8 @@
            (menu (q+:add-menu menu-bar "View")))
       (q+:add-action menu (q+:toggle-view-action log-dock))
       (q+:add-action menu (q+:toggle-view-action settings-dock))
-      (q+:add-action menu (q+:toggle-view-action user-list-dock))))
+      (q+:add-action menu (q+:toggle-view-action user-list-dock))
+      (q+:add-action menu (q+:toggle-view-action download-dock))))
 
   (setf (q+:central-widget main-window) list-of-shares))
 
