@@ -21,6 +21,12 @@ import studyproject.API.Lvl.Mid.Core.FileCoreInfo;
 import studyproject.API.Lvl.Mid.Core.UserInfo;
 import studyproject.Test.FileUtil;
 
+/**
+ * Junit tests for the FileConnectionThread class
+ * 
+ * @author Michael
+ *
+ */
 public class FileConnectionTest {
 
 	private final String completeTest = "destComplete";
@@ -31,17 +37,26 @@ public class FileConnectionTest {
 	private int endIndex = 200;
 	private int startIndex = 201;
 	
+	/**
+	 * create the file that is used for the tests
+	 */
 	@BeforeClass
 	public static void setUp(){
 		FileUtil.createFile(FileUtil.fileContents2);
 	}
 	
+	/**
+	 * delete all files that were created during testing
+	 */
 	@AfterClass
 	public static void cleanUp(){
 		FileUtil.cleanUp();
 	}
 	
 
+	/**
+	 * Test if getting and transmitting a complete file works
+	 */
 	@Test
 	public void testGetFileComplete() {
 		String originHash;
@@ -76,6 +91,9 @@ public class FileConnectionTest {
 		}
 	}
 	
+	/**
+	 * Test if getting and transmitting the first part of a file works
+	 */
 	@Test
 	public void testGetFileStart() {
 		String originHash;
@@ -113,6 +131,10 @@ public class FileConnectionTest {
 		}
 	}
 	
+	
+	/**
+	 * Test if getting and transmitting the last part of a file works
+	 */
 	@Test
 	public void testGetFileEnd() {
 		String originHash;
