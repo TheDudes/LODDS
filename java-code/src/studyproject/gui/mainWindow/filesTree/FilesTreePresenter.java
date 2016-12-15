@@ -24,6 +24,7 @@ import studyproject.API.Errors.ErrLog;
 import studyproject.API.Lvl.Mid.Core.FileCoreInfo;
 import studyproject.API.Lvl.Mid.Core.UserInfo;
 import studyproject.gui.mainWindow.MainWindowModel;
+import studyproject.gui.mainWindow.tasksList.TasksListModel;
 import studyproject.gui.mainWindow.usersList.UsersListModel;
 import studyproject.logging.APILvl;
 import studyproject.logging.LogKey;
@@ -38,6 +39,8 @@ public class FilesTreePresenter implements Initializable {
 	UsersListModel userListModel;
 	@Inject
 	MainWindowModel mainWindowModel;
+	@Inject
+	TasksListModel tasksListModel;
 	@FXML
 	Button downloadButton;
 
@@ -116,6 +119,7 @@ public class FilesTreePresenter implements Initializable {
 		if (savePathFile.exists()) {
 			directoryChooser.setInitialDirectory(savePathFile);
 		}
+		directoryChooser.setTitle("Choose folder to save files in");
 		chosenFolder = directoryChooser.showDialog(new Stage());
 		if (chosenFolder == null) {
 			ErrLog.log(Level.INFO, LogKey.info, APILvl.mid, "downloadPressed", "Non folder choosen. Download aborted.");
@@ -134,6 +138,7 @@ public class FilesTreePresenter implements Initializable {
 			System.out.println("FilePath: " + absolutePath + fileCoreInfo.getFilePath());
 			mainWindowModel.getLodds().getFile(userListModel.getSelectedUser().get(), fileCoreInfo.getChecksum(),
 					absolutePath + fileCoreInfo.getFilePath());
+			// tasksListModel.getTasksListPresenter().addTask("Download: " + fileCoreInfo.getFileName(), "Downloading...");
 		}
 		return;
 	}
