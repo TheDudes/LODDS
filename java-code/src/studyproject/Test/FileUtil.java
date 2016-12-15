@@ -93,6 +93,7 @@ public class FileUtil {
 			+ "ut aliquip ex ea commodo\n";
 
 	private static ArrayList<String> filesCreated = new ArrayList<String>();
+	private static ArrayList<String> dirsCreated = new ArrayList<String>();
 
 	/**
 	 * create a file for testing
@@ -103,15 +104,7 @@ public class FileUtil {
 	 *            the name of the file
 	 */
 	public static void createFile(String toWrite, String fileName) {
-		File file = new File(dir);
-		file.mkdir();
-		try (BufferedWriter writer = new BufferedWriter(new FileWriter(dir + "/" + fileName))) {
-			writer.write(toWrite);
-		} catch (IOException e) {
-			e.printStackTrace();
-			fail();
-		}
-		filesCreated.add(fileName);
+		createFile(toWrite, fileName, true);
 	}
 
 	/**
@@ -122,6 +115,38 @@ public class FileUtil {
 	 */
 	public static void createFile(String toWrite) {
 		createFile(toWrite, sourceFile);
+	}
+
+	/**
+	 * create a file for testing
+	 * 
+	 * @param toWrite
+	 *            the fileContents to write
+	 * @param fileName
+	 *            the name of the file
+	 * @param addToCleanup
+	 *            add the file to the files that get cleaned up when the
+	 *            cleanUp() method is called
+	 */
+	public static void createFile(String toWrite, String fileName, boolean addToCleanup) {
+		File directory = new File(dir);
+		directory.mkdir();
+		if (fileName.charAt(fileName.length() - 1) != '/' && fileName.contains("/")) {
+			File file = new File(dir + "/" + fileName.substring(0, fileName.lastIndexOf('/')));
+			if (!file.exists()) {
+				file.mkdirs();
+				dirsCreated.add(dir + "/" + fileName.substring(0, fileName.lastIndexOf('/')));
+			}
+		}
+		try (BufferedWriter writer = new BufferedWriter(new FileWriter(dir + "/" + fileName))) {
+			writer.write(toWrite);
+		} catch (IOException e) {
+			e.printStackTrace();
+			fail();
+		}
+		if (addToCleanup) {
+			filesCreated.add(fileName);
+		}
 	}
 
 	public static void addToCleanUp(String fileName) {
@@ -143,13 +168,24 @@ public class FileUtil {
 	 */
 	public static void cleanUp() {
 		File file;
-		int size = filesCreated.size(),index = size - 1;
+		int size = filesCreated.size(), index = size - 1;
 		for (int counter = 0; counter < size; counter++) {
 			file = new File(dir + "/" + filesCreated.get(index));
 			if (!file.delete()) {
 				System.err.println("could not delete file " + dir + "/" + filesCreated.get(index));
 			} else {
 				filesCreated.remove(index);
+			}
+			index--;
+		}
+		size = dirsCreated.size();
+		index = size - 1;
+		for (int counter = 0; counter < size; counter++) {
+			file = new File(dirsCreated.get(index));
+			if (!file.delete()) {
+				System.err.println("could not delete dir " + dirsCreated.get(index));
+			} else {
+				dirsCreated.remove(index);
 			}
 			index--;
 		}
