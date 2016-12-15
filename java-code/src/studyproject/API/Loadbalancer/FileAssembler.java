@@ -5,6 +5,12 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.Vector;
+import java.util.logging.Level;
+
+import studyproject.App;
+import studyproject.API.Errors.ErrLog;
+import studyproject.logging.APILvl;
+import studyproject.logging.LogKey;
 
 /**
  * class to assemble the temporary files created by the Loadbalancer into the
@@ -15,9 +21,7 @@ import java.util.Vector;
  */
 public class FileAssembler extends Thread {
 
-	// TODO is this sleep time appropriate? Can you change it via settings?
-	private final long SLEEP_TIME = 100;
-	// TODO have this as an option in the settings
+	private final long SLEEP_TIME = Long.getLong(App.properties.getProperty("fileAssemblerSleepTime"));
 	private final int BUFFER_SIZE = 4096;
 
 	private String tmpFilePath, localPath;
@@ -42,8 +46,7 @@ public class FileAssembler extends Thread {
 	 *            the vector with all the information about the threads that
 	 *            pull the files
 	 */
-	public FileAssembler(String tmpFilePath, String localPath, int chunksTotal,
-			Vector<ProgressInfo> chunkThreads) {
+	public FileAssembler(String tmpFilePath, String localPath, int chunksTotal, Vector<ProgressInfo> chunkThreads) {
 		lastWrittenChunk = -1;
 		writtenBytes = 0;
 		this.tmpFilePath = tmpFilePath;
@@ -55,8 +58,7 @@ public class FileAssembler extends Thread {
 
 	@Override
 	public void run() {
-		try (FileOutputStream writer = new FileOutputStream(
-				new File(localPath), true)) {
+		try (FileOutputStream writer = new FileOutputStream(new File(localPath), true)) {
 			// as long as there are chunks that were not written
 			while (lastWrittenChunk + 1 < chunksTotal) {
 				if (isNextChunkReady()) {
@@ -64,8 +66,7 @@ public class FileAssembler extends Thread {
 					// open the tmp file with the number of the chunk, i.e. if
 					// the chunk is 3 and the name of the file is /tmp/file then
 					// the opened file is /tmp/file3
-					try (FileInputStream reader = new FileInputStream(new File(
-							tmpFilePath + (lastWrittenChunk + 1)))) {
+					try (FileInputStream reader = new FileInputStream(new File(tmpFilePath + (lastWrittenChunk + 1)))) {
 						while (writtenBytes < chunkStates[lastWrittenChunk + 1]) {
 							if (writtenBytes + BUFFER_SIZE > chunkStates[lastWrittenChunk + 1]) {
 								readBytes = BUFFER_SIZE;
@@ -81,9 +82,11 @@ public class FileAssembler extends Thread {
 				}
 			}
 		} catch (IOException e) {
-			// TODO error handling
+			ErrLog.log(Level.SEVERE, LogKey.error, APILvl.mid, "FileAssembler.run()",
+					"Encountered IOException while assembling a file: \n" + e.getMessage());
 		} catch (InterruptedException e) {
-			// TODO error handling
+			ErrLog.log(Level.SEVERE, LogKey.error, APILvl.mid, "FileAssembler.run()",
+					"Encountered InterruptedException while assembling a file: \n" + e.getMessage());
 		}
 	}
 
