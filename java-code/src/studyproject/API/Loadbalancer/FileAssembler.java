@@ -68,15 +68,23 @@ public class FileAssembler extends Thread {
 					// the opened file is /tmp/file3
 					try (FileInputStream reader = new FileInputStream(new File(tmpFilePath + (lastWrittenChunk + 1)))) {
 						while (writtenBytes < chunkStates[lastWrittenChunk + 1]) {
-							if (writtenBytes + BUFFER_SIZE > chunkStates[lastWrittenChunk + 1]) {
-								readBytes = BUFFER_SIZE;
-							} else {
+							if (BUFFER_SIZE > chunkStates[lastWrittenChunk + 1] - writtenBytes) {
 								readBytes = (int) (chunkStates[lastWrittenChunk + 1] - writtenBytes);
+							} else {
+								readBytes = BUFFER_SIZE;
 							}
 							reader.read(buffer, 0, readBytes);
 							writer.write(buffer, 0, readBytes);
+							writer.flush();
+							writtenBytes += readBytes;
 						}
 					}
+					File doneTmpFile = new File(tmpFilePath + (lastWrittenChunk + 1));
+					if(!doneTmpFile.delete()){
+						ErrLog.log(Level.INFO, LogKey.warning, APILvl.mid, "FileAssembler.run()",
+								"could not delete tmp file with name " + tmpFilePath + (lastWrittenChunk + 1));
+					}
+					lastWrittenChunk++;
 				} else {
 					Thread.sleep(SLEEP_TIME);
 				}
