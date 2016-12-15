@@ -13,6 +13,7 @@ import studyproject.API.Loadbalancer.ProgressInfo;
 import studyproject.API.Lvl.Low.Handles;
 import studyproject.API.Lvl.Low.Requests;
 import studyproject.API.Lvl.Mid.Core.UserInfo;
+import studyproject.API.Lvl.Mid.ThreadMonitoring.MonitoredThread;
 import studyproject.logging.APILvl;
 import studyproject.logging.LogKey;
 
@@ -24,7 +25,7 @@ import studyproject.logging.LogKey;
  * @author Michael
  *
  */
-public class FileConnectionThread extends Thread {
+public class FileConnectionThread extends Thread implements MonitoredThread {
 
 	private UserInfo user;
 	private String checksum;
@@ -33,6 +34,8 @@ public class FileConnectionThread extends Thread {
 	private long startIndex = 0;
 	private long endIndex = 0;
 	private boolean supportLoadbalancing = false;
+	private FileOutputStream fileOutStream;
+	private boolean submitted;
 	ProgressInfo progressInfo;
 
 	/**
@@ -146,7 +149,7 @@ public class FileConnectionThread extends Thread {
 			if (file.getParentFile() != null) {
 				file.getParentFile().mkdirs();
 			}
-			FileOutputStream fileOutStream = new FileOutputStream(file);
+			fileOutStream = new FileOutputStream(file);
 			// whole file?
 			if (endIndex == 0) {
 				returnValue = Requests.getFile(outStream, checksum, startIndex, size);
@@ -179,6 +182,36 @@ public class FileConnectionThread extends Thread {
 
 		ErrLog.log(Level.INFO, LogKey.getReceived, APILvl.mid, "FileConnectionThread.run()",
 				this.getId() + ": Download of " + checksum + " finished");
+	}
+
+	@Override
+	public boolean isSubmitted() {
+		// TODO Auto-generated method stub
+		return submitted;
+	}
+
+	@Override
+	public void setSubmitted(boolean toSet) {
+		submitted = toSet;
+	}
+
+	@Override
+	public long getProgress() {
+		try {
+			if (fileOutStream != null) {
+				return fileOutStream.getChannel().position();
+			}
+		} catch (IOException e) {
+			ErrLog.log(Level.SEVERE, LogKey.error, APILvl.mid, "getProgress()",
+					"IOException thrown: " + e.getMessage());
+		}
+		return 0;
+	}
+
+	@Override
+	public boolean setProgress(double toSet) {
+		// TODO Auto-generated method stub
+		return false;
 	}
 
 }

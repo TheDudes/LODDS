@@ -78,5 +78,6 @@ public class ThreadExecutor implements Executor {
 
 	private void addToList(MonitoredThread monitoredThread) {
 		loddsModel.getTasksList().add(monitoredThread);
+		monitoredThread.setSubmitted(true);
 	}
 }
