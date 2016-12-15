@@ -21,8 +21,8 @@ import studyproject.logging.LogKey;
  */
 public class FileAssembler extends Thread {
 
-	private final long SLEEP_TIME = Long.getLong(App.properties.getProperty("fileAssemblerSleepTime"));
 	private final int BUFFER_SIZE = 4096;
+	private final long SLEEP_TIME;
 
 	private String tmpFilePath, localPath;
 	private byte[] buffer;
@@ -54,6 +54,7 @@ public class FileAssembler extends Thread {
 		this.chunksTotal = chunksTotal;
 		chunkStates = new long[this.chunksTotal];
 		buffer = new byte[BUFFER_SIZE];
+		SLEEP_TIME = Long.parseLong(App.properties.getProperty("fileAssemblerSleepTime"));
 	}
 
 	@Override
