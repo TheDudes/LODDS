@@ -137,7 +137,7 @@ public class FileConnectionThread extends Thread {
 	 */
 	public void run() {
 		ErrLog.log(Level.INFO, LogKey.getReceived, APILvl.mid, "FileConnectionThread.run()",
-				this.getId() + ": start FileConnectionThread");
+				this.getId() + ": Download " + checksum + " to " + localPath);
 		int returnValue;
 		try (Socket socket = new Socket(user.getIpAddress(), user.getPort());
 				BufferedOutputStream outStream = new BufferedOutputStream(socket.getOutputStream());
@@ -173,13 +173,12 @@ public class FileConnectionThread extends Thread {
 			}
 			fileOutStream.close();
 		} catch (IOException e) {
-			System.out.println("catch");
 			ErrLog.log(Level.SEVERE, LogKey.error, APILvl.mid, "FileConnectionThread.run()",
 					"IOException thrown: " + e.getMessage());
 		}
 
 		ErrLog.log(Level.INFO, LogKey.getReceived, APILvl.mid, "FileConnectionThread.run()",
-				this.getId() + ": finished FileConnectionThread");
+				this.getId() + ": Download of " + checksum + " finished");
 	}
 
 }
