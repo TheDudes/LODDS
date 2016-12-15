@@ -54,26 +54,30 @@ public class ThreadExecutor implements Executor {
 
 	@Override
 	public void execute(Runnable runnable) {
-		// TODO thread not executable error
-		if (!(runnable instanceof MonitoredThread))
-			return;
-
 		ThreadType threadType = ThreadType.getType(runnable);
 		// TODO thread not executable error
-		if (threadType == ThreadType.none)
+		switch (threadType) {
+		case none:
 			return;
-		if (threadType == ThreadType.fixed)
+		case fixed:
 			fixedThreadExecutor.submit(runnable);
-
-		if (threadType == ThreadType.info)
+			break;
+		case info:
 			infoExecutor.submit(runnable);
-
-		if (threadType == ThreadType.getFile)
+			break;
+		case getFile:
 			getFileExecutor.submit(runnable);
-
-		if (threadType == ThreadType.sendFile)
+			break;
+		case sendFile:
 			sendFileExecutor.submit(runnable);
-		addToList((MonitoredThread) runnable);
+			break;
+		default:
+			break;
+		}
+
+		if (runnable instanceof MonitoredThread) {
+			addToList((MonitoredThread) runnable);
+		}
 	}
 
 	private void addToList(MonitoredThread monitoredThread) {
