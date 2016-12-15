@@ -5,6 +5,8 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import studyproject.API.Lvl.Mid.Lodds.LoddsModel;
+
 /**
  * This is an executor who splits incoming runnables into 4 Executors, according
  * to their {@link ThreadType}.
@@ -23,11 +25,12 @@ public class ThreadExecutor implements Executor {
 	private ExecutorService fixedThreadExecutor;
 	private ThreadFactoryBuilder threadFactoryBuilder;
 	private Vector<ExecutorService> allExecutors = new Vector<ExecutorService>();
-	//TODO expose list or hash map with threads
+	private LoddsModel loddsModel;
+
 	/**
-	 * Default Constructor, initialises the threadFactoryBuilder and 
+	 * Default Constructor, initialises the threadFactoryBuilder and
 	 */
-	public ThreadExecutor() {
+	public ThreadExecutor(LoddsModel loddsModel) {
 		threadFactoryBuilder = new ThreadFactoryBuilder();
 		threadFactoryBuilder.setDaemon(true);
 		threadFactoryBuilder.setNamePrefix("fixedThreads");
@@ -39,6 +42,7 @@ public class ThreadExecutor implements Executor {
 		threadFactoryBuilder.setNamePrefix("fileGetter");
 		getFileExecutor = Executors.newFixedThreadPool(DEFAULT_AT_A_TIME_DOWNLOADS, threadFactoryBuilder.build());
 		addExecutorsToVector();
+		this.loddsModel = loddsModel;
 	}
 
 	private void addExecutorsToVector() {
@@ -48,18 +52,31 @@ public class ThreadExecutor implements Executor {
 		allExecutors.addElement(fixedThreadExecutor);
 	}
 
-	
-
 	@Override
 	public void execute(Runnable runnable) {
+		// TODO thread not executable error
+		if (!(runnable instanceof MonitoredThread))
+			return;
+
 		ThreadType threadType = ThreadType.getType(runnable);
+		// TODO thread not executable error
+		if (threadType == ThreadType.none)
+			return;
 		if (threadType == ThreadType.fixed)
 			fixedThreadExecutor.submit(runnable);
+
 		if (threadType == ThreadType.info)
 			infoExecutor.submit(runnable);
+
 		if (threadType == ThreadType.getFile)
 			getFileExecutor.submit(runnable);
+
 		if (threadType == ThreadType.sendFile)
 			sendFileExecutor.submit(runnable);
+		addToList((MonitoredThread) runnable);
+	}
+
+	private void addToList(MonitoredThread monitoredThread) {
+		loddsModel.getTasksList().add(monitoredThread);
 	}
 }

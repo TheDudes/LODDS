@@ -79,8 +79,8 @@ public class Lodds {
 		parallelDownloads = DEFAULT_PARALLEL_DOWNLOADS;
 		watchService = new FileWatcherController();
 		this.interfaceName = "no interface selected";
-		threadExecutor = new ThreadExecutor();
 		loadbalancer = new Loadbalancer(loadBalancingMinumum, parallelDownloads, threadExecutor);
+		threadExecutor = new ThreadExecutor(loddsModel);
 	}
 
 	/**
@@ -103,7 +103,7 @@ public class Lodds {
 		parallelDownloads = DEFAULT_PARALLEL_DOWNLOADS;
 		watchService = new FileWatcherController();
 		this.interfaceName = interfaceName;
-		threadExecutor = new ThreadExecutor();
+		threadExecutor = new ThreadExecutor(loddsModel);
 		setNetworkAddresses();
 		loadbalancer = new Loadbalancer(loadBalancingMinumum, parallelDownloads, threadExecutor);
 	}
@@ -223,8 +223,8 @@ public class Lodds {
 	 *            the index at which to stop the file transfer
 	 */
 	public void getFile(UserInfo user, String checksum, String localPath) {
-		FileConnectionThread fileConnectionThread = new FileConnectionThread(user, checksum,
-				getFileSize(checksum), localPath);
+		FileConnectionThread fileConnectionThread = new FileConnectionThread(user, checksum, getFileSize(checksum),
+				localPath);
 		threadExecutor.execute(fileConnectionThread);
 	}
 
@@ -322,7 +322,7 @@ public class Lodds {
 	 * 
 	 * 
 	 * @return 0 or error codes
-	 * @throws Exception 
+	 * @throws Exception
 	 */
 	public int shareFolder(String absolutePath) throws Exception {
 		if (Files.exists(Paths.get(absolutePath)) && Files.isDirectory(Paths.get(absolutePath))
