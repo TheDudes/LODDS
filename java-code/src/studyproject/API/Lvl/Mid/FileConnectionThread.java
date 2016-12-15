@@ -208,10 +208,4 @@ public class FileConnectionThread extends Thread implements MonitoredThread {
 		return 0;
 	}
 
-	@Override
-	public boolean setProgress(double toSet) {
-		// TODO Auto-generated method stub
-		return false;
-	}
-
 }

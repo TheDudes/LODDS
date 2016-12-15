@@ -12,7 +12,7 @@ public interface MonitoredThread {
 	 *            the number to set
 	 * @return true if successfull
 	 */
-	public boolean setProgress(double toSet);
+//	public boolean setProgress(double toSet);
 
 	public long getProgress();
 
