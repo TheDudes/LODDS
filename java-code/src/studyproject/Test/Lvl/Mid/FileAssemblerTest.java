@@ -10,6 +10,7 @@ import java.util.Vector;
 
 import org.junit.Test;
 
+import studyproject.App;
 import studyproject.API.Loadbalancer.FileAssembler;
 import studyproject.API.Loadbalancer.ProgressInfo;
 import studyproject.API.Lvl.Mid.FileConnectionThread;
@@ -33,6 +34,9 @@ public class FileAssemblerTest {
 	 */
 	@Test
 	public void testFileAssembly() {
+		App app = new App();
+		app.loadProperties();
+		
 		FileUtil.createFile("", finalFileName);
 		int chunksTotal = 3;
 		FileUtil.createFile(FileUtil.fileContents2.substring(0, 1000), tmpFilePaths + "0", false);
