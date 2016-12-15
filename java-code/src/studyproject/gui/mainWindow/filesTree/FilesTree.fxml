@@ -15,7 +15,7 @@
       <TreeView fx:id="filesTreeView" prefHeight="200.0" prefWidth="200.0" VBox.vgrow="ALWAYS" />
       <AnchorPane prefHeight="15.0" prefWidth="50.0" VBox.vgrow="NEVER">
          <children>
-            <Button fx:id="downloadButton" mnemonicParsing="false" prefHeight="15.0" prefWidth="130.0" text="Download (100)" AnchorPane.rightAnchor="0.0" />
+            <Button fx:id="downloadButton" mnemonicParsing="false" prefHeight="15.0" prefWidth="130.0" text="Download" AnchorPane.rightAnchor="0.0" />
          </children>
       </AnchorPane>
    </children>
