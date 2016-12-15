@@ -43,6 +43,10 @@
 (defun event-callback (event)
   (format t "log: ~a~%" event))
 
+(defun update-load (load-diff)
+  (bt:with-lock-held ((current-load-lock *server*))
+    (incf (current-load *server*) load-diff)))
+
 (defmethod initialize-instance ((server lodds-server) &rest initargs)
   (declare (ignorable initargs))
   (call-next-method)
