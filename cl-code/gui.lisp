@@ -70,13 +70,13 @@
   QTreeView::branch:has-children:!has-siblings:closed,
   QTreeView::branch:closed:has-children:has-siblings {
     border-image: none;
-    image: url(folder-closed.png);
+    image: url(./res/folder-closed.png);
   }
 
   QTreeView::branch:open:has-children:!has-siblings,
   QTreeView::branch:open:has-children:has-siblings  {
     border-image: none;
-    image: url(folder-open.png);
+    image: url(./res/folder-open.png);
   }")
 
 (define-widget main-window (QMainWindow) ())
