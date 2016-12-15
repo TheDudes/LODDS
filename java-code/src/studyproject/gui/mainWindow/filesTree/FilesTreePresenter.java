@@ -105,7 +105,6 @@ public class FilesTreePresenter implements Initializable {
 			parent.getChildren().add(folderToAdd);
 			addTreeItem(infoToAdd, subPaths, ++index, folderToAdd);
 		}
-
 	}
 
 	private void downloadPressed() {
@@ -134,11 +133,9 @@ public class FilesTreePresenter implements Initializable {
 			if (fileCoreInfo.getChecksum() == null) {
 				// continue because this item is a folder. it has no checksum.
 				continue;
-			}
-			System.out.println("FilePath: " + absolutePath + fileCoreInfo.getFilePath());
+			} 
 			mainWindowModel.getLodds().getFile(userListModel.getSelectedUser().get(), fileCoreInfo.getChecksum(),
 					absolutePath + fileCoreInfo.getFilePath());
-			// tasksListModel.getTasksListPresenter().addTask("Download: " + fileCoreInfo.getFileName(), "Downloading...");
 		}
 		return;
 	}
