@@ -206,8 +206,10 @@
     (q+:set-resize-mode header +los-checksum+ (q+:qheaderview.resize-to-contents)))
 
   (setf (q+:window-title main-window) "LODDS")
+  (q+:set-window-icon main-window (q+:make-qicon "./res/lodds.png"))
   (q+:resize main-window 800 450)
   (q+:set-style-sheet main-window *style-sheet*)
+
   (let ((settings-dock (q+:make-qdockwidget "Settings" main-window))
         (log-dock (q+:make-qdockwidget "Log" main-window))
         (user-list-dock (q+:make-qdockwidget "User List" main-window)))
