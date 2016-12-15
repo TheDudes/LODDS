@@ -308,7 +308,8 @@
               (setf socket
                     (usocket:socket-connect ip port
                                             :element-type '(unsigned-byte 8)))
-              (lodds.low-level-api:get-file (usocket:socket-stream socket) checksum 0 size))
+              (lodds.low-level-api:get-file (usocket:socket-stream socket) checksum 0 size)
+              (update-load size))
             (unless local-file-stream
               (setf local-file-stream
                     (open local-file-path :direction :output
@@ -321,8 +322,10 @@
                                       local-file-stream
                                       (if (> left-to-download chunk-size)
                                           (progn (incf read-bytes chunk-size)
+                                                 (update-load (- chunk-size))
                                                  chunk-size)
                                           (progn (incf read-bytes left-to-download)
+                                                 (update-load (- left-to-download))
                                                  left-to-download)))
               (finish-output local-file-stream)
               (if (eql size read-bytes)
