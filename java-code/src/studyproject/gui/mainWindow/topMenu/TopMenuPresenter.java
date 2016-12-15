@@ -19,17 +19,15 @@ import studyproject.gui.settingsWindow.SettingsWindowView;
 
 public class TopMenuPresenter implements Initializable {
 
-	public static Stage stage;
-
 	@FXML
 	MenuItem settingsItem;
 	@FXML
 	MenuItem shareFolder;
-
-	private File chosenFolder;
-
 	@Inject
 	MainWindowModel mainWindowModel;
+
+	public static Stage stage;
+	private File chosenFolder;
 
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {
