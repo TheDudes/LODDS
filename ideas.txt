@@ -23,3 +23,11 @@ Client Implementation Ideas:
      - ncurses
      - qt
      - oneshot/shell program to advertise/get/send/...
+     
+ From the HCI-Lessons:
+     - Remove Checksum from GUI, no user wants to know that
+     - @Lisp GUI: Needs a Search for files and user
+     - @Java GUI: Needs a file search
+     - Split Username@IP:Port into 3 collumns: username; IP; port
+     - Default-Userfriendly-Layout (No IP, no checksum, no LogArea)
+     - double-click on a file opens the download area e.g. in a pop-up
