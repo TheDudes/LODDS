@@ -264,7 +264,7 @@
   (lodds.task:submit-task
    (if user
        (make-instance 'lodds.task:task-get-file-from-user
-                      :name "get-file"
+                      :name "get-file-from-user"
                       :checksum checksum
                       :user user
                       :local-file-path local-file-path)
