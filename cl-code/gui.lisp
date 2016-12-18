@@ -167,7 +167,7 @@
 (define-subwidget (main-window download) (q+:make-qwidget main-window)
   (let* ((layout (q+:make-qgridlayout main-window))
          (folder-edit (q+:make-qlineedit main-window))
-         (folder-completer (q+:make-qcompleter))
+         (folder-completer (q+:make-qcompleter main-window))
          (download-button (q+:make-qpushbutton "Download" main-window))
          (folder-dir-model (q+:make-qdirmodel folder-completer)))
     (q+:set-filter folder-dir-model (q+:qdir.dirs))
