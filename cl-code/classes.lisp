@@ -134,7 +134,7 @@
                      :type string
                      :documentation "Name of the File requested to send")))
 
-(defclass task-get-file-from-user (task)
+(defclass task-get-file (task)
   ((get-local-file-path :accessor get-local-file-path
                         :initform (error "Specify a local-file-path pls.")
                         :initarg :local-file-path
@@ -144,24 +144,6 @@
                         which is getting downloaded from another
                         client, is getting saved on the local
                         filesystem.")
-   (get-user :accessor get-user
-             :initform (error "Specify a user pls.")
-             :initarg :user
-             :type string
-             :documentation "The User where the file is getting
-             downloaded from. User has to be specified with his ip and
-             port in the following format: username@ip:port, for
-             example: d4ryus@192.168.2.101:1234")
-   (get-ip :accessor get-ip
-           :initform nil
-           :type string
-           :documentation "Ip of User, will be set on initialize
-           instance. Can be parsed from get-user.")
-   (get-port :accessor get-port
-             :initform nil
-             :type fixnum
-             :documentation "Port of User, will be set on initialize
-             instance. Can be parsed from get-user.")
    (get-checksum :accessor get-checksum
                  :initform (error "Specify a checksum pls.")
                  :initarg :checksum
@@ -192,6 +174,36 @@
                    :documentation "Bignum describing how many bytes
                    have been read from the socket and saved to the
                    file.")))
+
+(defclass task-get-file-from-user (task-get-file)
+  ((get-user :accessor get-user
+             :initform (error "Specify a user pls.")
+             :initarg :user
+             :type string
+             :documentation "The User where the file is getting
+             downloaded from. User has to be specified with his ip and
+             port in the following format: username@ip:port, for
+             example: d4ryus@192.168.2.101:1234")
+   (get-ip :accessor get-ip
+           :initform nil
+           :type string
+           :documentation "Ip of User, will be set on initialize
+           instance. Can be parsed from get-user.")
+   (get-port :accessor get-port
+             :initform nil
+             :type fixnum
+             :documentation "Port of User, will be set on initialize
+             instance. Can be parsed from get-user.")))
+
+(defclass task-get-file-from-users (task-get-file)
+  ((get-current-part :accessor get-current-part
+                     :initform 0
+                     :type bignum
+                     :documentation "The current part which is downloaded.")
+   (get-read-bytes-part :accessor get-read-bytes-part
+                        :initform 0
+                        :type bignum
+                        :documentation "Bytes read of current part.")))
 
 ;; lodds.event classes
 

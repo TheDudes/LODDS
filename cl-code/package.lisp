@@ -79,16 +79,21 @@
            #:request-timeout
            #:request-filename
            ;; task-get-file and accerssors
-           #:task-get-file-from-user
            #:get-local-file-path
-           #:get-user
-           #:get-ip
-           #:get-port
            #:get-checksum
            #:get-size
            #:get-socket
            #:get-local-file-stream
-           #:get-read-bytes))
+           #:get-read-bytes
+           ;; task-get-file-from-user and accerssors
+           #:task-get-file-from-user
+           #:get-user
+           #:get-ip
+           #:get-port
+           ;; task-get-file-from-users and accerssors
+           #:task-get-file-from-users
+           #:get-current-part
+           #:get-read-bytes-part))
 
 (defpackage #:lodds.watcher
   (:use #:cl)
