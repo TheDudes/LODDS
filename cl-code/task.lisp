@@ -49,11 +49,13 @@
   (print-unreadable-object (object stream :type t :identity t)
     (with-accessors ((name name)
                      (local-file-path get-local-file-path)
+                     (size get-size)
                      (user get-user)
                      (checksum get-checksum)) object
-      (format stream "~a :local-file-path ~a :user ~a :checksum ~a"
+      (format stream "~a :local-file-path ~a size: ~a :user ~a :checksum ~a"
               name
               local-file-path
+              (lodds.core:format-size size)
               user
               checksum))))
 
