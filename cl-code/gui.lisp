@@ -180,41 +180,47 @@
   (q+:add-item download-user-selection "Any"))
 
 (define-subwidget (main-window download) (q+:make-qwidget main-window)
-  (let ((download-layout (q+:make-qvboxlayout main-window)))
-    (q+:set-layout download download-layout)
-    (q+:add-widget download-layout download-checksum)
-    (let ((file-selection (q+:make-qwidget main-window))
-          (layout (q+:make-qhboxlayout main-window))
-          (folder-selection-button (q+:make-qpushbutton "Change Directory" main-window))
-          (folder-edit (q+:make-qlineedit main-window))
-          (download-button (q+:make-qpushbutton "Download" main-window)))
-      (connect folder-selection-button "pressed()"
-               (lambda ()
-                 (let ((result (q+:qfiledialog-get-existing-directory)))
-                   (when (> (length result) 0)
-                     (q+:set-text folder-edit result)))))
-      (q+:set-layout file-selection layout)
-      (q+:add-widget layout folder-selection-button)
-      (q+:add-widget layout folder-edit)
-      (q+:add-widget layout download-file)
-      (q+:add-widget download-layout file-selection)
-      (q+:add-widget download-layout download-user-selection)
-      (connect download-button "pressed()"
-               (lambda ()
-                 (let ((user (q+:current-text download-user-selection))
-                       (directory (q+:text folder-edit))
-                       (filename (q+:text download-file)))
-                   (unless (char= #\/
-                                  (char directory (- (length directory) 1))))
-                   (lodds:get-file (concatenate 'string
-                                                (if (char= #\/ (char directory (- (length directory) 1)))
-                                                    directory
-                                                    (concatenate 'string directory "/"))
-                                                filename)
-                                   (q+:text download-checksum)
-                                   (unless (string= user "Any")
-                                     user)))))
-      (q+:add-widget download-layout download-button))))
+  (let* ((layout (q+:make-qgridlayout main-window))
+         (folder-edit (q+:make-qlineedit main-window))
+         (folder-completer (q+:make-qcompleter))
+         (download-button (q+:make-qpushbutton "Download" main-window))
+         (folder-dir-model (q+:make-qdirmodel folder-completer)))
+    (q+:set-filter folder-dir-model (q+:qdir.dirs))
+    (q+:set-model folder-completer folder-dir-model)
+    (q+:set-completer folder-edit folder-completer)
+    (q+:set-layout download layout)
+    ;; first row - checksum
+    (q+:add-widget layout (q+:make-qlabel "Checksum:" main-window) 0 0)
+    (q+:add-widget layout download-checksum 0 1 1 -1)
+    ;; second row - local file location
+    (q+:add-widget layout (q+:make-qlabel "Download to:" main-window) 1 0)
+    (q+:add-widget layout folder-edit 1 1 1 8)
+    (q+:add-widget layout download-file 1 9 1 4)
+    ;; third row - user selction and download button
+    (q+:add-widget layout (q+:make-qlabel "User:" main-window) 2 0)
+    (q+:add-widget layout download-user-selection 2 1 1 11)
+    (q+:add-widget layout download-button 2 12 1 1)
+    (connect download-button "pressed()"
+             (lambda ()
+               (let ((user (q+:current-text download-user-selection))
+                     (directory (q+:text folder-edit))
+                     (filename (q+:text download-file)))
+                 (cond
+                   ;; TODO: popup error
+                   ((eql 0 (length directory))
+                     (lodds.event:push-event :error (list "local directory not selected")))
+                   ((eql 0 (length filename))
+                     (lodds.event:push-event :error (list "no local filename given")))
+                   ((not (uiop:directory-exists-p directory))
+                     (lodds.event:push-event :error (list "local directory does not exist")))
+                   (t (lodds:get-file (concatenate 'string
+                                                   (if (char= #\/ (char directory (- (length directory) 1)))
+                                                       directory
+                                                       (concatenate 'string directory "/"))
+                                                   filename)
+                                      (q+:text download-checksum)
+                                      (unless (string= user "Any")
+                                        user)))))))))
 
 (define-subwidget (main-window log-widget) (q+:make-qsplitter main-window)
   (q+:add-widget log-widget log-checkboxes-widget)
