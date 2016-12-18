@@ -170,15 +170,15 @@
          (folder-completer (q+:make-qcompleter main-window))
          (download-button (q+:make-qpushbutton "Download" main-window))
          (folder-dir-model (q+:make-qdirmodel folder-completer)))
-    (q+:set-filter folder-dir-model (q+:qdir.dirs))
-    (q+:set-model folder-completer folder-dir-model)
-    (q+:set-completer folder-edit folder-completer)
     (q+:set-layout download layout)
     ;; first row - checksum
     (q+:add-widget layout (q+:make-qlabel "Checksum:" main-window) 0 0)
     (q+:add-widget layout download-checksum 0 1 1 -1)
     ;; second row - local file location
     (q+:add-widget layout (q+:make-qlabel "Download to:" main-window) 1 0)
+    (q+:set-filter folder-dir-model (q+:qdir.dirs))
+    (q+:set-model folder-completer folder-dir-model)
+    (q+:set-completer folder-edit folder-completer)
     (q+:add-widget layout folder-edit 1 1 1 8)
     (q+:add-widget layout download-file 1 9 1 4)
     ;; third row - user selction and download button
