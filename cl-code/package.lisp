@@ -6,7 +6,8 @@
            #:copy-stream
            #:get-timestamp
            #:str-case
-           #:split-directory))
+           #:split-directory
+           #:format-size))
 
 (defpackage #:lodds.low-level-api
   (:use #:cl
