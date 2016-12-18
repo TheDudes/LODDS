@@ -22,12 +22,12 @@
    - [ ] Download Button with Icon
 
 * Lodds Lib
-** TODO missing [1/4]
+** TODO missing [2/5]
    - [ ] logging
    - [ ] Error Handling
    - [X] directory watcher (cl-async)
    - [ ] initargs (interface -> overwrite initialize-instance)
-   - [ ] Get file with load balancing
+   - [X] Get file with load balancing
 
 ** TODO Code changes [4/5]
    - [X] rename and export accessors

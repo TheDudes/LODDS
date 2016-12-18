@@ -94,7 +94,8 @@
            ;; task-get-file-from-users and accerssors
            #:task-get-file-from-users
            #:get-current-part
-           #:get-read-bytes-part))
+           #:get-read-bytes-part
+           #:get-part-size))
 
 (defpackage #:lodds.watcher
   (:use #:cl)

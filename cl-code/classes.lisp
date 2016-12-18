@@ -203,7 +203,13 @@
    (get-read-bytes-part :accessor get-read-bytes-part
                         :initform 0
                         :type bignum
-                        :documentation "Bytes read of current part.")))
+                        :documentation "Bytes read of current part.")
+   (get-part-size :accessor get-part-size
+                  :initform 0
+                  :type bignum
+                  :documentation "Size limit after which lodds checks
+                                  again for a the user with the lowest
+                                  load.")))
 
 ;; lodds.event classes
 
