@@ -27,21 +27,6 @@
 (defvar +user-list-last-change+ 2)
 (defvar +user-list-id+ 3)
 
-(let ((xb (ash 1 53)) ;; 8xb
-      (tb (ash 1 43)) ;; 8tb
-      (gb (ash 1 33)) ;; 8gb
-      (mb (ash 1 23)) ;; 8mb
-      (kb (ash 1 13)));; 8kb
-  (defun format-size (size)
-    "formats given size (number) to a more readable format (string)"
-    (cond
-      ((> size xb) (format nil "~axb" (ash size -50)))
-      ((> size tb) (format nil "~atb" (ash size -40)))
-      ((> size gb) (format nil "~agb" (ash size -30)))
-      ((> size mb) (format nil "~amb" (ash size -20)))
-      ((> size kb) (format nil "~akb" (ash size -10)))
-      (t           (format nil "~ab " size)))))
-
 (defun generate-timestamp ()
   "Returns current date as a string."
   (multiple-value-bind (sec min hr day mon yr dow dst-p tz)
@@ -347,7 +332,7 @@
                                 (lambda (place) (q+:child element place)))
                   (q+:set-text element
                                +los-size+
-                               (format-size
+                               (lodds.core:format-size
                                 (let* ((id (q+:text element +los-id+))
                                        (old-size (gethash id *id-mapper*)))
                                   (setf (gethash id *id-mapper*)
@@ -363,7 +348,7 @@
       (q+:set-text new-entry +los-id+ entry-id)
       (setf (gethash entry-id *id-mapper*) (parse-integer size)))
     (q+:set-text new-entry +los-name+ (car path))
-    (q+:set-text new-entry +los-size+ (format-size (parse-integer size)))
+    (q+:set-text new-entry +los-size+ (lodds.core:format-size (parse-integer size)))
     (q+:set-text-alignment new-entry +los-size+ (q+:qt.align-right))
     ;; only add checksums on files, not on folders
     (unless (cdr path)
@@ -419,7 +404,7 @@
                             (funcall remove-child-fn i)
                             (q+:set-text element
                                          +los-size+
-                                         (format-size
+                                         (lodds.core:format-size
                                           (let* ((id (q+:text element +los-id+))
                                                  (old-size (gethash id *id-mapper*)))
                                             (setf (gethash id *id-mapper*)
@@ -544,7 +529,7 @@
       (setf (gethash entry-id *id-mapper*)
             new-entry)
       (q+:set-text new-entry +user-list-name+ user)
-      (q+:set-text new-entry +user-list-load+ (format-size (parse-integer load)))
+      (q+:set-text new-entry +user-list-load+ (lodds.core:format-size (parse-integer load)))
       (q+:set-text new-entry +user-list-last-change+ last-change)
       (q+:set-text new-entry +user-list-id+ entry-id)
       (q+:set-text-alignment new-entry +user-list-load+ (q+:qt.align-right)))))
@@ -571,7 +556,7 @@
     (when entry
       (q+:set-text entry
                    +user-list-load+
-                   (format-size (parse-integer load)))
+                   (lodds.core:format-size (parse-integer load)))
       (q+:set-text entry
                    +user-list-last-change+
                    last-change))))

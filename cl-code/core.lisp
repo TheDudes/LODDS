@@ -82,3 +82,18 @@
     (values
      (subseq directory-path 0 slash-position)
      (subseq directory-path slash-position))))
+
+(let ((xb (ash 1 53)) ;; 8xb
+      (tb (ash 1 43)) ;; 8tb
+      (gb (ash 1 33)) ;; 8gb
+      (mb (ash 1 23)) ;; 8mb
+      (kb (ash 1 13)));; 8kb
+  (defun format-size (size)
+    "formats given size (number) to a more readable format (string)"
+    (cond
+      ((> size xb) (format nil "~axb" (ash size -50)))
+      ((> size tb) (format nil "~atb" (ash size -40)))
+      ((> size gb) (format nil "~agb" (ash size -30)))
+      ((> size mb) (format nil "~amb" (ash size -20)))
+      ((> size kb) (format nil "~akb" (ash size -10)))
+      (t           (format nil "~ab " size)))))
