@@ -308,7 +308,7 @@
                (when local-file-stream
                  (close local-file-stream :abort error-occured))))
       (handler-case
-          (let ((chunk-size 8388608))
+          (let ((chunk-size (ash 1 21))) ;; 2 MB
             (unless socket
               (setf socket
                     (usocket:socket-connect ip port
