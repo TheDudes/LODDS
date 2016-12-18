@@ -293,8 +293,7 @@
                    (size lodds.task:get-size)
                    (read-bytes lodds.task:get-read-bytes)
                    (socket lodds.task:get-socket)
-                   (local-file-stream lodds.task:get-local-file-stream)
-                   (get-read-bytes lodds.task:get-read-bytes)) task
+                   (local-file-stream lodds.task:get-local-file-stream)) task
     (labels ((cleanup (&optional error-occured)
                (unless error-occured
                  (lodds.event:push-event :info (list "file transfer completed.")))
