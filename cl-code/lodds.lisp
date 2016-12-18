@@ -177,13 +177,19 @@
 (defun get-file-info (checksum &optional user)
   "Returns information about the given checksum.
   If user is left out it will return a list of user who own the given
-  file. The Size and a list of Filenames matching the checksum is
-  also returned.
+  file. The Load, Size and a list of Filenames matching the checksum
+  is also returned.
 
   CL-USER> (get-file-info \"03x87fjlwd...\")
-  => ((\"d4ryus@192.168.2.2:4567\" 1234 (\"/shares/a.txt\"
-                                         \"/shares/subfolder/x.txt\"))
-      (\"pete@192.168.2.4:1234\" 1234 (\"/public/z.txt\")))
+  => ((\"d4ryus@192.168.2.2:4567\" 32 1234 (\"/shares/a.txt\"
+                                            \"/shares/subfolder/x.txt\"))
+      (\"pete@192.168.2.4:1234\" 1320 1234 (\"/public/z.txt\")))
+  which states that d4ryus@... and pete@... share the given file,
+  d4ryus@...  has a load of 32 bytes and the file is located at
+  \"shares/a.txt\" and \"shares/subfolder/x.txt\" on his
+  system. pete@... has a load of 1320 bytes and the file is located at
+  \"/public/z.txt\". The third element in the list describes the
+  filesize, which is 1234 on both.
 
   CL-USER> (get-file-info \"03x87fjlwd...\" \"d4ryus@192.168.2.2:4567\")
   => (1234 (\"/shares/a.txt\" \"/shares/subfolder/x.txt\"))"
@@ -203,7 +209,7 @@
        (loop :for user :in (get-user-list)
              :collect (let ((info (get-file-info checksum user)))
                         (when info
-                          (cons user info)))))))
+                          (apply #'list user (c-load (get-user-info user)) info)))))))
 
 (defun get-file-changes (current-timestamp &optional (timestamp nil))
   "returns a list of all changes since the given timestamp. if
