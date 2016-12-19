@@ -286,8 +286,7 @@
                    (t-size lodds.task:get-size)) task
     (let ((user (getf initargs :user))
           (checksum (getf initargs :checksum)))
-      (destructuring-bind (ip port) (cl-strings:split (second (cl-strings:split user #\@))
-                                                      #\:)
+      (lodds.core:split-user-identifier (name ip port) user
         (setf t-ip ip
               t-port (parse-integer port)))
       (setf t-size
@@ -386,9 +385,7 @@
                                     (> best-load load))
                             (setf best-user user
                                   best-load load)))
-                (destructuring-bind (ip port) (cl-strings:split
-                                               (second (cl-strings:split best-user #\@))
-                                               #\:)
+                (lodds.core:split-user-identifier (name ip port) best-user
                   (lodds.event:push-event :debug (list "best user:" best-user
                                                        ", ip:" ip
                                                        ", port:" port

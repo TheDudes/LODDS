@@ -7,7 +7,8 @@
            #:get-timestamp
            #:str-case
            #:split-directory
-           #:format-size))
+           #:format-size
+           #:split-user-identifier))
 
 (defpackage #:lodds.low-level-api
   (:use #:cl

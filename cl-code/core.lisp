@@ -97,3 +97,10 @@
       ((> size mb) (format nil "~amb" (ash size -20)))
       ((> size kb) (format nil "~akb" (ash size -10)))
       (t           (format nil "~ab " size)))))
+
+(defmacro split-user-identifier ((name ip port) user &body body)
+  (let ((ip+port (gensym "ip+port")))
+    `(destructuring-bind (,name ,ip+port) (cl-strings:split ,user #\@)
+       (declare (ignorable ,name))
+       (destructuring-bind (,ip ,port) (cl-strings:split ,ip+port #\:)
+         ,@body))))
