@@ -148,7 +148,8 @@
     (unless (dir-watchers watcher)
       (bt:with-lock-held ((list-of-changes-lock watcher))
         (setf (list-of-changes watcher) nil
-              (started-tracking watcher) 0))
+              (started-tracking watcher) 0
+              (last-change watcher) (lodds.core:get-timestamp)))
       (setf (lodds.subsystem:alive-p watcher) nil)
       (lodds.event:push-event (lodds.subsystem:name watcher)
                               (list "stopped!")))))
