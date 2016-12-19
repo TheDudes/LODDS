@@ -29,6 +29,10 @@
 (defvar +user-list-last-change+ 4)
 (defvar +user-list-id+ 5)
 
+;; directories-shared columns
+(defvar +directories-shared-path+ 0)
+(defvar +directories-shared-remove-button+ 1)
+
 (defparameter *container*
   (make-hash-table :test 'equalp)
   "hash-table used to pass data between threads and ui Thread.")
@@ -104,18 +108,12 @@
          (lodds.subsystem:start (lodds:get-subsystem :tasker))
          (lodds.subsystem:start (lodds:get-subsystem :listener))
          (lodds.subsystem:start (lodds:get-subsystem :advertiser))
-         (lodds.subsystem:start (lodds:get-subsystem :handler))
-         (lodds.watcher:share-folder "~/ffff/A/")
-         (lodds.watcher:share-folder "~/ffff/B/")
-         (lodds.watcher:share-folder "~/ffff/C/"))
+         (lodds.subsystem:start (lodds:get-subsystem :handler)))
   (:item ("Stop" (ctrl s))
          (lodds.subsystem:stop (lodds:get-subsystem :tasker))
          (lodds.subsystem:stop (lodds:get-subsystem :listener))
          (lodds.subsystem:stop (lodds:get-subsystem :advertiser))
-         (lodds.subsystem:stop (lodds:get-subsystem :handler))
-         (lodds.watcher:unshare-folder "~/ffff/A/")
-         (lodds.watcher:unshare-folder "~/ffff/B/")
-         (lodds.watcher:unshare-folder "~/ffff/C/"))
+         (lodds.subsystem:stop (lodds:get-subsystem :handler)))
   (:separator)
   (:item "Reload Stylesheet"
          (q+:set-style-sheet main-window *style-sheet*))
@@ -257,6 +255,29 @@
     (q+:set-resize-mode header +user-list-load+ (q+:qheaderview.resize-to-contents))
     (q+:set-resize-mode header +user-list-last-change+ (q+:qheaderview.resize-to-contents))))
 
+(define-subwidget (main-window directories-shared) (q+:make-qtreewidget main-window)
+  (q+:set-column-count directories-shared 2)
+  (q+:set-header-labels directories-shared (list "Path" "Remove"))
+  (q+:set-alternating-row-colors directories-shared t)
+
+  (let ((header (q+:header directories-shared)))
+    (q+:set-stretch-last-section header nil)
+    (q+:set-resize-mode header +directories-shared-path+ (q+:qheaderview.stretch))
+    (q+:set-resize-mode header +directories-shared-remove-button+ (q+:qheaderview.resize-to-contents))))
+
+(define-subwidget (main-window share-widget) (q+:make-qwidget main-window)
+  (let ((layout (q+:make-qvboxlayout main-window))
+        (share-directory-button (q+:make-qpushbutton "Share Directory" main-window)))
+    (q+:set-layout share-widget layout)
+    (connect share-directory-button "pressed()"
+             (lambda ()
+               (let ((dir (q+:qfiledialog-get-existing-directory)))
+                 (when (> (length dir)
+                          0)
+                   (lodds.watcher:share-folder dir)))))
+    (q+:add-widget layout share-directory-button)
+    (q+:add-widget layout directories-shared)))
+
 (define-subwidget (main-window list-of-shares) (q+:make-qtreewidget main-window)
   (connect list-of-shares "itemClicked(QTreeWidgetItem *, int)"
            (lambda (item column)
@@ -293,6 +314,7 @@
   (let ((settings-dock (q+:make-qdockwidget "Settings" main-window))
         (log-dock (q+:make-qdockwidget "Log" main-window))
         (user-list-dock (q+:make-qdockwidget "User List" main-window))
+        (directories-shared-dock (q+:make-qdockwidget "Directories Shared" main-window))
         (download-dock (q+:make-qdockwidget "Download File" main-window)))
 
     ;; download-file dock
@@ -305,11 +327,15 @@
       (q+:set-maximum-height dock-content 48)
       (q+:add-row dock-layout "Interface:" interfaces)
       (q+:set-widget settings-dock dock-content))
-    (q+:add-dock-widget main-window (q+:qt.left-dock-widget-area) settings-dock)
+    (q+:add-dock-widget main-window (q+:qt.right-dock-widget-area) settings-dock)
 
     ;; user-dock
     (q+:set-widget user-list-dock user-list)
     (q+:add-dock-widget main-window (q+:qt.left-dock-widget-area) user-list-dock)
+
+    ;; directories-shared-dock
+    (q+:set-widget directories-shared-dock share-widget)
+    (q+:add-dock-widget main-window (q+:qt.right-dock-widget-area) directories-shared-dock)
 
     ;; log-dock
     (q+:set-widget log-dock log-widget)
@@ -321,6 +347,7 @@
       (q+:add-action menu (q+:toggle-view-action log-dock))
       (q+:add-action menu (q+:toggle-view-action settings-dock))
       (q+:add-action menu (q+:toggle-view-action user-list-dock))
+      (q+:add-action menu (q+:toggle-view-action directories-shared-dock))
       (q+:add-action menu (q+:toggle-view-action download-dock))))
 
   (setf (q+:central-widget main-window) list-of-shares))
@@ -334,6 +361,8 @@
 (define-signal (main-window add-user) (string string string))
 (define-signal (main-window remove-user) (string))
 (define-signal (main-window update-user) (string string string))
+(define-signal (main-window add-directory) (string))
+(define-signal (main-window remove-directory) (string))
 
 (define-slot (main-window interfaces) ((selected-item string))
   (declare (connected interfaces (current-index-changed string)))
@@ -594,6 +623,27 @@
                   (q+:take-top-level-item user-list i)
                   (return))))))
 
+(define-slot (main-window add-directory) ((path string))
+  (declare (connected main-window (add-directory string)))
+  (let* ((new-entry (q+:make-qtreewidgetitem directories-shared))
+         (remove-button (q+:make-qpushbutton "Del" main-window)))
+    (q+:set-text new-entry +directories-shared-path+ path)
+    (connect remove-button "pressed()"
+             (lambda ()
+               (lodds.watcher:unshare-folder path)))
+    (q+:set-item-widget directories-shared
+                        new-entry
+                        +directories-shared-remove-button+
+                        remove-button)))
+
+(define-slot (main-window remove-directory) ((path string))
+  (declare (connected main-window (remove-directory string)))
+  (loop :for i :from 0 :to (q+:top-level-item-count directories-shared)
+        :do (let ((child (q+:top-level-item directories-shared i)))
+              (when (string= path (q+:text child +directories-shared-path+))
+                (q+:take-top-level-item directories-shared i)
+                (return)))))
+
 (define-slot (main-window update-user) ((user string)
                                         (load string)
                                         (last-change string))
@@ -680,6 +730,18 @@
                             :event-type :list-update)
   (lodds.event:add-callback :gui
                             (lambda (event)
+                              (signal! window
+                                       (add-directory string)
+                                       (cadr event)))
+                            :event-type :shared-directory)
+  (lodds.event:add-callback :gui
+                            (lambda (event)
+                              (signal! window
+                                       (remove-directory string)
+                                       (cadr event)))
+                            :event-type :unshared-directory)
+  (lodds.event:add-callback :gui
+                            (lambda (event)
                               (cb-client-removed window (second event)))
                             :event-type :client-removed)
   (lodds.event:add-callback :gui
@@ -714,7 +776,9 @@
                          (lodds:c-file-table-name user-info))
                 (signal! window (update-entries string string)
                          (container-put (reverse changes))
-                         user)))))
+                         user))))
+  (loop :for dir :in (lodds.watcher:get-shared-folders)
+        :do (signal! window (add-directory string) dir)))
 
 (defun cleanup ()
   ;; remove all attached callbacks
@@ -722,6 +786,10 @@
                                :event-type :list-update)
   (lodds.event:remove-callback :gui
                                :event-type :client-removed)
+  (lodds.event:remove-callback :gui
+                               :event-type :shared-directory)
+  (lodds.event:remove-callback :gui
+                               :event-type :unshared-directory)
   (lodds.event:remove-callback :gui)
   (lodds.event:remove-callback :gui
                                :event-type :client-added)
