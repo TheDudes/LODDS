@@ -253,7 +253,8 @@
 (defun generate-info-response (timestamp)
   (let* ((started-tracking (lodds.watcher:started-tracking (get-subsystem :watcher)))
          (type (if (or (eql 0 timestamp)
-                       (< timestamp started-tracking))
+                       (< timestamp started-tracking)
+                       (not (lodds.subsystem:alive-p (get-subsystem :watcher))))
                    :all
                    :upd))
          (current-timestamp (lodds.core:get-timestamp))
