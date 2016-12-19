@@ -583,17 +583,16 @@
 
 (define-slot (main-window remove-user) ((user string))
   (declare (connected main-window (remove-user string)))
-  (split-user-identifier (name ip port) user
+  (lodds.core:split-user-identifier (name ip port) user
     (loop :for i :from 0 :to (q+:top-level-item-count user-list)
           :do (let ((child (q+:top-level-item user-list i)))
-                (split-user-identifier (name ip port) user
-                  (when (and (string= name (q+:text child +user-list-name+))
-                             (string= ip (q+:text child +user-list-ip+))
-                             (string= port (q+:text child +user-list-port+)))
-                    (remhash (q+:text child +user-list-id+)
-                             *id-mapper*)
-                    (q+:take-top-level-item user-list i)
-                    (return)))))))
+                (when (and (string= name (q+:text child +user-list-name+))
+                           (string= ip (q+:text child +user-list-ip+))
+                           (string= port (q+:text child +user-list-port+)))
+                  (remhash (q+:text child +user-list-id+)
+                           *id-mapper*)
+                  (q+:take-top-level-item user-list i)
+                  (return))))))
 
 (define-slot (main-window update-user) ((user string)
                                         (load string)
@@ -610,17 +609,6 @@
       (q+:set-text entry
                    +user-list-last-change+
                    last-change))))
-
-(define-slot (main-window remove-user) ((user string))
-  (declare (connected main-window (remove-user string)))
-  (loop :for i :from 0 :to (q+:top-level-item-count user-list)
-        :do (let* ((child (q+:top-level-item user-list i))
-                   (child-name (q+:text child +user-list-name+)))
-              (when (string= child-name user)
-                (remhash (q+:text child +user-list-id+)
-                         *id-mapper*)
-                (q+:take-top-level-item user-list i)
-                (return)))))
 
 (defun cb-list-update (main-window event)
   "callback which will be called on a :list-update event"
