@@ -199,8 +199,8 @@
       (push new-dir-watcher
             (dir-watchers watcher))
       (setf (lodds.subsystem:alive-p watcher) t)
-      (lodds.event:push-event (lodds.subsystem:name watcher)
-                              (list :watching folder-path)))))
+      (lodds.event:push-event :shared-directory
+                              (list folder-path)))))
 
 (defun unshare-folder (folder-path)
   "unshare the given folder"
@@ -211,5 +211,8 @@
                                :key #'cl-fs-watcher:dir
                                :test #'string=)))
         (if rem-watcher
-            (stop-dir-watcher rem-watcher)
+            (progn
+              (lodds.event:push-event :unshared-directory
+                                      (list folder-path))
+              (stop-dir-watcher rem-watcher))
             (error "TODO: could not find watcher to unshare with given folder-path"))))))
