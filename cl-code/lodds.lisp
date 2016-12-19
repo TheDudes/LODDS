@@ -146,9 +146,8 @@
 (defun get-timestamp-last-change ()
   "returns the timestamp of the last change, who would have thought?
   :D"
-  (caar
-   (lodds.watcher:list-of-changes
-    (get-subsystem :watcher))))
+  (lodds.watcher:last-change
+   (get-subsystem :watcher)))
 
 (defun get-user-list ()
   "Returns List of users who advertised themselfs.

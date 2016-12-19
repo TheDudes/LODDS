@@ -107,6 +107,7 @@
            #:started-tracking
            #:dir-watchers
            #:list-of-changes
+           #:last-change
            ;; #:file-table-name
            ;; #:file-table-hash
            ;; #:stop-watcher

@@ -185,7 +185,8 @@
       (error "TODO: the folder you tried to share has the same name"))
     (let* ((hook (lambda (change)
                    (bt:with-lock-held ((list-of-changes-lock watcher))
-                     (push change (list-of-changes watcher)))))
+                     (push change (list-of-changes watcher))
+                     (setf (last-change watcher) (car change)))))
            (new-dir-watcher
              (make-instance 'dir-watcher
                             :change-hook hook

@@ -313,7 +313,12 @@
                     :documentation "List of changes. Each member is a
                     list of Timestamp, Type, checksum, size and name
                     in that order. Lock with LIST-OF-CHANGES-LOCK
-                    before modifying the list.")))
+                    before modifying the list.")
+   (last-change :accessor last-change
+                :initform 0
+                :type rational
+                :documentation "Timestamp of file change on watched
+                files.")))
 
 ;; lodds classes
 
