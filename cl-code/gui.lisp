@@ -665,6 +665,13 @@
                             :do (incf dels))
                       (format nil "~a ~a ~a adds: ~a dels: ~a"
                               name type ts adds dels))))
+                 (:client-updated
+                  (destructuring-bind (name load last-change)
+                      event-msg
+                    (format nil "~a ~a ~a"
+                            name
+                            (lodds.core:format-size load)
+                            last-change)))
                  (t (format nil "~{~a~^ ~}" event-msg)))))))
 
 (defun init-gui (window)
