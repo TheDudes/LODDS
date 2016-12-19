@@ -27,6 +27,36 @@
 (defvar +user-list-last-change+ 2)
 (defvar +user-list-id+ 3)
 
+(defparameter *container*
+  (make-hash-table :test 'equalp)
+  "hash-table used to pass data between threads and ui Thread.")
+
+(defparameter *container-lock*
+  (bt:make-lock "container-lock")
+  "hash-table lock to savetly store data in a secure way")
+
+(defun container-put (data)
+  "adds data to *container* in a save way and returns a id which can
+  be used to retrieve the data again."
+  (let ((id nil))
+    (bt:with-lock-held (*container-lock*)
+      (loop :for test = (format nil "~a" (random 1024))
+            :while (gethash test *container*)
+            :finally (setf id test))
+      (setf (gethash id *container*)
+            data))
+    id))
+
+(defun container-get (id &optional (delete-id-p t))
+  "returns data corresponding to given id. When delete-id-p is t the
+  id gets freed to be used again"
+  (let ((data nil))
+    (bt:with-lock-held (*container-lock*)
+      (setf data (gethash id *container*))
+      (when delete-id-p
+        (remhash id *container*)))
+    data))
+
 (defun generate-timestamp ()
   "Returns current date as a string."
   (multiple-value-bind (sec min hr day mon yr dow dst-p tz)
@@ -237,6 +267,7 @@
                  (loop :for (user . rest) :in (lodds:get-file-info checksum)
                        :do (q+:add-item download-user-selection user))))))
   (q+:set-column-count list-of-shares 4)
+  (q+:set-uniform-row-heights list-of-shares t)
   (q+:set-header-labels list-of-shares (list "Name" "Size" "Checksum" "ID"))
   (q+:hide-column list-of-shares +los-id+)
   (q+:set-alternating-row-colors list-of-shares t)
@@ -290,7 +321,7 @@
 
   (setf (q+:central-widget main-window) list-of-shares))
 
-(define-signal (main-window add-entry) (string string string))
+(define-signal (main-window update-entries) (string string))
 (define-signal (main-window remove-entry) (string))
 (define-signal (main-window dump-table) ())
 (define-signal (main-window add-log-msg) (string string))
@@ -336,7 +367,7 @@
                                 (let* ((id (q+:text element +los-id+))
                                        (old-size (gethash id *id-mapper*)))
                                   (setf (gethash id *id-mapper*)
-                                        (+ old-size (parse-integer size))))))
+                                        (+ old-size size)))))
                   (return-from add-node t))
                 ;; if add-child-node was not successfull, just return
                 ;; nil
@@ -346,9 +377,9 @@
   (let ((new-entry (q+:make-qtreewidgetitem (funcall get-parent-fn))))
     (let ((entry-id (prin1-to-string (incf *current-id*))))
       (q+:set-text new-entry +los-id+ entry-id)
-      (setf (gethash entry-id *id-mapper*) (parse-integer size)))
+      (setf (gethash entry-id *id-mapper*) size))
     (q+:set-text new-entry +los-name+ (car path))
-    (q+:set-text new-entry +los-size+ (lodds.core:format-size (parse-integer size)))
+    (q+:set-text new-entry +los-size+ (lodds.core:format-size size))
     (q+:set-text-alignment new-entry +los-size+ (q+:qt.align-right))
     ;; only add checksums on files, not on folders
     (unless (cdr path)
@@ -420,17 +451,26 @@
         ;; find the specified node
         :finally (return nil)))
 
-(define-slot (main-window add-entry) ((path string)
-                                      (size string)
-                                      (checksum string))
-  (declare (connected main-window (add-entry string
-                                             string
-                                             string)))
-  (add-node (cl-strings:split path #\/) size checksum
-            (lambda () list-of-shares)
-            (q+:top-level-item-count list-of-shares)
-            (lambda (place) (q+:top-level-item list-of-shares place))
-            t))
+(define-slot (main-window update-entries) ((id string)
+                                           (name string))
+  (declare (connected main-window (update-entries string
+                                                  string)))
+  (q+:set-updates-enabled list-of-shares nil)
+  (loop :for (type checksum size path) :in (container-get id)
+        :do (let ((combined-path (concatenate 'string name path)))
+              (if (eql type :add)
+                  (add-node (cl-strings:split combined-path #\/)
+                            size
+                            checksum
+                            (lambda () list-of-shares)
+                            (q+:top-level-item-count list-of-shares)
+                            (lambda (place) (q+:top-level-item list-of-shares place))
+                            t)
+                  (remove-node (cl-strings:split combined-path #\/)
+                               (q+:top-level-item-count list-of-shares)
+                               (lambda (place) (q+:top-level-item list-of-shares place))
+                               (lambda (place) (cleanup-node (q+:take-top-level-item list-of-shares place)))))))
+  (q+:set-updates-enabled list-of-shares t))
 
 (define-slot (main-window remove-entry) ((path string))
   (declare (connected main-window (remove-entry string)))
@@ -578,15 +618,9 @@
     (declare (ignore timestamp))
     (when (eql type :all)
       (signal! main-window (remove-entry string) name))
-    (loop :for (type checksum size path) :in changes
-          :do (let ((combined-path (concatenate 'string name path)))
-                (if (eql type :add)
-                    (signal! main-window
-                             (add-entry string string string)
-                             combined-path (prin1-to-string size) checksum)
-                    (signal! main-window
-                             (remove-entry string)
-                             combined-path))))))
+    (signal! main-window (update-entries string string)
+             (container-put changes)
+             name)))
 
 (defun cb-client-removed (main-window client-name)
   "callback which will get called if a client was removed"
@@ -668,14 +702,14 @@
                        (prin1-to-string (lodds:c-load user-info))
                        (prin1-to-string (lodds:c-last-change user-info)))
               ;; add all files from user
-              (maphash (lambda (filename file-info)
-                         (destructuring-bind (checksum size) file-info
-                           (signal! window
-                                    (add-entry string string string)
-                                    (concatenate 'string user filename)
-                                    (prin1-to-string size)
-                                    checksum)))
-                       (lodds:c-file-table-name user-info)))))
+              (let ((changes nil))
+                (maphash (lambda (filename file-info)
+                           (destructuring-bind (checksum size) file-info
+                             (push (list :add checksum size filename) changes)))
+                         (lodds:c-file-table-name user-info))
+                (signal! window (update-entries string string)
+                         (container-put (reverse changes))
+                         user)))))
 
 (defun cleanup ()
   ;; remove all attached callbacks
