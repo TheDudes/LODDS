@@ -67,18 +67,51 @@
   (with-accessors ((socket lodds.task:request-socket)
                    (checksum lodds.task:request-checksum)
                    (start lodds.task:request-start)
-                   (end lodds.task:request-end)) task
-    (with-socket socket t
-      (let ((filename (lodds.watcher:get-file-info checksum)))
-        (if filename
-            (with-open-file (file-stream filename
-                                         :direction :input
-                                         :element-type '(unsigned-byte 8))
-              (lodds.low-level-api:respond-file (usocket:socket-stream socket)
-                                                file-stream
-                                                start end))
-            (lodds.event:push-event :handler
-                                    (list :error :local-file-not-found)))))))
+                   (end lodds.task:request-end)
+                   (written lodds.task:request-written)
+                   (filename lodds.task:request-filename)
+                   (file-stream lodds.task:request-file-stream)) task
+    (labels ((cleanup (&optional error-occured)
+               (unless error-occured
+                 (lodds.event:push-event :info (list "file transfer completed.")))
+               (when socket
+                 (usocket:socket-close socket))
+               (when file-stream
+                 (close file-stream))))
+      (handler-case
+          (let ((chunk-size (ash 1 21))) ;; 2 MB
+            (unless filename
+              (unless (setf filename (lodds.watcher:get-file-info checksum))
+                (lodds.event:push-event :error
+                                        (list "requested file could not be found"))
+                (cleanup t)
+                (return-from lodds.task:run-task))
+              (setf file-stream (open filename
+                                      :direction :input
+                                      :element-type '(unsigned-byte 8)))
+              (lodds:update-load (- end start))
+              (unless (eql start 0)
+                (file-position file-stream start)))
+            (let ((left-to-upload (- (- end start)
+                                     written)))
+              (lodds.core:copy-stream file-stream
+                                      (usocket:socket-stream socket)
+                                      (if (> left-to-upload chunk-size)
+                                          (progn (incf written chunk-size)
+                                                 (lodds:update-load (- chunk-size))
+                                                 chunk-size)
+                                          (progn (incf written left-to-upload)
+                                                 (lodds:update-load (- left-to-upload))
+                                                 left-to-upload)))
+              (finish-output file-stream)
+              (if (eql (- end start) written)
+                  (cleanup)
+                  (lodds.task:submit-task task))))
+        (error (e)
+          (cleanup t)
+          (lodds:update-load (- written (- end start)))
+          (lodds.event:push-event :error
+                                  (list "on request file" filename ":" e)))))))
 
 (defmethod lodds.task:run-task ((task lodds.task:task-request-info))
   (with-accessors ((socket lodds.task:request-socket)

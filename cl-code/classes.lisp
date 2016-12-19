@@ -107,7 +107,20 @@
                 :initform nil
                 :initarg :request-end
                 :type rational
-                :documentation "Requested File end position.")))
+                :documentation "Requested File end position.")
+   (request-filename :accessor request-filename
+                     :initform nil
+                     :type string
+                     :documentation "Local Filename of Requested File")
+   (request-file-stream :accessor request-file-stream
+                        :initform nil
+                        :type stream
+                        :documentation "Stream pointing to local file
+                        request-filename.")
+   (request-written :accessor request-written
+                    :initform 0
+                    :type rational
+                    :documentation "Bytes Written onto socket")))
 
 (defclass task-request-info (task-request)
   ((request-timestamp :reader request-timestamp

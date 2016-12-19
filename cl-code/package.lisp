@@ -72,6 +72,9 @@
            #:request-checksum
            #:request-start
            #:request-end
+           #:request-written
+           #:request-filename
+           #:request-file-stream
            ;; task-request-info and accerssors
            #:task-request-info
            #:request-timestamp
