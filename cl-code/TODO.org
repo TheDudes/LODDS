@@ -3,9 +3,9 @@
    - [ ] File Header with Description
 
 * GUI
-** TODO missing [4/16]
-   - [ ] Share Directory Functionality
-   - [ ] Display of Shared Directories
+** TODO missing [8/19]
+   - [X] Share Directory Functionality
+   - [X] Display of Shared Directories
    - [X] Info about found Users
    - [ ] Infobar (Statusbar) with Current Transfers, Load, Connections, ...
    - [ ] Tooltips
@@ -15,14 +15,18 @@
    - [ ] Edit/Reload Style
    - [ ] Error Dialogs
    - [ ] Label & more Info on Interface ComboBox
-   - [ ] Download File/Folder from a User
+   - [X] Download File User
+   - [X] Download File with load balancing
+   - [ ] Download Folder from a User
    - [ ] colorize logmessage count
    - [X] Split up User Display (name, ip, port)
    - [ ] Display Info on who has a given file (+ where its located)
    - [ ] Download Button with Icon
+   - [ ] Spinner or something similar on Share File
 
 * Lodds Lib
 ** TODO missing [2/5]
+   - [ ] Share File on Extra Thread(pool) with Queue
    - [ ] logging
    - [ ] Error Handling
    - [X] directory watcher (cl-async)
