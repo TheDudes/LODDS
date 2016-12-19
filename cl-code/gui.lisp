@@ -23,9 +23,11 @@
 
 ;; user-list columns
 (defvar +user-list-name+ 0)
-(defvar +user-list-load+ 1)
-(defvar +user-list-last-change+ 2)
-(defvar +user-list-id+ 3)
+(defvar +user-list-ip+ 1)
+(defvar +user-list-port+ 2)
+(defvar +user-list-load+ 3)
+(defvar +user-list-last-change+ 4)
+(defvar +user-list-id+ 5)
 
 (defparameter *container*
   (make-hash-table :test 'equalp)
@@ -242,14 +244,16 @@
   (q+:add-widget log-widget log))
 
 (define-subwidget (main-window user-list) (q+:make-qtreewidget main-window)
-  (q+:set-column-count user-list 4)
-  (q+:set-header-labels user-list (list "User" "Load" "Last Change" ""))
+  (q+:set-column-count user-list 6)
+  (q+:set-header-labels user-list (list "User" "IP" "Port" "Load" "Last Change" ""))
   (q+:hide-column user-list +user-list-id+)
   (q+:set-alternating-row-colors user-list t)
 
   (let ((header (q+:header user-list)))
     (q+:set-stretch-last-section header nil)
     (q+:set-resize-mode header +user-list-name+ (q+:qheaderview.stretch))
+    (q+:set-resize-mode header +user-list-ip+ (q+:qheaderview.resize-to-contents))
+    (q+:set-resize-mode header +user-list-port+ (q+:qheaderview.resize-to-contents))
     (q+:set-resize-mode header +user-list-load+ (q+:qheaderview.resize-to-contents))
     (q+:set-resize-mode header +user-list-last-change+ (q+:qheaderview.resize-to-contents))))
 
@@ -568,7 +572,10 @@
       (q+:set-text new-entry +los-id+ entry-id)
       (setf (gethash entry-id *id-mapper*)
             new-entry)
-      (q+:set-text new-entry +user-list-name+ user)
+      (lodds.core:split-user-identifier (name ip port) user
+        (q+:set-text new-entry +user-list-name+ name)
+        (q+:set-text new-entry +user-list-ip+ ip)
+        (q+:set-text new-entry +user-list-port+ port))
       (q+:set-text new-entry +user-list-load+ (lodds.core:format-size (parse-integer load)))
       (q+:set-text new-entry +user-list-last-change+ last-change)
       (q+:set-text new-entry +user-list-id+ entry-id)
@@ -576,14 +583,17 @@
 
 (define-slot (main-window remove-user) ((user string))
   (declare (connected main-window (remove-user string)))
-  (loop :for i :from 0 :to (q+:top-level-item-count user-list)
-        :do (let* ((child (q+:top-level-item user-list i))
-                   (child-name (q+:text child +user-list-name+)))
-              (when (string= child-name user)
-                (remhash (q+:text child +user-list-id+)
-                         *id-mapper*)
-                (q+:take-top-level-item user-list i)
-                (return)))))
+  (split-user-identifier (name ip port) user
+    (loop :for i :from 0 :to (q+:top-level-item-count user-list)
+          :do (let ((child (q+:top-level-item user-list i)))
+                (split-user-identifier (name ip port) user
+                  (when (and (string= name (q+:text child +user-list-name+))
+                             (string= ip (q+:text child +user-list-ip+))
+                             (string= port (q+:text child +user-list-port+)))
+                    (remhash (q+:text child +user-list-id+)
+                             *id-mapper*)
+                    (q+:take-top-level-item user-list i)
+                    (return)))))))
 
 (define-slot (main-window update-user) ((user string)
                                         (load string)
