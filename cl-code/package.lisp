@@ -145,6 +145,7 @@
            #:get-interface-info
            #:get-broadcast-address
            #:get-ip-address
+           #:update-load
            ;; client-info reader/accessor
            #:client-info
            #:c-name
