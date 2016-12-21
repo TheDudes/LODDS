@@ -36,10 +36,8 @@
   (error "You cannot start the Watcher subsystem like that! use SHARE and UNSHARE to start/stop"))
 
 (defmethod lodds.subsystem:stop ((subsys watcher))
-  (mapcar
-   (lambda (dir-watcher)
-     (stop-dir-watcher dir-watcher nil))
-   (dir-watchers subsys)))
+  (dolist (dir-watcher (dir-watchers subsys))
+    (stop-dir-watcher dir-watcher nil)))
 
 (defun add-file (dir-watcher pathname &optional (checksum nil) (size nil))
   "adds a file to the given dir-watcher, this functions is called by
