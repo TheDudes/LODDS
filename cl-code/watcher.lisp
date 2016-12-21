@@ -138,6 +138,8 @@
   from the dir-watchers list, also checks if it was the last
   dis-watcher, if so deletes list-of-changes and sets alive-p to nil"
   (cl-fs-watcher:stop-watcher dir-watcher)
+  (lodds.event:push-event :unshared-directory
+                          (list (cl-fs-watcher:dir dir-watcher)))
   (when run-change-hook-p
     (loop :for info :in (get-all-tracked-file-infos dir-watcher)
           :do (funcall (change-hook dir-watcher)
@@ -214,8 +216,5 @@
                                :key #'cl-fs-watcher:dir
                                :test #'string=)))
         (if rem-watcher
-            (progn
-              (lodds.event:push-event :unshared-directory
-                                      (list folder-path))
-              (stop-dir-watcher rem-watcher))
+            (stop-dir-watcher rem-watcher)
             (error "TODO: could not find watcher to unshare with given folder-path"))))))
