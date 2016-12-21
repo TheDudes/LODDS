@@ -36,9 +36,10 @@
 
 ;; list-of-shares columns
 (defvar +los-name+ 0)
-(defvar +los-size+ 1)
-(defvar +los-checksum+ 2)
-(defvar +los-id+ 3)
+(defvar +los-items+ 1)
+(defvar +los-size+ 2)
+(defvar +los-checksum+ 3)
+(defvar +los-id+ 4)
 
 ;; log columns
 (defvar +log-time+ 0)
@@ -312,9 +313,9 @@
                  (loop :for (user . rest) :in (lodds:get-file-info checksum)
                        :do (q+:add-item download-user-selection user))))))
   (qdoto list-of-shares
-         (q+:set-column-count 4)
+         (q+:set-column-count 5)
          (q+:set-uniform-row-heights t)
-         (q+:set-header-labels (list "Name" "Size" "Checksum" "ID"))
+         (q+:set-header-labels (list "Name" "Items" "Size" "Checksum" "ID"))
          (q+:hide-column +los-id+)
          (q+:set-alternating-row-colors t)
          (q+:set-animated t)
@@ -324,6 +325,7 @@
   (qdoto (q+:header list-of-shares)
          (q+:set-stretch-last-section nil)
          (q+:set-resize-mode +los-name+ (q+:qheaderview.stretch))
+         (q+:set-resize-mode +los-items+ (q+:qheaderview.resize-to-contents))
          (q+:set-resize-mode +los-size+ (q+:qheaderview.resize-to-contents))
          (q+:set-resize-mode +los-checksum+ (q+:qheaderview.resize-to-contents)))
 
@@ -412,7 +414,7 @@
                   ;; return nil to indicate an error
                   (return-from add-node nil))
                 ;; if add-node was successfull, update size and
-                ;; return t
+                ;; item count, then return t
                 (when (add-node (cdr path) size checksum
                                 (lambda () element)
                                 (q+:child-count element)
@@ -434,12 +436,24 @@
          (new-entry (qdoto (q+:make-qtreewidgetitem (funcall get-parent-fn))
                            (q+:set-text +los-id+ entry-id)
                            (q+:set-text +los-name+ (car path))
+                           (q+:set-text +los-items+ "")
                            (q+:set-text +los-size+ (lodds.core:format-size size))
-                           (q+:set-text-alignment +los-size+ (q+:qt.align-right)))))
+                           (q+:set-text-alignment +los-size+ (q+:qt.align-right))
+                           (q+:set-text-alignment +los-items+ (q+:qt.align-right)))))
     (setf (gethash entry-id *id-mapper*) size)
-    ;; only add checksums on files, not on folders
-    (unless (cdr path)
-      (q+:set-text new-entry +los-checksum+ checksum))
+    (unless root-p
+      (let ((parent (funcall get-parent-fn)))
+        (q+:set-text parent
+                     +los-items+
+                     (prin1-to-string
+                      (+ (parse-integer
+                          (q+:text parent +los-items+))
+                         1)))))
+    (if (cdr path)
+        ;; only add items on directories
+        (q+:set-text new-entry +los-items+ "0")
+        ;; only add checksums on files, not on folders
+        (q+:set-text new-entry +los-checksum+ checksum))
     ;; only if not root
     (unless root-p
       (q+:add-child (funcall get-parent-fn) new-entry))
@@ -478,6 +492,12 @@
                                                (let* ((removed-item (q+:take-child element place))
                                                       (size (gethash (q+:text removed-item +los-id+)
                                                                      *id-mapper*)))
+                                                 (q+:set-text element
+                                                              +los-items+
+                                                              (prin1-to-string
+                                                               (- (parse-integer
+                                                                   (q+:text element +los-items+))
+                                                                  1)))
                                                  (cleanup-node removed-item)
                                                  size)))))
                       ;; remove-node will return the size of the
@@ -486,7 +506,7 @@
                         ;; If element has no childs left (if the
                         ;; recursive call removed the last child)
                         ;; remove element too. If there are childs
-                        ;; left, just update the size.
+                        ;; left, just update the size and item count
                         (if (eql 0 (q+:child-count element))
                             (funcall remove-child-fn i)
                             (q+:set-text element
