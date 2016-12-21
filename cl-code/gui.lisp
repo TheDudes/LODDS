@@ -113,7 +113,8 @@
          (lodds.subsystem:stop (lodds:get-subsystem :tasker))
          (lodds.subsystem:stop (lodds:get-subsystem :listener))
          (lodds.subsystem:stop (lodds:get-subsystem :advertiser))
-         (lodds.subsystem:stop (lodds:get-subsystem :handler)))
+         (lodds.subsystem:stop (lodds:get-subsystem :handler))
+         (lodds.subsystem:stop (lodds:get-subsystem :watcher)))
   (:separator)
   (:item "Reload Stylesheet"
          (q+:set-style-sheet main-window *style-sheet*))
