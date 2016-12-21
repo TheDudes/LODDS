@@ -18,7 +18,7 @@
   "adds the given callback to the event-loop. NAME is a keyword which
   identifies the given callback. This is helpfull to overwrite or
   remove callbacks. FN is the callback function itself, it will be
-  called with at least 2 arguemnts, the event-type and information
+  called with at least 2 arguments, the event-type and information
   about the event. If EVENT-TYPE is given, the given function FN will
   only be called for events with the specified EVENT-TYPE. If left
   out, FN will be called for every occuring event. EVENT-TYPE is, like
