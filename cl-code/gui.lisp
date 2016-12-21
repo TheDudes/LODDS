@@ -9,6 +9,18 @@
   (list :listener
         :advertiser))
 
+(defparameter +events+ '(:advertiser
+                         :listener
+                         :info
+                         :client-added
+                         :client-removed
+                         :client-updated
+                         :debug
+                         :watcher
+                         :tasker
+                         :handler
+                         :list-update))
+
 (defmacro qdoto (instance &rest forms)
   (let ((inst (gensym "instance")))
     `(let ((,inst ,instance))
@@ -152,51 +164,24 @@
          (q+:set-resize-mode +log-message+ (q+:qheaderview.stretch))
          (q+:set-resize-mode +log-count+ (q+:qheaderview.resize-to-contents))))
 
-(defun update-ignored-log (checked-or-unchecked event-type)
-  (case checked-or-unchecked
-    (0 (push event-type *ignored-log-events*))
-    (2 (setf *ignored-log-events*
-             (remove event-type *ignored-log-events*)))))
-
-(defmacro gen-log-checkbox (event-type widget-name title slot-name)
-  `(progn
-     (define-subwidget (main-window ,widget-name) (q+:make-qcheckbox ,title main-window)
-       (q+:set-check-state ,widget-name
-                           (if (find ,event-type *ignored-log-events*)
-                               (q+:qt.unchecked)
-                               (q+:qt.checked))))
-     (define-slot (main-window ,slot-name) ((new-state int))
-       (declare (connected ,widget-name (state-changed int)))
-       (update-ignored-log new-state ,event-type))))
-
-(gen-log-checkbox :advertiser log-check-advertiser "Advertiser" log-check-advertiser-changed)
-(gen-log-checkbox :listener log-check-listener "Listener" log-check-listener-changed)
-(gen-log-checkbox :info log-check-info "Info" log-check-info-changed)
-(gen-log-checkbox :client-added log-check-client-added "Client Added" log-check-client-added-changed)
-(gen-log-checkbox :client-removed log-check-client-removed "Client Removed" log-check-client-removed-changed)
-(gen-log-checkbox :client-updated log-check-client-updated "Client Updated" log-check-client-updated-changed)
-(gen-log-checkbox :debug log-check-debug "Debug" log-check-debug-changed)
-(gen-log-checkbox :watcher log-check-watcher "Watcher" log-check-watcher-changed)
-(gen-log-checkbox :tasker log-check-watcher "Tasker" log-check-tasker-changed)
-(gen-log-checkbox :handler log-check-handler "Handler" log-check-handler-changed)
-(gen-log-checkbox :list-update log-check-list-update "List Update" log-check-list-update-changed)
-
 (define-subwidget (main-window log-checkboxes-widget) (q+:make-qscrollarea main-window)
   (let ((container (q+:make-qgroupbox "Log Settings" main-window))
         (layout (q+:make-qvboxlayout main-window)))
     (q+:set-layout container layout)
-    (qdoto layout
-           (q+:add-widget log-check-advertiser)
-           (q+:add-widget log-check-listener)
-           (q+:add-widget log-check-info)
-           (q+:add-widget log-check-client-added)
-           (q+:add-widget log-check-client-removed)
-           (q+:add-widget log-check-client-updated)
-           (q+:add-widget log-check-debug)
-           (q+:add-widget log-check-watcher)
-           (q+:add-widget log-check-watcher)
-           (q+:add-widget log-check-handler)
-           (q+:add-widget log-check-list-update))
+    (dolist (event +events+)
+      (let ((checkbox (q+:make-qcheckbox (cl-strings:title-case (string event))
+                                         main-window)))
+        (q+:set-check-state checkbox
+                            (if (find event *ignored-log-events*)
+                                (q+:qt.unchecked)
+                                (q+:qt.checked)))
+        (connect checkbox "stateChanged(int)"
+                 (lambda (new-state)
+                   (case new-state
+                     (0 (push event *ignored-log-events*))
+                     (2 (setf *ignored-log-events*
+                              (remove event *ignored-log-events*))))))
+        (q+:add-widget layout checkbox)))
     (q+:set-widget log-checkboxes-widget container)))
 
 (define-subwidget (main-window download-file) (q+:make-qlineedit main-window))
