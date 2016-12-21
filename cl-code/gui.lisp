@@ -129,11 +129,22 @@
 
 (define-menu (main-window File)
   (:item ("Run" (ctrl r))
-         (lodds.subsystem:start (lodds:get-subsystem :event-queue))
-         (lodds.subsystem:start (lodds:get-subsystem :tasker))
-         (lodds.subsystem:start (lodds:get-subsystem :listener))
-         (lodds.subsystem:start (lodds:get-subsystem :advertiser))
-         (lodds.subsystem:start (lodds:get-subsystem :handler)))
+         (if (lodds:interface lodds:*server*)
+             (progn
+               (lodds.subsystem:start (lodds:get-subsystem :event-queue))
+               (lodds.subsystem:start (lodds:get-subsystem :tasker))
+               (lodds.subsystem:start (lodds:get-subsystem :listener))
+               (lodds.subsystem:start (lodds:get-subsystem :advertiser))
+               (lodds.subsystem:start (lodds:get-subsystem :handler)))
+             (qdoto (q+:make-qmessagebox main-window)
+                    (q+:set-text "Interface not set!")
+                    (q+:set-detailed-text
+                     (concatenate 'string
+                                  "Please select a Interface (there should be a"
+                                  " 'Settings' Section somewhere with a empty"
+                                  " combobox, just click it and select the"
+                                  " prefered interface.)"))
+                    (q+:open))))
   (:item ("Stop" (ctrl s))
          (lodds.subsystem:stop (lodds:get-subsystem :tasker))
          (lodds.subsystem:stop (lodds:get-subsystem :listener))
