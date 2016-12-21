@@ -6,8 +6,13 @@
 
 (defun generate-checksum (pathname)
   "generates sha1 sum out of given pathname, will return a string"
-  (ironclad:byte-array-to-hex-string
-   (ironclad:digest-file :sha1 pathname)))
+  (handler-case
+      (ironclad:byte-array-to-hex-string
+       (ironclad:digest-file :sha1 pathname))
+    (error (e)
+      (lodds.event:push-event :error
+                              (list e))
+      "0000000000000000000000000000000000000000")))
 
 (defun copy-stream (stream-from stream-to &optional size)
   "will read from stream-from and write to stream-to size bytes"
