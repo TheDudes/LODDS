@@ -274,7 +274,7 @@
                (let ((dir (q+:qfiledialog-get-existing-directory)))
                  (when (> (length dir)
                           0)
-                   (lodds.watcher:share-folder dir)))))
+                   (lodds.watcher:share-folder (concatenate 'string dir "/"))))))
     (q+:add-widget layout share-directory-button)
     (q+:add-widget layout directories-shared)))
 
