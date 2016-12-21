@@ -67,21 +67,26 @@
   (let* ((ft-name (file-table-name dir-watcher))
          (ft-hash (file-table-hash dir-watcher))
          (checksum (car (gethash pathname ft-name))))
-    (funcall (change-hook dir-watcher)
-             (destructuring-bind (checksum size)
-                 (gethash pathname ft-name)
-               (list (lodds.core:get-timestamp)
-                     :del
-                     checksum
-                     size
-                     (subseq pathname (length (root-dir-path dir-watcher))))))
-    (let ((new-val (remove pathname (gethash checksum ft-hash)
-                           :test #'string=)))
-      (if new-val
-          (setf (gethash checksum ft-hash)
-                new-val)
-          (remhash checksum ft-hash)))
-    (remhash pathname ft-name)))
+    (let ((entry (gethash pathname ft-name)))
+      (if (not entry)
+          (error "watcher:remove-file entry '~a' not found"
+                 pathname)
+          (progn
+            (funcall (change-hook dir-watcher)
+                     (destructuring-bind (checksum size)
+                         entry
+                       (list (lodds.core:get-timestamp)
+                             :del
+                             checksum
+                             size
+                             (subseq pathname (length (root-dir-path dir-watcher))))))
+            (let ((new-val (remove pathname (gethash checksum ft-hash)
+                                   :test #'string=)))
+              (if new-val
+                  (setf (gethash checksum ft-hash)
+                        new-val)
+                  (remhash checksum ft-hash)))
+            (remhash pathname ft-name))))))
 
 (defun update-file (dir-watcher pathname)
   "checks if the given file under PATHNAME changed (if the checksum is
