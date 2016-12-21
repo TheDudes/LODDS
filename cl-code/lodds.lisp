@@ -130,19 +130,6 @@
 
         interface)))
 
-(defun remove-clients (inactive-time)
-  "removes all clients which a longer inactive then INACTIVE-TIME"
-  (let ((remove-me (list))
-        (current-time (get-timestamp)))
-    (maphash (lambda (key value)
-               (when (> (- current-time (car value))
-                        inactive-time)
-                 (push key remove-me)))
-             (clients *server*))
-    (mapcar (lambda (key)
-              (remhash key (clients *server*)))
-            remove-me)))
-
 (defun get-timestamp-last-change ()
   "returns the timestamp of the last change, who would have thought?
   :D"
