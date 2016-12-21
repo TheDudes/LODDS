@@ -613,7 +613,7 @@
 (define-slot (main-window remove-user) ((user string))
   (declare (connected main-window (remove-user string)))
   (lodds.core:split-user-identifier (name ip port) user
-    (loop :for i :from 0 :to (q+:top-level-item-count user-list)
+    (loop :for i :from 0 :below (q+:top-level-item-count user-list)
           :do (let ((child (q+:top-level-item user-list i)))
                 (when (and (string= name (q+:text child +user-list-name+))
                            (string= ip (q+:text child +user-list-ip+))
@@ -638,11 +638,12 @@
 
 (define-slot (main-window remove-directory) ((path string))
   (declare (connected main-window (remove-directory string)))
-  (loop :for i :from 0 :to (q+:top-level-item-count directories-shared)
-        :do (let ((child (q+:top-level-item directories-shared i)))
-              (when (string= path (q+:text child +directories-shared-path+))
-                (q+:take-top-level-item directories-shared i)
-                (return)))))
+  (loop :for i :from 0 :below (q+:top-level-item-count directories-shared)
+        :do (progn
+              (let ((child (q+:top-level-item directories-shared i)))
+                (when (string= path (q+:text child +directories-shared-path+))
+                  (q+:take-top-level-item directories-shared i)
+                  (return))))))
 
 (define-slot (main-window update-user) ((user string)
                                         (load string)
