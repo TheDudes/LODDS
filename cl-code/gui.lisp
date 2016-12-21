@@ -9,6 +9,13 @@
   (list :listener
         :advertiser))
 
+(defmacro qdoto (instance &rest forms)
+  (let ((inst (gensym "instance")))
+    `(let ((,inst ,instance))
+       ,@(loop :for (fn . arguments) :in forms
+               :collect `(,fn ,(car arguments) ,inst ,@ (cdr arguments)))
+       ,inst)))
+
 ;; list-of-shares columns
 (defvar +los-name+ 0)
 (defvar +los-size+ 1)
@@ -133,16 +140,17 @@
         (q+:set-current-index interfaces -1))))
 
 (define-subwidget (main-window log) (q+:make-qtreewidget main-window)
-  (q+:set-column-count log 4)
-  (q+:set-header-labels log (list "Time" "Event" "Message" ""))
-  (q+:set-alternating-row-colors log t)
+  (qdoto log
+         (q+:set-column-count 4)
+         (q+:set-header-labels (list "Time" "Event" "Message" ""))
+         (q+:set-alternating-row-colors t))
 
-  (let ((header (q+:header log)))
-    (q+:set-stretch-last-section header nil)
-    (q+:set-resize-mode header +log-time+ (q+:qheaderview.resize-to-contents))
-    (q+:set-resize-mode header +log-event+ (q+:qheaderview.resize-to-contents))
-    (q+:set-resize-mode header +log-message+ (q+:qheaderview.stretch))
-    (q+:set-resize-mode header +log-count+ (q+:qheaderview.resize-to-contents))))
+  (qdoto (q+:header log)
+         (q+:set-stretch-last-section nil)
+         (q+:set-resize-mode +log-time+ (q+:qheaderview.resize-to-contents))
+         (q+:set-resize-mode +log-event+ (q+:qheaderview.resize-to-contents))
+         (q+:set-resize-mode +log-message+ (q+:qheaderview.stretch))
+         (q+:set-resize-mode +log-count+ (q+:qheaderview.resize-to-contents))))
 
 (defun update-ignored-log (checked-or-unchecked event-type)
   (case checked-or-unchecked
@@ -177,17 +185,18 @@
   (let ((container (q+:make-qgroupbox "Log Settings" main-window))
         (layout (q+:make-qvboxlayout main-window)))
     (q+:set-layout container layout)
-    (q+:add-widget layout log-check-advertiser)
-    (q+:add-widget layout log-check-listener)
-    (q+:add-widget layout log-check-info)
-    (q+:add-widget layout log-check-client-added)
-    (q+:add-widget layout log-check-client-removed)
-    (q+:add-widget layout log-check-client-updated)
-    (q+:add-widget layout log-check-debug)
-    (q+:add-widget layout log-check-watcher)
-    (q+:add-widget layout log-check-watcher)
-    (q+:add-widget layout log-check-handler)
-    (q+:add-widget layout log-check-list-update)
+    (qdoto layout
+           (q+:add-widget log-check-advertiser)
+           (q+:add-widget log-check-listener)
+           (q+:add-widget log-check-info)
+           (q+:add-widget log-check-client-added)
+           (q+:add-widget log-check-client-removed)
+           (q+:add-widget log-check-client-updated)
+           (q+:add-widget log-check-debug)
+           (q+:add-widget log-check-watcher)
+           (q+:add-widget log-check-watcher)
+           (q+:add-widget log-check-handler)
+           (q+:add-widget log-check-list-update))
     (q+:set-widget log-checkboxes-widget container)))
 
 (define-subwidget (main-window download-file) (q+:make-qlineedit main-window))
@@ -202,20 +211,24 @@
          (download-button (q+:make-qpushbutton "Download" main-window))
          (folder-dir-model (q+:make-qdirmodel folder-completer)))
     (q+:set-layout download layout)
-    ;; first row - checksum
-    (q+:add-widget layout (q+:make-qlabel "Checksum:" main-window) 0 0)
-    (q+:add-widget layout download-checksum 0 1 1 -1)
-    ;; second row - local file location
-    (q+:add-widget layout (q+:make-qlabel "Download to:" main-window) 1 0)
+
     (q+:set-filter folder-dir-model (q+:qdir.dirs))
     (q+:set-model folder-completer folder-dir-model)
     (q+:set-completer folder-edit folder-completer)
-    (q+:add-widget layout folder-edit 1 1 1 8)
-    (q+:add-widget layout download-file 1 9 1 4)
-    ;; third row - user selction and download button
-    (q+:add-widget layout (q+:make-qlabel "User:" main-window) 2 0)
-    (q+:add-widget layout download-user-selection 2 1 1 11)
-    (q+:add-widget layout download-button 2 12 1 1)
+
+    (qdoto layout
+           ;; first row - checksum
+           (q+:add-widget (q+:make-qlabel "Checksum:" main-window) 0 0)
+           (q+:add-widget download-checksum 0 1 1 -1)
+           ;; second row - local file location
+           (q+:add-widget (q+:make-qlabel "Download to:" main-window) 1 0)
+           (q+:add-widget folder-edit 1 1 1 8)
+           (q+:add-widget download-file 1 9 1 4)
+           ;; third row - user selction and download button
+           (q+:add-widget (q+:make-qlabel "User:" main-window) 2 0)
+           (q+:add-widget download-user-selection 2 1 1 11)
+           (q+:add-widget download-button 2 12 1 1))
+
     (connect download-button "pressed()"
              (lambda ()
                (let ((user (q+:current-text download-user-selection))
@@ -239,32 +252,35 @@
                                         user)))))))))
 
 (define-subwidget (main-window log-widget) (q+:make-qsplitter main-window)
-  (q+:add-widget log-widget log-checkboxes-widget)
-  (q+:add-widget log-widget log))
+  (qdoto log-widget
+         (q+:add-widget log-checkboxes-widget)
+         (q+:add-widget log)))
 
 (define-subwidget (main-window user-list) (q+:make-qtreewidget main-window)
-  (q+:set-column-count user-list 6)
-  (q+:set-header-labels user-list (list "User" "IP" "Port" "Load" "Last Change" ""))
-  (q+:hide-column user-list +user-list-id+)
-  (q+:set-alternating-row-colors user-list t)
+  (qdoto user-list
+         (q+:set-column-count 6)
+         (q+:set-header-labels (list "User" "IP" "Port" "Load" "Last Change" ""))
+         (q+:hide-column +user-list-id+)
+         (q+:set-alternating-row-colors t))
 
-  (let ((header (q+:header user-list)))
-    (q+:set-stretch-last-section header nil)
-    (q+:set-resize-mode header +user-list-name+ (q+:qheaderview.stretch))
-    (q+:set-resize-mode header +user-list-ip+ (q+:qheaderview.resize-to-contents))
-    (q+:set-resize-mode header +user-list-port+ (q+:qheaderview.resize-to-contents))
-    (q+:set-resize-mode header +user-list-load+ (q+:qheaderview.resize-to-contents))
-    (q+:set-resize-mode header +user-list-last-change+ (q+:qheaderview.resize-to-contents))))
+  (qdoto (q+:header user-list)
+         (q+:set-stretch-last-section nil)
+         (q+:set-resize-mode +user-list-name+ (q+:qheaderview.stretch))
+         (q+:set-resize-mode +user-list-ip+ (q+:qheaderview.resize-to-contents))
+         (q+:set-resize-mode +user-list-port+ (q+:qheaderview.resize-to-contents))
+         (q+:set-resize-mode +user-list-load+ (q+:qheaderview.resize-to-contents))
+         (q+:set-resize-mode +user-list-last-change+ (q+:qheaderview.resize-to-contents))))
 
 (define-subwidget (main-window directories-shared) (q+:make-qtreewidget main-window)
-  (q+:set-column-count directories-shared 2)
-  (q+:set-header-labels directories-shared (list "Path" "Remove"))
-  (q+:set-alternating-row-colors directories-shared t)
+  (qdoto directories-shared
+         (q+:set-column-count 2)
+         (q+:set-header-labels (list "Path" "Remove"))
+         (q+:set-alternating-row-colors t))
 
-  (let ((header (q+:header directories-shared)))
-    (q+:set-stretch-last-section header nil)
-    (q+:set-resize-mode header +directories-shared-path+ (q+:qheaderview.stretch))
-    (q+:set-resize-mode header +directories-shared-remove-button+ (q+:qheaderview.resize-to-contents))))
+  (qdoto (q+:header directories-shared)
+         (q+:set-stretch-last-section nil)
+         (q+:set-resize-mode +directories-shared-path+ (q+:qheaderview.stretch))
+         (q+:set-resize-mode +directories-shared-remove-button+ (q+:qheaderview.resize-to-contents))))
 
 (define-subwidget (main-window share-widget) (q+:make-qwidget main-window)
   (let ((layout (q+:make-qvboxlayout main-window))
@@ -276,8 +292,9 @@
                  (when (> (length dir)
                           0)
                    (lodds.watcher:share-folder (concatenate 'string dir "/"))))))
-    (q+:add-widget layout share-directory-button)
-    (q+:add-widget layout directories-shared)))
+    (qdoto layout
+           (q+:add-widget share-directory-button)
+           (q+:add-widget directories-shared))))
 
 (define-subwidget (main-window list-of-shares) (q+:make-qtreewidget main-window)
   (connect list-of-shares "itemClicked(QTreeWidgetItem *, int)"
@@ -292,25 +309,27 @@
                        :do (q+:remove-item download-user-selection 1))
                  (loop :for (user . rest) :in (lodds:get-file-info checksum)
                        :do (q+:add-item download-user-selection user))))))
-  (q+:set-column-count list-of-shares 4)
-  (q+:set-uniform-row-heights list-of-shares t)
-  (q+:set-header-labels list-of-shares (list "Name" "Size" "Checksum" "ID"))
-  (q+:hide-column list-of-shares +los-id+)
-  (q+:set-alternating-row-colors list-of-shares t)
-  (q+:set-animated list-of-shares t)
-  (q+:set-items-expandable list-of-shares t)
-  (q+:set-expands-on-double-click list-of-shares t)
+  (qdoto list-of-shares
+         (q+:set-column-count 4)
+         (q+:set-uniform-row-heights t)
+         (q+:set-header-labels (list "Name" "Size" "Checksum" "ID"))
+         (q+:hide-column +los-id+)
+         (q+:set-alternating-row-colors t)
+         (q+:set-animated t)
+         (q+:set-items-expandable t)
+         (q+:set-expands-on-double-click t))
 
-  (let ((header (q+:header list-of-shares)))
-    (q+:set-stretch-last-section header nil)
-    (q+:set-resize-mode header +los-name+ (q+:qheaderview.stretch))
-    (q+:set-resize-mode header +los-size+ (q+:qheaderview.resize-to-contents))
-    (q+:set-resize-mode header +los-checksum+ (q+:qheaderview.resize-to-contents)))
+  (qdoto (q+:header list-of-shares)
+         (q+:set-stretch-last-section nil)
+         (q+:set-resize-mode +los-name+ (q+:qheaderview.stretch))
+         (q+:set-resize-mode +los-size+ (q+:qheaderview.resize-to-contents))
+         (q+:set-resize-mode +los-checksum+ (q+:qheaderview.resize-to-contents)))
 
-  (setf (q+:window-title main-window) "LODDS")
-  (q+:set-window-icon main-window (q+:make-qicon "./res/lodds.png"))
-  (q+:resize main-window 800 450)
-  (q+:set-style-sheet main-window *style-sheet*)
+  (qdoto main-window
+         (q+:set-window-title "LODDS")
+         (q+:set-window-icon (q+:make-qicon "./res/lodds.png"))
+         (q+:resize 800 450)
+         (q+:set-style-sheet *style-sheet*))
 
   (let ((settings-dock (q+:make-qdockwidget "Settings" main-window))
         (log-dock (q+:make-qdockwidget "Log" main-window))
@@ -328,30 +347,31 @@
       (q+:set-maximum-height dock-content 48)
       (q+:add-row dock-layout "Interface:" interfaces)
       (q+:set-widget settings-dock dock-content))
-    (q+:add-dock-widget main-window (q+:qt.right-dock-widget-area) settings-dock)
 
     ;; user-dock
     (q+:set-widget user-list-dock user-list)
-    (q+:add-dock-widget main-window (q+:qt.left-dock-widget-area) user-list-dock)
 
     ;; directories-shared-dock
     (q+:set-widget directories-shared-dock share-widget)
-    (q+:add-dock-widget main-window (q+:qt.right-dock-widget-area) directories-shared-dock)
 
     ;; log-dock
     (q+:set-widget log-dock log-widget)
-    (q+:add-dock-widget main-window (q+:qt.bottom-dock-widget-area) log-dock)
 
     ;; add view-toggle to View MenuBar Item
-    (let* ((menu-bar (q+:menu-bar main-window))
-           (menu (q+:add-menu menu-bar "View")))
-      (q+:add-action menu (q+:toggle-view-action log-dock))
-      (q+:add-action menu (q+:toggle-view-action settings-dock))
-      (q+:add-action menu (q+:toggle-view-action user-list-dock))
-      (q+:add-action menu (q+:toggle-view-action directories-shared-dock))
-      (q+:add-action menu (q+:toggle-view-action download-dock))))
+    (qdoto (q+:add-menu (q+:menu-bar main-window) "View")
+           (q+:add-action (q+:toggle-view-action log-dock))
+           (q+:add-action (q+:toggle-view-action settings-dock))
+           (q+:add-action (q+:toggle-view-action user-list-dock))
+           (q+:add-action (q+:toggle-view-action directories-shared-dock))
+           (q+:add-action (q+:toggle-view-action download-dock)))
 
-  (setf (q+:central-widget main-window) list-of-shares))
+    ;; add widgets to main-window
+    (qdoto main-window
+           (q+:add-dock-widget (q+:qt.right-dock-widget-area) settings-dock)
+           (q+:add-dock-widget (q+:qt.left-dock-widget-area) user-list-dock)
+           (q+:add-dock-widget (q+:qt.right-dock-widget-area) directories-shared-dock)
+           (q+:add-dock-widget (q+:qt.bottom-dock-widget-area) log-dock)
+           (q+:set-central-widget list-of-shares))))
 
 (define-signal (main-window update-entries) (string string))
 (define-signal (main-window remove-entry) (string))
@@ -408,13 +428,13 @@
                 (return-from add-node nil))))
   ;; when we get down here it means there was no matching
   ;; node, so lets add a new one.
-  (let ((new-entry (q+:make-qtreewidgetitem (funcall get-parent-fn))))
-    (let ((entry-id (prin1-to-string (incf *current-id*))))
-      (q+:set-text new-entry +los-id+ entry-id)
-      (setf (gethash entry-id *id-mapper*) size))
-    (q+:set-text new-entry +los-name+ (car path))
-    (q+:set-text new-entry +los-size+ (lodds.core:format-size size))
-    (q+:set-text-alignment new-entry +los-size+ (q+:qt.align-right))
+  (let* ((entry-id (prin1-to-string (incf *current-id*)))
+         (new-entry (qdoto (q+:make-qtreewidgetitem (funcall get-parent-fn))
+                           (q+:set-text +los-id+ entry-id)
+                           (q+:set-text +los-name+ (car path))
+                           (q+:set-text +los-size+ (lodds.core:format-size size))
+                           (q+:set-text-alignment +los-size+ (q+:qt.align-right)))))
+    (setf (gethash entry-id *id-mapper*) size)
     ;; only add checksums on files, not on folders
     (unless (cdr path)
       (q+:set-text new-entry +los-checksum+ checksum))
@@ -527,21 +547,20 @@
              (string= (q+:text last-item +log-message+)
                       msg))
 
-        (progn
-          (q+:set-text last-item +log-time+ (generate-timestamp))
-          (q+:set-text last-item
-                       +log-count+
-                       (prin1-to-string
-                        (let ((current (q+:text last-item +log-count+)))
-                          (if (string= current "")
-                              2
-                              (+ 1 (parse-integer current)))))))
-        (let ((new-entry (q+:make-qtreewidgetitem log)))
-          (q+:set-text new-entry +log-time+ (generate-timestamp))
-          (q+:set-text new-entry +log-event+ event)
-          (q+:set-text new-entry +log-message+ msg)
-          (q+:set-text new-entry +log-count+ "")
-          (q+:set-text-alignment new-entry +log-count+ (q+:qt.align-right))
+        (qdoto last-item
+               (q+:set-text +log-time+ (generate-timestamp))
+               (q+:set-text +log-count+
+                            (prin1-to-string
+                             (let ((current (q+:text last-item +log-count+)))
+                               (if (string= current "")
+                                   2
+                                   (+ 1 (parse-integer current)))))))
+        (let ((new-entry (qdoto (q+:make-qtreewidgetitem log)
+                                (q+:set-text +log-time+ (generate-timestamp))
+                                (q+:set-text +log-event+ event)
+                                (q+:set-text +log-message+ msg)
+                                (q+:set-text +log-count+ "")
+                                (q+:set-text-alignment +log-count+ (q+:qt.align-right)))))
           (let* ((scrollbar (q+:vertical-scroll-bar log))
                  (position (q+:value scrollbar)))
             (loop :while (> (q+:top-level-item-count log) +log-message-maximum+)
@@ -597,19 +616,19 @@
   (declare (connected main-window (add-user string
                                             string
                                             string)))
-  (let ((new-entry (q+:make-qtreewidgetitem user-list)))
-    (let ((entry-id (concatenate 'string "user:" user)))
-      (q+:set-text new-entry +los-id+ entry-id)
+
+  (lodds.core:split-user-identifier (name ip port) user
+    (let* ((entry-id (concatenate 'string "user:" user)))
       (setf (gethash entry-id *id-mapper*)
-            new-entry)
-      (lodds.core:split-user-identifier (name ip port) user
-        (q+:set-text new-entry +user-list-name+ name)
-        (q+:set-text new-entry +user-list-ip+ ip)
-        (q+:set-text new-entry +user-list-port+ port))
-      (q+:set-text new-entry +user-list-load+ (lodds.core:format-size (parse-integer load)))
-      (q+:set-text new-entry +user-list-last-change+ last-change)
-      (q+:set-text new-entry +user-list-id+ entry-id)
-      (q+:set-text-alignment new-entry +user-list-load+ (q+:qt.align-right)))))
+            (qdoto (q+:make-qtreewidgetitem user-list)
+                   (q+:set-text +los-id+ entry-id)
+                   (q+:set-text +user-list-name+ name)
+                   (q+:set-text +user-list-ip+ ip)
+                   (q+:set-text +user-list-port+ port)
+                   (q+:set-text +user-list-load+ (lodds.core:format-size (parse-integer load)))
+                   (q+:set-text +user-list-last-change+ last-change)
+                   (q+:set-text +user-list-id+ entry-id)
+                   (q+:set-text-alignment +user-list-load+ (q+:qt.align-right)))))))
 
 (define-slot (main-window remove-user) ((user string))
   (declare (connected main-window (remove-user string)))
@@ -655,12 +674,11 @@
   (let ((entry (gethash (concatenate 'string "user:" user)
                         *id-mapper*)))
     (when entry
-      (q+:set-text entry
-                   +user-list-load+
-                   (lodds.core:format-size (parse-integer load)))
-      (q+:set-text entry
-                   +user-list-last-change+
-                   last-change))))
+      (qdoto entry
+             (q+:set-text +user-list-load+
+                          (lodds.core:format-size (parse-integer load)))
+             (q+:set-text +user-list-last-change+
+                          last-change)))))
 
 (defun cb-list-update (main-window event)
   "callback which will be called on a :list-update event"
