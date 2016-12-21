@@ -643,7 +643,7 @@
     (let* ((entry-id (concatenate 'string "user:" user)))
       (setf (gethash entry-id *id-mapper*)
             (qdoto (q+:make-qtreewidgetitem user-list)
-                   (q+:set-text +los-id+ entry-id)
+                   (q+:set-text +user-list-id+ entry-id)
                    (q+:set-text +user-list-name+ name)
                    (q+:set-text +user-list-ip+ ip)
                    (q+:set-text +user-list-port+ port)
