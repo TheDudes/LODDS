@@ -188,7 +188,7 @@
                       (when (string= name n)
                         (error "TODO: the given directory can not be shared since a directory with that name already exists :("))))))
     (when (find folder-path (get-shared-folders))
-      (error "TODO: the folder you tried to share has the same name"))
+      (error "TODO: the folder you tried to share is already shared"))
     (let* ((hook (lambda (change)
                    (bt:with-lock-held ((list-of-changes-lock watcher))
                      (push change (list-of-changes watcher))
