@@ -9,17 +9,23 @@
   (list :listener
         :advertiser))
 
-(defparameter +events+ '(:advertiser
-                         :listener
-                         :info
-                         :client-added
-                         :client-removed
-                         :client-updated
-                         :debug
-                         :watcher
-                         :tasker
-                         :handler
-                         :list-update))
+(defvar +events+
+  '((:advertiser)
+    (:listener)
+    (:info)
+    (:client-added cb-client-added)
+    (:client-removed cb-client-removed)
+    (:client-updated cb-client-updated)
+    (:debug)
+    (:watcher)
+    (:tasker)
+    (:handler)
+    (:list-update cb-list-update)
+    (:shared-directory cb-shared-directory)
+    (:unshared-directory cb-unshared-directory))
+  "list of events with their callback. For every event there will also
+  be checkbox to show/hide the corresponding log message, see
+  log-checkboxes-widget.")
 
 (defmacro qdoto (instance &rest forms)
   (let ((inst (gensym "instance")))
@@ -169,18 +175,18 @@
         (layout (q+:make-qvboxlayout main-window)))
     (q+:set-layout container layout)
     (dolist (event +events+)
-      (let ((checkbox (q+:make-qcheckbox (cl-strings:title-case (string event))
+      (let ((checkbox (q+:make-qcheckbox (cl-strings:title-case (string (car event)))
                                          main-window)))
         (q+:set-check-state checkbox
-                            (if (find event *ignored-log-events*)
+                            (if (find (car event) *ignored-log-events*)
                                 (q+:qt.unchecked)
                                 (q+:qt.checked)))
         (connect checkbox "stateChanged(int)"
                  (lambda (new-state)
                    (case new-state
-                     (0 (push event *ignored-log-events*))
+                     (0 (push (car event) *ignored-log-events*))
                      (2 (setf *ignored-log-events*
-                              (remove event *ignored-log-events*))))))
+                              (remove (car event) *ignored-log-events*))))))
         (q+:add-widget layout checkbox)))
     (q+:set-widget log-checkboxes-widget container)))
 
@@ -675,10 +681,10 @@
              (container-put changes)
              name)))
 
-(defun cb-client-removed (main-window client-name)
+(defun cb-client-removed (main-window data)
   "callback which will get called if a client was removed"
-  (signal! main-window (remove-entry string) client-name)
-  (signal! main-window (remove-user string) client-name))
+  (signal! main-window (remove-entry string) (car data))
+  (signal! main-window (remove-user string) (car data)))
 
 (defun cb-client-added (main-window data)
   "callback which will get called if a client was removed"
@@ -727,48 +733,38 @@
                             last-change)))
                  (t (format nil "~{~a~^ ~}" event-msg)))))))
 
-(defun init-gui (window)
+(defun cb-shared-directory (main-window event)
+  (signal! main-window
+           (add-directory string)
+           (car event)))
+
+(defun cb-unshared-directory (main-window event)
+  (signal! main-window
+           (remove-directory string)
+           (car event)))
+
+(defun init-gui (main-window)
   ;; add callbacks
   (lodds.event:add-callback :gui
                             (lambda (event)
-                              (cb-list-update window (cdr event)))
-                            :event-type :list-update)
-  (lodds.event:add-callback :gui
-                            (lambda (event)
-                              (signal! window
-                                       (add-directory string)
-                                       (cadr event)))
-                            :event-type :shared-directory)
-  (lodds.event:add-callback :gui
-                            (lambda (event)
-                              (signal! window
-                                       (remove-directory string)
-                                       (cadr event)))
-                            :event-type :unshared-directory)
-  (lodds.event:add-callback :gui
-                            (lambda (event)
-                              (cb-client-removed window (second event)))
-                            :event-type :client-removed)
-  (lodds.event:add-callback :gui
-                            (lambda (event)
-                              (cb-log-messages window event)))
-  (lodds.event:add-callback :gui
-                            (lambda (event)
-                              (cb-client-added window (cdr event)))
-                            :event-type :client-added)
-  (lodds.event:add-callback :gui
-                            (lambda (event)
-                              (cb-client-updated window (cdr event)))
-                            :event-type :client-updated)
+                              (cb-log-messages main-window event)))
+  (dolist (event+cb +events+)
+    (when (second event+cb)
+      (lodds.event:add-callback :gui
+                                (lambda (event)
+                                  (funcall (symbol-function (second event+cb))
+                                           main-window
+                                           (cdr event)))
+                                (first event+cb))))
   ;; reset id
   (setf *current-id* 0)
   ;; reorder menubar items
-  (signal! window (fix-menubar-order))
+  (signal! main-window (fix-menubar-order))
   ;; add known users and their shared files
   (loop :for user :in (lodds:get-user-list)
         :do (let ((user-info (lodds:get-user-info user)))
               ;; add user
-              (signal! window
+              (signal! main-window
                        (add-user string string string)
                        user
                        (prin1-to-string (lodds:c-load user-info))
@@ -779,27 +775,18 @@
                            (destructuring-bind (checksum size) file-info
                              (push (list :add checksum size filename) changes)))
                          (lodds:c-file-table-name user-info))
-                (signal! window (update-entries string string)
+                (signal! main-window (update-entries string string)
                          (container-put (reverse changes))
                          user))))
   (loop :for dir :in (lodds.watcher:get-shared-folders)
-        :do (signal! window (add-directory string) dir)))
+        :do (signal! main-window (add-directory string) dir)))
 
 (defun cleanup ()
   ;; remove all attached callbacks
-  (lodds.event:remove-callback :gui
-                               :event-type :list-update)
-  (lodds.event:remove-callback :gui
-                               :event-type :client-removed)
-  (lodds.event:remove-callback :gui
-                               :event-type :shared-directory)
-  (lodds.event:remove-callback :gui
-                               :event-type :unshared-directory)
   (lodds.event:remove-callback :gui)
-  (lodds.event:remove-callback :gui
-                               :event-type :client-added)
-  (lodds.event:remove-callback :gui
-                               :event-type :client-updated))
+  (loop :for (event cb) :in +events+
+        :when cb
+        :do (lodds.event:remove-callback :gui event)))
 
 (defun main ()
   (let ((lodds-server lodds:*server*))

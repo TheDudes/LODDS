@@ -14,7 +14,7 @@
              (append (list (cons ,name ,fn))
                      ,alist-accessor))))
 
-(defun add-callback (name fn &key (event-type nil))
+(defun add-callback (name fn &optional event-type)
   "adds the given callback to the event-loop. NAME is a keyword which
   identifies the given callback. This is helpfull to overwrite or
   remove callbacks. FN is the callback function itself, it will be
@@ -32,7 +32,7 @@
           (update-callback name fn (gethash event-type ht)))
         (update-callback name fn (callbacks evt-queue)))))
 
-(defun remove-callback (name &key event-type)
+(defun remove-callback (name &optional event-type)
   "Removes a callback which refers to the given NAME. EVENT-TYPE must
   be specified if it was specified by adding the given callback with
   ADD-CALLBACK. lodds:*server* needs to be bound, else a error will be
