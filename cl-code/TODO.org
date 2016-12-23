@@ -3,7 +3,7 @@
    - [ ] File Header with Description
 
 * GUI
-** TODO missing [8/19]
+** TODO missing [9/19]
    - [X] Share Directory Functionality
    - [X] Display of Shared Directories
    - [X] Info about found Users
@@ -17,7 +17,7 @@
    - [ ] Label & more Info on Interface ComboBox
    - [X] Download File User
    - [X] Download File with load balancing
-   - [ ] Download Folder from a User
+   - [X] Download Folder from a User
    - [ ] colorize logmessage count
    - [X] Split up User Display (name, ip, port)
    - [ ] Display Info on who has a given file (+ where its located)

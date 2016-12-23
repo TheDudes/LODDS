@@ -100,7 +100,13 @@
            #:task-get-file-from-users
            #:get-current-part
            #:get-read-bytes-part
-           #:get-part-size))
+           #:get-part-size
+           ;; task-get-folder and accessors
+           #:task-get-folder
+           #:folder-user
+           #:folder-local-path
+           #:folder-remote-path
+           #:folder-items))
 
 (defpackage #:lodds.watcher
   (:use #:cl)
@@ -185,4 +191,5 @@
            #:get-file-changes
            #:shutdown
            #:generate-info-response
-           #:get-file))
+           #:get-file
+           #:get-folder))

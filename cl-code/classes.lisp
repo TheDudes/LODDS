@@ -230,6 +230,29 @@
                                   again for a the user with the lowest
                                   load.")))
 
+(defclass task-get-folder (task)
+  ((folder-user :accessor folder-user
+                :initarg :user
+                :initform (error "please specify the User who contains the wanted Folder")
+                :type string
+                :documentation "User who got the wanted Folder")
+   (folder-local-path :accessor folder-local-path
+                      :initarg :local-path
+                      :initform (error "please specify a local folder")
+                      :type string
+                      :documentation "Local Folder where Files of Remote Folder will be downloaded too")
+   (folder-remote-path :accessor folder-remote-path
+                       :initarg :remote-path
+                       :initform (error "please specify a remote folder")
+                       :type string
+                       :documentation "Remote Folder which should be downloaded")
+   (folder-items :accessor folder-items
+                 :initform nil
+                 :type list
+                 :documentation "List of files and (path checksum
+                 size) the Remote Folder contains. Will be filled by
+                 GET-FOLDER-INFO when initialized")))
+
 ;; lodds.event classes
 
 (in-package #:lodds.event)

@@ -197,6 +197,36 @@
                         (when info
                           (apply #'list user (c-load (get-user-info user)) info)))))))
 
+(defun get-checksum-from-path (file-path user)
+  "Gets the checksum of the given FILE-PATH from the given USER,
+  returns nil if FILE-PATH or USER does not exist.
+  lodds:*server* needs to be bound
+
+  CL-USER> (get-checksum-from-path \"/shared/\" \"d4ryus@192.168.321.123\")
+  => \"10fha02fh2093f...\")"
+  (let ((user-info (get-user-info user)))
+    (when user-info
+      (car (gethash file-path (c-file-table-name user-info))))))
+
+(defun get-folder-info (folder user)
+  "Returns a list of Files with their Checksums and size which the
+  given FOLDER of given USER contains. If the User ist not found or
+  the User does not share FOLDER, nil is returned.
+  lodds:*server* needs to be bound
+
+  CL-USER> (get-folder-info \"d4ryus@192.168.2.123\" \"/shared/\")
+  => ((\"this.txt\" \"10hf198f...\" 10)
+      (\"that.txt\" \"fj90823f...\" 3213)
+      (\"another-folder/a.txt\" \"20h2ny9f...\" 9513)
+      (\"another-folder/b.txt\" \"gh0q09mb...\") 3183)"
+  (let ((user-info (get-user-info user)))
+    (when user-info
+      (bt:with-lock-held ((c-lock user-info))
+        (loop :for path :being :the :hash-key :of (c-file-table-name user-info)
+              :using (hash-value checksum+size)
+              :if (cl-strings:starts-with path folder)
+              :collect (cons path checksum+size))))))
+
 (defun get-file-changes (current-timestamp &optional (timestamp nil))
   "returns a list of all changes since the given timestamp. if
   timestamp is nil a full list of all files will be returnd"
@@ -266,6 +296,14 @@
                       :checksum checksum
                       :local-file-path local-file-path))))
 
+(defun get-folder (remote-path local-path user)
+  (lodds.task:submit-task
+   (make-instance 'lodds.task:task-get-folder
+                  :name "get-folder"
+                  :user user
+                  :remote-path remote-path
+                  :local-path local-path)))
+
 (defmethod initialize-instance ((task lodds.task:task-get-file-from-user) &rest initargs)
   (call-next-method)
   (with-accessors ((t-ip lodds.task:get-ip)
@@ -296,6 +334,15 @@
                     ;; if file is smaller than 32 mb just
                     ;; download it in one go
                     size))))))
+
+(defmethod initialize-instance ((task lodds.task:task-get-folder) &rest initargs)
+  (call-next-method)
+  (let* ((user (getf initargs :user))
+         (remote-path (getf initargs :remote-path))
+         (items (get-folder-info remote-path user)))
+    (update-load (reduce #'+ items :key #'third))
+    (setf (lodds.task:folder-items task)
+          items)))
 
 (defun load-chunk (stream-from stream-to size &optional (chunk-size (ash 1 21)))
   (let ((transfered (if (> size chunk-size)
@@ -443,3 +490,42 @@
           (update-load (- read-bytes size))
           (lodds.event:push-event :error
                                   (list "on get file from users" local-file-path ":" e)))))))
+
+(defmethod lodds.task:run-task ((task lodds.task:task-get-folder))
+  (with-accessors ((local-path lodds.task:folder-local-path)
+                   (remote-path lodds.task:folder-remote-path)
+                   (items lodds.task:folder-items)
+                   (user lodds.task:folder-user)
+                   (on-finish-hook lodds.task:on-finish-hook)) task
+    (if items
+        (destructuring-bind (file checksum size) (pop items)
+          (unless checksum
+            ;; the file might have changed, if so we should be able to
+            ;; get the checksum from remote-path again, if this also
+            ;; fails checksum will just be nil, so the following if
+            ;; will catch that.
+            (setf checksum (get-checksum-from-path remote-path user)))
+          ;; remove size from load since the new task will add it again
+          (update-load (- size))
+          (if checksum
+              (lodds.task:submit-task
+               (make-instance 'lodds.task:task-get-file-from-users
+                              :name "get-file"
+                              :checksum checksum
+                              :local-file-path (ensure-directories-exist
+                                                (concatenate 'string
+                                                             local-path
+                                                             (subseq file 1)))
+                              ;; resubmit current task-get-folder when file
+                              ;; download is complete
+                              :on-finish-hook (lambda ()
+                                                (lodds.task:submit-task task))))
+              (error "The file ~a from user ~a with checksum ~a does not exist anymore."
+                     file user checksum)))
+        (progn
+          (when on-finish-hook
+            (funcall on-finish-hook))
+          (lodds.event:push-event :info (list "folder"
+                                              remote-path
+                                              "sucessfully downloaded to"
+                                        local-path))))))
