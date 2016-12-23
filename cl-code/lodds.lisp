@@ -405,19 +405,20 @@
             (unless socket
               (multiple-value-bind (ip port) (find-best-user checksum)
                 (setf socket
-                      (request-file ip
-                                    (parse-integer port)
-                                    checksum
-                                    (* current-part part-size)
-                                    (let ((end-next-part (* (+ 1 current-part)
-                                                            part-size)))
-                                      (if (> end-next-part
-                                             size)
-                                          (progn
-                                            (setf part-size (- size
-                                                               (* current-part part-size)))
-                                            size)
-                                          end-next-part))))))
+                      (request-file
+                       ip
+                       (parse-integer port)
+                       checksum
+                       (* current-part part-size)
+                       (let ((end-next-part (* (+ 1 current-part)
+                                               part-size)))
+                         (if (> end-next-part
+                                size)
+                             (progn
+                               (setf part-size (- size
+                                                  (* current-part part-size)))
+                               size)
+                             end-next-part))))))
             (let ((written (load-chunk (usocket:socket-stream socket)
                                        local-file-stream
                                        (- part-size read-bytes-part))))
