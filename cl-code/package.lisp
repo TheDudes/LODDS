@@ -64,10 +64,10 @@
            #:client-message-timestamp
            #:client-last-change
            #:client-load
-           ;; task-request and accerssors
+           ;; task-request and accessors
            #:task-request
            #:request-socket
-           ;; task-request-file and accerssors
+           ;; task-request-file and accessors
            #:task-request-file
            #:request-checksum
            #:request-start
@@ -75,27 +75,27 @@
            #:request-written
            #:request-filename
            #:request-file-stream
-           ;; task-request-info and accerssors
+           ;; task-request-info and accessors
            #:task-request-info
            #:request-timestamp
-           ;; task-request-send-permission and accerssors
+           ;; task-request-send-permission and accessors
            #:task-request-send-permission
            #:request-size
            #:request-timeout
            #:request-filename
-           ;; task-get-file and accerssors
+           ;; task-get-file and accessors
            #:get-local-file-path
            #:get-checksum
            #:get-size
            #:get-socket
            #:get-local-file-stream
            #:get-read-bytes
-           ;; task-get-file-from-user and accerssors
+           ;; task-get-file-from-user and accessors
            #:task-get-file-from-user
            #:get-user
            #:get-ip
            #:get-port
-           ;; task-get-file-from-users and accerssors
+           ;; task-get-file-from-users and accessors
            #:task-get-file-from-users
            #:get-current-part
            #:get-read-bytes-part
