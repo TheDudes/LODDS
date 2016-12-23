@@ -108,6 +108,103 @@
   item gets klicked you can get Information like the file owner or the
   filesize by looking up the id inside *id-mapper*.")
 
+(let ((current-id 0)
+      (id-lock (bt:make-lock "id-lock")))
+  (defun gen-id ()
+    "Will return a string with a number which is increased by 1
+    everytime gen-id is called"
+    (bt:with-lock-held (id-lock)
+      (prin1-to-string (incf current-id)))))
+
+(defclass info ()
+  ((info-id :reader info-id
+            :initform (error "Please specify a id")
+            :initarg :id
+            :type string
+            :documentation "Id which identifies a id-info object, Use
+            id to retrieve id-info objects from *id-mapper* table.")
+   (info-widget :reader info-widget
+                :initform (error "Please specify a widget")
+                :initarg :widget
+                :documentation "A qt widget corresponding to the given
+                id.")))
+
+(defmethod initialize-instance ((entry info) &rest initargs)
+  (declare (ignorable initargs))
+  (call-next-method)
+  (setf (gethash (info-id entry) *id-mapper*) entry))
+
+(defclass shares-entry (info)
+  ((shares-entry-name :accessor shares-entry-name
+                      :initform (error "Please specify entry name")
+                      :initarg :name
+                      :type string
+                      :documentation "Name of entry")
+   (shares-entry-user :accessor shares-entry-user
+                      :initform (error "Please specify a user")
+                      :initarg :user
+                      :type string
+                      :documentation "Id which identifies a id-info
+                      object, Use id to retrieve id-info objects from
+                      *id-mapper* table.")
+   (shares-entry-size :accessor shares-entry-size
+                      :initform (error "Please specify a widget")
+                      :initarg :size
+                      :type bignum
+                      :documentation "A qt widget corresponding to the
+                      given id.")
+   (shares-entry-path :accessor shares-entry-path
+                      :initform (error "Please specify the entry path")
+                      :initarg :path
+                      :type string
+                      :documentation "")))
+
+(defmethod initialize-instance ((entry shares-entry) &rest initargs)
+  (declare (ignorable initargs))
+  (call-next-method)
+  (with-accessors ((name shares-entry-name)
+                   (size shares-entry-size)
+                   (widget info-widget)
+                   (id info-id)) entry
+    (qdoto widget
+           (q+:set-text-alignment +los-size+ (q+:qt.align-right))
+           (q+:set-text-alignment +los-items+ (q+:qt.align-right))
+           (q+:set-text +los-name+ name)
+           (q+:set-text +los-size+ (lodds.core:format-size size))
+           (q+:set-text +los-id+ id))))
+
+(defclass shares-entry-dir (shares-entry)
+  ((shares-entry-items :accessor shares-entry-items
+                       :initform 0
+                       :type bignum
+                       :documentation "Amount of Children the
+                       Directory has")))
+
+(defmethod initialize-instance ((entry shares-entry-dir) &rest initargs)
+  (declare (ignorable initargs))
+  (call-next-method)
+  (with-accessors ((items shares-entry-items)
+                   (widget info-widget)) entry
+    (qdoto widget
+           (q+:set-text +los-items+ (prin1-to-string items))
+           (q+:set-text +los-checksum+ ""))))
+
+(defclass shares-entry-file (shares-entry)
+  ((shares-entry-checksum :accessor shares-entry-checksum
+                          :initform (error "Please specify a checksum")
+                          :initarg :checksum
+                          :type string
+                          :documentation "File entries checksum")))
+
+(defmethod initialize-instance ((entry shares-entry-file) &rest initargs)
+  (declare (ignorable initargs))
+  (call-next-method)
+  (with-accessors ((checksum shares-entry-checksum)
+                   (widget info-widget)) entry
+    (qdoto widget
+           (q+:set-text +los-items+ "")
+           (q+:set-text +los-checksum+ checksum))))
+
 (defparameter *style-sheet*
   "QTreeView {
      alternate-background-color: #eeeeef;
@@ -236,21 +333,35 @@
              (lambda ()
                (let ((user (q+:current-text download-user-selection))
                      (directory (q+:text folder-edit))
-                     (filename (q+:text download-file)))
+                     (filename (q+:text download-file))
+                     (checksum (q+:text download-checksum)))
+                 ;; add / if missing
+                 (when (> (length directory) 0)
+                   (setf directory
+                         (if (char= #\/ (char directory (- (length directory) 1)))
+                             directory
+                             (concatenate 'string directory "/"))))
                  (cond
                    ;; TODO: popup error
                    ((eql 0 (length directory))
                      (lodds.event:push-event :error (list "local directory not selected")))
-                   ((eql 0 (length filename))
-                     (lodds.event:push-event :error (list "no local filename given")))
                    ((not (uiop:directory-exists-p directory))
                      (lodds.event:push-event :error (list "local directory does not exist")))
+                   ((not (q+:is-enabled download-user-selection))
+                    ;; we got a folder download
+                    (lodds:get-folder checksum
+                                      (subseq checksum 0 (- (length checksum)
+                                                            (length filename)))
+                                      directory
+                                      user))
+                   ;; file download
+                   ((eql 0 (length filename))
+                     (lodds.event:push-event :error (list "no local filename given")))
                    (t (lodds:get-file (concatenate 'string
-                                                   (if (char= #\/ (char directory (- (length directory) 1)))
-                                                       directory
-                                                       (concatenate 'string directory "/"))
+                                                   ;; in case trailing slash does not exists, add it
+                                                   directory
                                                    filename)
-                                      (q+:text download-checksum)
+                                      checksum
                                       (unless (string= user "Any")
                                         user)))))))))
 
@@ -303,15 +414,39 @@
   (connect list-of-shares "itemClicked(QTreeWidgetItem *, int)"
            (lambda (item column)
              (declare (ignore column))
-             (let ((checksum (q+:text item +los-checksum+)))
-               ;; TODO: needs to be removed if folder download works
-               (unless (eql 0 (length checksum))
-                 (q+:set-text download-file (q+:text item +los-name+))
-                 (q+:set-text download-checksum checksum)
-                 (loop :repeat (- (q+:count download-user-selection) 1)
-                       :do (q+:remove-item download-user-selection 1))
-                 (loop :for (user . rest) :in (lodds:get-file-info checksum)
-                       :do (q+:add-item download-user-selection user))))))
+             ;; remove all entries from download-user-selection
+             (loop :repeat (- (q+:count download-user-selection) 1)
+                   :do (q+:remove-item download-user-selection 1))
+             (let ((info (gethash (q+:text item +los-id+) *id-mapper*)))
+               (if (eql (type-of info)
+                        'shares-entry-dir)
+                   (with-accessors ((user shares-entry-user)
+                                    (name shares-entry-name)
+                                    (path shares-entry-path)) info
+                     ;; directory was clicked
+                     (qdoto download-file
+                            (q+:set-text
+                            ;; check if item is root (parent == NULL)
+                             (if (qobject-alive-p (q+:parent item))
+                                 name
+                                 ""))
+                            (q+:set-enabled nil))
+                     (q+:set-text download-checksum path)
+                     (qdoto download-user-selection
+                            ;; TODO: add selected user here
+                            (q+:add-item user)
+                            (q+:set-current-index 1)
+                            (q+:set-enabled nil)))
+                   ;; file was clicked
+                   (with-accessors ((name shares-entry-name)
+                                    (checksum shares-entry-checksum)) info
+                     (qdoto download-file
+                            (q+:set-text name)
+                            (q+:set-enabled t))
+                     (q+:set-text download-checksum checksum)
+                     (q+:set-enabled download-user-selection t)
+                     (loop :for (user . rest) :in (lodds:get-file-info checksum)
+                           :do (q+:add-item download-user-selection user)))))))
   (qdoto list-of-shares
          (q+:set-column-count 5)
          (q+:set-uniform-row-heights t)
@@ -393,10 +528,13 @@
   (declare (connected interfaces (current-index-changed string)))
   (lodds:switch-interface selected-item))
 
-(defun add-node (path size checksum get-parent-fn &optional
-                                                    (child-count 0)
-                                                    (get-child-fn nil)
-                                                    (root-p nil))
+(defparameter *new-checksum* nil)
+(defparameter *new-size* nil)
+(defparameter *new-user* nil)
+(defun add-node (path path-left get-parent-fn &optional
+                                                (child-count 0)
+                                                (get-child-fn nil)
+                                                (root-p nil))
   "loop over childs with get-child-fn and check if current entry (car
   path) is already present, if so call add-node on that entry
   recursivly, if not add a new entry and then call add-node with the
@@ -406,8 +544,9 @@
   (loop :for i :from 0 :below child-count
         :do (let ((element (funcall get-child-fn i)))
               ;; check if node matches
-              (when (string= (car path) (q+:text element +los-name+))
-                (unless (cdr path)
+              (when (string= (car path-left)
+                             (q+:text element +los-name+))
+                (unless (cdr path-left)
                   ;; if there is no path left but we have a
                   ;; matching node, it means that the node
                   ;; we tried to add already exists -> we
@@ -415,45 +554,57 @@
                   (return-from add-node nil))
                 ;; if add-node was successfull, update size and
                 ;; item count, then return t
-                (when (add-node (cdr path) size checksum
+                (when (add-node (concatenate 'string path (car path-left))
+                                (cdr path-left)
                                 (lambda () element)
                                 (q+:child-count element)
                                 (lambda (place) (q+:child element place)))
-                  (q+:set-text element
-                               +los-size+
-                               (lodds.core:format-size
-                                (let* ((id (q+:text element +los-id+))
-                                       (old-size (gethash id *id-mapper*)))
-                                  (setf (gethash id *id-mapper*)
-                                        (+ old-size size)))))
+                  (with-accessors ((old-size shares-entry-size))
+                      (gethash (q+:text element +los-id+) *id-mapper*)
+                    (incf old-size *new-size*)
+                    (q+:set-text element
+                                 +los-size+
+                                 (lodds.core:format-size
+                                  old-size)))
                   (return-from add-node t))
                 ;; if add-child-node was not successfull, just return
                 ;; nil
                 (return-from add-node nil))))
   ;; when we get down here it means there was no matching
   ;; node, so lets add a new one.
-  (let* ((entry-id (prin1-to-string (incf *current-id*)))
-         (new-entry (qdoto (q+:make-qtreewidgetitem (funcall get-parent-fn))
-                           (q+:set-text +los-id+ entry-id)
-                           (q+:set-text +los-name+ (car path))
-                           (q+:set-text +los-items+ "")
-                           (q+:set-text +los-size+ (lodds.core:format-size size))
-                           (q+:set-text-alignment +los-size+ (q+:qt.align-right))
-                           (q+:set-text-alignment +los-items+ (q+:qt.align-right)))))
-    (setf (gethash entry-id *id-mapper*) size)
+  (let ((new-entry (q+:make-qtreewidgetitem (funcall get-parent-fn)))
+        (current-path (concatenate 'string
+                                   path
+                                   (car path-left))))
+    (if (cdr path-left)
+        ;; only add items on directories
+        (make-instance 'shares-entry-dir
+                       :name (car path-left)
+                       :path (subseq current-path
+                                     (length *new-user*))
+                       :size *new-size*
+                       :user *new-user*
+                       :widget new-entry
+                       :id (gen-id))
+        ;; only add checksums on files, not on folders
+        (make-instance 'shares-entry-file
+                       :name (car path-left)
+                       :checksum *new-checksum*
+                       :path (subseq current-path
+                                     (length *new-user*))
+                       :size *new-size*
+                       :user *new-user*
+                       :widget new-entry
+                       :id (gen-id)))
     (unless root-p
       (let ((parent (funcall get-parent-fn)))
         (q+:set-text parent
                      +los-items+
                      (prin1-to-string
-                      (+ (parse-integer
-                          (q+:text parent +los-items+))
-                         1)))))
-    (if (cdr path)
-        ;; only add items on directories
-        (q+:set-text new-entry +los-items+ "0")
-        ;; only add checksums on files, not on folders
-        (q+:set-text new-entry +los-checksum+ checksum))
+                      (incf (shares-entry-items
+                             (gethash
+                              (q+:text parent +los-id+)
+                              *id-mapper*)))))))
     ;; only if not root
     (unless root-p
       (q+:add-child (funcall get-parent-fn) new-entry))
@@ -461,8 +612,10 @@
     ;; is no path left it means we reached the last node, so return t
     ;; as we successfully added it. We dont have to update size here,
     ;; since its a new node and it will match the elements size.
-    (if (cdr path)
-        (add-node (cdr path) size checksum (lambda () new-entry))
+    (if (cdr path-left)
+        (add-node (concatenate 'string path (car path-left))
+                  (cdr path-left)
+                  (lambda () new-entry))
         t)))
 
 (defun cleanup-node (node)
@@ -480,7 +633,8 @@
   (loop :for i :from 0 :below child-count
         :do (let ((element (funcall get-child-fn i)))
               ;; check if node matches
-              (when (string= (car path) (q+:text element +los-name+))
+              (when (string= (car path)
+                             (q+:text element +los-name+))
                 ;; check if we have a path left and need to call
                 ;; remove-node recursivly
                 (if (cdr path)
@@ -490,14 +644,16 @@
                                                (q+:child element place))
                                              (lambda (place)
                                                (let* ((removed-item (q+:take-child element place))
-                                                      (size (gethash (q+:text removed-item +los-id+)
-                                                                     *id-mapper*)))
+                                                      (size (shares-entry-size
+                                                             (gethash (q+:text removed-item +los-id+)
+                                                                      *id-mapper*))))
                                                  (q+:set-text element
                                                               +los-items+
                                                               (prin1-to-string
-                                                               (- (parse-integer
-                                                                   (q+:text element +los-items+))
-                                                                  1)))
+                                                               (incf (shares-entry-items
+                                                                      (gethash
+                                                                       (q+:text element +los-id+)
+                                                                       *id-mapper*)))))
                                                  (cleanup-node removed-item)
                                                  size)))))
                       ;; remove-node will return the size of the
@@ -509,13 +665,13 @@
                         ;; left, just update the size and item count
                         (if (eql 0 (q+:child-count element))
                             (funcall remove-child-fn i)
-                            (q+:set-text element
-                                         +los-size+
-                                         (lodds.core:format-size
-                                          (let* ((id (q+:text element +los-id+))
-                                                 (old-size (gethash id *id-mapper*)))
-                                            (setf (gethash id *id-mapper*)
-                                                  (- old-size size))))))
+                            (with-accessors ((old-size shares-entry-size))
+                                (gethash (q+:text element +los-id+) *id-mapper*)
+                              (decf old-size size)
+                              (q+:set-text element
+                                           +los-size+
+                                           (lodds.core:format-size
+                                            old-size))))
                         ;; return size here, since recursive remove
                         ;; was successfull
                         (return-from remove-node size)))
@@ -535,14 +691,18 @@
   (loop :for (type checksum size path) :in (container-get id)
         :do (let ((combined-path (concatenate 'string name path)))
               (if (eql type :add)
-                  (add-node (cl-strings:split combined-path #\/)
-                            size
-                            checksum
-                            (lambda () list-of-shares)
-                            (q+:top-level-item-count list-of-shares)
-                            (lambda (place) (q+:top-level-item list-of-shares place))
-                            t)
-                  (remove-node (cl-strings:split combined-path #\/)
+                  (let* ((split-path (lodds.core:split-path combined-path))
+                         (*new-checksum* checksum)
+                         (*new-size* size)
+                         (*new-user* (let ((user (car split-path)))
+                                       (subseq user 0 (- (length user) 1)))))
+                    (add-node ""
+                              split-path
+                              (lambda () list-of-shares)
+                              (q+:top-level-item-count list-of-shares)
+                              (lambda (place) (q+:top-level-item list-of-shares place))
+                              t))
+                  (remove-node (lodds.core:split-path combined-path)
                                (q+:top-level-item-count list-of-shares)
                                (lambda (place) (q+:top-level-item list-of-shares place))
                                (lambda (place) (cleanup-node (q+:take-top-level-item list-of-shares place)))))))
@@ -550,7 +710,7 @@
 
 (define-slot (main-window remove-entry) ((path string))
   (declare (connected main-window (remove-entry string)))
-  (remove-node (cl-strings:split path #\/)
+  (remove-node (lodds.core:split-path path)
                (q+:top-level-item-count list-of-shares)
                (lambda (place) (q+:top-level-item list-of-shares place))
                (lambda (place) (cleanup-node (q+:take-top-level-item list-of-shares place)))))
@@ -817,7 +977,8 @@
   (lodds.event:remove-callback :gui)
   (loop :for (event cb) :in +events+
         :when cb
-        :do (lodds.event:remove-callback :gui event)))
+        :do (lodds.event:remove-callback :gui event))
+  (setf *id-mapper* (make-hash-table :test 'equalp)))
 
 (defun main ()
   (let ((lodds-server lodds:*server*))
