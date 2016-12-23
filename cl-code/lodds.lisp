@@ -444,7 +444,8 @@
                  (usocket:socket-close socket)
                  (setf socket nil))
                (when close-file-p
-                 (close local-file-stream :abort error-occured))))
+                 (when local-file-stream
+                   (close local-file-stream :abort error-occured)))))
       (handler-case
           (progn
             (unless local-file-stream
