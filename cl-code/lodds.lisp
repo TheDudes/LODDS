@@ -327,7 +327,8 @@
                    (size lodds.task:get-size)
                    (read-bytes lodds.task:get-read-bytes)
                    (socket lodds.task:get-socket)
-                   (local-file-stream lodds.task:get-local-file-stream)) task
+                   (local-file-stream lodds.task:get-local-file-stream)
+                   (on-finish-hook lodds.task:on-finish-hook)) task
     (labels ((cleanup (&optional error-occured error)
                (if error-occured
                    (progn
@@ -335,8 +336,11 @@
                                              (list "on get file from user"
                                                    local-file-path ":" error))
                      (update-load (- read-bytes size)))
-                   (lodds.event:push-event :info (list "downloaded file"
-                                                       local-file-path)))
+                   (progn
+                     (when on-finish-hook
+                       (funcall on-finish-hook))
+                     (lodds.event:push-event :info (list "downloaded file"
+                                                         local-file-path))))
                (when socket
                  (usocket:socket-close socket))
                (when local-file-stream
@@ -384,7 +388,8 @@
                    (local-file-stream lodds.task:get-local-file-stream)
                    (current-part lodds.task:get-current-part)
                    (read-bytes-part lodds.task:get-read-bytes-part)
-                   (part-size lodds.task:get-part-size)) task
+                   (part-size lodds.task:get-part-size)
+                   (on-finish-hook lodds.task:on-finish-hook)) task
     (labels ((cleanup (error-occured close-file-p)
                (when socket
                  (usocket:socket-close socket)
@@ -419,6 +424,8 @@
             (finish-output local-file-stream)
             (if (eql size read-bytes)
                 (progn
+                  (when on-finish-hook
+                    (funcall on-finish-hook))
                   (lodds.event:push-event :info (list "downloaded file"
                                                       local-file-path))
                   (cleanup nil t))

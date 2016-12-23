@@ -52,6 +52,7 @@
   (:export #:tasker
            #:task
            #:name
+           #:on-finish-hook
            #:run-task
            #:submit-task
            ;; task-client and accessors

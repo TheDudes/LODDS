@@ -46,7 +46,13 @@
          :initarg :name
          :initform (error "please specify a task name!")
          :type string
-         :documentation "Task Name.")))
+         :documentation "Task Name.")
+   (on-finish-hook :accessor on-finish-hook
+                   :initarg :on-finish-hook
+                   :initform nil
+                   :type function
+                   :documentation "Function which gets called when the
+                   task finishes.")))
 
 (defclass task-client (task)
     ((client-name :reader client-name
