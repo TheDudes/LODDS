@@ -296,11 +296,12 @@
                       :checksum checksum
                       :local-file-path local-file-path))))
 
-(defun get-folder (remote-path local-path user)
+(defun get-folder (remote-path remote-root local-path user)
   (lodds.task:submit-task
    (make-instance 'lodds.task:task-get-folder
                   :name "get-folder"
                   :user user
+                  :remote-root remote-root
                   :remote-path remote-path
                   :local-path local-path)))
 
@@ -495,6 +496,7 @@
 (defmethod lodds.task:run-task ((task lodds.task:task-get-folder))
   (with-accessors ((local-path lodds.task:folder-local-path)
                    (remote-path lodds.task:folder-remote-path)
+                   (remote-root lodds.task:folder-remote-root)
                    (items lodds.task:folder-items)
                    (user lodds.task:folder-user)
                    (on-finish-hook lodds.task:on-finish-hook)) task
@@ -516,7 +518,7 @@
                               :local-file-path (ensure-directories-exist
                                                 (concatenate 'string
                                                              local-path
-                                                             (subseq file 1)))
+                                                             (subseq file (length remote-root))))
                               ;; resubmit current task-get-folder when file
                               ;; download is complete
                               :on-finish-hook (lambda ()

@@ -241,9 +241,14 @@
                       :initform (error "please specify a local folder")
                       :type string
                       :documentation "Local Folder where Files of Remote Folder will be downloaded too")
+   (folder-remote-root :accessor folder-remote-root
+                       :initarg :remote-root
+                       :initform (error "please specify the remote folder root path")
+                       :type string
+                       :documentation "Remote Folder Root Path which should be downloaded")
    (folder-remote-path :accessor folder-remote-path
                        :initarg :remote-path
-                       :initform (error "please specify a remote folder")
+                       :initform (error "please specify the remote folder path")
                        :type string
                        :documentation "Remote Folder which should be downloaded")
    (folder-items :accessor folder-items

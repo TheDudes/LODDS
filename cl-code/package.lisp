@@ -106,6 +106,7 @@
            #:task-get-folder
            #:folder-user
            #:folder-local-path
+           #:folder-remote-root
            #:folder-remote-path
            #:folder-items))
 
