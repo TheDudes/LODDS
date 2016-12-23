@@ -276,12 +276,15 @@
       (lodds.core:split-user-identifier (name ip port) user
         (setf t-ip ip
               t-port (parse-integer port)))
-      (setf t-size
-            (car (get-file-info checksum user))))))
+      ;; if size was not given, just download the whole file
+      (update-load
+       (setf t-size
+             (car (get-file-info checksum user)))))))
 
 (defmethod initialize-instance ((task lodds.task:task-get-file-from-users) &rest initargs)
   (call-next-method)
   (let ((size (third (first (get-file-info (getf initargs :checksum))))))
+    (update-load size)
     (setf (lodds.task:get-size task) size)
     (setf (lodds.task:get-part-size task)
           (let ((64mb (ash 1 26))
@@ -304,8 +307,7 @@
     (update-load (- transfered))
     transfered))
 
-(defun open-file (file-path load)
-  (update-load load)
+(defun open-file (file-path)
   (open file-path :direction :output
                   :if-does-not-exist :create
                   :element-type '(unsigned-byte 8)
@@ -350,7 +352,7 @@
             (unless socket
               (setf socket (request-file ip port checksum 0 size)))
             (unless local-file-stream
-              (setf local-file-stream (open-file local-file-path size)))
+              (setf local-file-stream (open-file local-file-path)))
             (incf read-bytes
                   (load-chunk (usocket:socket-stream socket)
                               local-file-stream
@@ -399,7 +401,7 @@
       (handler-case
           (progn
             (unless local-file-stream
-              (setf local-file-stream (open-file local-file-path size)))
+              (setf local-file-stream (open-file local-file-path)))
             (unless socket
               (multiple-value-bind (ip port) (find-best-user checksum)
                 (setf socket
