@@ -73,7 +73,8 @@
                    (file-stream lodds.task:request-file-stream)) task
     (labels ((cleanup (&optional error-occured)
                (unless error-occured
-                 (lodds.event:push-event :info (list "file transfer completed.")))
+                 (lodds.event:push-event :info (list "uploaded file"
+                                                     filename)))
                (when socket
                  (usocket:socket-close socket))
                (when file-stream
