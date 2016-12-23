@@ -8,7 +8,8 @@
            #:str-case
            #:split-directory
            #:format-size
-           #:split-user-identifier))
+           #:split-user-identifier
+           #:split-path))
 
 (defpackage #:lodds.low-level-api
   (:use #:cl
