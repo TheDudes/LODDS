@@ -1,6 +1,4 @@
 (in-package #:lodds-qt)
-
-(in-package #:lodds-qt)
 (in-readtable :qtools)
 
 (defparameter +log-message-maximum+ 1000)
