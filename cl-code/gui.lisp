@@ -278,9 +278,8 @@
          (q+:set-resize-mode +log-count+ (q+:qheaderview.resize-to-contents))))
 
 (define-subwidget (main-window log-checkboxes-widget) (q+:make-qscrollarea main-window)
-  (let ((container (q+:make-qgroupbox "Log Settings" main-window))
-        (layout (q+:make-qvboxlayout main-window)))
-    (q+:set-layout container layout)
+  (let* ((container (q+:make-qgroupbox "Log Settings" main-window))
+         (layout (q+:make-qvboxlayout container)))
     (dolist (event +events+)
       (let ((checkbox (q+:make-qcheckbox (cl-strings:title-case (string (car event)))
                                          main-window)))
@@ -303,13 +302,11 @@
   (q+:add-item download-user-selection "Any"))
 
 (define-subwidget (main-window download) (q+:make-qwidget main-window)
-  (let* ((layout (q+:make-qgridlayout main-window))
+  (let* ((layout (q+:make-qgridlayout download))
          (folder-edit (q+:make-qlineedit main-window))
          (folder-completer (q+:make-qcompleter main-window))
          (download-button (q+:make-qpushbutton "Download" main-window))
          (folder-dir-model (q+:make-qdirmodel folder-completer)))
-    (q+:set-layout download layout)
-
     (q+:set-filter folder-dir-model (q+:qdir.dirs))
     (q+:set-model folder-completer folder-dir-model)
     (q+:set-completer folder-edit folder-completer)
@@ -395,9 +392,8 @@
          (q+:set-resize-mode +directories-shared-remove-button+ (q+:qheaderview.resize-to-contents))))
 
 (define-subwidget (main-window share-widget) (q+:make-qwidget main-window)
-  (let ((layout (q+:make-qvboxlayout main-window))
+  (let ((layout (q+:make-qvboxlayout share-widget))
         (share-directory-button (q+:make-qpushbutton "Share Directory" main-window)))
-    (q+:set-layout share-widget layout)
     (connect share-directory-button "pressed()"
              (lambda ()
                (let ((dir (q+:qfiledialog-get-existing-directory)))
