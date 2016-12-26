@@ -33,7 +33,8 @@
          0))))
 
 (defmethod lodds.subsystem:start ((subsys watcher))
-  (error "You cannot start the Watcher subsystem like that! use SHARE and UNSHARE to start/stop"))
+  (error "You cannot start the Watcher subsystem like that! use SHARE and ~
+         UNSHARE to start/stop"))
 
 (defmethod lodds.subsystem:stop ((subsys watcher))
   (dolist (dir-watcher (dir-watchers subsys))
@@ -186,7 +187,8 @@
                 :do (multiple-value-bind (p n) (lodds.core:split-directory shared-folder)
                       (declare (ignore p))
                       (when (string= name n)
-                        (error "TODO: the given directory can not be shared since a directory with that name already exists :("))))))
+                        (error "TODO: the given directory can not be shared ~
+                               since a directory with that name already exists :("))))))
     (when (find folder-path (get-shared-folders))
       (error "TODO: the folder you tried to share is already shared"))
     (let* ((hook (lambda (change)
@@ -217,4 +219,5 @@
                                :test #'string=)))
         (if rem-watcher
             (stop-dir-watcher rem-watcher)
-            (error "TODO: could not find watcher to unshare with given folder-path"))))))
+            (error "TODO: could not find watcher to unshare with given ~
+                   folder-path"))))))

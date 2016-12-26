@@ -5,7 +5,8 @@
 (defclass subsystem ()
   ((name :accessor name
          :initarg :name
-         :initform (error "please specify a subsystem name (keyword like :my-awesome-subsystem)")
+         :initform (error "please specify a subsystem name ~
+                          (keyword like :my-awesome-subsystem)")
          :type keyword
          :documentation "Name to identify a subsystem.")
    (thread :accessor thread
@@ -22,7 +23,8 @@
             and SUBSYSTEM-STOP.")
    (init-fn :accessor init-fn
             :initarg :init-fn
-            :initform (error "please specify a init function which will be run by the subsystem")
+            :initform (error "please specify a init function which ~
+                             will be run by the subsystem")
             :type function
             :documentation "The 'main' function which will be called
             by a extra thread.")))
@@ -233,7 +235,8 @@
 (defclass task-get-folder (task)
   ((folder-user :accessor folder-user
                 :initarg :user
-                :initform (error "please specify the User who contains the wanted Folder")
+                :initform (error "please specify the User who contains ~
+                                 the wanted Folder")
                 :type string
                 :documentation "User who got the wanted Folder")
    (folder-local-path :accessor folder-local-path
