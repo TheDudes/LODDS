@@ -114,9 +114,10 @@
   "splits a path string into its directorires
   CL-USER: (split-path \"d4ryus@192.168.2.1.1:1234/some/shared/file.txt)
   => (\"d4ryus@192.168.2.1.1:1234/\" \"some/\" \"shared/\" \"file.txt\")"
-  (maplist
-   (lambda (path)
-     (if (cdr path)
-         (concatenate 'string (car path) "/")
-         (car path)))
-   (cl-strings:split path #\/)))
+  (remove-if (lambda (element) (eql 0 (length element)))
+             (maplist
+              (lambda (path)
+                (if (cdr path)
+                    (concatenate 'string (car path) "/")
+                    (car path)))
+              (cl-strings:split path #\/))))

@@ -861,14 +861,19 @@
   (destructuring-bind (name type timestamp changes) event
     (declare (ignore timestamp))
     (when (eql type :all)
-      (signal! main-window (remove-entry string) name))
+      (signal! main-window (remove-entry string)
+               (concatenate 'string
+                            name
+                            "/")))
     (signal! main-window (update-entries string string)
              (container-put changes)
              name)))
 
 (defun cb-client-removed (main-window data)
   "callback which will get called if a client was removed"
-  (signal! main-window (remove-entry string) (car data))
+  (signal! main-window (remove-entry string) (concatenate 'string
+                                                          (car data)
+                                                          "/"))
   (signal! main-window (remove-user string) (car data)))
 
 (defun cb-client-added (main-window data)
