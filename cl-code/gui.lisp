@@ -223,6 +223,13 @@
 
 (define-widget main-window (QMainWindow) ())
 
+(define-initializer (main-window setup)
+  (doto main-window
+         (q+:set-window-title "LODDS")
+         (q+:set-window-icon (q+:make-qicon "./res/lodds.png"))
+         (q+:resize 800 450)
+         (q+:set-style-sheet *style-sheet*)))
+
 (define-menu (main-window File)
   (:item ("Run" (ctrl r))
          (if (lodds:interface lodds:*server*)
@@ -457,12 +464,6 @@
          (q+:set-resize-mode +los-items+ (q+:qheaderview.resize-to-contents))
          (q+:set-resize-mode +los-size+ (q+:qheaderview.resize-to-contents))
          (q+:set-resize-mode +los-checksum+ (q+:qheaderview.resize-to-contents)))
-
-  (qdoto main-window
-         (q+:set-window-title "LODDS")
-         (q+:set-window-icon (q+:make-qicon "./res/lodds.png"))
-         (q+:resize 800 450)
-         (q+:set-style-sheet *style-sheet*))
 
   (let ((settings-dock (q+:make-qdockwidget "Settings" main-window))
         (log-dock (q+:make-qdockwidget "Log" main-window))
