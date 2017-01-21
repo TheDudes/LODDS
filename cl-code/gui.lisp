@@ -224,7 +224,7 @@
 (define-widget main-window (QMainWindow) ())
 
 (define-initializer (main-window setup)
-  (doto main-window
+  (qdoto main-window
          (q+:set-window-title "LODDS")
          (q+:set-window-icon (q+:make-qicon "./res/lodds.png"))
          (q+:resize 800 450)
