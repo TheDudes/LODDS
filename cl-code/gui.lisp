@@ -127,9 +127,8 @@
                 :documentation "A qt widget corresponding to the given
                 id.")))
 
-(defmethod initialize-instance ((entry info) &rest initargs)
+(defmethod initialize-instance :after ((entry info) &rest initargs)
   (declare (ignorable initargs))
-  (call-next-method)
   (setf (gethash (info-id entry) *id-mapper*) entry))
 
 (defclass shares-entry (info)
@@ -157,9 +156,8 @@
                       :type string
                       :documentation "")))
 
-(defmethod initialize-instance ((entry shares-entry) &rest initargs)
+(defmethod initialize-instance :after ((entry shares-entry) &rest initargs)
   (declare (ignorable initargs))
-  (call-next-method)
   (with-accessors ((name shares-entry-name)
                    (size shares-entry-size)
                    (widget info-widget)
@@ -178,9 +176,8 @@
                        :documentation "Amount of Children the
                        Directory has")))
 
-(defmethod initialize-instance ((entry shares-entry-dir) &rest initargs)
+(defmethod initialize-instance :after ((entry shares-entry-dir) &rest initargs)
   (declare (ignorable initargs))
-  (call-next-method)
   (with-accessors ((items shares-entry-items)
                    (widget info-widget)) entry
     (qdoto widget
@@ -194,9 +191,8 @@
                           :type string
                           :documentation "File entries checksum")))
 
-(defmethod initialize-instance ((entry shares-entry-file) &rest initargs)
+(defmethod initialize-instance :after ((entry shares-entry-file) &rest initargs)
   (declare (ignorable initargs))
-  (call-next-method)
   (with-accessors ((checksum shares-entry-checksum)
                    (widget info-widget)) entry
     (qdoto widget

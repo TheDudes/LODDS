@@ -108,10 +108,8 @@
     (:file-removed (remove-file dir-watcher pathname))
     (:file-changed (update-file dir-watcher pathname))))
 
-(defmethod initialize-instance ((w dir-watcher) &rest initargs)
+(defmethod initialize-instance :after ((w dir-watcher) &rest initargs)
   (declare (ignorable initargs))
-  (call-next-method)
-
   (multiple-value-bind (path name)
       (lodds.core:split-directory (cl-fs-watcher:dir w))
     (setf (slot-value w 'root-dir-name) name

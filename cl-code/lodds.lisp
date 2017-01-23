@@ -47,9 +47,8 @@
   (bt:with-lock-held ((current-load-lock *server*))
     (incf (current-load *server*) load-diff)))
 
-(defmethod initialize-instance ((server lodds-server) &rest initargs)
+(defmethod initialize-instance :after ((server lodds-server) &rest initargs)
   (declare (ignorable initargs))
-  (call-next-method)
   (with-server server ;; bind *server* for every subsystem of *server*
     (setf (subsystems server)
           (list
@@ -305,8 +304,7 @@
                   :remote-path remote-path
                   :local-path local-path)))
 
-(defmethod initialize-instance ((task lodds.task:task-get-file-from-user) &rest initargs)
-  (call-next-method)
+(defmethod initialize-instance :after ((task lodds.task:task-get-file-from-user) &rest initargs)
   (with-accessors ((t-ip lodds.task:get-ip)
                    (t-port lodds.task:get-port)
                    (t-size lodds.task:get-size)) task
@@ -320,8 +318,7 @@
        (setf t-size
              (car (get-file-info checksum user)))))))
 
-(defmethod initialize-instance ((task lodds.task:task-get-file-from-users) &rest initargs)
-  (call-next-method)
+(defmethod initialize-instance :after ((task lodds.task:task-get-file-from-users) &rest initargs)
   (let ((size (third (first (get-file-info (getf initargs :checksum))))))
     (update-load size)
     (setf (lodds.task:get-size task) size)
@@ -336,8 +333,7 @@
                     ;; download it in one go
                     size))))))
 
-(defmethod initialize-instance ((task lodds.task:task-get-folder) &rest initargs)
-  (call-next-method)
+(defmethod initialize-instance :after ((task lodds.task:task-get-folder) &rest initargs)
   (let* ((user (getf initargs :user))
          (remote-path (getf initargs :remote-path))
          (items (get-folder-info remote-path user)))
