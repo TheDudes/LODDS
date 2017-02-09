@@ -13,4 +13,5 @@
   :components ((:file "package")
                (:file "globals")
                (:file "misc")
+               (:file "log")
                (:file "gui")))

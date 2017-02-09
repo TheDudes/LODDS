@@ -1,24 +1,12 @@
 (in-package #:lodds-qt)
 (in-readtable :qtools)
 
-(defparameter +log-message-maximum+ 1000)
-
-(defparameter *ignored-log-events*
-  (list :listener
-        :advertiser))
-
 ;; list-of-shares columns
 (defvar +los-name+ 0)
 (defvar +los-items+ 1)
 (defvar +los-size+ 2)
 (defvar +los-checksum+ 3)
 (defvar +los-id+ 4)
-
-;; log columns
-(defvar +log-time+ 0)
-(defvar +log-event+ 1)
-(defvar +log-message+ 2)
-(defvar +log-count+ 3)
 
 ;; user-list columns
 (defvar +user-list-name+ 0)
@@ -187,38 +175,6 @@
             (q+:set-current-index interfaces current-interface-index)))
         (q+:set-current-index interfaces -1))))
 
-(define-subwidget (main-window log) (q+:make-qtreewidget main-window)
-  (qdoto log
-         (q+:set-column-count 4)
-         (q+:set-header-labels (list "Time" "Event" "Message" ""))
-         (q+:set-alternating-row-colors t))
-
-  (qdoto (q+:header log)
-         (q+:set-stretch-last-section nil)
-         (q+:set-resize-mode +log-time+ (q+:qheaderview.resize-to-contents))
-         (q+:set-resize-mode +log-event+ (q+:qheaderview.resize-to-contents))
-         (q+:set-resize-mode +log-message+ (q+:qheaderview.stretch))
-         (q+:set-resize-mode +log-count+ (q+:qheaderview.resize-to-contents))))
-
-(define-subwidget (main-window log-checkboxes-widget) (q+:make-qscrollarea main-window)
-  (let* ((container (q+:make-qgroupbox "Log Settings" main-window))
-         (layout (q+:make-qvboxlayout container)))
-    (dolist (event +events+)
-      (let ((checkbox (q+:make-qcheckbox (cl-strings:title-case (string (car event)))
-                                         main-window)))
-        (q+:set-check-state checkbox
-                            (if (find (car event) *ignored-log-events*)
-                                (q+:qt.unchecked)
-                                (q+:qt.checked)))
-        (connect checkbox "stateChanged(int)"
-                 (lambda (new-state)
-                   (case new-state
-                     (0 (push (car event) *ignored-log-events*))
-                     (2 (setf *ignored-log-events*
-                              (remove (car event) *ignored-log-events*))))))
-        (q+:add-widget layout checkbox)))
-    (q+:set-widget log-checkboxes-widget container)))
-
 (define-subwidget (main-window download-file) (q+:make-qlineedit main-window))
 (define-subwidget (main-window download-checksum) (q+:make-qlabel main-window))
 (define-subwidget (main-window download-user-selection) (q+:make-qcombobox main-window)
@@ -283,11 +239,6 @@
                                       (unless (string= user "Any")
                                         user)))))))))
 
-(define-subwidget (main-window log-widget) (q+:make-qsplitter main-window)
-  (qdoto log-widget
-         (q+:add-widget log-checkboxes-widget)
-         (q+:add-widget log)))
-
 (define-subwidget (main-window user-list) (q+:make-qtreewidget main-window)
   (qdoto user-list
          (q+:set-column-count 7)
@@ -327,6 +278,8 @@
     (qdoto layout
            (q+:add-widget directories-shared)
            (q+:add-widget share-directory-button))))
+
+(define-subwidget (main-window info-log-widget) (make-instance 'info-log))
 
 (define-subwidget (main-window list-of-shares) (q+:make-qtreewidget main-window)
   (connect list-of-shares "itemClicked(QTreeWidgetItem *, int)"
@@ -406,7 +359,7 @@
     (q+:set-widget directories-shared-dock share-widget)
 
     ;; log-dock
-    (q+:set-widget log-dock log-widget)
+    (q+:set-widget log-dock info-log-widget)
 
     ;; add view-toggle to View MenuBar Item
     (qdoto (q+:add-menu (q+:menu-bar main-window) "View")
@@ -427,7 +380,6 @@
 (define-signal (main-window update-entries) (string string))
 (define-signal (main-window remove-entry) (string))
 (define-signal (main-window dump-table) ())
-(define-signal (main-window add-log-msg) (string string))
 (define-signal (main-window reload-stylesheet) ())
 (define-signal (main-window fix-menubar-order) ())
 (define-signal (main-window add-user) (string string string))
@@ -627,48 +579,6 @@
                (lambda (place) (q+:top-level-item list-of-shares place))
                (lambda (place) (cleanup-node (q+:take-top-level-item list-of-shares place)))))
 
-(define-slot (main-window add-log-msg) ((event string)
-                                        (msg string))
-  (declare (connected main-window (add-log-msg string
-                                               string)))
-  (let* ((items (q+:top-level-item-count log))
-         (last-item (if (> items 0)
-                        (q+:top-level-item log (- items 1))
-                        nil)))
-    (if (and last-item
-             (string= (q+:text last-item +log-event+)
-                      event)
-             (string= (q+:text last-item +log-message+)
-                      msg))
-
-        (qdoto last-item
-               (q+:set-text +log-time+ (generate-timestamp))
-               (q+:set-text +log-count+
-                            (prin1-to-string
-                             (let ((current (q+:text last-item +log-count+)))
-                               (if (string= current "")
-                                   2
-                                   (+ 1 (parse-integer current)))))))
-        (let ((new-entry (qdoto (q+:make-qtreewidgetitem log)
-                                (q+:set-text +log-time+ (generate-timestamp))
-                                (q+:set-text +log-event+ event)
-                                (q+:set-text +log-message+ msg)
-                                (q+:set-text +log-count+ "")
-                                (q+:set-text-alignment +log-count+ (q+:qt.align-right)))))
-          (let* ((scrollbar (q+:vertical-scroll-bar log))
-                 (position (q+:value scrollbar)))
-            (loop :while (> (q+:top-level-item-count log) +log-message-maximum+)
-                  :do (progn (finalize (q+:take-top-level-item log 0))
-                             (q+:set-value scrollbar (- position 1)))))
-          (let ((visual-rect (if last-item
-                                 (q+:visual-item-rect log last-item)
-                                 nil)))
-            (when (and visual-rect
-                       (< (- (q+:bottom visual-rect)
-                             (q+:height (q+:viewport log)))
-                          (q+:height visual-rect)))
-              (q+:scroll-to-item log new-entry)))))))
-
 (defun dump-item (item &optional (depth 0))
   "dumps given item, and all its childs, if it has any. Just for
   debugging"
@@ -820,35 +730,6 @@
              (prin1-to-string load)
              (prin1-to-string last-change))))
 
-(defun cb-log-messages (main-window event)
-  (let ((event-type (first event))
-        (event-msg (cdr event)))
-    (unless (find event-type *ignored-log-events*)
-      (signal! main-window
-               (add-log-msg string string)
-               (format nil "~a" event-type)
-               (case event-type
-                 (:list-update
-                  (destructuring-bind (name type ts changes)
-                      event-msg
-                    (let ((adds 0)
-                          (dels 0))
-                      (loop :for (type . rest) :in changes
-                            :if (eql type :add)
-                            :do (incf adds)
-                            :else
-                            :do (incf dels))
-                      (format nil "~a ~a ~a adds: ~a dels: ~a"
-                              name type ts adds dels))))
-                 (:client-updated
-                  (destructuring-bind (name load last-change)
-                      event-msg
-                    (format nil "~a ~a ~a"
-                            name
-                            (lodds.core:format-size load)
-                            last-change)))
-                 (t (format nil "~{~a~^ ~}" event-msg)))))))
-
 (defun cb-shared-directory (main-window event)
   (signal! main-window
            (add-directory string)
@@ -861,9 +742,6 @@
 
 (defun init-gui (main-window)
   ;; add callbacks
-  (lodds.event:add-callback :gui
-                            (lambda (event)
-                              (cb-log-messages main-window event)))
   (dolist (event+cb +events+)
     (when (second event+cb)
       (lodds.event:add-callback :gui
@@ -897,20 +775,16 @@
   (loop :for dir :in (lodds.watcher:get-shared-folders)
         :do (signal! main-window (add-directory string) dir)))
 
-(defun cleanup ()
-  ;; remove all attached callbacks
-  (lodds.event:remove-callback :gui)
-  (loop :for (event cb) :in +events+
-        :when cb
-        :do (lodds.event:remove-callback :gui event))
-  (setf *id-mapper* (make-hash-table :test 'equalp)))
-
 (defun main ()
   (let ((lodds-server lodds:*server*))
     ;; TODO: thats not supposed to be in a CALL-IN-MAIN-THREAD
-    (trivial-main-thread:call-in-main-thread
-     (lambda ()
-       (lodds:with-server lodds-server
-         (with-main-window (window (make-instance 'main-window))
-           (init-gui window))
-         (cleanup))))))
+    (tmt:with-body-in-main-thread ()
+      (lodds:with-server lodds-server
+        (with-main-window (window (make-instance 'main-window)
+                           :main-thread nil)
+          (init-gui window))
+
+        (loop :for (event cb) :in +events+
+              :when cb
+              :do (lodds.event:remove-callback :gui event))
+        (setf *id-mapper* (make-hash-table :test 'equalp))))))
