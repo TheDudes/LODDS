@@ -797,7 +797,7 @@
            (send-file-button (q+:make-qpushbutton "Send File" main-window)))
       (connect send-file-button "pressed()"
                (lambda ()
-                 (format t "TODO: implemented SendFile (entry-id: ~a)~%" entry-id)))
+                 (format t "TODO: implement SendFile (entry-id: ~a)~%" entry-id)))
       (q+:set-item-widget user-list
                           new-entry
                           +user-list-send-file+
