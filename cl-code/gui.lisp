@@ -51,7 +51,8 @@
 (defvar +user-list-port+ 2)
 (defvar +user-list-load+ 3)
 (defvar +user-list-last-change+ 4)
-(defvar +user-list-id+ 5)
+(defvar +user-list-send-file+ 5)
+(defvar +user-list-id+ 6)
 
 ;; directories-shared columns
 (defvar +directories-shared-path+ 0)
@@ -370,8 +371,8 @@
 
 (define-subwidget (main-window user-list) (q+:make-qtreewidget main-window)
   (qdoto user-list
-         (q+:set-column-count 6)
-         (q+:set-header-labels (list "User" "IP" "Port" "Load" "Last Change" ""))
+         (q+:set-column-count 7)
+         (q+:set-header-labels (list "User" "IP" "Port" "Load" "Last Change" "" ""))
          (q+:hide-column +user-list-id+)
          (q+:set-alternating-row-colors t))
 
@@ -381,7 +382,8 @@
          (q+:set-resize-mode +user-list-ip+ (q+:qheaderview.resize-to-contents))
          (q+:set-resize-mode +user-list-port+ (q+:qheaderview.resize-to-contents))
          (q+:set-resize-mode +user-list-load+ (q+:qheaderview.resize-to-contents))
-         (q+:set-resize-mode +user-list-last-change+ (q+:qheaderview.resize-to-contents))))
+         (q+:set-resize-mode +user-list-last-change+ (q+:qheaderview.resize-to-contents))
+         (q+:set-resize-mode +user-list-send-file+ (q+:qheaderview.resize-to-contents))))
 
 (define-subwidget (main-window directories-shared) (q+:make-qtreewidget main-window)
   (qdoto directories-shared
@@ -789,19 +791,27 @@
   (declare (connected main-window (add-user string
                                             string
                                             string)))
-
   (lodds.core:split-user-identifier (name ip port) user
-    (let* ((entry-id (concatenate 'string "user:" user)))
-      (setf (gethash entry-id *id-mapper*)
-            (qdoto (q+:make-qtreewidgetitem user-list)
-                   (q+:set-text +user-list-id+ entry-id)
-                   (q+:set-text +user-list-name+ name)
-                   (q+:set-text +user-list-ip+ ip)
-                   (q+:set-text +user-list-port+ port)
-                   (q+:set-text +user-list-load+ (lodds.core:format-size (parse-integer load)))
-                   (q+:set-text +user-list-last-change+ last-change)
-                   (q+:set-text +user-list-id+ entry-id)
-                   (q+:set-text-alignment +user-list-load+ (q+:qt.align-right)))))))
+    (let* ((entry-id (concatenate 'string "user:" user))
+           (new-entry (q+:make-qtreewidgetitem user-list))
+           (send-file-button (q+:make-qpushbutton "Send File" main-window)))
+      (connect send-file-button "pressed()"
+               (lambda ()
+                 (format t "TODO: implemented SendFile (entry-id: ~a)~%" entry-id)))
+      (q+:set-item-widget user-list
+                          new-entry
+                          +user-list-send-file+
+                          send-file-button)
+      (qdoto new-entry
+             (q+:set-text +user-list-id+ entry-id)
+             (q+:set-text +user-list-name+ name)
+             (q+:set-text +user-list-ip+ ip)
+             (q+:set-text +user-list-port+ port)
+             (q+:set-text +user-list-load+ (lodds.core:format-size (parse-integer load)))
+             (q+:set-text +user-list-last-change+ last-change)
+             (q+:set-text +user-list-id+ entry-id)
+             (q+:set-text-alignment +user-list-load+ (q+:qt.align-right)))
+      (setf (gethash entry-id *id-mapper*) new-entry))))
 
 (define-slot (main-window remove-user) ((user string))
   (declare (connected main-window (remove-user string)))
