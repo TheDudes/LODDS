@@ -1,5 +1,5 @@
 * General
-** TODO missing [0/2]
+** TODO missing [0/1]
    - [ ] File Header with Description
 
 * GUI
@@ -27,14 +27,14 @@
    - [ ] SendPermission
 
 * Lodds Lib
-** TODO missing [3/6]
+** TODO missing [4/7]
    - [X] Share File on Extra Thread(pool) with Queue
    - [ ] logging
    - [ ] Error Handling
    - [X] directory watcher (cl-async)
    - [ ] initargs (interface -> overwrite initialize-instance)
    - [X] Get file with load balancing
-   - [ ] Use Systemname as Default
+   - [X] Use Systemname as Default
 
 ** TODO Code changes [4/5]
    - [X] rename and export accessors

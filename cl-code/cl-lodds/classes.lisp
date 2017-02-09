@@ -411,7 +411,7 @@
 (defclass lodds-server ()
   ((name :accessor name
          :initarg :name
-         :initform nil
+         :initform (machine-instance)
          :type string
          :documentation "Advertised name. Will be displayed by other
          Clients as client name.")
