@@ -163,12 +163,18 @@
                    (size shares-entry-size)
                    (widget info-widget)
                    (id info-id)) entry
-    (qdoto widget
-           (q+:set-text-alignment +los-size+ (q+:qt.align-right))
-           (q+:set-text-alignment +los-items+ (q+:qt.align-right))
-           (q+:set-text +los-name+ name)
-           (q+:set-text +los-size+ (lodds.core:format-size size))
-           (q+:set-text +los-id+ id))))
+    (let ((font (q+:make-qfont "Consolas, Inconsolata, Monospace" 10)))
+      (setf (q+:style-hint font) (q+:qfont.type-writer))
+      (qdoto widget
+             (q+:set-font +los-name+ font)
+             (q+:set-font +los-items+ font)
+             (q+:set-font +los-size+ font)
+             (q+:set-font +los-checksum+ font)
+             (q+:set-text-alignment +los-size+ (q+:qt.align-right))
+             (q+:set-text-alignment +los-items+ (q+:qt.align-right))
+             (q+:set-text +los-name+ name)
+             (q+:set-text +los-size+ (lodds.core:format-size size))
+             (q+:set-text +los-id+ id)))))
 
 (defclass shares-entry-dir (shares-entry)
   ((shares-entry-items :accessor shares-entry-items
