@@ -386,7 +386,7 @@
 (define-subwidget (main-window directories-shared) (q+:make-qtreewidget main-window)
   (qdoto directories-shared
          (q+:set-column-count 2)
-         (q+:set-header-labels (list "Path" "Remove"))
+         (q+:set-header-labels (list "Path" ""))
          (q+:set-alternating-row-colors t))
 
   (qdoto (q+:header directories-shared)
@@ -819,7 +819,7 @@
 (define-slot (main-window add-directory) ((path string))
   (declare (connected main-window (add-directory string)))
   (let* ((new-entry (q+:make-qtreewidgetitem directories-shared))
-         (remove-button (q+:make-qpushbutton "Del" main-window)))
+         (remove-button (q+:make-qpushbutton "Unshare" main-window)))
     (q+:set-text new-entry +directories-shared-path+ path)
     (connect remove-button "pressed()"
              (lambda ()
