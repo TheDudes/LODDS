@@ -28,8 +28,8 @@
     (unless evt-queue
       (error "Could not find event-queue!"))
     (if event-type
-        (let* ((ht (typed-callbacks evt-queue)))
-          (update-callback name fn (gethash event-type ht)))
+        (update-callback name fn (gethash event-type
+                                          (typed-callbacks evt-queue)))
         (update-callback name fn (callbacks evt-queue)))))
 
 (defun remove-callback (name &optional event-type)
