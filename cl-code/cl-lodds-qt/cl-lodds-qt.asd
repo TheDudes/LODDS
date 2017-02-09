@@ -11,4 +11,6 @@
                :qtgui
                :cl-strings)
   :components ((:file "package")
+               (:file "globals")
+               (:file "misc")
                (:file "gui")))
