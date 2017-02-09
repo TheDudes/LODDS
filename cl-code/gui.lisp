@@ -404,8 +404,8 @@
                           0)
                    (lodds.watcher:share-folder (concatenate 'string dir "/"))))))
     (qdoto layout
-           (q+:add-widget share-directory-button)
-           (q+:add-widget directories-shared))))
+           (q+:add-widget directories-shared)
+           (q+:add-widget share-directory-button))))
 
 (define-subwidget (main-window list-of-shares) (q+:make-qtreewidget main-window)
   (connect list-of-shares "itemClicked(QTreeWidgetItem *, int)"
