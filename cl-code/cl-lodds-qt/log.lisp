@@ -120,7 +120,7 @@
                           (q+:height visual-rect)))
               (q+:scroll-to-item info-log-list new-entry)))))))
 
-(define-insitializer (info-log setup-widget)
+(define-initializer (info-log setup-widget)
     (qdoto info-log
            (q+:add-widget info-log-settings)
            (q+:add-widget info-log-list)))
