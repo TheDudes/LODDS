@@ -136,111 +136,48 @@
             (q+:set-current-index interfaces current-interface-index)))
         (q+:set-current-index interfaces -1))))
 
-(define-subwidget (main-window download-file) (q+:make-qlineedit main-window))
-(define-subwidget (main-window download-checksum) (q+:make-qlabel main-window))
-(define-subwidget (main-window download-user-selection) (q+:make-qcombobox main-window)
-  (q+:add-item download-user-selection "Any"))
-
-(define-subwidget (main-window download) (q+:make-qwidget main-window)
-  (let* ((layout (q+:make-qgridlayout download))
-         (folder-edit (q+:make-qlineedit main-window))
-         (folder-completer (q+:make-qcompleter main-window))
-         (download-button (q+:make-qpushbutton "Download" main-window))
-         (folder-dir-model (q+:make-qdirmodel folder-completer)))
-    (q+:set-filter folder-dir-model (q+:qdir.dirs))
-    (q+:set-model folder-completer folder-dir-model)
-    (q+:set-completer folder-edit folder-completer)
-
-    (qdoto layout
-           ;; first row - checksum
-           (q+:add-widget (q+:make-qlabel "Checksum:" main-window) 0 0)
-           (q+:add-widget download-checksum 0 1 1 -1)
-           ;; second row - local file location
-           (q+:add-widget (q+:make-qlabel "Download to:" main-window) 1 0)
-           (q+:add-widget folder-edit 1 1 1 8)
-           (q+:add-widget download-file 1 9 1 4)
-           ;; third row - user selction and download button
-           (q+:add-widget (q+:make-qlabel "User:" main-window) 2 0)
-           (q+:add-widget download-user-selection 2 1 1 11)
-           (q+:add-widget download-button 2 12 1 1))
-
-    (connect download-button "pressed()"
-             (lambda ()
-               (let ((user (q+:current-text download-user-selection))
-                     (directory (q+:text folder-edit))
-                     (filename (q+:text download-file))
-                     (checksum (q+:text download-checksum)))
-                 ;; add / if missing
-                 (when (> (length directory) 0)
-                   (setf directory
-                         (if (char= #\/ (char directory (- (length directory) 1)))
-                             directory
-                             (concatenate 'string directory "/"))))
-                 (cond
-                   ;; TODO: popup error
-                   ((eql 0 (length directory))
-                     (lodds.event:push-event :error (list "local directory not selected")))
-                   ((not (uiop:directory-exists-p directory))
-                     (lodds.event:push-event :error (list "local directory does not exist")))
-                   ((not (q+:is-enabled download-user-selection))
-                    ;; we got a folder download
-                    (lodds:get-folder checksum
-                                      (subseq checksum 0 (- (length checksum)
-                                                            (length filename)))
-                                      directory
-                                      user))
-                   ;; file download
-                   ((eql 0 (length filename))
-                     (lodds.event:push-event :error (list "no local filename given")))
-                   (t (lodds:get-file (concatenate 'string
-                                                   ;; in case trailing slash does not exists, add it
-                                                   directory
-                                                   filename)
-                                      checksum
-                                      (unless (string= user "Any")
-                                        user)))))))))
-
 (define-subwidget (main-window info-log-widget) (make-instance 'info-log))
 (define-subwidget (main-window user-list-widget) (make-instance 'user-list))
 (define-subwidget (main-window shared-widget) (make-instance 'shared))
+(define-subwidget (main-window download-widget) (make-instance 'download))
+
+(defun set-selected-file (selected-item)
+  "sets *selected-file* and signals download-widget to update"
+  (let ((info (gethash (q+:text selected-item +los-id+) *id-mapper*)))
+    (if (eql (type-of info)
+             'shares-entry-dir)
+        (with-accessors ((user shares-entry-user)
+                         (name shares-entry-name)
+                         (path shares-entry-path)) info
+          (setf *selected-file*
+                (list path
+                      ;; checksum
+                      name
+                      ;; name
+                      (if (qobject-alive-p (q+:parent selected-item))
+                          name
+                          "")
+                      ;; user
+                      user)))
+        ;; file was clicked
+        (with-accessors ((name shares-entry-name)
+                         (checksum shares-entry-checksum)) info
+          (setf *selected-file*
+                (list nil
+                      ;; checksum
+                      checksum
+                      ;; name
+                      name
+                      ;; users
+                      (loop :for (user . rest) :in (lodds:get-file-info checksum)
+                            :collect user)))))))
 
 (define-subwidget (main-window list-of-shares) (q+:make-qtreewidget main-window)
   (connect list-of-shares "itemClicked(QTreeWidgetItem *, int)"
-           (lambda (item column)
+           (lambda (selected-item column)
              (declare (ignore column))
-             ;; remove all entries from download-user-selection
-             (loop :repeat (- (q+:count download-user-selection) 1)
-                   :do (q+:remove-item download-user-selection 1))
-             (let ((info (gethash (q+:text item +los-id+) *id-mapper*)))
-               (if (eql (type-of info)
-                        'shares-entry-dir)
-                   (with-accessors ((user shares-entry-user)
-                                    (name shares-entry-name)
-                                    (path shares-entry-path)) info
-                     ;; directory was clicked
-                     (qdoto download-file
-                            (q+:set-text
-                            ;; check if item is root (parent == NULL)
-                             (if (qobject-alive-p (q+:parent item))
-                                 name
-                                 ""))
-                            (q+:set-enabled nil))
-                     (q+:set-text download-checksum path)
-                     (qdoto download-user-selection
-                            ;; TODO: add selected user here
-                            (q+:add-item user)
-                            (q+:set-current-index 1)
-                            (q+:set-enabled nil)))
-                   ;; file was clicked
-                   (with-accessors ((name shares-entry-name)
-                                    (checksum shares-entry-checksum)) info
-                     (qdoto download-file
-                            (q+:set-text name)
-                            (q+:set-enabled t))
-                     (q+:set-text download-checksum checksum)
-                     (q+:set-enabled download-user-selection t)
-                     (loop :for (user . rest) :in (lodds:get-file-info checksum)
-                           :do (q+:add-item download-user-selection user)))))))
+             (set-selected-file selected-item)
+             (signal! download-widget (update-download))))
   (qdoto list-of-shares
          (q+:set-column-count 5)
          (q+:set-uniform-row-heights t)
@@ -265,7 +202,7 @@
         (download-dock (q+:make-qdockwidget "Download File" main-window)))
 
     ;; download-file dock
-    (q+:set-widget download-dock download)
+    (q+:set-widget download-dock download-widget)
     (q+:add-dock-widget main-window (q+:qt.left-dock-widget-area) download-dock)
 
     ;; settings-dock
