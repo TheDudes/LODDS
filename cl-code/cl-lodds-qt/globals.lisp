@@ -37,6 +37,13 @@
   be checkbox to show/hide the corresponding log message, see
   log-checkboxes-widget.")
 
+(defparameter *selected-file* nil
+  "Contains a list containing the currently selected file.
+  Containing: Path, Checksum, Filename and List out of Users who
+  share the selected file. Path is set to a path if the selected Item
+  is a Folder, users will then just be a single user (not a list of
+  users).")
+
 (defparameter *container*
   (make-hash-table :test 'equalp)
   "hash-table used to pass data between threads and ui Thread.")
