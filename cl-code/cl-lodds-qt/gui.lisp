@@ -662,13 +662,21 @@
   (loop :for dir :in (lodds.watcher:get-shared-folders)
         :do (signal! main-window (add-directory string) dir)))
 
+(defun debug-ignore (&rest args)
+  (format t "ERROR:---------------------------------------~%")
+  (format t "~a~%" args)
+  (format t "---------------------------------------------~%")
+  (abort))
+
 (defun main ()
   (let ((lodds-server lodds:*server*))
     ;; TODO: thats not supposed to be in a CALL-IN-MAIN-THREAD
     (tmt:with-body-in-main-thread ()
       (lodds:with-server lodds-server
-        (with-main-window (window (make-instance 'main-window)
-                           :main-thread nil)
+        (with-main-window (window
+                           (make-instance 'main-window)
+                           :main-thread nil
+                           :on-error #'debug-ignore)
           (init-gui window))
         (loop :for (event cb) :in +events+
               :when cb
