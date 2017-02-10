@@ -122,7 +122,6 @@ public class TopMenuPresenter implements Initializable {
 	}
 	
 	private void sendSingleFileToUser(String userName, long timeout, File file) {
-		System.out.println("File: " +  file);
 		FileInfo fileInfo;
 		try {
 			fileInfo = new FileInfo(file.getPath(), file.getPath());
