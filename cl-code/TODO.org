@@ -1,9 +1,9 @@
 * General
-** TODO missing [0/2]
+** TODO missing [0/1]
    - [ ] File Header with Description
 
 * GUI
-** TODO missing [9/19]
+** TODO missing [9/21]
    - [X] Share Directory Functionality
    - [X] Display of Shared Directories
    - [X] Info about found Users
@@ -23,15 +23,18 @@
    - [ ] Display Info on who has a given file (+ where its located)
    - [ ] Download Button with Icon
    - [ ] Spinner or something similar on Share File
+   - [ ] Icons for Up/Download
+   - [ ] SendPermission
 
 * Lodds Lib
-** TODO missing [3/6]
+** TODO missing [4/7]
    - [X] Share File on Extra Thread(pool) with Queue
    - [ ] logging
    - [ ] Error Handling
    - [X] directory watcher (cl-async)
    - [ ] initargs (interface -> overwrite initialize-instance)
    - [X] Get file with load balancing
+   - [X] Use Systemname as Default
 
 ** TODO Code changes [4/5]
    - [X] rename and export accessors
@@ -40,6 +43,9 @@
    - [ ] replace all parse-integer calls
    - [X] Use [[https://github.com/cosmos72/stmx][STMX]] instead of Locks
    - [X] replace all 'bt:destroy-thread'
+
+** TODO Bugs
+   - [ ] Blocks on Sharing Directory -> Async Hashing
 
 * Low Level API
 ** TODO missing [1/6]

@@ -1,131 +1,12 @@
 (in-package #:lodds-qt)
 (in-readtable :qtools)
 
-(defparameter +log-message-maximum+ 1000)
-
-(defparameter *ignored-log-events*
-  (list :listener
-        :advertiser))
-
-(defvar +events+
-  '((:advertiser)
-    (:listener)
-    (:info)
-    (:client-added cb-client-added)
-    (:client-removed cb-client-removed)
-    (:client-updated cb-client-updated)
-    (:debug)
-    (:watcher)
-    (:tasker)
-    (:handler)
-    (:list-update cb-list-update)
-    (:shared-directory cb-shared-directory)
-    (:unshared-directory cb-unshared-directory))
-  "list of events with their callback. For every event there will also
-  be checkbox to show/hide the corresponding log message, see
-  log-checkboxes-widget.")
-
-(defmacro qdoto (instance &rest forms)
-  (let ((inst (gensym "instance")))
-    `(let ((,inst ,instance))
-       ,@(loop :for (fn . arguments) :in forms
-               :collect `(,fn ,(car arguments) ,inst ,@ (cdr arguments)))
-       ,inst)))
-
 ;; list-of-shares columns
 (defvar +los-name+ 0)
 (defvar +los-items+ 1)
 (defvar +los-size+ 2)
 (defvar +los-checksum+ 3)
 (defvar +los-id+ 4)
-
-;; log columns
-(defvar +log-time+ 0)
-(defvar +log-event+ 1)
-(defvar +log-message+ 2)
-(defvar +log-count+ 3)
-
-;; user-list columns
-(defvar +user-list-name+ 0)
-(defvar +user-list-ip+ 1)
-(defvar +user-list-port+ 2)
-(defvar +user-list-load+ 3)
-(defvar +user-list-last-change+ 4)
-(defvar +user-list-id+ 5)
-
-;; directories-shared columns
-(defvar +directories-shared-path+ 0)
-(defvar +directories-shared-remove-button+ 1)
-
-(defparameter *container*
-  (make-hash-table :test 'equalp)
-  "hash-table used to pass data between threads and ui Thread.")
-
-(defparameter *container-lock*
-  (bt:make-lock "container-lock")
-  "hash-table lock to savetly store data in a secure way")
-
-(defun container-put (data)
-  "adds data to *container* in a save way and returns a id which can
-  be used to retrieve the data again."
-  (let ((id nil))
-    (bt:with-lock-held (*container-lock*)
-      (loop :for test = (format nil "~a" (random 1024))
-            :while (gethash test *container*)
-            :finally (setf id test))
-      (setf (gethash id *container*)
-            data))
-    id))
-
-(defun container-get (id &optional (delete-id-p t))
-  "returns data corresponding to given id. When delete-id-p is t the
-  id gets freed to be used again"
-  (let ((data nil))
-    (bt:with-lock-held (*container-lock*)
-      (setf data (gethash id *container*))
-      (when delete-id-p
-        (remhash id *container*)))
-    data))
-
-(defun generate-timestamp ()
-  "Returns current date as a string."
-  (multiple-value-bind (sec min hr day mon yr dow dst-p tz)
-      (get-decoded-time)
-    (declare (ignore dow dst-p tz))
-    (format nil "~4,'0d-~2,'0d-~2,'0d ~2,'0d:~2,'0d:~2,'0d"
-            yr mon day hr min sec) ))
-
-(defparameter *current-id* 0
-  "each time a new widget gets added it will increment the *curren-id*
-  and take the new value as its own id.")
-
-(defparameter *id-mapper*
-  (make-hash-table :test 'equalp)
-  "hash-table mapping generated widget id's to Information. For
-  example: Each element in list-of-shares has a hidden id column. If a
-  item gets klicked you can get Information like the file owner or the
-  filesize by looking up the id inside *id-mapper*.")
-
-(let ((current-id 0)
-      (id-lock (bt:make-lock "id-lock")))
-  (defun gen-id ()
-    "Will return a string with a number which is increased by 1
-    everytime gen-id is called"
-    (bt:with-lock-held (id-lock)
-      (prin1-to-string (incf current-id)))))
-
-(defclass info ()
-  ((info-id :reader info-id
-            :initform (error "Please specify a id")
-            :initarg :id
-            :type string
-            :documentation "Id which identifies a id-info object, Use
-            id to retrieve id-info objects from *id-mapper* table.")
-   (info-widget :reader info-widget
-                :initform (error "Please specify a widget")
-                :initarg :widget
-                :documentation "A qt widget corresponding to the given
-                id.")))
 
 (defmethod initialize-instance :after ((entry info) &rest initargs)
   (declare (ignorable initargs))
@@ -162,12 +43,18 @@
                    (size shares-entry-size)
                    (widget info-widget)
                    (id info-id)) entry
-    (qdoto widget
-           (q+:set-text-alignment +los-size+ (q+:qt.align-right))
-           (q+:set-text-alignment +los-items+ (q+:qt.align-right))
-           (q+:set-text +los-name+ name)
-           (q+:set-text +los-size+ (lodds.core:format-size size))
-           (q+:set-text +los-id+ id))))
+    (let ((font (q+:make-qfont "Consolas, Inconsolata, Monospace" 10)))
+      (setf (q+:style-hint font) (q+:qfont.type-writer))
+      (qdoto widget
+             (q+:set-font +los-name+ font)
+             (q+:set-font +los-items+ font)
+             (q+:set-font +los-size+ font)
+             (q+:set-font +los-checksum+ font)
+             (q+:set-text-alignment +los-size+ (q+:qt.align-right))
+             (q+:set-text-alignment +los-items+ (q+:qt.align-right))
+             (q+:set-text +los-name+ name)
+             (q+:set-text +los-size+ (lodds.core:format-size size))
+             (q+:set-text +los-id+ id)))))
 
 (defclass shares-entry-dir (shares-entry)
   ((shares-entry-items :accessor shares-entry-items
@@ -199,27 +86,9 @@
            (q+:set-text +los-items+ "")
            (q+:set-text +los-checksum+ checksum))))
 
-(defparameter *style-sheet*
-  "QTreeView {
-     alternate-background-color: #eeeeef;
-     background-color: #ffffff;
-   }
-
-  QTreeView::branch:has-children:!has-siblings:closed,
-  QTreeView::branch:closed:has-children:has-siblings {
-    border-image: none;
-    image: url(./res/folder-closed.png);
-  }
-
-  QTreeView::branch:open:has-children:!has-siblings,
-  QTreeView::branch:open:has-children:has-siblings  {
-    border-image: none;
-    image: url(./res/folder-open.png);
-  }")
-
 (define-widget main-window (QMainWindow) ())
 
-(define-initializer (main-window setup)
+(define-initializer (main-window setup-widget)
   (qdoto main-window
          (q+:set-window-title "LODDS")
          (q+:set-window-icon (q+:make-qicon "./res/lodds.png"))
@@ -266,38 +135,6 @@
           (when (> current-interface-index 0)
             (q+:set-current-index interfaces current-interface-index)))
         (q+:set-current-index interfaces -1))))
-
-(define-subwidget (main-window log) (q+:make-qtreewidget main-window)
-  (qdoto log
-         (q+:set-column-count 4)
-         (q+:set-header-labels (list "Time" "Event" "Message" ""))
-         (q+:set-alternating-row-colors t))
-
-  (qdoto (q+:header log)
-         (q+:set-stretch-last-section nil)
-         (q+:set-resize-mode +log-time+ (q+:qheaderview.resize-to-contents))
-         (q+:set-resize-mode +log-event+ (q+:qheaderview.resize-to-contents))
-         (q+:set-resize-mode +log-message+ (q+:qheaderview.stretch))
-         (q+:set-resize-mode +log-count+ (q+:qheaderview.resize-to-contents))))
-
-(define-subwidget (main-window log-checkboxes-widget) (q+:make-qscrollarea main-window)
-  (let* ((container (q+:make-qgroupbox "Log Settings" main-window))
-         (layout (q+:make-qvboxlayout container)))
-    (dolist (event +events+)
-      (let ((checkbox (q+:make-qcheckbox (cl-strings:title-case (string (car event)))
-                                         main-window)))
-        (q+:set-check-state checkbox
-                            (if (find (car event) *ignored-log-events*)
-                                (q+:qt.unchecked)
-                                (q+:qt.checked)))
-        (connect checkbox "stateChanged(int)"
-                 (lambda (new-state)
-                   (case new-state
-                     (0 (push (car event) *ignored-log-events*))
-                     (2 (setf *ignored-log-events*
-                              (remove (car event) *ignored-log-events*))))))
-        (q+:add-widget layout checkbox)))
-    (q+:set-widget log-checkboxes-widget container)))
 
 (define-subwidget (main-window download-file) (q+:make-qlineedit main-window))
 (define-subwidget (main-window download-checksum) (q+:make-qlabel main-window))
@@ -363,49 +200,9 @@
                                       (unless (string= user "Any")
                                         user)))))))))
 
-(define-subwidget (main-window log-widget) (q+:make-qsplitter main-window)
-  (qdoto log-widget
-         (q+:add-widget log-checkboxes-widget)
-         (q+:add-widget log)))
-
-(define-subwidget (main-window user-list) (q+:make-qtreewidget main-window)
-  (qdoto user-list
-         (q+:set-column-count 6)
-         (q+:set-header-labels (list "User" "IP" "Port" "Load" "Last Change" ""))
-         (q+:hide-column +user-list-id+)
-         (q+:set-alternating-row-colors t))
-
-  (qdoto (q+:header user-list)
-         (q+:set-stretch-last-section nil)
-         (q+:set-resize-mode +user-list-name+ (q+:qheaderview.stretch))
-         (q+:set-resize-mode +user-list-ip+ (q+:qheaderview.resize-to-contents))
-         (q+:set-resize-mode +user-list-port+ (q+:qheaderview.resize-to-contents))
-         (q+:set-resize-mode +user-list-load+ (q+:qheaderview.resize-to-contents))
-         (q+:set-resize-mode +user-list-last-change+ (q+:qheaderview.resize-to-contents))))
-
-(define-subwidget (main-window directories-shared) (q+:make-qtreewidget main-window)
-  (qdoto directories-shared
-         (q+:set-column-count 2)
-         (q+:set-header-labels (list "Path" "Remove"))
-         (q+:set-alternating-row-colors t))
-
-  (qdoto (q+:header directories-shared)
-         (q+:set-stretch-last-section nil)
-         (q+:set-resize-mode +directories-shared-path+ (q+:qheaderview.stretch))
-         (q+:set-resize-mode +directories-shared-remove-button+ (q+:qheaderview.resize-to-contents))))
-
-(define-subwidget (main-window share-widget) (q+:make-qwidget main-window)
-  (let ((layout (q+:make-qvboxlayout share-widget))
-        (share-directory-button (q+:make-qpushbutton "Share Directory" main-window)))
-    (connect share-directory-button "pressed()"
-             (lambda ()
-               (let ((dir (q+:qfiledialog-get-existing-directory)))
-                 (when (> (length dir)
-                          0)
-                   (lodds.watcher:share-folder (concatenate 'string dir "/"))))))
-    (qdoto layout
-           (q+:add-widget share-directory-button)
-           (q+:add-widget directories-shared))))
+(define-subwidget (main-window info-log-widget) (make-instance 'info-log))
+(define-subwidget (main-window user-list-widget) (make-instance 'user-list))
+(define-subwidget (main-window shared-widget) (make-instance 'shared))
 
 (define-subwidget (main-window list-of-shares) (q+:make-qtreewidget main-window)
   (connect list-of-shares "itemClicked(QTreeWidgetItem *, int)"
@@ -479,13 +276,13 @@
       (q+:set-widget settings-dock dock-content))
 
     ;; user-dock
-    (q+:set-widget user-list-dock user-list)
+    (q+:set-widget user-list-dock user-list-widget)
 
     ;; directories-shared-dock
-    (q+:set-widget directories-shared-dock share-widget)
+    (q+:set-widget directories-shared-dock shared-widget)
 
     ;; log-dock
-    (q+:set-widget log-dock log-widget)
+    (q+:set-widget log-dock info-log-widget)
 
     ;; add view-toggle to View MenuBar Item
     (qdoto (q+:add-menu (q+:menu-bar main-window) "View")
@@ -506,14 +303,8 @@
 (define-signal (main-window update-entries) (string string))
 (define-signal (main-window remove-entry) (string))
 (define-signal (main-window dump-table) ())
-(define-signal (main-window add-log-msg) (string string))
 (define-signal (main-window reload-stylesheet) ())
 (define-signal (main-window fix-menubar-order) ())
-(define-signal (main-window add-user) (string string string))
-(define-signal (main-window remove-user) (string))
-(define-signal (main-window update-user) (string string string))
-(define-signal (main-window add-directory) (string))
-(define-signal (main-window remove-directory) (string))
 
 (define-slot (main-window interfaces) ((selected-item string))
   (declare (connected interfaces (current-index-changed string)))
@@ -706,48 +497,6 @@
                (lambda (place) (q+:top-level-item list-of-shares place))
                (lambda (place) (cleanup-node (q+:take-top-level-item list-of-shares place)))))
 
-(define-slot (main-window add-log-msg) ((event string)
-                                        (msg string))
-  (declare (connected main-window (add-log-msg string
-                                               string)))
-  (let* ((items (q+:top-level-item-count log))
-         (last-item (if (> items 0)
-                        (q+:top-level-item log (- items 1))
-                        nil)))
-    (if (and last-item
-             (string= (q+:text last-item +log-event+)
-                      event)
-             (string= (q+:text last-item +log-message+)
-                      msg))
-
-        (qdoto last-item
-               (q+:set-text +log-time+ (generate-timestamp))
-               (q+:set-text +log-count+
-                            (prin1-to-string
-                             (let ((current (q+:text last-item +log-count+)))
-                               (if (string= current "")
-                                   2
-                                   (+ 1 (parse-integer current)))))))
-        (let ((new-entry (qdoto (q+:make-qtreewidgetitem log)
-                                (q+:set-text +log-time+ (generate-timestamp))
-                                (q+:set-text +log-event+ event)
-                                (q+:set-text +log-message+ msg)
-                                (q+:set-text +log-count+ "")
-                                (q+:set-text-alignment +log-count+ (q+:qt.align-right)))))
-          (let* ((scrollbar (q+:vertical-scroll-bar log))
-                 (position (q+:value scrollbar)))
-            (loop :while (> (q+:top-level-item-count log) +log-message-maximum+)
-                  :do (progn (finalize (q+:take-top-level-item log 0))
-                             (q+:set-value scrollbar (- position 1)))))
-          (let ((visual-rect (if last-item
-                                 (q+:visual-item-rect log last-item)
-                                 nil)))
-            (when (and visual-rect
-                       (< (- (q+:bottom visual-rect)
-                             (q+:height (q+:viewport log)))
-                          (q+:height visual-rect)))
-              (q+:scroll-to-item log new-entry)))))))
-
 (defun dump-item (item &optional (depth 0))
   "dumps given item, and all its childs, if it has any. Just for
   debugging"
@@ -783,76 +532,6 @@
   (declare (connected main-window (reload-stylesheet)))
   (q+:set-style-sheet main-window *style-sheet*))
 
-(define-slot (main-window add-user) ((user string)
-                                     (load string)
-                                     (last-change string))
-  (declare (connected main-window (add-user string
-                                            string
-                                            string)))
-
-  (lodds.core:split-user-identifier (name ip port) user
-    (let* ((entry-id (concatenate 'string "user:" user)))
-      (setf (gethash entry-id *id-mapper*)
-            (qdoto (q+:make-qtreewidgetitem user-list)
-                   (q+:set-text +user-list-id+ entry-id)
-                   (q+:set-text +user-list-name+ name)
-                   (q+:set-text +user-list-ip+ ip)
-                   (q+:set-text +user-list-port+ port)
-                   (q+:set-text +user-list-load+ (lodds.core:format-size (parse-integer load)))
-                   (q+:set-text +user-list-last-change+ last-change)
-                   (q+:set-text +user-list-id+ entry-id)
-                   (q+:set-text-alignment +user-list-load+ (q+:qt.align-right)))))))
-
-(define-slot (main-window remove-user) ((user string))
-  (declare (connected main-window (remove-user string)))
-  (lodds.core:split-user-identifier (name ip port) user
-    (loop :for i :from 0 :below (q+:top-level-item-count user-list)
-          :do (let ((child (q+:top-level-item user-list i)))
-                (when (and (string= name (q+:text child +user-list-name+))
-                           (string= ip (q+:text child +user-list-ip+))
-                           (string= port (q+:text child +user-list-port+)))
-                  (remhash (q+:text child +user-list-id+)
-                           *id-mapper*)
-                  (q+:take-top-level-item user-list i)
-                  (return))))))
-
-(define-slot (main-window add-directory) ((path string))
-  (declare (connected main-window (add-directory string)))
-  (let* ((new-entry (q+:make-qtreewidgetitem directories-shared))
-         (remove-button (q+:make-qpushbutton "Del" main-window)))
-    (q+:set-text new-entry +directories-shared-path+ path)
-    (connect remove-button "pressed()"
-             (lambda ()
-               (lodds.watcher:unshare-folder path)))
-    (q+:set-item-widget directories-shared
-                        new-entry
-                        +directories-shared-remove-button+
-                        remove-button)))
-
-(define-slot (main-window remove-directory) ((path string))
-  (declare (connected main-window (remove-directory string)))
-  (loop :for i :from 0 :below (q+:top-level-item-count directories-shared)
-        :do (progn
-              (let ((child (q+:top-level-item directories-shared i)))
-                (when (string= path (q+:text child +directories-shared-path+))
-                  (q+:take-top-level-item directories-shared i)
-                  (return))))))
-
-(define-slot (main-window update-user) ((user string)
-                                        (load string)
-                                        (last-change string))
-  (declare (connected main-window (update-user string
-                                               string
-                                               string)))
-  (let ((entry (gethash (concatenate 'string "user:" user)
-                        *id-mapper*)))
-    (when entry
-      (qdoto entry
-             (q+:set-text +user-list-load+
-                          (lodds.core:format-size (parse-integer load)))
-             (q+:set-text +user-list-last-change+
-                          last-change)))))
-
 (defun cb-list-update (main-window event)
   "callback which will be called on a :list-update event"
   (destructuring-bind (name type timestamp changes) event
@@ -866,75 +545,8 @@
              (container-put changes)
              name)))
 
-(defun cb-client-removed (main-window data)
-  "callback which will get called if a client was removed"
-  (signal! main-window (remove-entry string) (concatenate 'string
-                                                          (car data)
-                                                          "/"))
-  (signal! main-window (remove-user string) (car data)))
-
-(defun cb-client-added (main-window data)
-  "callback which will get called if a client was removed"
-  (destructuring-bind (name load last-change) data
-    (signal! main-window
-             (add-user string string string)
-             name
-             (prin1-to-string load)
-             (prin1-to-string last-change))))
-
-(defun cb-client-updated (main-window data)
-  "callback which will get called if a client was removed"
-  (destructuring-bind (name load last-change) data
-    (signal! main-window
-             (update-user string string string)
-             name
-             (prin1-to-string load)
-             (prin1-to-string last-change))))
-
-(defun cb-log-messages (main-window event)
-  (let ((event-type (first event))
-        (event-msg (cdr event)))
-    (unless (find event-type *ignored-log-events*)
-      (signal! main-window
-               (add-log-msg string string)
-               (format nil "~a" event-type)
-               (case event-type
-                 (:list-update
-                  (destructuring-bind (name type ts changes)
-                      event-msg
-                    (let ((adds 0)
-                          (dels 0))
-                      (loop :for (type . rest) :in changes
-                            :if (eql type :add)
-                            :do (incf adds)
-                            :else
-                            :do (incf dels))
-                      (format nil "~a ~a ~a adds: ~a dels: ~a"
-                              name type ts adds dels))))
-                 (:client-updated
-                  (destructuring-bind (name load last-change)
-                      event-msg
-                    (format nil "~a ~a ~a"
-                            name
-                            (lodds.core:format-size load)
-                            last-change)))
-                 (t (format nil "~{~a~^ ~}" event-msg)))))))
-
-(defun cb-shared-directory (main-window event)
-  (signal! main-window
-           (add-directory string)
-           (car event)))
-
-(defun cb-unshared-directory (main-window event)
-  (signal! main-window
-           (remove-directory string)
-           (car event)))
-
 (defun init-gui (main-window)
   ;; add callbacks
-  (lodds.event:add-callback :gui
-                            (lambda (event)
-                              (cb-log-messages main-window event)))
   (dolist (event+cb +events+)
     (when (second event+cb)
       (lodds.event:add-callback :gui
@@ -943,6 +555,15 @@
                                            main-window
                                            (cdr event)))
                                 (first event+cb))))
+  ;; move this to list-view later
+  (lodds.event:add-callback :gui
+                            (lambda (event)
+                              (signal! main-window
+                                       (remove-entry string)
+                                       (concatenate 'string
+                                                    (second event)
+                                                    "/")))
+                            :client-removed)
   ;; reset id
   (setf *current-id* 0)
   ;; reorder menubar items
@@ -950,12 +571,6 @@
   ;; add known users and their shared files
   (loop :for user :in (lodds:get-user-list)
         :do (let ((user-info (lodds:get-user-info user)))
-              ;; add user
-              (signal! main-window
-                       (add-user string string string)
-                       user
-                       (prin1-to-string (lodds:c-load user-info))
-                       (prin1-to-string (lodds:c-last-change user-info)))
               ;; add all files from user
               (let ((changes nil))
                 (maphash (lambda (filename file-info)
@@ -964,24 +579,26 @@
                          (lodds:c-file-table-name user-info))
                 (signal! main-window (update-entries string string)
                          (container-put (reverse changes))
-                         user))))
-  (loop :for dir :in (lodds.watcher:get-shared-folders)
-        :do (signal! main-window (add-directory string) dir)))
+                         user)))))
 
-(defun cleanup ()
-  ;; remove all attached callbacks
-  (lodds.event:remove-callback :gui)
-  (loop :for (event cb) :in +events+
-        :when cb
-        :do (lodds.event:remove-callback :gui event))
-  (setf *id-mapper* (make-hash-table :test 'equalp)))
+(defun debug-ignore (&rest args)
+  (format t "ERROR:---------------------------------------~%")
+  (format t "~a~%" args)
+  (format t "---------------------------------------------~%")
+  (abort))
 
 (defun main ()
   (let ((lodds-server lodds:*server*))
     ;; TODO: thats not supposed to be in a CALL-IN-MAIN-THREAD
-    (trivial-main-thread:call-in-main-thread
-     (lambda ()
-       (lodds:with-server lodds-server
-         (with-main-window (window (make-instance 'main-window))
-           (init-gui window))
-         (cleanup))))))
+    (tmt:with-body-in-main-thread ()
+      (lodds:with-server lodds-server
+        (with-main-window (window
+                           (make-instance 'main-window)
+                           :main-thread nil
+                           :on-error #'debug-ignore)
+          (init-gui window))
+        (loop :for (event cb) :in +events+
+              :when cb
+              :do (lodds.event:remove-callback :gui event))
+        (lodds.event:remove-callback :gui :client-removed)
+        (setf *id-mapper* (make-hash-table :test 'equalp))))))
