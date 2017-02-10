@@ -183,7 +183,6 @@
            The size of the file in byte.
          timeout
            The time to accept the request in seconds.
-
          filename
            The name of the file.
 
@@ -192,11 +191,11 @@
          exceeded the requesting client may close the connection.
 
        Example:
-         "get send-permission 38e80faf7... 300 /sample.txt 15\n"
-           Asks to transfer file with checksum 38e80faf7... with 300
-           byte size and path /sample.txt to be transfered. The User
-           receiving this request may change the file location on his
-           side. He has 15 seconds to accept the request.
+         "get send-permission 300 15 /sample.txt\n"
+           Asks to transfer file with name "/sample.txt" with 300
+           bytes size. The User receiving this request may change the
+           file location on his side. He has 15 seconds to accept the
+           request.
 
   3.2 Responses
 
