@@ -12,14 +12,6 @@
 (defvar +directories-shared-path+ 0)
 (defvar +directories-shared-remove-button+ 1)
 
-(defun generate-timestamp ()
-  "Returns current date as a string."
-  (multiple-value-bind (sec min hr day mon yr dow dst-p tz)
-      (get-decoded-time)
-    (declare (ignore dow dst-p tz))
-    (format nil "~4,'0d-~2,'0d-~2,'0d ~2,'0d:~2,'0d:~2,'0d"
-            yr mon day hr min sec) ))
-
 (defmethod initialize-instance :after ((entry info) &rest initargs)
   (declare (ignorable initargs))
   (setf (gethash (info-id entry) *id-mapper*) entry))
