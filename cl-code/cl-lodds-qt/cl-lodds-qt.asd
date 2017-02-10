@@ -14,4 +14,5 @@
                (:file "globals")
                (:file "misc")
                (:file "log")
+               (:file "user-list")
                (:file "gui")))

@@ -8,15 +8,6 @@
 (defvar +los-checksum+ 3)
 (defvar +los-id+ 4)
 
-;; user-list columns
-(defvar +user-list-name+ 0)
-(defvar +user-list-ip+ 1)
-(defvar +user-list-port+ 2)
-(defvar +user-list-load+ 3)
-(defvar +user-list-last-change+ 4)
-(defvar +user-list-send-file+ 5)
-(defvar +user-list-id+ 6)
-
 ;; directories-shared columns
 (defvar +directories-shared-path+ 0)
 (defvar +directories-shared-remove-button+ 1)
@@ -239,22 +230,6 @@
                                       (unless (string= user "Any")
                                         user)))))))))
 
-(define-subwidget (main-window user-list) (q+:make-qtreewidget main-window)
-  (qdoto user-list
-         (q+:set-column-count 7)
-         (q+:set-header-labels (list "User" "IP" "Port" "Load" "Last Change" "" ""))
-         (q+:hide-column +user-list-id+)
-         (q+:set-alternating-row-colors t))
-
-  (qdoto (q+:header user-list)
-         (q+:set-stretch-last-section nil)
-         (q+:set-resize-mode +user-list-name+ (q+:qheaderview.stretch))
-         (q+:set-resize-mode +user-list-ip+ (q+:qheaderview.resize-to-contents))
-         (q+:set-resize-mode +user-list-port+ (q+:qheaderview.resize-to-contents))
-         (q+:set-resize-mode +user-list-load+ (q+:qheaderview.resize-to-contents))
-         (q+:set-resize-mode +user-list-last-change+ (q+:qheaderview.resize-to-contents))
-         (q+:set-resize-mode +user-list-send-file+ (q+:qheaderview.resize-to-contents))))
-
 (define-subwidget (main-window directories-shared) (q+:make-qtreewidget main-window)
   (qdoto directories-shared
          (q+:set-column-count 2)
@@ -280,6 +255,7 @@
            (q+:add-widget share-directory-button))))
 
 (define-subwidget (main-window info-log-widget) (make-instance 'info-log))
+(define-subwidget (main-window user-list-widget) (make-instance 'user-list))
 
 (define-subwidget (main-window list-of-shares) (q+:make-qtreewidget main-window)
   (connect list-of-shares "itemClicked(QTreeWidgetItem *, int)"
@@ -353,7 +329,7 @@
       (q+:set-widget settings-dock dock-content))
 
     ;; user-dock
-    (q+:set-widget user-list-dock user-list)
+    (q+:set-widget user-list-dock user-list-widget)
 
     ;; directories-shared-dock
     (q+:set-widget directories-shared-dock share-widget)
@@ -382,9 +358,6 @@
 (define-signal (main-window dump-table) ())
 (define-signal (main-window reload-stylesheet) ())
 (define-signal (main-window fix-menubar-order) ())
-(define-signal (main-window add-user) (string string string))
-(define-signal (main-window remove-user) (string))
-(define-signal (main-window update-user) (string string string))
 (define-signal (main-window add-directory) (string))
 (define-signal (main-window remove-directory) (string))
 
@@ -614,47 +587,6 @@
   (declare (connected main-window (reload-stylesheet)))
   (q+:set-style-sheet main-window *style-sheet*))
 
-(define-slot (main-window add-user) ((user string)
-                                     (load string)
-                                     (last-change string))
-  (declare (connected main-window (add-user string
-                                            string
-                                            string)))
-  (lodds.core:split-user-identifier (name ip port) user
-    (let* ((entry-id (concatenate 'string "user:" user))
-           (new-entry (q+:make-qtreewidgetitem user-list))
-           (send-file-button (q+:make-qpushbutton "Send File" main-window)))
-      (connect send-file-button "pressed()"
-               (lambda ()
-                 (format t "TODO: implement SendFile (entry-id: ~a)~%" entry-id)))
-      (q+:set-item-widget user-list
-                          new-entry
-                          +user-list-send-file+
-                          send-file-button)
-      (qdoto new-entry
-             (q+:set-text +user-list-id+ entry-id)
-             (q+:set-text +user-list-name+ name)
-             (q+:set-text +user-list-ip+ ip)
-             (q+:set-text +user-list-port+ port)
-             (q+:set-text +user-list-load+ (lodds.core:format-size (parse-integer load)))
-             (q+:set-text +user-list-last-change+ last-change)
-             (q+:set-text +user-list-id+ entry-id)
-             (q+:set-text-alignment +user-list-load+ (q+:qt.align-right)))
-      (setf (gethash entry-id *id-mapper*) new-entry))))
-
-(define-slot (main-window remove-user) ((user string))
-  (declare (connected main-window (remove-user string)))
-  (lodds.core:split-user-identifier (name ip port) user
-    (loop :for i :from 0 :below (q+:top-level-item-count user-list)
-          :do (let ((child (q+:top-level-item user-list i)))
-                (when (and (string= name (q+:text child +user-list-name+))
-                           (string= ip (q+:text child +user-list-ip+))
-                           (string= port (q+:text child +user-list-port+)))
-                  (remhash (q+:text child +user-list-id+)
-                           *id-mapper*)
-                  (q+:take-top-level-item user-list i)
-                  (return))))))
-
 (define-slot (main-window add-directory) ((path string))
   (declare (connected main-window (add-directory string)))
   (let* ((new-entry (q+:make-qtreewidgetitem directories-shared))
@@ -677,21 +609,6 @@
                   (q+:take-top-level-item directories-shared i)
                   (return))))))
 
-(define-slot (main-window update-user) ((user string)
-                                        (load string)
-                                        (last-change string))
-  (declare (connected main-window (update-user string
-                                               string
-                                               string)))
-  (let ((entry (gethash (concatenate 'string "user:" user)
-                        *id-mapper*)))
-    (when entry
-      (qdoto entry
-             (q+:set-text +user-list-load+
-                          (lodds.core:format-size (parse-integer load)))
-             (q+:set-text +user-list-last-change+
-                          last-change)))))
-
 (defun cb-list-update (main-window event)
   "callback which will be called on a :list-update event"
   (destructuring-bind (name type timestamp changes) event
@@ -704,31 +621,6 @@
     (signal! main-window (update-entries string string)
              (container-put changes)
              name)))
-
-(defun cb-client-removed (main-window data)
-  "callback which will get called if a client was removed"
-  (signal! main-window (remove-entry string) (concatenate 'string
-                                                          (car data)
-                                                          "/"))
-  (signal! main-window (remove-user string) (car data)))
-
-(defun cb-client-added (main-window data)
-  "callback which will get called if a client was removed"
-  (destructuring-bind (name load last-change) data
-    (signal! main-window
-             (add-user string string string)
-             name
-             (prin1-to-string load)
-             (prin1-to-string last-change))))
-
-(defun cb-client-updated (main-window data)
-  "callback which will get called if a client was removed"
-  (destructuring-bind (name load last-change) data
-    (signal! main-window
-             (update-user string string string)
-             name
-             (prin1-to-string load)
-             (prin1-to-string last-change))))
 
 (defun cb-shared-directory (main-window event)
   (signal! main-window
@@ -750,6 +642,15 @@
                                            main-window
                                            (cdr event)))
                                 (first event+cb))))
+  ;; move this to list-view later
+  (lodds.event:add-callback :gui
+                            (lambda (event)
+                              (signal! main-window
+                                       (remove-entry string)
+                                       (concatenate 'string
+                                                    (second event)
+                                                    "/")))
+                            :client-removed)
   ;; reset id
   (setf *current-id* 0)
   ;; reorder menubar items
@@ -757,12 +658,6 @@
   ;; add known users and their shared files
   (loop :for user :in (lodds:get-user-list)
         :do (let ((user-info (lodds:get-user-info user)))
-              ;; add user
-              (signal! main-window
-                       (add-user string string string)
-                       user
-                       (prin1-to-string (lodds:c-load user-info))
-                       (prin1-to-string (lodds:c-last-change user-info)))
               ;; add all files from user
               (let ((changes nil))
                 (maphash (lambda (filename file-info)
@@ -783,8 +678,8 @@
         (with-main-window (window (make-instance 'main-window)
                            :main-thread nil)
           (init-gui window))
-
         (loop :for (event cb) :in +events+
               :when cb
               :do (lodds.event:remove-callback :gui event))
+        (lodds.event:remove-callback :gui :client-removed)
         (setf *id-mapper* (make-hash-table :test 'equalp))))))
