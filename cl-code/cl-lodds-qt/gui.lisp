@@ -90,24 +90,6 @@
            (q+:set-text +los-items+ "")
            (q+:set-text +los-checksum+ checksum))))
 
-(defparameter *style-sheet*
-  "QTreeView {
-     alternate-background-color: #eeeeef;
-     background-color: #ffffff;
-   }
-
-  QTreeView::branch:has-children:!has-siblings:closed,
-  QTreeView::branch:closed:has-children:has-siblings {
-    border-image: none;
-    image: url(./res/folder-closed.png);
-  }
-
-  QTreeView::branch:open:has-children:!has-siblings,
-  QTreeView::branch:open:has-children:has-siblings  {
-    border-image: none;
-    image: url(./res/folder-open.png);
-  }")
-
 (define-widget main-window (QMainWindow) ())
 
 (define-initializer (main-window setup-widget)

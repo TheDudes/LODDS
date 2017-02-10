@@ -1,6 +1,24 @@
 (in-package #:lodds-qt)
 (in-readtable :qtools)
 
+(defparameter *style-sheet*
+  "QTreeView {
+     alternate-background-color: #eeeeef;
+     background-color: #ffffff;
+   }
+
+  QTreeView::branch:has-children:!has-siblings:closed,
+  QTreeView::branch:closed:has-children:has-siblings {
+    border-image: none;
+    image: url(./res/folder-closed.png);
+  }
+
+  QTreeView::branch:open:has-children:!has-siblings,
+  QTreeView::branch:open:has-children:has-siblings  {
+    border-image: none;
+    image: url(./res/folder-open.png);
+  }")
+
 (defvar +events+
   '((:advertiser)
     (:listener)
