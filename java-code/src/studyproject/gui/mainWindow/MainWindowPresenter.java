@@ -75,6 +75,8 @@ public class MainWindowPresenter implements Initializable {
 		if ((interf == null) || interf.isEmpty() || (!interfaces.contains(interf))) {
 			SelectedInterfaceView selectedInterfaceView = new SelectedInterfaceView();
 			Stage interfaceStage = new Stage();
+			interfaceStage.setMinWidth(300);
+			interfaceStage.setMinHeight(200);
 			interfaceStage.setTitle("Startup...");
 			interfaceStage.setScene(new Scene(selectedInterfaceView.getView()));
 			interfaceStage.initModality(Modality.APPLICATION_MODAL);
