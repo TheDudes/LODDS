@@ -17,12 +17,10 @@ import javafx.scene.control.SelectionMode;
 import javafx.scene.control.TextField;
 import javafx.scene.control.TreeItem;
 import javafx.scene.control.TreeView;
-import javafx.stage.DirectoryChooser;
-import javafx.stage.Stage;
-import studyproject.App;
 import studyproject.API.Errors.ErrLog;
 import studyproject.API.Lvl.Mid.Core.FileCoreInfo;
 import studyproject.API.Lvl.Mid.Core.UserInfo;
+import studyproject.gui.Core.Utils;
 import studyproject.gui.mainWindow.MainWindowModel;
 import studyproject.gui.mainWindow.tasksList.TasksListModel;
 import studyproject.gui.mainWindow.usersList.UsersListModel;
@@ -109,18 +107,11 @@ public class FilesTreePresenter implements Initializable {
 
 	private void downloadPressed() {
 		ObservableList<TreeItem<FileCoreInfo>> itemsList = filesTreeView.getSelectionModel().getSelectedItems();
-		DirectoryChooser directoryChooser = new DirectoryChooser();
 		String absolutePath;
 		File chosenFolder;
-		File savePathFile = new File((String) App.properties.get("defaultSavePath"));
-
-		System.out.println(itemsList);
-		if (savePathFile.exists()) {
-			directoryChooser.setInitialDirectory(savePathFile);
-		}
-		directoryChooser.setTitle("Choose folder to save files in");
-		chosenFolder = directoryChooser.showDialog(new Stage());
-		if (chosenFolder == null) {
+		try {
+			chosenFolder = new File(Utils.getChoosenDirPath("Choose folder to save files in"));
+		} catch (NullPointerException e) {
 			ErrLog.log(Level.INFO, LogKey.info, APILvl.mid, "downloadPressed", "Non folder choosen. Download aborted.");
 			return;
 		}
@@ -133,7 +124,7 @@ public class FilesTreePresenter implements Initializable {
 			if (fileCoreInfo.getChecksum() == null) {
 				// continue because this item is a folder. it has no checksum.
 				continue;
-			} 
+			}
 			mainWindowModel.getLodds().getFile(userListModel.getSelectedUser().get(), fileCoreInfo.getChecksum(),
 					absolutePath + fileCoreInfo.getFilePath());
 		}
