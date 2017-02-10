@@ -8,10 +8,6 @@
 (defvar +los-checksum+ 3)
 (defvar +los-id+ 4)
 
-;; directories-shared columns
-(defvar +directories-shared-path+ 0)
-(defvar +directories-shared-remove-button+ 1)
-
 (defmethod initialize-instance :after ((entry info) &rest initargs)
   (declare (ignorable initargs))
   (setf (gethash (info-id entry) *id-mapper*) entry))
@@ -204,32 +200,9 @@
                                       (unless (string= user "Any")
                                         user)))))))))
 
-(define-subwidget (main-window directories-shared) (q+:make-qtreewidget main-window)
-  (qdoto directories-shared
-         (q+:set-column-count 2)
-         (q+:set-header-labels (list "Path" ""))
-         (q+:set-alternating-row-colors t))
-
-  (qdoto (q+:header directories-shared)
-         (q+:set-stretch-last-section nil)
-         (q+:set-resize-mode +directories-shared-path+ (q+:qheaderview.stretch))
-         (q+:set-resize-mode +directories-shared-remove-button+ (q+:qheaderview.resize-to-contents))))
-
-(define-subwidget (main-window share-widget) (q+:make-qwidget main-window)
-  (let ((layout (q+:make-qvboxlayout share-widget))
-        (share-directory-button (q+:make-qpushbutton "Share Directory" main-window)))
-    (connect share-directory-button "pressed()"
-             (lambda ()
-               (let ((dir (q+:qfiledialog-get-existing-directory)))
-                 (when (> (length dir)
-                          0)
-                   (lodds.watcher:share-folder (concatenate 'string dir "/"))))))
-    (qdoto layout
-           (q+:add-widget directories-shared)
-           (q+:add-widget share-directory-button))))
-
 (define-subwidget (main-window info-log-widget) (make-instance 'info-log))
 (define-subwidget (main-window user-list-widget) (make-instance 'user-list))
+(define-subwidget (main-window shared-widget) (make-instance 'shared))
 
 (define-subwidget (main-window list-of-shares) (q+:make-qtreewidget main-window)
   (connect list-of-shares "itemClicked(QTreeWidgetItem *, int)"
@@ -306,7 +279,7 @@
     (q+:set-widget user-list-dock user-list-widget)
 
     ;; directories-shared-dock
-    (q+:set-widget directories-shared-dock share-widget)
+    (q+:set-widget directories-shared-dock shared-widget)
 
     ;; log-dock
     (q+:set-widget log-dock info-log-widget)
@@ -332,8 +305,6 @@
 (define-signal (main-window dump-table) ())
 (define-signal (main-window reload-stylesheet) ())
 (define-signal (main-window fix-menubar-order) ())
-(define-signal (main-window add-directory) (string))
-(define-signal (main-window remove-directory) (string))
 
 (define-slot (main-window interfaces) ((selected-item string))
   (declare (connected interfaces (current-index-changed string)))
@@ -561,28 +532,6 @@
   (declare (connected main-window (reload-stylesheet)))
   (q+:set-style-sheet main-window *style-sheet*))
 
-(define-slot (main-window add-directory) ((path string))
-  (declare (connected main-window (add-directory string)))
-  (let* ((new-entry (q+:make-qtreewidgetitem directories-shared))
-         (remove-button (q+:make-qpushbutton "Unshare" main-window)))
-    (q+:set-text new-entry +directories-shared-path+ path)
-    (connect remove-button "pressed()"
-             (lambda ()
-               (lodds.watcher:unshare-folder path)))
-    (q+:set-item-widget directories-shared
-                        new-entry
-                        +directories-shared-remove-button+
-                        remove-button)))
-
-(define-slot (main-window remove-directory) ((path string))
-  (declare (connected main-window (remove-directory string)))
-  (loop :for i :from 0 :below (q+:top-level-item-count directories-shared)
-        :do (progn
-              (let ((child (q+:top-level-item directories-shared i)))
-                (when (string= path (q+:text child +directories-shared-path+))
-                  (q+:take-top-level-item directories-shared i)
-                  (return))))))
-
 (defun cb-list-update (main-window event)
   "callback which will be called on a :list-update event"
   (destructuring-bind (name type timestamp changes) event
@@ -595,16 +544,6 @@
     (signal! main-window (update-entries string string)
              (container-put changes)
              name)))
-
-(defun cb-shared-directory (main-window event)
-  (signal! main-window
-           (add-directory string)
-           (car event)))
-
-(defun cb-unshared-directory (main-window event)
-  (signal! main-window
-           (remove-directory string)
-           (car event)))
 
 (defun init-gui (main-window)
   ;; add callbacks
@@ -640,9 +579,7 @@
                          (lodds:c-file-table-name user-info))
                 (signal! main-window (update-entries string string)
                          (container-put (reverse changes))
-                         user))))
-  (loop :for dir :in (lodds.watcher:get-shared-folders)
-        :do (signal! main-window (add-directory string) dir)))
+                         user)))))
 
 (defun debug-ignore (&rest args)
   (format t "ERROR:---------------------------------------~%")

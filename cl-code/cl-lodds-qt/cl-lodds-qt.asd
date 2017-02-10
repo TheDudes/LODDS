@@ -15,4 +15,5 @@
                (:file "misc")
                (:file "log")
                (:file "user-list")
+               (:file "shared")
                (:file "gui")))

@@ -31,8 +31,8 @@
     (:tasker)
     (:handler)
     (:list-update cb-list-update)
-    (:shared-directory cb-shared-directory)
-    (:unshared-directory cb-unshared-directory))
+    (:shared-directory)
+    (:unshared-directory))
   "list of events with their callback. For every event there will also
   be checkbox to show/hide the corresponding log message, see
   log-checkboxes-widget.")
