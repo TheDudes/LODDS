@@ -72,7 +72,7 @@
              (q+:set-text +user-list-last-change+
                           last-change)))))
 
-(define-initializer (user-list setup)
+(define-initializer (user-list setup-widget)
   (qdoto user-list
          (q+:set-column-count 7)
          (q+:set-header-labels (list "User" "IP" "Port" "Load" "Last Change" "" ""))
@@ -86,7 +86,9 @@
          (q+:set-resize-mode +user-list-port+ (q+:qheaderview.resize-to-contents))
          (q+:set-resize-mode +user-list-load+ (q+:qheaderview.resize-to-contents))
          (q+:set-resize-mode +user-list-last-change+ (q+:qheaderview.resize-to-contents))
-         (q+:set-resize-mode +user-list-send-file+ (q+:qheaderview.resize-to-contents)))
+         (q+:set-resize-mode +user-list-send-file+ (q+:qheaderview.resize-to-contents))))
+
+(define-initializer (user-list setup-callbacks)
   (lodds.event:add-callback :qt-user-list
                             (lambda (event)
                               (destructuring-bind (name load last-change) (cdr event)
@@ -110,8 +112,9 @@
                                          name
                                          (prin1-to-string load)
                                          (prin1-to-string last-change))))
-                            :client-updated)
+                            :client-updated))
 
+(define-initializer (user-list setup-add-users)
   (loop :for user :in (lodds:get-user-list)
         :do (let ((user-info (lodds:get-user-info user)))
               ;; add user
@@ -121,7 +124,7 @@
                        (prin1-to-string (lodds:c-load user-info))
                        (prin1-to-string (lodds:c-last-change user-info))))))
 
-(define-finalizer (user-list cleanup)
+(define-finalizer (user-list cleanup-callbacks)
   (lodds.event:remove-callback :qt-user-list :client-added)
   (lodds.event:remove-callback :qt-user-list :client-removed)
   (lodds.event:remove-callback :qt-user-list :client-updated))

@@ -120,13 +120,15 @@
                           (q+:height visual-rect)))
               (q+:scroll-to-item info-log-list new-entry)))))))
 
-(define-initializer (info-log setup)
-  (qdoto info-log
-         (q+:add-widget info-log-settings)
-         (q+:add-widget info-log-list))
+(define-insitializer (info-log setup-widget)
+    (qdoto info-log
+           (q+:add-widget info-log-settings)
+           (q+:add-widget info-log-list)))
+
+(define-initializer (info-log setup-callbacks)
   (lodds.event:add-callback :qt-info-log
                             (lambda (event)
                               (cb-log-messages info-log event))))
 
-(define-finalizer (info-log cleanup)
+(define-finalizer (info-log cleanup-callbacks)
   (lodds.event:remove-callback :qt-info-log))
