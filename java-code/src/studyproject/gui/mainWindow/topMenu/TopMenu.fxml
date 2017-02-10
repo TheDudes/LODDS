@@ -1,22 +1,21 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import java.lang.*?>
-<?import javafx.scene.control.*?>
 <?import javafx.scene.control.Menu?>
 <?import javafx.scene.control.MenuBar?>
 <?import javafx.scene.control.MenuItem?>
 
-<MenuBar xmlns="http://javafx.com/javafx/8.0.76-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="studyproject.gui.mainWindow.topMenu.TopMenuPresenter">
+<MenuBar xmlns="http://javafx.com/javafx/8.0.111" xmlns:fx="http://javafx.com/fxml/1" fx:controller="studyproject.gui.mainWindow.topMenu.TopMenuPresenter">
   <menus>
-    <Menu mnemonicParsing="false" text="File">
+    <Menu fx:id="fileMenu" mnemonicParsing="false" text="File">
       <items>
         <MenuItem fx:id="shareFolder" mnemonicParsing="false" text="Share Folder..." />
+        <MenuItem fx:id="sendFilesToUser" mnemonicParsing="false" text="Send Files to marked User..." />
+        <MenuItem fx:id="sendFolderToUser" mnemonicParsing="false" text="Send Folder to marked User..." />
       </items>
     </Menu>
     <Menu mnemonicParsing="false" text="Edit">
       <items>
-        <MenuItem mnemonicParsing="false" text="Delete" />
-            <MenuItem fx:id="settingsItem" mnemonicParsing="false" text="Settings" />
+        <MenuItem fx:id="settingsItem" mnemonicParsing="false" text="Settings..." />
       </items>
     </Menu>
     <Menu mnemonicParsing="false" text="Help">
