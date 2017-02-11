@@ -17,4 +17,5 @@
                (:file "user-list")
                (:file "shared")
                (:file "download")
+               (:file "shares")
                (:file "gui")))

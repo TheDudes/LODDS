@@ -30,7 +30,7 @@
     (:watcher)
     (:tasker)
     (:handler)
-    (:list-update cb-list-update)
+    (:list-update)
     (:shared-directory)
     (:unshared-directory))
   "list of events with their callback. For every event there will also
