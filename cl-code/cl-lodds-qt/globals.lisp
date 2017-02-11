@@ -105,3 +105,7 @@
                 :initarg :widget
                 :documentation "A qt widget corresponding to the given
                 id.")))
+
+(defmethod initialize-instance :after ((entry info) &rest initargs)
+  (declare (ignorable initargs))
+  (setf (gethash (info-id entry) *id-mapper*) entry))

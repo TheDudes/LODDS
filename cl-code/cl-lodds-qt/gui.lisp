@@ -1,10 +1,6 @@
 (in-package #:lodds-qt)
 (in-readtable :qtools)
 
-
-(defmethod initialize-instance :after ((entry info) &rest initargs)
-  (declare (ignorable initargs))
-  (setf (gethash (info-id entry) *id-mapper*) entry))
 (define-widget main-window (QMainWindow) ())
 
 (define-menu (main-window File)
