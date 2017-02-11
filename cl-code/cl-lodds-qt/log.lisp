@@ -33,18 +33,18 @@
   (let* ((container (q+:make-qgroupbox "Log Settings" info-log))
          (layout (q+:make-qvboxlayout container)))
     (dolist (event +events+)
-      (let ((checkbox (q+:make-qcheckbox (cl-strings:title-case (string (car event)))
+      (let ((checkbox (q+:make-qcheckbox (cl-strings:title-case (string event))
                                          info-log)))
         (q+:set-check-state checkbox
-                            (if (find (car event) *ignored-log-events*)
+                            (if (find event *ignored-log-events*)
                                 (q+:qt.unchecked)
                                 (q+:qt.checked)))
         (connect checkbox "stateChanged(int)"
                  (lambda (new-state)
                    (case new-state
-                     (0 (push (car event) *ignored-log-events*))
+                     (0 (push event *ignored-log-events*))
                      (2 (setf *ignored-log-events*
-                              (remove (car event) *ignored-log-events*))))))
+                              (remove event *ignored-log-events*))))))
         (q+:add-widget layout checkbox)))
     (q+:set-widget info-log-settings container)))
 

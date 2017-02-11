@@ -20,22 +20,23 @@
   }")
 
 (defvar +events+
-  '((:advertiser)
-    (:listener)
-    (:info)
-    (:client-added)
-    (:client-removed)
-    (:client-updated)
-    (:debug)
-    (:watcher)
-    (:tasker)
-    (:handler)
-    (:list-update)
-    (:shared-directory)
-    (:unshared-directory))
-  "list of events with their callback. For every event there will also
-  be checkbox to show/hide the corresponding log message, see
-  log-checkboxes-widget.")
+  '(:advertiser
+    :listener
+    :info
+    :client-added
+    :client-removed
+    :client-updated
+    :debug
+    :watcher
+    :tasker
+    :handler
+    :list-update
+    :shared-directory
+    :unshared-directory)
+  "For every event there will also be checkbox to show/hide the
+  corresponding log message, see info-log.lisp info-log-settings
+
+  TODO: this should be inside lodds lib.")
 
 (defparameter *selected-file* nil
   "Contains a list containing the currently selected file.
