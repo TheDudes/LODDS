@@ -139,6 +139,9 @@
   (format t "---------------------------------------------~%")
   (abort))
 
+(defparameter *main-window* nil
+  "Contains the Main-window, usefull to debug/inspect gui widgets.")
+
 (defun main (&optional (lodds-server (make-instance 'lodds:lodds-server) server-given-p))
   ;; so iam calling tmt:with-body-in-main-thread here myself and set
   ;; :main-thread to nil on with-main-window. This way lodds-server
@@ -149,6 +152,7 @@
       (with-main-window (window (make-instance 'main-window)
                          :main-thread nil
                          :on-error #'debug-ignore)
+        (setf *main-window* window)
         (signal! window (fix-menubar-order)))
       (unless server-given-p
         (lodds:shutdown)))))
