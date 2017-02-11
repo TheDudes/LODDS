@@ -53,7 +53,8 @@
   (connect shares-widget "itemClicked(QTreeWidgetItem *, int)"
            (lambda (selected-item column)
              (declare (ignore column))
-             (setf *selected-file* (get-selected-file selected-item))
+             (setf *selected-file* (get-selected-file shares-widget
+                                                      selected-item))
              (signal! download-widget (update-download)))))
 
 (define-initializer (main-window setup-widget)
