@@ -524,18 +524,21 @@
   (format t "---------------------------------------------~%")
   (abort))
 
-(defun main ()
-  (let ((lodds-server lodds:*server*))
-    ;; TODO: thats not supposed to be in a CALL-IN-MAIN-THREAD
-    (tmt:with-body-in-main-thread ()
-      (lodds:with-server lodds-server
-        (with-main-window (window
-                           (make-instance 'main-window)
-                           :main-thread nil
-                           :on-error #'debug-ignore)
-          (init-gui window))
-        (loop :for (event cb) :in +events+
-              :when cb
-              :do (lodds.event:remove-callback :gui event))
-        (lodds.event:remove-callback :gui :client-removed)
-        (setf *id-mapper* (make-hash-table :test 'equalp))))))
+(defun main (&optional (lodds-server (make-instance 'lodds:lodds-server) server-given-p))
+  ;; so iam calling tmt:with-body-in-main-thread here myself and set
+  ;; :main-thread to nil on with-main-window. This way lodds-server
+  ;; can be dynamically bound to lodds::*server* with
+  ;; lodds:with-server and is available on the main thread.
+  (tmt:with-body-in-main-thread ()
+    (lodds:with-server lodds-server
+      (with-main-window (window (make-instance 'main-window)
+                         :main-thread nil
+                         :on-error #'debug-ignore)
+        (init-gui window))
+      (loop :for (event cb) :in +events+
+            :when cb
+            :do (lodds.event:remove-callback :gui event))
+      (lodds.event:remove-callback :gui :client-removed)
+      (setf *id-mapper* (make-hash-table :test 'equalp))
+      (unless server-given-p
+        (lodds:shutdown)))))
