@@ -8,7 +8,6 @@
 (defvar +user-list-load+ 3)
 (defvar +user-list-last-change+ 4)
 (defvar +user-list-send-file+ 5)
-(defvar +user-list-id+ 6)
 
 (define-widget user-list (QTreeWidget)
   ((users :initform (make-hash-table :test 'equalp)
@@ -25,39 +24,31 @@
                                           string
                                           string)))
   (lodds.core:split-user-identifier (name ip port) user
-    (let* ((entry-id (concatenate 'string "user:" user))
-           (new-entry (q+:make-qtreewidgetitem user-list))
+    (let* ((new-entry (q+:make-qtreewidgetitem user-list))
            (send-file-button (q+:make-qpushbutton "Send File" user-list)))
       (connect send-file-button "pressed()"
                (lambda ()
-                 (format t "TODO: implement SendFile (entry-id: ~a)~%" entry-id)))
+                 (format t "TODO: implement SendFile (user: ~a)~%" user)))
       (q+:set-item-widget user-list
                           new-entry
                           +user-list-send-file+
                           send-file-button)
       (qdoto new-entry
-             (q+:set-text +user-list-id+ entry-id)
              (q+:set-text +user-list-name+ name)
              (q+:set-text +user-list-ip+ ip)
              (q+:set-text +user-list-port+ port)
              (q+:set-text +user-list-load+ (lodds.core:format-size (parse-integer load)))
              (q+:set-text +user-list-last-change+ last-change)
-             (q+:set-text +user-list-id+ entry-id)
              (q+:set-text-alignment +user-list-load+ (q+:qt.align-right)))
-      (setf (gethash entry-id (users user-list)) new-entry))))
+      (setf (gethash user (users user-list)) new-entry))))
 
 (define-slot (user-list remove-user) ((user string))
   (declare (connected user-list (remove-user string)))
-  (lodds.core:split-user-identifier (name ip port) user
-    (loop :for i :from 0 :below (q+:top-level-item-count user-list)
-          :do (let ((child (q+:top-level-item user-list i)))
-                (when (and (string= name (q+:text child +user-list-name+))
-                           (string= ip (q+:text child +user-list-ip+))
-                           (string= port (q+:text child +user-list-port+)))
-                  (remhash (q+:text child +user-list-id+)
-                           (users user-list))
-                  (q+:take-top-level-item user-list i)
-                  (return))))))
+  (let ((widget (gethash user (users user-list))))
+    (when widget
+      (q+:take-top-level-item user-list
+                              (q+:index-of-top-level-item user-list widget))
+      (remhash user (users user-list)))))
 
 (define-slot (user-list update-user) ((user string)
                                       (load string)
@@ -65,8 +56,7 @@
   (declare (connected user-list (update-user string
                                              string
                                              string)))
-  (let ((entry (gethash (concatenate 'string "user:" user)
-                        (users user-list))))
+  (let ((entry (gethash user (users user-list))))
     (when entry
       (qdoto entry
              (q+:set-text +user-list-load+
@@ -76,9 +66,8 @@
 
 (define-initializer (user-list setup-widget)
   (qdoto user-list
-         (q+:set-column-count 7)
-         (q+:set-header-labels (list "User" "IP" "Port" "Load" "Last Change" "" ""))
-         (q+:hide-column +user-list-id+)
+         (q+:set-column-count 6)
+         (q+:set-header-labels (list "User" "IP" "Port" "Load" "Last Change" ""))
          (q+:set-alternating-row-colors t))
 
   (qdoto (q+:header user-list)
