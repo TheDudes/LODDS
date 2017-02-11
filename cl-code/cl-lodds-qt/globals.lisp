@@ -44,36 +44,6 @@
   is a Folder, users will then just be a single user (not a list of
   users).")
 
-(defparameter *container*
-  (make-hash-table :test 'equalp)
-  "hash-table used to pass data between threads and ui Thread.")
-
-(defparameter *container-lock*
-  (bt:make-lock "container-lock")
-  "hash-table lock to savetly store data in a secure way")
-
-(defun container-put (data)
-  "adds data to *container* in a save way and returns a id which can
-  be used to retrieve the data again."
-  (let ((id nil))
-    (bt:with-lock-held (*container-lock*)
-      (loop :for test = (format nil "~a" (random 1024))
-            :while (gethash test *container*)
-            :finally (setf id test))
-      (setf (gethash id *container*)
-            data))
-    id))
-
-(defun container-get (id &optional (delete-id-p t))
-  "returns data corresponding to given id. When delete-id-p is t the
-  id gets freed to be used again"
-  (let ((data nil))
-    (bt:with-lock-held (*container-lock*)
-      (setf data (gethash id *container*))
-      (when delete-id-p
-        (remhash id *container*)))
-    data))
-
 (defparameter *current-id* 0
   "each time a new widget gets added it will increment the *curren-id*
   and take the new value as its own id.")

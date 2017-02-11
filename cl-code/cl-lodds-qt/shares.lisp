@@ -8,7 +8,35 @@
 (defvar +shares-checksum+ 3)
 (defvar +shares-id+ 4)
 
-(define-widget shares (QTreeWidget) ())
+(define-widget shares (QTreeWidget)
+  ((changes :accessor changes
+            :initform (list)
+            :type list
+            :documentation "contains new changes which need to be
+            added to the widget. This slot is used to transfer changes
+            from other threads over to the main thread. The method
+            ADD-CHANGE will add changes and then signal UPDATE-ENTRIES
+            which will then update the widget inside the main
+            thread. To safetly retrieve a change use GET-CHANGE.")
+   (changes-lock :accessor changes-lock
+                 :initform (bt:make-lock)
+                 :documentation "Lock to not nconc/pop two changes at
+                 the same time. Lock is used by ADD-CHANGE and
+                 GET-CHANGE.")))
+
+(defmethod add-change ((shares shares) changes name)
+  (bt:with-lock-held ((changes-lock shares))
+    (if (null (changes shares))
+        (setf (changes shares) (list changes))
+        (nconc (changes shares) (list changes))))
+  (signal! shares (update-entries string)
+           name))
+
+(defmethod get-change ((shares shares))
+  (let ((change nil))
+    (bt:with-lock-held ((changes-lock shares))
+      (setf change (pop (changes shares))))
+    change))
 
 (define-initializer (shares setup-widget)
   (qdoto shares
@@ -132,8 +160,7 @@
            (q+:set-text +shares-items+ "")
            (q+:set-text +shares-checksum+ checksum))))
 
-
-(define-signal (shares update-entries) (string string))
+(define-signal (shares update-entries) (string))
 (define-signal (shares remove-entry) (string))
 (define-signal (shares dump-table) ())
 
@@ -292,12 +319,10 @@
         ;; find the specified node
         :finally (return nil)))
 
-(define-slot (shares update-entries) ((id string)
-                                      (name string))
-  (declare (connected shares (update-entries string
-                                             string)))
+(define-slot (shares update-entries) ((name string))
+  (declare (connected shares (update-entries string)))
   (q+:set-updates-enabled shares nil)
-  (loop :for (type checksum size path) :in (container-get id)
+  (loop :for (type checksum size path) :in (get-change shares)
         :do (let ((combined-path (concatenate 'string name path)))
               (if (eql type :add)
                   (let* ((split-path (lodds.core:split-path combined-path))
@@ -358,9 +383,7 @@
                                            (concatenate 'string
                                                         name
                                                         "/")))
-                                (signal! shares (update-entries string string)
-                                         (container-put changes)
-                                         name)))
+                                (add-change shares changes name)))
                             :list-update))
 
 (define-initializer (shares setup-add-files)
@@ -375,9 +398,7 @@
                            (destructuring-bind (checksum size) file-info
                              (push (list :add checksum size filename) changes)))
                          (lodds:c-file-table-name user-info))
-                (signal! shares (update-entries string string)
-                         (container-put (reverse changes))
-                         user)))))
+                (add-change shares changes user)))))
 
 (define-finalizer (shares cleanup-callbacks)
   (lodds.event:remove-callback :qt-shares :client-removed)
