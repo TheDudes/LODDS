@@ -10,7 +10,9 @@
 (defvar +user-list-send-file+ 5)
 (defvar +user-list-id+ 6)
 
-(define-widget user-list (QTreeWidget) ())
+(define-widget user-list (QTreeWidget)
+  ((users :initform (make-hash-table :test 'equalp)
+          :accessor users)))
 
 (define-signal (user-list add-user) (string string string))
 (define-signal (user-list remove-user) (string))
@@ -42,7 +44,7 @@
              (q+:set-text +user-list-last-change+ last-change)
              (q+:set-text +user-list-id+ entry-id)
              (q+:set-text-alignment +user-list-load+ (q+:qt.align-right)))
-      (setf (gethash entry-id *id-mapper*) new-entry))))
+      (setf (gethash entry-id (users user-list)) new-entry))))
 
 (define-slot (user-list remove-user) ((user string))
   (declare (connected user-list (remove-user string)))
@@ -53,7 +55,7 @@
                            (string= ip (q+:text child +user-list-ip+))
                            (string= port (q+:text child +user-list-port+)))
                   (remhash (q+:text child +user-list-id+)
-                           *id-mapper*)
+                           (users user-list))
                   (q+:take-top-level-item user-list i)
                   (return))))))
 
@@ -64,7 +66,7 @@
                                              string
                                              string)))
   (let ((entry (gethash (concatenate 'string "user:" user)
-                        *id-mapper*)))
+                        (users user-list))))
     (when entry
       (qdoto entry
              (q+:set-text +user-list-load+
