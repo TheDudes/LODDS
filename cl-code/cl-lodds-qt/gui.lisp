@@ -105,6 +105,7 @@
                (lodds.subsystem:start (lodds:get-subsystem :advertiser))
                (lodds.subsystem:start (lodds:get-subsystem :handler)))
              (qdoto (q+:make-qmessagebox main-window)
+                    (q+:set-window-title "Error - Could not start LODDS")
                     (q+:set-text "Interface not set!")
                     (q+:set-detailed-text
                      (concatenate 'string
