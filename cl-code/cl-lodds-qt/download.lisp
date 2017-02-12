@@ -15,15 +15,11 @@
     (q+:set-model completer dir-model)
     (q+:set-completer download-folder completer)))
 
-(define-signal (download start-download) (string))
-(define-signal (download update-download) ())
-
-(define-slot (download update-download) ()
-  (declare (connected download (update-download)))
+(defmethod update-download ((download download) path checksum name users)
   ;; remove all entries from download-user-selection
-  (loop :repeat (- (q+:count download-user-selection) 1)
-        :do (q+:remove-item download-user-selection 1))
-  (destructuring-bind (path checksum name users) *selected-file*
+  (with-slots-bound (download download)
+    (loop :repeat (- (q+:count download-user-selection) 1)
+          :do (q+:remove-item download-user-selection 1))
     (if path
         (progn
           ;; directory was clicked

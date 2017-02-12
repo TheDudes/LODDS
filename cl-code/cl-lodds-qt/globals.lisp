@@ -37,10 +37,3 @@
   corresponding log message, see info-log.lisp info-log-settings
 
   TODO: this should be inside lodds lib.")
-
-(defparameter *selected-file* nil
-  "Contains a list containing the currently selected file.
-  Containing: Path, Checksum, Filename and List out of Users who
-  share the selected file. Path is set to a path if the selected Item
-  is a Folder, users will then just be a single user (not a list of
-  users).")
