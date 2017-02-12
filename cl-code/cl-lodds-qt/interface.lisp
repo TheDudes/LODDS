@@ -46,8 +46,8 @@
   (with-slots-bound (interface interface)
     (setf blocked t)
     (call-next-method)
-    (setf blocked nil)
-    (set-current-interface selector)))
+    (set-current-interface selector)
+    (setf blocked nil)))
 
 (defmethod refresh-list ((interface interface))
   (with-slots-bound (interface interface)
