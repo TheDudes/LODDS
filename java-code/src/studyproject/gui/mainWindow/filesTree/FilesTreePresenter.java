@@ -12,11 +12,7 @@ import javafx.beans.value.ObservableValue;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
-import javafx.scene.control.Button;
-import javafx.scene.control.SelectionMode;
-import javafx.scene.control.TextField;
-import javafx.scene.control.TreeItem;
-import javafx.scene.control.TreeView;
+import javafx.scene.control.*;
 import studyproject.API.Errors.ErrLog;
 import studyproject.API.Lvl.Mid.Core.FileCoreInfo;
 import studyproject.API.Lvl.Mid.Core.UserInfo;
@@ -33,6 +29,8 @@ public class FilesTreePresenter implements Initializable {
 	TreeView<FileCoreInfo> filesTreeView;
 	@FXML
 	TextField filesTreeSearch;
+	@FXML
+	MenuItem reloadTreeCM;
 	@Inject
 	UsersListModel userListModel;
 	@Inject
@@ -56,28 +54,22 @@ public class FilesTreePresenter implements Initializable {
 				createTree(newValue);
 			}
 		});
-		filesTreeView.getSelectionModel().selectedItemProperty()
-				.addListener(new ChangeListener<TreeItem<FileCoreInfo>>() {
-
-					@Override
-					public void changed(ObservableValue<? extends TreeItem<FileCoreInfo>> observable,
-							TreeItem<FileCoreInfo> oldValue, TreeItem<FileCoreInfo> newValue) {
-						System.out.println(newValue.getValue().getFileName() + newValue.getValue().getChecksum());
-					}
-				});
+		reloadTreeCM.setOnAction(e -> createTree(userListModel.getSelectedUser().get()));
 	}
 
 	public void createTree(UserInfo userInfo) {
+		if (userInfo == null)
+			return;
 		root.getChildren().clear();
-		String[] subpaths = null;
+		String[] subPaths = null;
 		FileCoreInfo infoToAdd = null;
 		int startIndex = 0;
 		for (String path : userInfo.getPathToFileInfo().keySet()) {
 			infoToAdd = userInfo.getPathToFileInfo().get(path);
-			subpaths = path.split("/");
-			if (subpaths[0].isEmpty())
+			subPaths = path.split("/");
+			if (subPaths[0].isEmpty())
 				startIndex = 1;
-			addTreeItem(infoToAdd, subpaths, startIndex, root);
+			addTreeItem(infoToAdd, subPaths, startIndex, root);
 		}
 	}
 
