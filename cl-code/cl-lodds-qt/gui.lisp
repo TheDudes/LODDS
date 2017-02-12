@@ -115,11 +115,11 @@
   (declare (connected main-window (reload-stylesheet)))
   (q+:set-style-sheet main-window *style-sheet*))
 
-(defun debug-ignore (&rest args)
+(defun on-error (&rest args)
   (format t "ERROR:---------------------------------------~%")
   (format t "~a~%" args)
   (format t "---------------------------------------------~%")
-  (abort))
+  (apply #'qui:invoke-gui-debugger args))
 
 (defparameter *main-window* nil
   "Contains the Main-window, usefull to debug/inspect gui widgets.")
@@ -133,7 +133,7 @@
     (lodds:with-server lodds-server
       (with-main-window (window (make-instance 'main-window)
                          :main-thread nil
-                         :on-error #'debug-ignore)
+                         :on-error #'on-error)
         (setf *main-window* window)
         (signal! window (fix-menubar-order)))
       (unless server-given-p
