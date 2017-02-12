@@ -5,24 +5,21 @@
 
 (define-menu (main-window File)
   (:item ("Run" (ctrl r))
-         (if (lodds:interface lodds:*server*)
-             (progn
-               (lodds.subsystem:start (lodds:get-subsystem :event-queue))
-               (lodds.subsystem:start (lodds:get-subsystem :tasker))
-               (lodds.subsystem:start (lodds:get-subsystem :listener))
-               (lodds.subsystem:start (lodds:get-subsystem :advertiser))
-               (lodds.subsystem:start (lodds:get-subsystem :handler)))
-             ;; TODO: make error widget
-             (qdoto (q+:make-qmessagebox main-window)
-                    (q+:set-window-title "Error - Could not start LODDS")
-                    (q+:set-text "Interface not set!")
-                    (q+:set-detailed-text
-                     (concatenate 'string
-                                  "Please select a Interface (there should be a"
-                                  " 'Settings' Section somewhere with a empty"
-                                  " combobox, just click it and select the"
-                                  " prefered interface.)"))
-                    (q+:open))))
+         (flet ((run () (progn
+                          (lodds.subsystem:start (lodds:get-subsystem :event-queue))
+                          (lodds.subsystem:start (lodds:get-subsystem :tasker))
+                          (lodds.subsystem:start (lodds:get-subsystem :listener))
+                          (lodds.subsystem:start (lodds:get-subsystem :advertiser))
+                          (lodds.subsystem:start (lodds:get-subsystem :handler)))))
+           (if (lodds:interface lodds:*server*)
+               (run)
+               (make-instance 'dialog
+                              :title "Error - Interface not set!"
+                              :text "Please select a Interface first."
+                              :widget (make-instance 'interface)
+                              :on-success-fn (lambda ()
+                                               (when (lodds:interface lodds:*server*)
+                                                 (run)))))))
   (:item ("Stop" (ctrl s))
          (lodds.subsystem:stop (lodds:get-subsystem :tasker))
          (lodds.subsystem:stop (lodds:get-subsystem :listener))

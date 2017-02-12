@@ -19,4 +19,5 @@
                (:file "download")
                (:file "shares")
                (:file "interface")
+               (:file "dialog")
                (:file "gui")))
