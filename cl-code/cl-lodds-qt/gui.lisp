@@ -12,6 +12,7 @@
                (lodds.subsystem:start (lodds:get-subsystem :listener))
                (lodds.subsystem:start (lodds:get-subsystem :advertiser))
                (lodds.subsystem:start (lodds:get-subsystem :handler)))
+             ;; TODO: make error widget
              (qdoto (q+:make-qmessagebox main-window)
                     (q+:set-window-title "Error - Could not start LODDS")
                     (q+:set-text "Interface not set!")
@@ -35,16 +36,6 @@
   (:item ("Quit" (ctrl q))
          (q+:close main-window)))
 
-(define-subwidget (main-window interfaces) (q+:make-qcombobox main-window)
-  (q+:add-items interfaces (lodds:get-interfaces))
-  (let ((current-interface (lodds:interface lodds:*server*)))
-    (if current-interface
-        (let ((current-interface-index (q+:find-text interfaces
-                                                     current-interface)))
-          (when (> current-interface-index 0)
-            (q+:set-current-index interfaces current-interface-index)))
-        (q+:set-current-index interfaces -1))))
-
 (define-subwidget (main-window info-log-widget) (make-instance 'info-log))
 (define-subwidget (main-window user-list-widget) (make-instance 'user-list))
 (define-subwidget (main-window shared-widget) (make-instance 'shared))
@@ -56,6 +47,7 @@
              (setf *selected-file* (get-selected-file shares-widget
                                                       selected-item))
              (signal! download-widget (update-download)))))
+(define-subwidget (main-window interface-widget) (make-instance 'interface))
 
 (define-initializer (main-window setup-widget)
   (qdoto main-window
@@ -75,12 +67,8 @@
     (q+:set-widget download-dock download-widget)
     (q+:add-dock-widget main-window (q+:qt.left-dock-widget-area) download-dock)
 
-    ;; settings-dock
-    (let* ((dock-content (q+:make-qwidget))
-           (dock-layout (q+:make-qformlayout dock-content)))
-      (q+:set-maximum-height dock-content 48)
-      (q+:add-row dock-layout "Interface:" interfaces)
-      (q+:set-widget settings-dock dock-content))
+    ;; interface dock
+    (q+:set-widget settings-dock interface-widget)
 
     ;; user-dock
     (q+:set-widget user-list-dock user-list-widget)
@@ -109,10 +97,6 @@
 
 (define-signal (main-window reload-stylesheet) ())
 (define-signal (main-window fix-menubar-order) ())
-
-(define-slot (main-window interfaces) ((selected-item string))
-  (declare (connected interfaces (current-index-changed string)))
-  (lodds:switch-interface selected-item))
 
 (define-slot (main-window fix-menubar-order) ()
   (declare (connected main-window (fix-menubar-order)))
