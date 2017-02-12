@@ -31,7 +31,7 @@ public class Handles {
 
 	/**
 	 * Handles incoming info responses to the getInfoUp request
-	 * 
+	 *
 	 * @param socketStream
 	 *            BufferedReader to read from
 	 * @param fileInfos
@@ -47,6 +47,7 @@ public class Handles {
 			FileInfoListType infoType) {
 		FileInfo fileInfo;
 		String currentLine;
+		String filePath;
 		String[] params;
 		int numberOfLines;
 		try {
@@ -83,8 +84,8 @@ public class Handles {
 				} else {
 					fileInfoFileAction = FileAction.del;
 				}
-
-				fileInfo = new FileInfo(params[1], Long.valueOf(params[2]), params[3], "", fileInfoFileAction);
+				filePath = currentLine.substring(currentLine.indexOf("/"));
+				fileInfo = new FileInfo(params[1], Long.valueOf(params[2]), filePath, "", fileInfoFileAction);
 				fileInfos.add(fileInfo);
 			}
 		} catch (IOException e) {
@@ -101,7 +102,7 @@ public class Handles {
 
 	/**
 	 * Writes incoming files from a BufferedInputStream to an output file
-	 * 
+	 *
 	 * @param socketStream
 	 *            the BufferedInputStream to read from
 	 * @param fileStream
@@ -133,9 +134,9 @@ public class Handles {
 
 	/**
 	 * Check if permission to send is permitted
-	 * 
-	 * @param socketStream
-	 *            the BufferedReader to read from
+	 *
+	 * @param socket
+	 *            the socket to read the permission from
 	 * @param timeout
 	 *            the time in ms until the request times out
 	 * @return integer representing the result. Negative value if function fails
