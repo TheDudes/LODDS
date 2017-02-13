@@ -182,7 +182,7 @@ public class Lodds {
 	 * get a whole or parts of a file from another user Starts a
 	 * FileConnectionThread and starts it, the thread does all the work
 	 * 
-	 * @param user
+	 * @param userName
 	 *            the username of the user from which to get the file from
 	 * 
 	 * @param checksum
@@ -197,8 +197,8 @@ public class Lodds {
 	 * @param endIndex
 	 *            the index at which to stop the file transfer
 	 */
-	public void getFile(String user, String checksum, String localPath, long startIndex, long endIndex) {
-		FileConnectionThread fileConnectionThread = new FileConnectionThread(getUserConnectionInfo(user), checksum,
+	public void getFile(String userName, String checksum, String localPath, long startIndex, long endIndex) {
+		FileConnectionThread fileConnectionThread = new FileConnectionThread(getUserConnectionInfo(userName), checksum,
 				getFileSize(checksum), localPath, startIndex, endIndex);
 		threadExecutor.execute(fileConnectionThread);
 	}
@@ -300,15 +300,15 @@ public class Lodds {
 	 * get the information necessary to connect to another user, this means IP
 	 * address and port
 	 * 
-	 * @param user
+	 * @param userName
 	 *            the name of the user
 	 * 
 	 * @return UserInfo that contains information about the IP and port of the
 	 *         user
 	 */
-	public UserInfo getUserConnectionInfo(String user) {
+	public UserInfo getUserConnectionInfo(String userName) {
 		for (UserInfo currentUser : loddsModel.getClientList()) {
-			if (currentUser.getUserName().equals(user))
+			if (currentUser.getUserName().equals(userName))
 				return currentUser;
 		}
 		return null;
