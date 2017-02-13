@@ -44,10 +44,8 @@ public class TopMenuPresenter implements Initializable {
 
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {
-		// Menus
 		fileMenu.setOnShowing(e -> fileMenuPressed());
 
-		// Items
 		settingsItem.setOnAction(e -> settingsItemPressed());
 		shareFolder.setOnAction(e -> shareFolderPressed());
 		sendFilesToUser.setOnAction(e -> sendFilesToUser());
@@ -92,25 +90,38 @@ public class TopMenuPresenter implements Initializable {
 		stage.initModality(Modality.APPLICATION_MODAL);
 		stage.show();
 	}
-	
+
+	/**
+	 * Send one or multiple files from the same directory to one specific user
+	 */
 	private void sendFilesToUser() {
-		String userName = usersListModel.getSelectedUser().getName();
-		int timeout = Integer.parseInt((String) App.properties.get("getPermissionTimeout"));
-		List<File> fileList = Utils.getChoosenMultipleFiles("Select File or Folder to share");
+		String userName = usersListModel.getSelectedUser().get().getUserName();
+		long timeout = Long.parseLong((String) App.properties.get("getPermissionTimeout")) * 1000;
+		List<File> fileList = Utils.getChoosenMultipleFiles("Select Files to share");
 		for (File f : fileList) {
 			sendSingleFileToUser(userName, timeout, f);
 		}
 	}
-	
+
+	/**
+	 * Send one folder to one specific user
+	 */
 	private void sendFolderToUser() {
 		String userName = usersListModel.getSelectedUser().getName();
-		int timeout = Integer.parseInt((String) App.properties.get("getPermissionTimeout"));
-		File chosenFolder = new File(Utils.getChoosenDirPath("Select File or Folder to share"));
+		long timeout = Long.parseLong((String) App.properties.get("getPermissionTimeout")) * 1000;
+		File chosenFolder = new File(Utils.getChoosenDirPath("Select Folder to share"));
 		if (chosenFolder.isDirectory()) {
 			sendDirectoryToUser(userName, timeout, chosenFolder);
 		}
 	}
-	
+
+	/**
+	 * 
+	 * @param userName
+	 * @param timeout
+	 *            time in ms
+	 * @param directoryFolder
+	 */
 	private void sendDirectoryToUser(String userName, long timeout, File directoryFolder) {
 		for (File f : directoryFolder.listFiles()) {
 			if (f.isDirectory()) {
@@ -120,7 +131,14 @@ public class TopMenuPresenter implements Initializable {
 			}
 		}
 	}
-	
+
+	/**
+	 * 
+	 * @param userName
+	 * @param timeout
+	 *            time in ms
+	 * @param file
+	 */
 	private void sendSingleFileToUser(String userName, long timeout, File file) {
 		FileInfo fileInfo;
 		try {
