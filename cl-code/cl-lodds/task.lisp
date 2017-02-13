@@ -149,7 +149,7 @@
          (remote-path (getf initargs :remote-path))
          (items (lodds:get-folder-info remote-path user)))
     (lodds:update-load (reduce #'+ items :key #'third))
-    (setf (slot-value task 'folder-items)
+    (setf (slot-value task 'items)
           items)))
 
 (defun load-chunk (stream-from stream-to size &optional (chunk-size (ash 1 21)))
