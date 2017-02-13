@@ -129,6 +129,16 @@
 
         interface)))
 
+(defun switch-name (new-name)
+  "Switches servername which is advertised by the server. Also emits a
+  :name-changed event with the new name"
+  ;;TODO: check if name is accepted
+  (let ((old-name (name *server*)))
+    (setf (name *server*) new-name)
+    (lodds.event:push-event :name-changed
+                            (list "Name changed from" old-name
+                                  "to" new-name))))
+
 (defun get-timestamp-last-change ()
   "returns the timestamp of the last change, who would have thought?
   :D"
