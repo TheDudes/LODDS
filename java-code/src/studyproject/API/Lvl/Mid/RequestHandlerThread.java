@@ -80,17 +80,19 @@ public class RequestHandlerThread extends Thread {
 
 				break;
 			case GET_SEND_PERMISSION:
-				// TODO Ask user to receive a file via GUI window
+				System.out.println("Received a send-permission request");
 				GetPermissionRequest permissionReq = (GetPermissionRequest) reqContainer.request;
-				// TODO Ask user where to save the file and under which name via
-				// 'save as' GUI
-				// TODO Split the returning path into path and filename, save
-				// them in the two variables
-				String pathToSave = "";
-				String fileName = permissionReq.fileName;
-				GetFileWPThread getFileThread = new GetFileWPThread(socket, pathToSave, fileName,
-						permissionReq.fileSize);
-				threadExecutor.execute(getFileThread);
+				loddsObj.getLoddsModel().getPermissionList().add(permissionReq);
+//				// TODO Ask user to receive a file via GUI window
+//				// TODO Ask user where to save the file and under which name via
+//				// 'save as' GUI
+//				// TODO Split the returning path into path and filename, save
+//				// them in the two variables
+//				String pathToSave = "";
+//				String fileName = permissionReq.fileName;
+//				GetFileWPThread getFileThread = new GetFileWPThread(socket, pathToSave, fileName,
+//						permissionReq.fileSize);
+//				threadExecutor.execute(getFileThread);
 				break;
 
 			}
