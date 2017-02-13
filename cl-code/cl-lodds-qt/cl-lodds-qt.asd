@@ -20,4 +20,5 @@
                (:file "shares")
                (:file "interface")
                (:file "dialog")
+               (:file "dock")
                (:file "gui")))

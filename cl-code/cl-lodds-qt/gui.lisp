@@ -34,64 +34,60 @@
   (:item ("Quit" (ctrl q))
          (q+:close main-window)))
 
-(define-subwidget (main-window info-log-widget) (make-instance 'info-log))
-(define-subwidget (main-window user-list-widget) (make-instance 'user-list))
-(define-subwidget (main-window shared-widget) (make-instance 'shared))
-(define-subwidget (main-window download-widget) (make-instance 'download))
-(define-subwidget (main-window shares-widget) (make-instance 'shares)
-  (connect shares-widget "itemClicked(QTreeWidgetItem *, int)"
+(define-subwidget (main-window view-menu) (q+:add-menu (q+:menu-bar main-window)
+                                                       "View"))
+
+(define-subwidget (main-window shares-widget) (make-instance 'shares))
+
+(define-subwidget (main-window log-dock)
+    (make-instance 'dock :title "Log"
+                         :widget (make-instance 'info-log)
+                         :main-window main-window
+                         :side :bottom
+                         :menu view-menu))
+
+(define-subwidget (main-window download-dock)
+    (make-instance 'dock :title "Download"
+                         :widget (make-instance 'download)
+                         :main-window main-window
+                         :side :left
+                         :menu view-menu))
+
+(define-subwidget (main-window settings-dock)
+    (make-instance 'dock :title "Settings"
+                         :widget (make-instance 'interface)
+                         :main-window main-window
+                         :side :right
+                         :menu view-menu))
+
+(define-subwidget (main-window user-dock)
+    (make-instance 'dock :title "User List"
+                         :widget (make-instance 'user-list)
+                         :main-window main-window
+                         :side :right
+                         :menu view-menu))
+
+(define-subwidget (main-window shared-dock)
+    (make-instance 'dock :title "Directories Shared"
+                         :widget (make-instance 'shared)
+                         :main-window main-window
+                         :side :right
+                         :menu view-menu))
+
+(define-initializer (main-window setup-widget)
+  (connect shares-widget
+           "itemClicked(QTreeWidgetItem *, int)"
            (lambda (selected-item column)
              (declare (ignore column))
              (apply #'update-download
-                    download-widget
-                    (get-selected-file shares-widget selected-item)))))
-(define-subwidget (main-window interface-widget) (make-instance 'interface))
-
-(define-initializer (main-window setup-widget)
+                    (slot-value download-dock 'widget)
+                    (get-selected-file shares-widget selected-item))))
   (qdoto main-window
          (q+:set-window-title "LODDS")
          (q+:set-window-icon (q+:make-qicon "./res/lodds.png"))
          (q+:resize 800 450)
-         (q+:set-style-sheet *style-sheet*)))
-
-(define-initializer (main-window setup-docks)
-  (let ((settings-dock (q+:make-qdockwidget "Settings" main-window))
-        (log-dock (q+:make-qdockwidget "Log" main-window))
-        (user-list-dock (q+:make-qdockwidget "User List" main-window))
-        (directories-shared-dock (q+:make-qdockwidget "Directories Shared" main-window))
-        (download-dock (q+:make-qdockwidget "Download File" main-window)))
-
-    ;; download-file dock
-    (q+:set-widget download-dock download-widget)
-    (q+:add-dock-widget main-window (q+:qt.left-dock-widget-area) download-dock)
-
-    ;; interface dock
-    (q+:set-widget settings-dock interface-widget)
-
-    ;; user-dock
-    (q+:set-widget user-list-dock user-list-widget)
-
-    ;; directories-shared-dock
-    (q+:set-widget directories-shared-dock shared-widget)
-
-    ;; log-dock
-    (q+:set-widget log-dock info-log-widget)
-
-    ;; add view-toggle to View MenuBar Item
-    (qdoto (q+:add-menu (q+:menu-bar main-window) "View")
-           (q+:add-action (q+:toggle-view-action log-dock))
-           (q+:add-action (q+:toggle-view-action settings-dock))
-           (q+:add-action (q+:toggle-view-action user-list-dock))
-           (q+:add-action (q+:toggle-view-action directories-shared-dock))
-           (q+:add-action (q+:toggle-view-action download-dock)))
-
-    ;; add widgets to main-window
-    (qdoto main-window
-           (q+:add-dock-widget (q+:qt.right-dock-widget-area) settings-dock)
-           (q+:add-dock-widget (q+:qt.left-dock-widget-area) user-list-dock)
-           (q+:add-dock-widget (q+:qt.right-dock-widget-area) directories-shared-dock)
-           (q+:add-dock-widget (q+:qt.bottom-dock-widget-area) log-dock)
-           (q+:set-central-widget shares-widget))))
+         (q+:set-style-sheet *style-sheet*)
+         (q+:set-central-widget shares-widget)))
 
 (define-signal (main-window reload-stylesheet) ())
 (define-signal (main-window fix-menubar-order) ())
