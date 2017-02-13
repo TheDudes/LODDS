@@ -154,7 +154,7 @@ public class LogAreaHandler extends Handler {
             return false;
         if (getRec.get() == false && record.isRespondFile())
             return false;
-        if (getSent.get() == false && record.isGetSent())
+        if (getSent.get() == false && record.isGetFile())
             return false;
         return true;
     }

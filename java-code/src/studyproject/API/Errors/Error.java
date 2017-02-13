@@ -128,23 +128,23 @@ public class Error extends LogRecord {
 	}
 
 	/**
-	 * Returns true if LogKey is LogKey.getSent
+	 * Returns true if LogKey is LogKey.getFile
 	 * 
-	 * @return true if LogKey is LogKey.getSent
+	 * @return true if LogKey is LogKey.getFile
 	 */
-	public boolean isGetSent() {
-		if (logKey == LogKey.getSent)
+	public boolean isGetFile() {
+		if (logKey == LogKey.getFile)
 			return true;
 		return false;
 	}
 
 	/**
-	 * Returns true if LogKey is LogKey.getReceived
+	 * Returns true if LogKey is LogKey.respondFile
 	 * 
-	 * @return true if LogKey is LogKey.getReceived
+	 * @return true if LogKey is LogKey.respondFile
 	 */
-	public boolean isGetRec() {
-		if (logKey == LogKey.getReceived)
+	public boolean isRespondFile() {
+		if (logKey == LogKey.respondFile)
 			return true;
 		return false;
 	}
