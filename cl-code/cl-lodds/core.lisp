@@ -14,11 +14,10 @@
                               (list e))
       "0000000000000000000000000000000000000000")))
 
-(defun copy-stream (stream-from stream-to &optional size)
+(defun copy-stream (stream-from stream-to size)
   "will read from stream-from and write to stream-to size bytes"
   (loop :with written = 0
-        :with buffer-size = (if (and size
-                                     (< size 8192))
+        :with buffer-size = (if (< size 8192)
                                 size
                                 8192)
         :with buffer = (make-array (list buffer-size)
@@ -26,9 +25,8 @@
         :for read = (read-sequence buffer stream-from)
         :until (zerop read)
         :do (progn
-              (if (and size
-                       (>= (+ read written)
-                           size))
+              (if (>= (+ read written)
+                      size)
                   (progn
                     (write-sequence buffer stream-to :end (- size written))
                     ;; TODO: error handling

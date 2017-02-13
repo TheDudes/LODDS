@@ -254,7 +254,7 @@ multiple-value-bind.
                                        (return-from handle-info 2))))))
         2)))
 
-(defun handle-send-permission (socket timeout file-stream)
+(defun handle-send-permission (socket timeout file-stream size)
   "handles a successfull 'get send-permission' request and waits
    maximum 'timeout' seconds for a OK. On success it writes data from
    file-stream to socket.
@@ -263,7 +263,12 @@ multiple-value-bind.
       (let ((socket-stream (usocket:socket-stream socket)))
         (if (string= "OK"
                      (read-line-from-socket socket-stream))
-            (copy-stream file-stream
-                         socket-stream)
-            2)
-       2)))
+            (progn
+              (lodds.event:push-event :debug "calling copy stream")
+              (copy-stream file-stream
+                           socket-stream
+                           size)
+              (lodds.event:push-event :debug "Done calling copy stream")
+              0)
+            2))
+      5))
