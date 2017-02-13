@@ -1,11 +1,7 @@
 package studyproject.API.Lvl.Low;
 
 import java.io.IOException;
-import java.net.DatagramPacket;
-import java.net.DatagramSocket;
-import java.net.InetAddress;
-import java.net.NetworkInterface;
-import java.net.SocketException;
+import java.net.*;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.NoSuchElementException;
@@ -31,7 +27,11 @@ public class Broadcast {
 	private static final int DEFAULT_PORT = 9002;
 	private static final int DEFAULT_PORT_SENDING = 9003;
 	private static final int DEFAULT_BUFFERSIZE = 2048;
-	private static final String ADVERTISE_BROADCAST_REGEX = "\\S*@(\\d{1,3}\\.){3}\\d{1,3}:\\d{1,5} \\d{1,19} \\d{1,19}";//"(\\d{1,3}\\.){3}\\d{1,3} \\d{1,5} \\d{1,19} \\d{1,19} \\S*";
+	private static final String ADVERTISE_BROADCAST_REGEX = "\\S*@(\\d{1,3}\\.){3}\\d{1,3}:\\d{1,5} \\d{1,19} \\d{1,19}";// "(\\d{1,3}\\.){3}\\d{1,3}
+																															// \\d{1,5}
+																															// \\d{1,19}
+																															// \\d{1,19}
+																															// \\S*";
 	private static final String IP_REGEX = "(\\d{1,3}\\.){3}\\d{1,3}";
 
 	private static int broadcastPort = DEFAULT_PORT;
@@ -58,8 +58,6 @@ public class Broadcast {
 			}
 		} catch (SocketException e) {
 			return 1;
-		} catch (NoSuchElementException f) {
-			return 2;
 		}
 		return 0;
 	}
@@ -91,7 +89,7 @@ public class Broadcast {
 	 * @param interfaceName
 	 *            the name of the interface to which the ip should be retrieved
 	 * 
-	 * @param broadcastAddress
+	 * @param networkAddress
 	 *            the StringBuilder to store the ip in
 	 * 
 	 * @return 0 or an error code
@@ -121,9 +119,12 @@ public class Broadcast {
 		} catch (SocketException e) {
 			return 1;
 		} catch (NoSuchElementException f) {
-			return 2;
+			ErrLog.log(Level.SEVERE, LogKey.error, APILvl.low, "getAddress", f.getStackTrace().toString());
+			System.exit(1);
 		}
-		return 2;
+		ErrLog.log(Level.SEVERE, LogKey.error, APILvl.low, "getAddress", "No Suitable Interface found");
+		System.exit(1);
+		return 0;
 	}
 
 	/**
@@ -168,6 +169,11 @@ public class Broadcast {
 					broadcastPort);
 			socket.send(packet);
 			// socket.disconnect();
+		} catch (UnknownHostException e) {
+			ErrLog.log(Level.SEVERE, LogKey.broadcastSent, APILvl.low, "sendAdvertise", e.getStackTrace().toString());
+			System.exit(1);
+		} catch (SocketException e) {
+			return 1;
 		} catch (IOException e) {
 			return 1;
 		}
@@ -179,15 +185,13 @@ public class Broadcast {
 	 * given information in the broadcastInfo if the given data matches the
 	 * specification
 	 * 
-	 * @param broadcastAddress
-	 *            the address to listen to
-	 * 
+	 *
 	 * @param broadcastInfo
 	 *            the broadcastInfo to put the read info in
 	 * 
 	 * @return 0 or an error value
 	 */
-	public static int readAdvertise(String localIPAddress, BroadcastInfo broadcastInfo) {
+	public static int readAdvertise(BroadcastInfo broadcastInfo) {
 		try (DatagramSocket socket = new DatagramSocket(broadcastPort, InetAddress.getByName("0.0.0.0"))) {
 			DatagramPacket packet = new DatagramPacket(new byte[buffersize], buffersize);
 			socket.receive(packet);

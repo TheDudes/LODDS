@@ -56,7 +56,7 @@ public class UpdateFileInfoThread extends Thread {
 			err = Handles.handleInfo(bufferedreader, fileInfoList, newFileListTimestamp, infoType);
 			if (err != 0) {
 				ErrLog.log(Level.SEVERE, LogKey.info, APILvl.mid, err, "Handles.handleInfo");
-
+				//TODO what shall happens with the thread if the handleInfo failed
 			}
 			userInfo.setLastUpdate(newFileListTimestamp.value);
 			if (infoType.equals(InfoType.all)) {

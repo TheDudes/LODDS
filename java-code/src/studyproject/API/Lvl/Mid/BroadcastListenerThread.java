@@ -37,12 +37,14 @@ public class BroadcastListenerThread extends Thread {
 	public void run() {
 		localAddress = new StringBuilder();
 		brInfo = new BroadcastInfo();
-
+		int errorCode;
 		while (run) {
-			Broadcast.getLocalIp(loddsObject.getInterface(), localAddress);
-			if (Broadcast.readAdvertise(localAddress.toString(), brInfo) != 0) {
-				// TODO catch wrong return value
-				// readAdvertise failed
+			if ((errorCode = Broadcast.getLocalIp(loddsObject.getInterface(), localAddress)) != 0) {
+				ErrLog.log(Level.SEVERE, LogKey.error, APILvl.mid, errorCode, getClass().getName() + ".run");
+			}
+			if ((errorCode = Broadcast.readAdvertise(brInfo)) != 0) {
+				ErrLog.log(Level.SEVERE, LogKey.broadcastReceived, APILvl.mid, errorCode,
+						getClass().getName() + ".run");
 				continue;
 			}
 			try {

@@ -139,8 +139,8 @@ public class FileConnectionThread extends Thread implements MonitoredThread {
 	 * starts pulling the file with the parameters set in the constructor
 	 */
 	public void run() {
-		ErrLog.log(Level.INFO, LogKey.getReceived, APILvl.mid, "FileConnectionThread.run()",
-				this.getId() + ": Download " + checksum + " to " + localPath);
+		ErrLog.log(Level.INFO, LogKey.filetransferInit, APILvl.mid, getClass().getName() + ".run() : " + this.getId(),
+				"Filetransfer initiated to user: '" + user.toString() + "' for file '" + checksum + "'");
 		int returnValue;
 		try (Socket socket = new Socket(user.getIpAddress(), user.getPort());
 				BufferedOutputStream outStream = new BufferedOutputStream(socket.getOutputStream());
@@ -157,9 +157,11 @@ public class FileConnectionThread extends Thread implements MonitoredThread {
 				returnValue = Requests.getFile(outStream, checksum, startIndex, endIndex);
 			}
 			if (returnValue != 0) {
-				ErrLog.log(Level.SEVERE, LogKey.error, APILvl.mid, "FileConnectionThread.run()",
-						"reurnValue after Request.getFile is not equals 0: " + returnValue);
+				ErrLog.log(Level.SEVERE, LogKey.error, APILvl.mid, returnValue,
+						getClass().getName() + ".run() : " + this.getId());
 			}
+			ErrLog.log(Level.INFO, LogKey.getFile, APILvl.mid, getClass().getName() + ".run() : " + this.getId(),
+					"Sent getFile to user '" + user.toString() + "' for file '" + checksum + "'");
 			// whole file?
 			if (endIndex == 0) {
 				returnValue = Handles.handleFile(inStream, fileOutStream, size);
@@ -167,8 +169,8 @@ public class FileConnectionThread extends Thread implements MonitoredThread {
 				returnValue = Handles.handleFile(inStream, fileOutStream, endIndex - startIndex);
 			}
 			if (returnValue != 0) {
-				ErrLog.log(Level.SEVERE, LogKey.error, APILvl.mid, "FileConnectionThread.run()",
-						"reurnValue after Handles.handleFile is not equals 0: " + returnValue);
+				ErrLog.log(Level.SEVERE, LogKey.error, APILvl.mid, returnValue,
+						getClass().getName() + ".run() : " + this.getId());
 			} else {
 				if (supportLoadbalancing) {
 					progressInfo.setFinishedSuccessfully(true);
@@ -176,12 +178,12 @@ public class FileConnectionThread extends Thread implements MonitoredThread {
 			}
 			fileOutStream.close();
 		} catch (IOException e) {
-			ErrLog.log(Level.SEVERE, LogKey.error, APILvl.mid, "FileConnectionThread.run()",
+			ErrLog.log(Level.SEVERE, LogKey.error, APILvl.mid, getClass().getName() + ".run() : " + this.getId(),
 					"IOException thrown: " + e.getMessage());
 		}
 
-		ErrLog.log(Level.INFO, LogKey.getReceived, APILvl.mid, "FileConnectionThread.run()",
-				this.getId() + ": Download of " + checksum + " finished");
+		ErrLog.log(Level.INFO, LogKey.filetransferComplete, APILvl.mid, getClass().getName() + ".run() : " + this.getId(),
+				"Download of '" + checksum + "' from user '" + user.toString() + "'finished");
 	}
 
 	@Override
@@ -202,7 +204,7 @@ public class FileConnectionThread extends Thread implements MonitoredThread {
 				return fileOutStream.getChannel().position();
 			}
 		} catch (IOException e) {
-			ErrLog.log(Level.SEVERE, LogKey.error, APILvl.mid, "getProgress()",
+			ErrLog.log(Level.SEVERE, LogKey.error, APILvl.mid, getClass().getName() + ".getProgress : " + this.getId(),
 					"IOException thrown: " + e.getMessage());
 		}
 		return 0;

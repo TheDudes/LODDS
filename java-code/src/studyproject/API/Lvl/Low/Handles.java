@@ -91,11 +91,11 @@ public class Handles {
 		} catch (IOException e) {
 			ErrLog.log(Level.SEVERE, LogKey.error, APILvl.low, "handleInfo",
 					"IOException thrown: " + e.getStackTrace());
-			return -1;
+			return 1;
 		} catch (NumberFormatException e) {
 			ErrLog.log(Level.SEVERE, LogKey.error, APILvl.low, "handleInfo",
 					"NumberFormatException thrown: " + e.getStackTrace());
-			return -2;
+			return 2;
 		}
 		return 0;
 	}
@@ -125,9 +125,7 @@ public class Handles {
 				size -= readSize;
 			}
 		} catch (IOException e) {
-			ErrLog.log(Level.SEVERE, LogKey.error, APILvl.low, "handleFile",
-					"IOException thrown: " + e.getMessage());
-			return -2;
+			return 1;
 		}
 		return 0;
 	}
@@ -150,18 +148,18 @@ public class Handles {
 			if (readLine.equals("OK")) {
 				return 0;
 			} else {
-				ErrLog.log(Level.WARNING, LogKey.warning, APILvl.low, "handleSendPermission",
+				ErrLog.log(Level.INFO, LogKey.respondSendPermission, APILvl.low, "handleSendPermission",
 						"handleSendPermission failed. Return negative value");
-				return -1;
+				return 5;
 			}
 		} catch (SocketTimeoutException s) {
 			ErrLog.log(Level.SEVERE, LogKey.error, APILvl.low, "handleSendPermission",
 					"SocketTimeoutException thrown: " + s.getStackTrace());
-			return 1;
+			return 3;
 		} catch (IOException e) {
 			ErrLog.log(Level.SEVERE, LogKey.error, APILvl.low, "handleSendPermission",
 					"IOException thrown: " + e.getStackTrace());
-			return -2;
+			return 1;
 		}
 	}
 }
