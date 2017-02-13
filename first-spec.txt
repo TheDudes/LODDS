@@ -191,8 +191,8 @@
          exceeded the requesting client may close the connection.
 
        Example:
-         "get send-permission 300 15 /sample.txt\n"
-           Asks to transfer file with name "/sample.txt" with 300
+         "get send-permission 300 15 sample.txt\n"
+           Asks to transfer file with name "sample.txt" with 300
            bytes size. The User receiving this request may change the
            file location on his side. He has 15 seconds to accept the
            request.
