@@ -9,7 +9,8 @@
                :qtools
                :qtcore
                :qtgui
-               :cl-strings)
+               :cl-strings
+               :qtools-ui-debugger)
   :components ((:file "package")
                (:file "globals")
                (:file "misc")
