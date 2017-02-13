@@ -43,58 +43,6 @@
       (when socket
         (usocket:socket-close socket)))))
 
-(defmethod lodds.task:run-task ((task lodds.task:task-client-info))
-  (with-accessors ((c-name lodds.task:client-name)
-                   (c-ip lodds.task:client-ip)
-                   (c-port lodds.task:client-port)
-                   (c-message-timestamp lodds.task:client-message-timestamp)
-                   (c-last-change lodds.task:client-last-change)
-                   (c-load lodds.task:client-load)) task
-    (let ((client-info (lodds:get-user-info c-name)))
-      (if client-info
-          (with-accessors ((old-load lodds:c-load)
-                           (old-last-change lodds:c-last-change))
-              (lodds:get-user-info c-name)
-            (when (or (not (eql old-load c-load))
-                      (<= old-last-change c-last-change))
-              (lodds.event:push-event :client-updated
-                                      (list c-name
-                                            c-load
-                                            c-last-change))))
-          (progn
-            (setf client-info
-                  (make-instance 'lodds:client-info
-                                 :c-name c-name
-                                 :c-last-message c-message-timestamp
-                                 :c-ip c-ip
-                                 :c-port c-port
-                                 :c-last-change 0
-                                 :c-load c-load))
-            (setf (gethash c-name (lodds:clients lodds:*server*))
-                  client-info)
-            (lodds.event:push-event :client-added
-                                    (list c-name
-                                          c-load
-                                          c-last-change))))
-      (let ((locked (bt:acquire-lock (lodds:c-lock client-info) nil)))
-        (if locked
-            ;; only go on if we locked, if not, just drop the update, we
-            ;;will update on the next advertise. unwind-protect to be sure
-            ;;we unlock that lock.
-            (unwind-protect
-                 (handler-case
-                     (progn
-                       (setf (lodds:c-last-message client-info) c-message-timestamp
-                             (lodds:c-load client-info) c-load)
-                       (when (<= (lodds:c-last-change client-info)
-                                 c-last-change)
-                         (update-client-list client-info)))
-                   (error (e)
-                     (lodds.event:push-event :error (list "error inside update-client-list"
-                                                          e))))
-              (bt:release-lock (lodds:c-lock client-info)))
-            (lodds.event:push-event :info (list :dropped task)))))))
-
 (defun handle-message (message)
   (multiple-value-bind (error result) (lodds.low-level-api:read-advertise message)
     (unless (eql error 0)
@@ -120,11 +68,11 @@
          (make-instance 'lodds.task:task-client-info
                         :name "update-client-info"
                         :client-name name
-                        :client-ip ip
-                        :client-port port
-                        :client-message-timestamp current-time
-                        :client-last-change timestamp-l-c
-                        :client-load load))))))
+                        :ip ip
+                        :port port
+                        :timestamp current-time
+                        :last-change timestamp-l-c
+                        :load load))))))
 
 (defun get-next-message (socket)
   (let* ((buffer-size 2048) ;; TODO: move to config
@@ -161,6 +109,7 @@
                         (when msg
                           (handle-message msg)))))
         (error (e)
+          (declare (ignore e))
           (when socket
             (usocket:socket-close socket))))
       (when socket

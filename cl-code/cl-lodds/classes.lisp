@@ -44,222 +44,190 @@
             :documentation "tasker lparallel:channel")))
 
 (defclass task ()
-  ((name :accessor name
-         :initarg :name
+  ((name :initarg :name
          :initform (error "please specify a task name!")
          :type string
          :documentation "Task Name.")
-   (on-finish-hook :accessor on-finish-hook
-                   :initarg :on-finish-hook
+   (on-finish-hook :initarg :on-finish-hook
                    :initform nil
                    :type function
                    :documentation "Function which gets called when the
                    task finishes.")))
 
 (defclass task-client (task)
-    ((client-name :reader client-name
-                  :initarg :client-name
+    ((client-name :initarg :client-name
                   :initform (error "Specify client-name")
                   :type string
-                  :documentation "name of client, for example: d4yus@192.168.2.1:1234")
-     (client-ip :reader client-ip
-                :initarg :client-ip
-                :initform (error "Specify client-ip")
-                :type vector
-                :documentation "Ip of client, for example: #(192 168 2 1)")
-     (client-port :reader client-port
-                  :initarg :client-port
-                  :initform (error "Specify client-port")
-                  :type integer
-                  :documentation "Port of client, for exampe: 1234")))
+                  :documentation "name of client, for example:
+                  d4yus@192.168.2.1:1234")
+     (ip :initarg :ip
+         :initform (error "Specify ip")
+         :type vector
+         :documentation "Ip of client, for example: #(192 168 2 1)")
+     (port :initarg :port
+           :initform (error "Specify port")
+           :type integer
+           :documentation "Port of client, for exampe: 1234")))
 
 (defclass task-client-info (task-client)
-  ((client-message-timestamp :reader client-message-timestamp
-                             :initform nil
-                             :initarg :client-message-timestamp
-                             :type integer
-                             :documentation "Timestamp the Broadcast message
-                             was received")
-   (client-last-change :reader client-last-change
-                       :initarg :client-last-change
-                       :initform (error "Specify client-last-change")
-                       :type integer
-                       :documentation "Timestamp of last change,
-                       received vom client")
-   (client-load :reader client-load
-                :initarg :client-load
-                :initform (error "Specify client load")
+  ((timestamp :initarg :timestamp
+              :initform nil
+              :type integer
+              :documentation "Timestamp the Broadcast message was
+              received")
+   (last-change :initarg :last-change
+                :initform (error "Specify client-last-change")
                 :type integer
-                :documentation "Advertised load of given Client")))
+                :documentation "Timestamp of last change,received vom
+                client")
+   (load :initarg :load
+         :initform (error "Specify client load")
+         :type integer
+         :documentation "Advertised load of given Client")))
 
 (defclass task-request (task)
-  ((request-socket :reader request-socket
-                   :initform (error "Specify a socket pls.")
-                   :initarg :request-socket
-                   :type usocket:socket
-                   :documentation "Socket with the requesting client
-                   on the other end :D")))
+  ((socket :initform (error "Specify a socket pls.")
+           :initarg :socket
+           :type usocket:socket
+           :documentation "Socket with the requesting client on the
+           other end :D")))
 
 (defclass task-request-file (task-request)
-  ((request-checksum :reader request-checksum
-                     :initform nil
-                     :initarg :request-checksum
-                     :type string
-                     :documentation "Requested File checksum.")
-   (request-start :reader request-start
-                  :initform nil
-                  :initarg :request-start
-                  :type rational
-                  :documentation "Requested File start position.")
-   (request-end :reader request-end
+  ((checksum :initarg :checksum
+             :initform nil
+             :type string
+             :documentation "Requested File checksum.")
+   (start :initarg :start
+          :initform nil
+          :type rational
+          :documentation "Requested File start position.")
+   (end :initarg :end
+        :initform nil
+        :type rational
+        :documentation "Requested File end position.")
+   (filename :type string
+             :initform nil
+             :documentation "Local Filename of Requested File")
+   (file-stream :type stream
                 :initform nil
-                :initarg :request-end
-                :type rational
-                :documentation "Requested File end position.")
-   (request-filename :accessor request-filename
-                     :initform nil
-                     :type string
-                     :documentation "Local Filename of Requested File")
-   (request-file-stream :accessor request-file-stream
-                        :initform nil
-                        :type stream
-                        :documentation "Stream pointing to local file
-                        request-filename.")
-   (request-written :accessor request-written
-                    :initform 0
-                    :type rational
-                    :documentation "Bytes Written onto socket")))
+                :documentation "Stream pointing to local file
+                request-filename.")
+   (written :initform 0
+            :type rational
+            :documentation "Bytes Written onto socket")))
 
 (defclass task-request-info (task-request)
-  ((request-timestamp :reader request-timestamp
-                      :initform 0
-                      :initarg :request-timestamp
-                      :type rational
-                      :documentation "Requested info timestamp.")))
+  ((timestamp :initform 0
+              :initarg :timestamp
+              :type rational
+              :documentation "Requested info timestamp.")))
 
 (defclass task-request-send-permission (task-request)
-  ((request-size :accessor request-size
-                 :initform nil
-                 :initarg :request-size
-                 :type rational
-                 :documentation "Size of the File requested to send.")
-   (request-timeout :accessor request-timeout
-                    :initform nil
-                    :initarg :request-timeout
-                    :type rational
-                    :documentation "Time the Requesting Client will wait
-                    for a answer.")
-   (request-filename :accessor request-filename
-                     :initform nil
-                     :initarg :request-filename
-                     :type string
-                     :documentation "Name of the File requested to send")))
+  ((size :initarg :size
+         :initform nil
+         :type rational
+         :documentation "Size of the File requested to send.")
+   (timeout :initarg :timeout
+            :initform nil
+            :type rational
+            :documentation "Time the Requesting Client will wait for a
+            answer.")
+   (filename :initarg :filename
+             :initform nil
+             :type string
+             :documentation "Name of the File requested to send")))
 
 (defclass task-get-file (task)
-  ((get-local-file-path :accessor get-local-file-path
-                        :initform (error "Specify a local-file-path pls.")
-                        :initarg :local-file-path
-                        :type string
-                        :documentation "String describing the local
-                        file path. The Path describes where the file,
-                        which is getting downloaded from another
-                        client, is getting saved on the local
-                        filesystem.")
-   (get-checksum :accessor get-checksum
-                 :initform (error "Specify a checksum pls.")
-                 :initarg :checksum
-                 :type string
-                 :documentation "Checksum to identify the File. Used
-                 to request the File from the user and find all users
-                 who hold the file.")
-   (get-size :accessor get-size
-             :initform 0
-             :type bignum
-             :documentation "Size of specified File, will be set on
-             initialize instance")
-   (get-socket :accessor get-socket
-               :initform nil
-               :type usocket:socket
-               :documentation "If connection is established socket is
-               set. It will then be read for information.")
-   (get-local-file-stream :accessor get-local-file-stream
-                          :initform nil
-                          :type file-stream
-                          :documentation "If connection is established
-                          and transfer has started file-stream will
-                          point to local-file-path. Everything read
-                          from socket will be saved to file-stream.")
-   (get-read-bytes :accessor get-read-bytes
-                   :initform 0
-                   :type bignum
-                   :documentation "Bignum describing how many bytes
-                   have been read from the socket and saved to the
-                   file.")))
+  ((local-file-path :initform (error "Specify a local-file-path pls.")
+                    :initarg :local-file-path
+                    :type string
+                    :documentation "String describing the local file
+                    path. The Path describes where the file, which is
+                    getting downloaded from another client, is getting
+                    saved on the local filesystem.")
+   (checksum :initform (error "Specify a checksum pls.")
+             :initarg :checksum
+             :type string
+             :documentation "Checksum to identify the File. Used to
+             request the File from the user and find all users who
+             hold the file.")
+   (size :initform 0
+         :type bignum
+         :documentation "Size of specified File, will be set on
+         initialize instance")
+   (socket :initform nil
+           :type usocket:socket
+           :documentation "If connection is established socket is
+           set. It will then be read for information.")
+   (local-file-stream :type file-stream
+                      :initform nil
+                      :documentation "If connection is established and
+                      transfer has started file-stream will point to
+                      local-file-path. Everything read from socket
+                      will be saved to file-stream.")
+   (read-bytes :initform 0
+               :type bignum
+               :documentation "Bignum describing how many bytes have
+               been read from the socket and saved to the file.")))
 
 (defclass task-get-file-from-user (task-get-file)
-  ((get-user :accessor get-user
-             :initform (error "Specify a user pls.")
-             :initarg :user
-             :type string
-             :documentation "The User where the file is getting
-             downloaded from. User has to be specified with his ip and
-             port in the following format: username@ip:port, for
-             example: d4ryus@192.168.2.101:1234")
-   (get-ip :accessor get-ip
-           :initform nil
-           :type string
-           :documentation "Ip of User, will be set on initialize
-           instance. Can be parsed from get-user.")
-   (get-port :accessor get-port
-             :initform nil
-             :type fixnum
-             :documentation "Port of User, will be set on initialize
-             instance. Can be parsed from get-user.")))
+  ((user :initform (error "Specify a user pls.")
+         :initarg :user
+         :type string
+         :documentation "The User where the file is getting downloaded
+         from. User has to be specified with his ip and port in the
+         following format: username@ip:port, for example:
+         d4ryus@192.168.2.101:1234")
+   (ip :initform nil
+       :type string
+       :documentation "Ip of User, will be set on initialize
+       instance. Can be parsed from get-user.")
+   (port :initform nil
+         :type fixnum
+         :documentation "Port of User, will be set on initialize
+         instance. Can be parsed from get-user.")))
 
 (defclass task-get-file-from-users (task-get-file)
-  ((get-current-part :accessor get-current-part
-                     :initform 0
-                     :type bignum
-                     :documentation "The current part which is downloaded.")
-   (get-read-bytes-part :accessor get-read-bytes-part
-                        :initform 0
-                        :type bignum
-                        :documentation "Bytes read of current part.")
-   (get-part-size :accessor get-part-size
-                  :initform 0
-                  :type bignum
-                  :documentation "Size limit after which lodds checks
-                                  again for a the user with the lowest
-                                  load.")))
+  ((current-part :initform 0
+                 :type bignum
+                 :documentation "The current part which is
+                 downloaded.")
+   (read-bytes-part :initform 0
+                    :type bignum
+                    :documentation "Bytes read of current part.")
+   (part-size :initform 0
+              :type bignum
+              :documentation "Size limit after which lodds checks
+              again for a the user with the lowest load.")))
 
 (defclass task-get-folder (task)
-  ((folder-user :accessor folder-user
-                :initarg :user
-                :initform (error "please specify the User who contains ~
-                                 the wanted Folder")
+  ((user :initarg :user
+         :initform (error "please specify the User who contains ~ the
+         wanted Folder")
+         :type string
+         :documentation "User who got the wanted Folder")
+   (local-path :initarg :local-path
+               :initform (error "please specify a local folder")
+               :type string
+               :documentation "Local Folder where Files of Remote
+               Folder will be downloaded too")
+   (remote-root :initarg :remote-root
+                :initform (error "please specify the remote folder
+                root path")
                 :type string
-                :documentation "User who got the wanted Folder")
-   (folder-local-path :accessor folder-local-path
-                      :initarg :local-path
-                      :initform (error "please specify a local folder")
-                      :type string
-                      :documentation "Local Folder where Files of Remote Folder will be downloaded too")
-   (folder-remote-root :accessor folder-remote-root
-                       :initarg :remote-root
-                       :initform (error "please specify the remote folder root path")
-                       :type string
-                       :documentation "Remote Folder Root Path which should be downloaded")
-   (folder-remote-path :accessor folder-remote-path
-                       :initarg :remote-path
-                       :initform (error "please specify the remote folder path")
-                       :type string
-                       :documentation "Remote Folder which should be downloaded")
-   (folder-items :accessor folder-items
-                 :initform nil
-                 :type list
-                 :documentation "List of files and (path checksum
-                 size) the Remote Folder contains. Will be filled by
-                 GET-FOLDER-INFO when initialized")))
+                :documentation "Remote Folder Root Path which should
+                be downloaded")
+   (remote-path :initarg :remote-path
+                :initform (error "please specify the remote folder
+                path")
+                :type string
+                :documentation "Remote Folder which should be
+                downloaded")
+   (items :initform nil
+          :type list
+          :documentation "List of files and (path checksum size) the
+          Remote Folder contains. Will be filled by GET-FOLDER-INFO
+          when initialized")))
 
 ;; lodds.event classes
 

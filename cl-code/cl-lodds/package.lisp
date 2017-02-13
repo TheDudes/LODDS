@@ -56,59 +56,16 @@
            #:on-finish-hook
            #:run-task
            #:submit-task
-           ;; task-client and accessors
            #:task-client
-           #:client-name
-           #:client-ip
-           #:client-port
-           ;; task-client-info and accessors
            #:task-client-info
-           #:client-message-timestamp
-           #:client-last-change
-           #:client-load
-           ;; task-request and accessors
            #:task-request
-           #:request-socket
-           ;; task-request-file and accessors
            #:task-request-file
-           #:request-checksum
-           #:request-start
-           #:request-end
-           #:request-written
-           #:request-filename
-           #:request-file-stream
-           ;; task-request-info and accessors
            #:task-request-info
-           #:request-timestamp
-           ;; task-request-send-permission and accessors
            #:task-request-send-permission
-           #:request-size
-           #:request-timeout
-           #:request-filename
-           ;; task-get-file and accessors
            #:get-local-file-path
-           #:get-checksum
-           #:get-size
-           #:get-socket
-           #:get-local-file-stream
-           #:get-read-bytes
-           ;; task-get-file-from-user and accessors
            #:task-get-file-from-user
-           #:get-user
-           #:get-ip
-           #:get-port
-           ;; task-get-file-from-users and accessors
            #:task-get-file-from-users
-           #:get-current-part
-           #:get-read-bytes-part
-           #:get-part-size
-           ;; task-get-folder and accessors
-           #:task-get-folder
-           #:folder-user
-           #:folder-local-path
-           #:folder-remote-root
-           #:folder-remote-path
-           #:folder-items))
+           #:task-get-folder))
 
 (defpackage #:lodds.watcher
   (:use #:cl)
@@ -137,7 +94,8 @@
 
 (defpackage #:lodds.listener
   (:use #:cl)
-  (:export #:run))
+  (:export #:run
+           #:update-client-list))
 
 (defpackage #:lodds.advertiser
   (:use #:cl)
@@ -190,7 +148,9 @@
            #:get-user-list
            #:get-user-info
            #:get-file-info
+           #:get-folder-info
            #:get-file-changes
+           #:get-checksum-from-path
            #:shutdown
            #:generate-info-response
            #:get-file
