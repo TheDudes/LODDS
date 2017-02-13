@@ -32,7 +32,8 @@
     :handler
     :list-update
     :shared-directory
-    :unshared-directory)
+    :unshared-directory
+    :name-changed)
   "For every event there will also be checkbox to show/hide the
   corresponding log message, see info-log.lisp info-log-settings
 

@@ -83,11 +83,24 @@
                     (slot-value download-dock 'widget)
                     (get-selected-file shares-widget selected-item))))
   (qdoto main-window
-         (q+:set-window-title "LODDS")
+         (q+:set-window-title (format nil "LODDS - ~a" (lodds:name lodds:*server*)))
          (q+:set-window-icon (q+:make-qicon "./res/lodds.png"))
          (q+:resize 800 450)
          (q+:set-style-sheet *style-sheet*)
          (q+:set-central-widget shares-widget)))
+
+(define-initializer (main-window setup-callbacks)
+  (lodds.event:add-callback :qt-main
+                            (lambda (event)
+                              (declare (ignore event))
+                              (q+:set-window-title
+                               main-window
+                               (format nil "LODDS - ~a"
+                                       (lodds:name lodds:*server*))))
+                            :name-changed))
+
+(define-finalizer (main-window cleanup-callbacks)
+  (lodds.event:remove-callback :qt-main :name-changed))
 
 (define-signal (main-window reload-stylesheet) ())
 (define-signal (main-window fix-menubar-order) ())
