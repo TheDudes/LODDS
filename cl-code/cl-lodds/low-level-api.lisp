@@ -171,6 +171,7 @@ multiple-value-bind.
                     size
                     timeout
                     filename)
+  (force-output socket-stream)
   0)
 
 ;; response family
