@@ -96,19 +96,16 @@ multiple-value-bind.
    for example: '(#(192 168 2 255) 12345 9999 87654321 \"username\")
    will use *advertise-scanner* to check for syntax errors."
   (if (cl-ppcre:scan *advertise-scanner* message)
-      (destructuring-bind (name timestamp load)
+      (destructuring-bind (user timestamp load)
           (cl-strings:split message)
-        (destructuring-bind (ip port)
-            (cl-strings:split (second
-                               (cl-strings:split name #\@))
-                              #\:)
+        (lodds.core:split-user-identifier (name ip port) user
           (values 0
                   (list
                    (usocket:dotted-quad-to-vector-quad ip)
                    (parse-integer port)
                    (parse-integer timestamp)
                    (parse-integer load)
-                   name))))
+                   user))))
       2))
 
 (defun parse-request (socket-stream)

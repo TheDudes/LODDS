@@ -6,7 +6,10 @@
            #:copy-stream
            #:get-timestamp
            #:str-case
-           #:split-directory))
+           #:split-directory
+           #:format-size
+           #:split-user-identifier
+           #:split-path))
 
 (defpackage #:lodds.low-level-api
   (:use #:cl
@@ -50,6 +53,7 @@
   (:export #:tasker
            #:task
            #:name
+           #:on-finish-hook
            #:run-task
            #:submit-task
            ;; task-client and accessors
@@ -62,33 +66,49 @@
            #:client-message-timestamp
            #:client-last-change
            #:client-load
-           ;; task-request and accerssors
+           ;; task-request and accessors
            #:task-request
            #:request-socket
-           ;; task-request-file and accerssors
+           ;; task-request-file and accessors
            #:task-request-file
            #:request-checksum
            #:request-start
            #:request-end
-           ;; task-request-info and accerssors
+           #:request-written
+           #:request-filename
+           #:request-file-stream
+           ;; task-request-info and accessors
            #:task-request-info
            #:request-timestamp
-           ;; task-request-send-permission and accerssors
+           ;; task-request-send-permission and accessors
            #:task-request-send-permission
            #:request-size
            #:request-timeout
            #:request-filename
-           ;; task-get-file and accerssors
-           #:task-get-file-from-user
+           ;; task-get-file and accessors
            #:get-local-file-path
-           #:get-user
-           #:get-ip
-           #:get-port
            #:get-checksum
            #:get-size
            #:get-socket
            #:get-local-file-stream
-           #:get-read-bytes))
+           #:get-read-bytes
+           ;; task-get-file-from-user and accessors
+           #:task-get-file-from-user
+           #:get-user
+           #:get-ip
+           #:get-port
+           ;; task-get-file-from-users and accessors
+           #:task-get-file-from-users
+           #:get-current-part
+           #:get-read-bytes-part
+           #:get-part-size
+           ;; task-get-folder and accessors
+           #:task-get-folder
+           #:folder-user
+           #:folder-local-path
+           #:folder-remote-root
+           #:folder-remote-path
+           #:folder-items))
 
 (defpackage #:lodds.watcher
   (:use #:cl)
@@ -96,6 +116,7 @@
            #:started-tracking
            #:dir-watchers
            #:list-of-changes
+           #:last-change
            ;; #:file-table-name
            ;; #:file-table-hash
            ;; #:stop-watcher
@@ -137,6 +158,7 @@
            #:get-interface-info
            #:get-broadcast-address
            #:get-ip-address
+           #:update-load
            ;; client-info reader/accessor
            #:client-info
            #:c-name
@@ -171,4 +193,5 @@
            #:get-file-changes
            #:shutdown
            #:generate-info-response
-           #:get-file))
+           #:get-file
+           #:get-folder))

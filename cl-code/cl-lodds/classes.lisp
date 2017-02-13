@@ -5,7 +5,8 @@
 (defclass subsystem ()
   ((name :accessor name
          :initarg :name
-         :initform (error "please specify a subsystem name (keyword like :my-awesome-subsystem)")
+         :initform (error "please specify a subsystem name ~
+                          (keyword like :my-awesome-subsystem)")
          :type keyword
          :documentation "Name to identify a subsystem.")
    (thread :accessor thread
@@ -22,7 +23,8 @@
             and SUBSYSTEM-STOP.")
    (init-fn :accessor init-fn
             :initarg :init-fn
-            :initform (error "please specify a init function which will be run by the subsystem")
+            :initform (error "please specify a init function which ~
+                             will be run by the subsystem")
             :type function
             :documentation "The 'main' function which will be called
             by a extra thread.")))
@@ -46,7 +48,13 @@
          :initarg :name
          :initform (error "please specify a task name!")
          :type string
-         :documentation "Task Name.")))
+         :documentation "Task Name.")
+   (on-finish-hook :accessor on-finish-hook
+                   :initarg :on-finish-hook
+                   :initform nil
+                   :type function
+                   :documentation "Function which gets called when the
+                   task finishes.")))
 
 (defclass task-client (task)
     ((client-name :reader client-name
@@ -107,7 +115,20 @@
                 :initform nil
                 :initarg :request-end
                 :type rational
-                :documentation "Requested File end position.")))
+                :documentation "Requested File end position.")
+   (request-filename :accessor request-filename
+                     :initform nil
+                     :type string
+                     :documentation "Local Filename of Requested File")
+   (request-file-stream :accessor request-file-stream
+                        :initform nil
+                        :type stream
+                        :documentation "Stream pointing to local file
+                        request-filename.")
+   (request-written :accessor request-written
+                    :initform 0
+                    :type rational
+                    :documentation "Bytes Written onto socket")))
 
 (defclass task-request-info (task-request)
   ((request-timestamp :reader request-timestamp
@@ -134,7 +155,7 @@
                      :type string
                      :documentation "Name of the File requested to send")))
 
-(defclass task-get-file-from-user (task)
+(defclass task-get-file (task)
   ((get-local-file-path :accessor get-local-file-path
                         :initform (error "Specify a local-file-path pls.")
                         :initarg :local-file-path
@@ -144,24 +165,6 @@
                         which is getting downloaded from another
                         client, is getting saved on the local
                         filesystem.")
-   (get-user :accessor get-user
-             :initform (error "Specify a user pls.")
-             :initarg :user
-             :type string
-             :documentation "The User where the file is getting
-             downloaded from. User has to be specified with his ip and
-             port in the following format: username@ip:port, for
-             example: d4ryus@192.168.2.101:1234")
-   (get-ip :accessor get-ip
-           :initform nil
-           :type string
-           :documentation "Ip of User, will be set on initialize
-           instance. Can be parsed from get-user.")
-   (get-port :accessor get-port
-             :initform nil
-             :type fixnum
-             :documentation "Port of User, will be set on initialize
-             instance. Can be parsed from get-user.")
    (get-checksum :accessor get-checksum
                  :initform (error "Specify a checksum pls.")
                  :initarg :checksum
@@ -192,6 +195,71 @@
                    :documentation "Bignum describing how many bytes
                    have been read from the socket and saved to the
                    file.")))
+
+(defclass task-get-file-from-user (task-get-file)
+  ((get-user :accessor get-user
+             :initform (error "Specify a user pls.")
+             :initarg :user
+             :type string
+             :documentation "The User where the file is getting
+             downloaded from. User has to be specified with his ip and
+             port in the following format: username@ip:port, for
+             example: d4ryus@192.168.2.101:1234")
+   (get-ip :accessor get-ip
+           :initform nil
+           :type string
+           :documentation "Ip of User, will be set on initialize
+           instance. Can be parsed from get-user.")
+   (get-port :accessor get-port
+             :initform nil
+             :type fixnum
+             :documentation "Port of User, will be set on initialize
+             instance. Can be parsed from get-user.")))
+
+(defclass task-get-file-from-users (task-get-file)
+  ((get-current-part :accessor get-current-part
+                     :initform 0
+                     :type bignum
+                     :documentation "The current part which is downloaded.")
+   (get-read-bytes-part :accessor get-read-bytes-part
+                        :initform 0
+                        :type bignum
+                        :documentation "Bytes read of current part.")
+   (get-part-size :accessor get-part-size
+                  :initform 0
+                  :type bignum
+                  :documentation "Size limit after which lodds checks
+                                  again for a the user with the lowest
+                                  load.")))
+
+(defclass task-get-folder (task)
+  ((folder-user :accessor folder-user
+                :initarg :user
+                :initform (error "please specify the User who contains ~
+                                 the wanted Folder")
+                :type string
+                :documentation "User who got the wanted Folder")
+   (folder-local-path :accessor folder-local-path
+                      :initarg :local-path
+                      :initform (error "please specify a local folder")
+                      :type string
+                      :documentation "Local Folder where Files of Remote Folder will be downloaded too")
+   (folder-remote-root :accessor folder-remote-root
+                       :initarg :remote-root
+                       :initform (error "please specify the remote folder root path")
+                       :type string
+                       :documentation "Remote Folder Root Path which should be downloaded")
+   (folder-remote-path :accessor folder-remote-path
+                       :initarg :remote-path
+                       :initform (error "please specify the remote folder path")
+                       :type string
+                       :documentation "Remote Folder which should be downloaded")
+   (folder-items :accessor folder-items
+                 :initform nil
+                 :type list
+                 :documentation "List of files and (path checksum
+                 size) the Remote Folder contains. Will be filled by
+                 GET-FOLDER-INFO when initialized")))
 
 ;; lodds.event classes
 
@@ -282,7 +350,12 @@
                     :documentation "List of changes. Each member is a
                     list of Timestamp, Type, checksum, size and name
                     in that order. Lock with LIST-OF-CHANGES-LOCK
-                    before modifying the list.")))
+                    before modifying the list.")
+   (last-change :accessor last-change
+                :initform 0
+                :type rational
+                :documentation "Timestamp of file change on watched
+                files.")))
 
 ;; lodds classes
 
@@ -338,7 +411,7 @@
 (defclass lodds-server ()
   ((name :accessor name
          :initarg :name
-         :initform nil
+         :initform (machine-instance)
          :type string
          :documentation "Advertised name. Will be displayed by other
          Clients as client name.")

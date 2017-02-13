@@ -12,17 +12,11 @@ import javafx.beans.value.ObservableValue;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
-import javafx.scene.control.Button;
-import javafx.scene.control.SelectionMode;
-import javafx.scene.control.TextField;
-import javafx.scene.control.TreeItem;
-import javafx.scene.control.TreeView;
-import javafx.stage.DirectoryChooser;
-import javafx.stage.Stage;
-import studyproject.App;
+import javafx.scene.control.*;
 import studyproject.API.Errors.ErrLog;
 import studyproject.API.Lvl.Mid.Core.FileCoreInfo;
 import studyproject.API.Lvl.Mid.Core.UserInfo;
+import studyproject.gui.Core.Utils;
 import studyproject.gui.mainWindow.MainWindowModel;
 import studyproject.gui.mainWindow.tasksList.TasksListModel;
 import studyproject.gui.mainWindow.usersList.UsersListModel;
@@ -35,6 +29,8 @@ public class FilesTreePresenter implements Initializable {
 	TreeView<FileCoreInfo> filesTreeView;
 	@FXML
 	TextField filesTreeSearch;
+	@FXML
+	MenuItem reloadTreeCM;
 	@Inject
 	UsersListModel userListModel;
 	@Inject
@@ -58,28 +54,22 @@ public class FilesTreePresenter implements Initializable {
 				createTree(newValue);
 			}
 		});
-		filesTreeView.getSelectionModel().selectedItemProperty()
-				.addListener(new ChangeListener<TreeItem<FileCoreInfo>>() {
-
-					@Override
-					public void changed(ObservableValue<? extends TreeItem<FileCoreInfo>> observable,
-							TreeItem<FileCoreInfo> oldValue, TreeItem<FileCoreInfo> newValue) {
-						System.out.println(newValue.getValue().getFileName() + newValue.getValue().getChecksum());
-					}
-				});
+		reloadTreeCM.setOnAction(e -> createTree(userListModel.getSelectedUser().get()));
 	}
 
 	public void createTree(UserInfo userInfo) {
+		if (userInfo == null)
+			return;
 		root.getChildren().clear();
-		String[] subpaths = null;
+		String[] subPaths = null;
 		FileCoreInfo infoToAdd = null;
 		int startIndex = 0;
 		for (String path : userInfo.getPathToFileInfo().keySet()) {
 			infoToAdd = userInfo.getPathToFileInfo().get(path);
-			subpaths = path.split("/");
-			if (subpaths[0].isEmpty())
+			subPaths = path.split("/");
+			if (subPaths[0].isEmpty())
 				startIndex = 1;
-			addTreeItem(infoToAdd, subpaths, startIndex, root);
+			addTreeItem(infoToAdd, subPaths, startIndex, root);
 		}
 	}
 
@@ -109,18 +99,11 @@ public class FilesTreePresenter implements Initializable {
 
 	private void downloadPressed() {
 		ObservableList<TreeItem<FileCoreInfo>> itemsList = filesTreeView.getSelectionModel().getSelectedItems();
-		DirectoryChooser directoryChooser = new DirectoryChooser();
 		String absolutePath;
 		File chosenFolder;
-		File savePathFile = new File((String) App.properties.get("defaultSavePath"));
-
-		System.out.println(itemsList);
-		if (savePathFile.exists()) {
-			directoryChooser.setInitialDirectory(savePathFile);
-		}
-		directoryChooser.setTitle("Choose folder to save files in");
-		chosenFolder = directoryChooser.showDialog(new Stage());
-		if (chosenFolder == null) {
+		try {
+			chosenFolder = new File(Utils.getChoosenDirPath("Choose folder to save files in"));
+		} catch (NullPointerException e) {
 			ErrLog.log(Level.INFO, LogKey.info, APILvl.mid, "downloadPressed", "Non folder choosen. Download aborted.");
 			return;
 		}
@@ -133,7 +116,7 @@ public class FilesTreePresenter implements Initializable {
 			if (fileCoreInfo.getChecksum() == null) {
 				// continue because this item is a folder. it has no checksum.
 				continue;
-			} 
+			}
 			mainWindowModel.getLodds().getFile(userListModel.getSelectedUser().get(), fileCoreInfo.getChecksum(),
 					absolutePath + fileCoreInfo.getFilePath());
 		}

@@ -77,6 +77,8 @@ public class App extends Application {
 	@Override
 	public void start(Stage mainStage) throws Exception {
 		mainStage.setTitle("Local Open Distributed Data Sharing");
+		mainStage.setMinHeight(400);
+		mainStage.setMinWidth(600);
 		mainView = new MainWindowView();
 		Scene mainScene = new Scene(mainView.getView());
 		mainStage.setScene(mainScene);

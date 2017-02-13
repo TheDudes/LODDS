@@ -33,13 +33,12 @@
          0))))
 
 (defmethod lodds.subsystem:start ((subsys watcher))
-  (error "You cannot start the Watcher subsystem like that! use SHARE and UNSHARE to start/stop"))
+  (error "You cannot start the Watcher subsystem like that! use SHARE and ~
+         UNSHARE to start/stop"))
 
 (defmethod lodds.subsystem:stop ((subsys watcher))
-  (mapcar
-   (lambda (dir-watcher)
-     (stop-dir-watcher dir-watcher nil))
-   (dir-watchers subsys)))
+  (dolist (dir-watcher (dir-watchers subsys))
+    (stop-dir-watcher dir-watcher nil)))
 
 (defun add-file (dir-watcher pathname &optional (checksum nil) (size nil))
   "adds a file to the given dir-watcher, this functions is called by
@@ -69,21 +68,26 @@
   (let* ((ft-name (file-table-name dir-watcher))
          (ft-hash (file-table-hash dir-watcher))
          (checksum (car (gethash pathname ft-name))))
-    (funcall (change-hook dir-watcher)
-             (destructuring-bind (checksum size)
-                 (gethash pathname ft-name)
-               (list (lodds.core:get-timestamp)
-                     :del
-                     checksum
-                     size
-                     (subseq pathname (length (root-dir-path dir-watcher))))))
-    (let ((new-val (remove pathname (gethash checksum ft-hash)
-                           :test #'string=)))
-      (if new-val
-          (setf (gethash checksum ft-hash)
-                new-val)
-          (remhash checksum ft-hash)))
-    (remhash pathname ft-name)))
+    (let ((entry (gethash pathname ft-name)))
+      (if (not entry)
+          (error "watcher:remove-file entry '~a' not found"
+                 pathname)
+          (progn
+            (funcall (change-hook dir-watcher)
+                     (destructuring-bind (checksum size)
+                         entry
+                       (list (lodds.core:get-timestamp)
+                             :del
+                             checksum
+                             size
+                             (subseq pathname (length (root-dir-path dir-watcher))))))
+            (let ((new-val (remove pathname (gethash checksum ft-hash)
+                                   :test #'string=)))
+              (if new-val
+                  (setf (gethash checksum ft-hash)
+                        new-val)
+                  (remhash checksum ft-hash)))
+            (remhash pathname ft-name))))))
 
 (defun update-file (dir-watcher pathname)
   "checks if the given file under PATHNAME changed (if the checksum is
@@ -104,10 +108,8 @@
     (:file-removed (remove-file dir-watcher pathname))
     (:file-changed (update-file dir-watcher pathname))))
 
-(defmethod initialize-instance ((w dir-watcher) &rest initargs)
+(defmethod initialize-instance :after ((w dir-watcher) &rest initargs)
   (declare (ignorable initargs))
-  (call-next-method)
-
   (multiple-value-bind (path name)
       (lodds.core:split-directory (cl-fs-watcher:dir w))
     (setf (slot-value w 'root-dir-name) name
@@ -135,6 +137,8 @@
   from the dir-watchers list, also checks if it was the last
   dis-watcher, if so deletes list-of-changes and sets alive-p to nil"
   (cl-fs-watcher:stop-watcher dir-watcher)
+  (lodds.event:push-event :unshared-directory
+                          (list (cl-fs-watcher:dir dir-watcher)))
   (when run-change-hook-p
     (loop :for info :in (get-all-tracked-file-infos dir-watcher)
           :do (funcall (change-hook dir-watcher)
@@ -148,7 +152,8 @@
     (unless (dir-watchers watcher)
       (bt:with-lock-held ((list-of-changes-lock watcher))
         (setf (list-of-changes watcher) nil
-              (started-tracking watcher) 0))
+              (started-tracking watcher) 0
+              (last-change watcher) (lodds.core:get-timestamp)))
       (setf (lodds.subsystem:alive-p watcher) nil)
       (lodds.event:push-event (lodds.subsystem:name watcher)
                               (list "stopped!")))))
@@ -180,12 +185,14 @@
                 :do (multiple-value-bind (p n) (lodds.core:split-directory shared-folder)
                       (declare (ignore p))
                       (when (string= name n)
-                        (error "TODO: the given directory can not be shared since a directory with that name already exists :("))))))
+                        (error "TODO: the given directory can not be shared ~
+                               since a directory with that name already exists :("))))))
     (when (find folder-path (get-shared-folders))
-      (error "TODO: the folder you tried to share has the same name"))
+      (error "TODO: the folder you tried to share is already shared"))
     (let* ((hook (lambda (change)
                    (bt:with-lock-held ((list-of-changes-lock watcher))
-                     (push change (list-of-changes watcher)))))
+                     (push change (list-of-changes watcher))
+                     (setf (last-change watcher) (car change)))))
            (new-dir-watcher
              (make-instance 'dir-watcher
                             :change-hook hook
@@ -197,8 +204,8 @@
       (push new-dir-watcher
             (dir-watchers watcher))
       (setf (lodds.subsystem:alive-p watcher) t)
-      (lodds.event:push-event (lodds.subsystem:name watcher)
-                              (list :watching folder-path)))))
+      (lodds.event:push-event :shared-directory
+                              (list folder-path)))))
 
 (defun unshare-folder (folder-path)
   "unshare the given folder"
@@ -210,4 +217,5 @@
                                :test #'string=)))
         (if rem-watcher
             (stop-dir-watcher rem-watcher)
-            (error "TODO: could not find watcher to unshare with given folder-path"))))))
+            (error "TODO: could not find watcher to unshare with given ~
+                   folder-path"))))))

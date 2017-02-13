@@ -74,7 +74,10 @@ public class FileInfo {
 	}
 	
 	private String removeLeadingForwardslash(String fileName) {
-		if (fileName.charAt(0) == '/') {
+		if (fileName.length() == 0) {
+			return "";
+		}
+		else if (fileName.charAt(0) == '/') {
 			return fileName.substring(1);
 		} else {
 			return fileName;

@@ -55,8 +55,8 @@
           (with-accessors ((old-load lodds:c-load)
                            (old-last-change lodds:c-last-change))
               (lodds:get-user-info c-name)
-            (unless (and (eql old-load c-load)
-                         (> old-last-change c-last-change))
+            (when (or (not (eql old-load c-load))
+                      (<= old-last-change c-last-change))
               (lodds.event:push-event :client-updated
                                       (list c-name
                                             c-load

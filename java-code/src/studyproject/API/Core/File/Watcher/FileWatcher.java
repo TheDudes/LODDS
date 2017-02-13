@@ -88,20 +88,14 @@ public class FileWatcher implements Runnable {
 					WatchEvent<Path> ev = (WatchEvent<Path>) event;
 					Path fileName = ev.context();
 					String fullPath = directoryPath + fileName.toString();
-//					FileInfo newFileInfo = null;
 
 					File newFile = new File(fullPath);
 
 					System.out.println("FileWatcher detected event for: "+fullPath);
-
-//					if (newFile.exists() && !newFile.isDirectory()) {
-//						newFileInfo = new FileInfo(fullPath, virtualRoot);
-//					}
-
 					System.out.println("FileWatcher instance: " + directoryPath);
 					System.out.println(eventType.name() + ": " + fullPath);
 
-					// New file was created -> Add to list
+					// New file or directory was created -> Add to list
 					if (watchForNewFiles && eventType == ENTRY_CREATE) {
 
 						System.out.println("..New file was created -> Add to list: " + newFile.getPath());
@@ -113,13 +107,10 @@ public class FileWatcher implements Runnable {
 						
 						// New file was created
 						else {
-
-//							newFileInfo = new FileInfo(fullPath, virtualRoot);
-//							FileInfo fileFromList = controller.getWatchedFileFromListByHash(newFileInfo.checksum);
 							controller.addFileToLists(fullPath, virtualRoot);
 						}
+						
 					} else {
-						// fileFromList = controller.getWatchedFileFromListByFileName(fullPath);
 						
 						FileWatcherTreeNode node = controller.currentFiles.getNodeByFileName(fullPath);
 
@@ -131,66 +122,12 @@ public class FileWatcher implements Runnable {
 							// DEL
 							// File is not a folder
 							if (node.fileInfo != null) {
-								
-								System.out.println("FileWatcher: Deleted file is not a folder ("+node.fileInfo.fileName+")");
-
-								// Check if that file was really deleted
-								File probablyDeletedFile = new File(node.fileInfo.fileName);
-
-								// File does not exist anymore -> It was deleted
-								if (!probablyDeletedFile.exists()) {
-									controller.deleteFileFromLists(node.fileInfo);
-
-									System.out.println("File was deleted: " + node.fileInfo.fileName);
-
-									// Unwatch Directory if directory does not
-									// exist anymore
-									/*
-									 * File parentDir = new
-									 * File(fileFromList.parentDirectory); if
-									 * (!parentDir.exists())
-									 * controller.unwatchDirectory(directoryPath
-									 * );
-									 */
-								}
-
+								fileWasDeleted(node);
 							}
 							
 							// File is a folder
 							else {
-
-								System.out.println("FileWatcher: Deleted file seems to be a folder");
-								
-								// Check if folder is in our list
-								System.out.println("Check if folder is in our list: " + fullPath);
-								if (controller.watchedInternalDirectories.contains(fullPath)
-										|| controller.watchedInternalDirectories.contains(fullPath + "/")) {
-
-									File probablyDeletedFolder = new File(fullPath);
-
-									// Check if folder does still exist
-									System.out.println("FileWatcher: Check if folder does still exist");
-									
-									if (!probablyDeletedFolder.exists()) {
-										controller.watchedInternalDirectories.remove(fullPath);
-										controller.watchedInternalDirectories.remove(fullPath + "/");
-
-										// Delete all sub folders from
-										// watchtedInternalDirectories
-										System.out.println("Delete all sub folders from watchtedInternalDirectories");
-										for (String subfolder : controller.watchedInternalDirectories) {
-											if (subfolder.contains(fullPath)) {
-												controller.watchedInternalDirectories.remove(subfolder);
-												System.out.println("Subfolder deleted: " + subfolder);
-											}
-										}
-										
-										controller.deleteFolderFromLists(fullPath);
-										
-									}
-																		
-								}
-
+								folderWasDeleted(fullPath);
 							}
 	 
 						}
@@ -198,15 +135,7 @@ public class FileWatcher implements Runnable {
 						// File was modified
 						// We are only interested in modified files, not folders
 						if (node != null && node.fileInfo != null && eventType == ENTRY_MODIFY) {
-
-							System.out.println("FileWatcher: Detected MODIFY event");
-
-							// DEL
-							controller.deleteFileFromLists(node.fileInfo);
-
-							// ADD
-							controller.addFileToLists(fullPath, virtualRoot);
-
+							fileWasModified(fullPath, node);
 						}
 
 					}
@@ -233,6 +162,74 @@ public class FileWatcher implements Runnable {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+	}
+
+	private void folderWasDeleted(String fullPath) {
+		System.out.println("FileWatcher: Deleted file seems to be a folder");
+		
+		// Check if folder is in our list
+		System.out.println("Check if folder is in our list: " + fullPath);
+		if (controller.watchedInternalDirectories.contains(fullPath)
+				|| controller.watchedInternalDirectories.contains(fullPath + "/")) {
+
+			File probablyDeletedFolder = new File(fullPath);
+
+			// Check if folder does still exist
+			System.out.println("FileWatcher: Check if folder does still exist");
+			
+			if (!probablyDeletedFolder.exists()) {
+				controller.watchedInternalDirectories.remove(fullPath);
+				controller.watchedInternalDirectories.remove(fullPath + "/");
+
+				// Delete all sub folders from
+				// watchtedInternalDirectories
+				System.out.println("Delete all sub folders from watchtedInternalDirectories");
+				for (String subfolder : controller.watchedInternalDirectories) {
+					if (subfolder.contains(fullPath)) {
+						controller.watchedInternalDirectories.remove(subfolder);
+						System.out.println("Subfolder deleted: " + subfolder);
+					}
+				}
+				
+				controller.deleteFolderFromLists(fullPath);
+				
+			}
+												
+		}
+	}
+
+	private void fileWasDeleted(FileWatcherTreeNode node) {
+		System.out.println("FileWatcher: Deleted file is not a folder ("+node.fileInfo.fileName+")");
+
+		// Check if that file was really deleted
+		File probablyDeletedFile = new File(node.fileInfo.fileName);
+
+		// File does not exist anymore -> It was deleted
+		if (!probablyDeletedFile.exists()) {
+			controller.deleteFileFromLists(node.fileInfo);
+
+			System.out.println("File was deleted: " + node.fileInfo.fileName);
+
+			// Unwatch Directory if directory does not
+			// exist anymore
+			/*
+			 * File parentDir = new
+			 * File(fileFromList.parentDirectory); if
+			 * (!parentDir.exists())
+			 * controller.unwatchDirectory(directoryPath
+			 * );
+			 */
+		}
+	}
+
+	private void fileWasModified(String fullPath, FileWatcherTreeNode node) throws Exception {
+		System.out.println("FileWatcher: Detected MODIFY event");
+
+		// DEL
+		controller.deleteFileFromLists(node.fileInfo);
+
+		// ADD
+		controller.addFileToLists(fullPath, virtualRoot);
 	}
 
 }
