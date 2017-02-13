@@ -9,23 +9,20 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.security.NoSuchAlgorithmException;
 import java.util.Vector;
+import java.util.logging.Level;
 
 import javafx.collections.ObservableList;
 import studyproject.App;
 import studyproject.API.Core.File.FileInfo;
 import studyproject.API.Core.File.Watcher.FileWatcherController;
+import studyproject.API.Errors.ErrLog;
 import studyproject.API.Loadbalancer.Loadbalancer;
 import studyproject.API.Lvl.Low.Broadcast;
-import studyproject.API.Lvl.Mid.BroadcastListenerThread;
-import studyproject.API.Lvl.Mid.BroadcastSenderThread;
-import studyproject.API.Lvl.Mid.FileConnectionThread;
-import studyproject.API.Lvl.Mid.FileSenderThread;
-import studyproject.API.Lvl.Mid.GetFileWPThread;
-import studyproject.API.Lvl.Mid.RequestHandlerThread;
-import studyproject.API.Lvl.Mid.SendFileWPThread;
-import studyproject.API.Lvl.Mid.UpdateFileInfoThread;
+import studyproject.API.Lvl.Mid.*;
 import studyproject.API.Lvl.Mid.Core.UserInfo;
 import studyproject.API.Lvl.Mid.ThreadMonitoring.ThreadExecutor;
+import studyproject.logging.APILvl;
+import studyproject.logging.LogKey;
 
 /**
  * Main class of the Mid-level API implementation of the LODDS protocol Default
@@ -42,7 +39,7 @@ public class Lodds {
 	private final int DEFAULT_TIME_INTERVAL = 1000;
 	private final int DEFAULT_PARALLEL_DOWNLOADS = 8;
 
-	private long loadBalancingMinumum = 4096;
+	private long loadBalancingMinimum = 4096;
 
 	private long lastChange;
 	private Loadbalancer loadbalancer;
@@ -79,7 +76,7 @@ public class Lodds {
 		parallelDownloads = DEFAULT_PARALLEL_DOWNLOADS;
 		watchService = new FileWatcherController();
 		this.interfaceName = "no interface selected";
-		loadbalancer = new Loadbalancer(loadBalancingMinumum, parallelDownloads, threadExecutor);
+		loadbalancer = new Loadbalancer(loadBalancingMinimum, parallelDownloads, threadExecutor);
 		threadExecutor = new ThreadExecutor(loddsModel);
 	}
 
@@ -91,9 +88,6 @@ public class Lodds {
 	 * @param interfaceName
 	 *            the name of the interface the client should use to communicate
 	 *            with the network
-	 * 
-	 * @param userName
-	 *            the name under which this client will appear to other clients
 	 */
 	public Lodds(String interfaceName) {
 		sharedFolders = new Vector<String>();
@@ -105,7 +99,7 @@ public class Lodds {
 		this.interfaceName = interfaceName;
 		threadExecutor = new ThreadExecutor(loddsModel);
 		setNetworkAddresses();
-		loadbalancer = new Loadbalancer(loadBalancingMinumum, parallelDownloads, threadExecutor);
+		loadbalancer = new Loadbalancer(loadBalancingMinimum, parallelDownloads, threadExecutor);
 	}
 
 	/**
@@ -215,12 +209,7 @@ public class Lodds {
 	 * 
 	 * @param localPath
 	 *            the complete path under which the file should be saved
-	 * 
-	 * @param startIndex
-	 *            the index from which to begin the file transfer
-	 * 
-	 * @param endIndex
-	 *            the index at which to stop the file transfer
+	 *
 	 */
 	public void getFile(UserInfo user, String checksum, String localPath) {
 		FileConnectionThread fileConnectionThread = new FileConnectionThread(user, checksum, getFileSize(checksum),
@@ -247,7 +236,7 @@ public class Lodds {
 			if (owningUsers.size() == 1) {
 				getFile(owningUsers.get(0), checksum, localPath);
 			} else {
-				if (getFileSize(checksum) < loadBalancingMinumum) {
+				if (getFileSize(checksum) < loadBalancingMinimum) {
 					getFile(loadbalancer.getClientMinLoad(owningUsers, checksum), checksum, localPath);
 				} else {
 					loadbalancer.splitLoad(getOwningUsers(checksum), checksum, localPath, getFileSize(checksum));
@@ -563,10 +552,15 @@ public class Lodds {
 
 	private void setNetworkAddresses() {
 		StringBuilder broadcastAddr = new StringBuilder();
-		Broadcast.getBroadcastAddress(interfaceName, broadcastAddr);
+		int errorCode = 0;
+		if ((errorCode = Broadcast.getBroadcastAddress(interfaceName, broadcastAddr)) != 0) {
+			ErrLog.log(Level.SEVERE, LogKey.error, APILvl.gui, errorCode, "setNetworkAddresses");
+		}
 		broadcastAddress = broadcastAddr.toString();
 		StringBuilder networkAddr = new StringBuilder();
-		Broadcast.getLocalIp(interfaceName, networkAddr);
+		if ((errorCode = Broadcast.getLocalIp(interfaceName, networkAddr)) != 0) {
+			ErrLog.log(Level.SEVERE, LogKey.broadcastReceived, APILvl.mid, errorCode, "setNetworkAddresses");
+		}
 		networkAddress = networkAddr.toString();
 	}
 

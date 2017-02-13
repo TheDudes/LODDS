@@ -131,7 +131,7 @@ public class ErrLog {
 		case malformedData:
 			errorMsg = "Data could not be parsed, since it's not conforment to the specification LODDS";
 			break;
-		case timoutReached:
+		case timeoutReached:
 			errorMsg = "Timeout has been reached whithout a response";
 			break;
 		case connectionDenied:

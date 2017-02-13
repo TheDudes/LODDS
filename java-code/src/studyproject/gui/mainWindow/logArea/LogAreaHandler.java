@@ -133,7 +133,7 @@ public class LogAreaHandler extends Handler {
      * Inspects the passed {@link Error}(the LogRecord), returns True if the log
      * record is either Level.Info or Severe, and the corresponding check box is
      * set to true. Furthermore checks if the {@link Error} got {@link LogKey}
-     * broadcast, getRec, getSent and the corresponding checkboxes are set. All
+     * broadcast, getRec, getFile and the corresponding checkboxes are set. All
      * Errors which got other {@link LogKey} are logged to the table view at the
      * moment.
      *
@@ -152,7 +152,7 @@ public class LogAreaHandler extends Handler {
             return false;
         if (broadcast.get() == false && record.isBroadcast())
             return false;
-        if (getRec.get() == false && record.isGetRec())
+        if (getRec.get() == false && record.isRespondFile())
             return false;
         if (getSent.get() == false && record.isGetSent())
             return false;

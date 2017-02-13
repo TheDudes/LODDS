@@ -30,10 +30,10 @@ public class BroadcastTest {
 	 */
 	@Test
 	public void testBroadcasting() {
-		
+
 		App app = new App();
 		app.loadProperties();
-		
+
 		String username = "junit";
 		ArrayList<String> networkAddresses = new ArrayList<String>();
 		Broadcast.getNetworkAddresses(networkAddresses);
@@ -42,8 +42,7 @@ public class BroadcastTest {
 		for (String interfaceName : networkAddresses) {
 			Broadcast.getLocalIp(interfaceName, networkAddress);
 			if (!networkAddress.toString().equals("127.0.0.1")
-					&& (networkAddress.toString().startsWith("192.168") || networkAddress
-							.toString().startsWith("10."))
+					&& (networkAddress.toString().startsWith("192.168") || networkAddress.toString().startsWith("10."))
 					|| networkAddress.toString().startsWith("172.16")) {
 				chosenInterface = interfaceName;
 			}
@@ -54,13 +53,12 @@ public class BroadcastTest {
 		} else {
 			Lodds loddsObject = new Lodds(chosenInterface);
 			loddsObject.setUserName(username);
-			BroadcastSenderThread sender = new BroadcastSenderThread(
-					loddsObject);
+			BroadcastSenderThread sender = new BroadcastSenderThread(loddsObject);
 			sender.start();
 
 			Broadcast.getLocalIp(chosenInterface, networkAddress);
 			BroadcastInfo broadcastInfo = new BroadcastInfo();
-			Broadcast.readAdvertise(networkAddress.toString(), broadcastInfo);
+			Broadcast.readAdvertise(broadcastInfo);
 			assertEquals(broadcastInfo.name, username);
 
 			// shut down the sender

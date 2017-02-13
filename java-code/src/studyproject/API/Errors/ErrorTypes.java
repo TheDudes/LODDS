@@ -15,7 +15,7 @@ public enum ErrorTypes {
 	oK,
 	connectionClosed, 
 	malformedData,
-	timoutReached,
+	timeoutReached,
 	fileNotFound,
 	connectionDenied;
 	
