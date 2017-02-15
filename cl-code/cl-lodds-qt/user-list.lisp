@@ -31,9 +31,7 @@
                  (let ((file (q+:qfiledialog-get-open-file-name)))
                    (when (> (length file)
                             0)
-                     (format t "file: ~a, name: ~a, ip: ~a, port: ~a~%"
-                             file name ip port)
-                     (lodds:send-file file ip port))))))
+                     (lodds:send-file file ip port 10))))))
     (q+:set-item-widget user-list
                         new-entry
                         +user-list-send-file+
