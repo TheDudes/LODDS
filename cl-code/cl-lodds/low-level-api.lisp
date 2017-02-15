@@ -255,21 +255,20 @@ multiple-value-bind.
                                        (return-from handle-info 2))))))
         2)))
 
-(defun handle-send-permission (socket timeout file-stream size)
+(defun handle-send-permission (socket timeout)
   "handles a successfull 'get send-permission' request and waits
-   maximum 'timeout' seconds for a OK. On success it writes data from
-   file-stream to socket.
-   TODO: implement parse of OK."
-  (if (usocket:wait-for-input socket :timeout timeout)
-      (let ((socket-stream (usocket:socket-stream socket)))
-        (if (string= "OK"
-                     (read-line-from-socket socket-stream))
-            (progn
-              (lodds.event:push-event :debug "calling copy stream")
-              (copy-stream file-stream
-                           socket-stream
-                           size)
-              (lodds.event:push-event :debug "Done calling copy stream")
-              0)
-            2))
-      5))
+   maximum 'timeout' seconds for a OK. On success it returns with 0
+   and the socket should be rdy to send the file. If timeout is
+   reached 5 will be returned"
+  (handler-case
+      (multiple-value-bind (socket-rdy time-left)
+          (usocket:wait-for-input socket :timeout timeout)
+        (if (and time-left socket-rdy)
+            (if (string= "OK"
+                         (read-line-from-socket (usocket:socket-stream socket-rdy)))
+                0
+                2)
+            3))
+    (end-of-file (e)
+      (declare (ignore e))
+      1)))
