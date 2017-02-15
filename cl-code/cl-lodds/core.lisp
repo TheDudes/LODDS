@@ -101,12 +101,17 @@
       ((> size kb) (format nil "~akb" (ash size -10)))
       (t           (format nil "~ab " size)))))
 
-(defmacro split-user-identifier ((name ip port) user &body body)
+(defmacro split-user-identifier ((name ip port &optional (convert-types nil)) user &body body)
   (let ((ip+port (gensym "ip+port")))
     `(destructuring-bind (,name ,ip+port) (cl-strings:split ,user #\@)
        (declare (ignorable ,name))
        (destructuring-bind (,ip ,port) (cl-strings:split ,ip+port #\:)
-         ,@body))))
+         ,(if convert-types
+              `(let ((,ip (usocket:dotted-quad-to-vector-quad ,ip))
+                     (,port (parse-integer ,port)))
+                 ,@body)
+              `(progn
+                 ,@body))))))
 
 (defun split-path (path)
   "splits a path string into its directorires
