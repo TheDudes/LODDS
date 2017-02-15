@@ -89,21 +89,22 @@
          (q+:set-style-sheet *style-sheet*)
          (q+:set-central-widget shares-widget)))
 
+(define-signal (main-window reload-stylesheet) ())
+(define-signal (main-window fix-menubar-order) ())
+(define-signal (main-window change-title) (string))
 (define-initializer (main-window setup-callbacks)
   (lodds.event:add-callback :qt-main
                             (lambda (event)
                               (declare (ignore event))
-                              (q+:set-window-title
-                               main-window
-                               (format nil "LODDS - ~a"
-                                       (lodds:name lodds:*server*))))
+                              (signal! main-window
+                                       (change-title string)
+                                       (format nil "LODDS - ~a"
+                                               (lodds:name lodds:*server*))))
                             :name-changed))
 
 (define-finalizer (main-window cleanup-callbacks)
   (lodds.event:remove-callback :qt-main :name-changed))
 
-(define-signal (main-window reload-stylesheet) ())
-(define-signal (main-window fix-menubar-order) ())
 
 (define-slot (main-window fix-menubar-order) ()
   (declare (connected main-window (fix-menubar-order)))
@@ -124,6 +125,11 @@
 (define-slot (main-window reload-stylesheet) ()
   (declare (connected main-window (reload-stylesheet)))
   (q+:set-style-sheet main-window *style-sheet*))
+
+(define-slot (main-window change-title) ((new-title string))
+  (declare (connected main-window (change-title string)))
+  (q+:set-window-title main-window
+                       new-title))
 
 (defun on-error (&rest args)
   (format t "ERROR:---------------------------------------~%")
