@@ -41,7 +41,12 @@
    (channel :accessor channel
             :initform nil
             :type lparallel:channel
-            :documentation "tasker lparallel:channel")))
+            :documentation "tasker lparallel:channel")
+   (tasks-on-hold :initform (make-hash-table :test #'equalp)
+                  :type hash-table
+                  :documentation "Hashtable containing Tasks which are
+                  on hold. See PUT-TASK-ON-HOLD, SUBMIT-TASK-FROM-HOLD
+                  and REMOVE-TASK-FROM-HOLD.")))
 
 (defclass task ()
   ((name :initarg :name
