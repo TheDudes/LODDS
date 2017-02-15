@@ -55,6 +55,9 @@
       (q+:add-widget layout widget))
     (q+:add-widget layout button-area)))
 
+(defmethod cancel ((dialog dialog))
+  (finish-dialog dialog :cancel))
+
 (define-initializer (dialog setup-widget)
   (q+:set-attribute dialog (q+:qt.wa_delete-on-close))
   (q+:show dialog))
