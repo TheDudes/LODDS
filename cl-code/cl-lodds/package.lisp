@@ -94,7 +94,8 @@
            #:remove-callback
            #:push-event
            #:cleanup
-           #:run))
+           #:run
+           #:callback-exists-p))
 
 (defpackage #:lodds.listener
   (:use #:cl)

@@ -107,3 +107,9 @@ handle all left events and then return"
                                 event-queue)
                   (error "Event-Queue is nil!")))
         :finally (cleanup)))
+
+(defun callback-exists-p (event-type)
+  (if (gethash event-type
+               (typed-callbacks (lodds:get-subsystem :event-queue)))
+      t
+      nil))
