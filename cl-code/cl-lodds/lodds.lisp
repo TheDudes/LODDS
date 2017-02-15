@@ -314,3 +314,17 @@
                   :remote-path remote-path
                   :local-path local-path)))
 
+;; TODO: default timeout from settings
+(defun send-file (file ip port &optional (timeout 300))
+  (lodds.task:submit-task
+   (make-instance 'lodds.task:task-send-file
+                  :name "send-file"
+                  :ip ip
+                  :port port
+                  :filepath file
+                  :timeout timeout)))
+
+;; TODO: default timeout from settings
+(defun send-file-user (file user &optional (timeout 300))
+  (lodds.core:split-user-identifier (name ip port) user
+    (send-file file ip port timeout)))

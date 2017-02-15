@@ -23,24 +23,30 @@
   (declare (connected user-list (add-user string
                                           string
                                           string)))
-  (lodds.core:split-user-identifier (name ip port) user
-    (let* ((new-entry (q+:make-qtreewidgetitem user-list))
-           (send-file-button (q+:make-qpushbutton "Send File" user-list)))
+  (let* ((new-entry (q+:make-qtreewidgetitem user-list))
+         (send-file-button (q+:make-qpushbutton "Send File" user-list)))
+    (lodds.core:split-user-identifier (name ip port t) user
       (connect send-file-button "pressed()"
                (lambda ()
-                 (format t "TODO: implement SendFile (user: ~a)~%" user)))
-      (q+:set-item-widget user-list
-                          new-entry
-                          +user-list-send-file+
-                          send-file-button)
+                 (let ((file (q+:qfiledialog-get-open-file-name)))
+                   (when (> (length file)
+                            0)
+                     (format t "file: ~a, name: ~a, ip: ~a, port: ~a~%"
+                             file name ip port)
+                     (lodds:send-file file ip port))))))
+    (q+:set-item-widget user-list
+                        new-entry
+                        +user-list-send-file+
+                        send-file-button)
+    (lodds.core:split-user-identifier (name ip port) user
       (qdoto new-entry
              (q+:set-text +user-list-name+ name)
              (q+:set-text +user-list-ip+ ip)
              (q+:set-text +user-list-port+ port)
              (q+:set-text +user-list-load+ (lodds.core:format-size (parse-integer load)))
              (q+:set-text +user-list-last-change+ last-change)
-             (q+:set-text-alignment +user-list-load+ (q+:qt.align-right)))
-      (setf (gethash user (users user-list)) new-entry))))
+             (q+:set-text-alignment +user-list-load+ (q+:qt.align-right))))
+    (setf (gethash user (users user-list)) new-entry)))
 
 (define-slot (user-list remove-user) ((user string))
   (declare (connected user-list (remove-user string)))

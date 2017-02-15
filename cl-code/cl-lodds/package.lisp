@@ -65,7 +65,8 @@
            #:get-local-file-path
            #:task-get-file-from-user
            #:task-get-file-from-users
-           #:task-get-folder))
+           #:task-get-folder
+           #:task-send-file))
 
 (defpackage #:lodds.watcher
   (:use #:cl)
@@ -154,4 +155,6 @@
            #:shutdown
            #:generate-info-response
            #:get-file
-           #:get-folder))
+           #:get-folder
+           #:send-file
+           #:send-file-user))

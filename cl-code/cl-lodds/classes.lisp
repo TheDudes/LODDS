@@ -229,6 +229,43 @@
           Remote Folder contains. Will be filled by GET-FOLDER-INFO
           when initialized")))
 
+(defclass task-send-file (task)
+  ((ip :initarg :ip
+       :initform (error "Specify ip")
+       :type vector
+       :documentation "Ip the file is sent to")
+   (port :initarg :port
+         :initform (error "Specify port")
+         :type integer
+         :documentation "Port of receiving user")
+   (filepath :initarg :filepath
+             :initform (error "Specify file")
+             :documentation "Full path to the local file which will be
+             sent")
+   (timeout :initarg :timeout
+            :initform (error "Specify timeout")
+            :type integer
+            :documentation "Timeout in seconds how long we wait for a
+            responsse from the receiving client. If there is no
+            positive Response within the given timeout, the send-file
+            task will be abortet")
+   (socket :initform nil
+           :documentation "Socket of the recieving Client (Socket of
+           given ip and port), will be opened on first call to
+           run-task")
+   (file-stream :initform nil
+                :type file-stream
+                :documentation "File stream pointing to filepath, will
+                be set on first call to run-task")
+   (size :initform 0
+         :type bignum
+         :documentation "Size of file described by file-stream and
+         filepath, will be set on first call to run-task")
+   (written :initform 0
+            :type bignum
+            :documentation "Amount of bytes already written to the
+            Socket")))
+
 ;; lodds.event classes
 
 (in-package #:lodds.event)

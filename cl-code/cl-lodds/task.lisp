@@ -420,6 +420,7 @@
                (when file-stream
                  (close file-stream))))
       (handler-case
+          ;; TODO: chunk-size to settings
           (let ((chunk-size (ash 1 21))) ;; 2 MB
             (unless filename
               (unless (setf filename (lodds.watcher:get-file-info checksum))
@@ -528,3 +529,72 @@
                                                           e))))
               (bt:release-lock (lodds:c-lock client-info)))
             (lodds.event:push-event :info (list :dropped task)))))))
+
+(defmethod lodds.task:run-task ((task lodds.task:task-send-file))
+  (with-slots (ip
+               port
+               filepath
+               timeout
+               socket
+               file-stream
+               size
+               written) task
+    (labels ((cleanup (&optional error-occured)
+               (unless error-occured
+                 (lodds.event:push-event :info (list "send file"
+                                                     filepath)))
+               (when socket
+                 (usocket:socket-close socket))
+               (when file-stream
+                 (close file-stream))))
+      (handler-case
+          ;; TODO: chunk-size to settings
+          (let ((chunk-size (ash 1 21))) ;; 2 MB
+            ;; open up file-stream if not open yet
+            (unless file-stream
+              (setf file-stream (open filepath
+                                      :element-type '(unsigned-byte 8)))
+              (setf size (file-length file-stream)))
+            ;; open up socket
+            (unless socket
+              (setf socket (usocket:socket-connect ip
+                                                   port
+                                                   :element-type '(unsigned-byte 8)))
+              (lodds.event:push-event :debug
+                                      (list "Asking for send permission"))
+              (let ((ret 0))
+                ;; send a send-permission request
+                (setf ret
+                      (lodds.low-level-api:get-send-permission (usocket:socket-stream socket)
+                                                               size
+                                                               timeout
+                                                               (file-namestring filepath)))
+                (unless (eql 0 ret)
+                  (error "get-send-permission returned: ~a" ret))
+                ;; wait timeout seconds for a response from the client
+                (setf ret
+                      (lodds.low-level-api:handle-send-permission socket
+                                                                  timeout))
+                (unless (eql 0 ret)
+                  (error "handle-send-permission returned: ~a" ret))
+                (lodds:update-load size)))
+            ;; transfer the file
+            (let ((left-to-send (- size written)))
+              (lodds.core:copy-stream file-stream
+                                      (usocket:socket-stream socket)
+                                      (if (> left-to-send chunk-size)
+                                          (progn (incf written chunk-size)
+                                                 (lodds:update-load (- chunk-size))
+                                                 chunk-size)
+                                          (progn (incf written left-to-send)
+                                                 (lodds:update-load (- left-to-send))
+                                                 left-to-send)))
+              (finish-output file-stream)
+              (if (eql size written)
+                  (cleanup)
+                  (lodds.task:submit-task task))))
+        (error (e)
+          (cleanup t)
+          ;;(lodds:update-load (- written (- end start)))
+          (lodds.event:push-event :error
+                                  (list "on send file" filepath ":" e)))))))
