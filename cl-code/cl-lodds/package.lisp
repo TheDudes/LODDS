@@ -56,6 +56,9 @@
            #:on-finish-hook
            #:run-task
            #:submit-task
+           #:put-task-on-hold
+           #:submit-task-from-hold
+           #:remove-task-from-hold
            #:task-client
            #:task-client-info
            #:task-request

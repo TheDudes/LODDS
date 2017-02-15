@@ -90,6 +90,38 @@
                              #'run-task
                              task))))
 
+(defun put-task-on-hold (task)
+  "puts the given task /on-hold/, which just saves it inside a
+  hashtable and returns a /task-id/ (string) which can be used to
+  submit the task with SUBMIT-TASK-FROM-HOLD or remove the task from
+  the table with REMOVE-TASK-FROM-HOLD"
+  (with-slots (tasks-on-hold) (lodds:get-subsystem :tasker)
+    (let ((id (copy-seq (string (gensym "task-id")))))
+      (loop :while (gethash id tasks-on-hold)
+            :do (setf id task))
+      (setf (gethash id tasks-on-hold) task)
+      id)))
+
+(defun submit-task-from-hold (task-id)
+  "Removes task specified by the given task-id from hold and submits
+  it to the tasker. If the given task was found and submittet t is
+  returned, otherwise nil"
+  (with-slots (tasks-on-hold) (lodds:get-subsystem :tasker)
+    (let ((task (gethash task-id tasks-on-hold)))
+      (when task
+        (remhash task-id tasks-on-hold)
+        (submit-task task)
+        t))))
+
+(defun remove-task-from-hold (task-id)
+  "Removes task specified by the given task-id from hold and returns
+  it, if the task is not found nil is returned"
+  (with-slots (tasks-on-hold) (lodds:get-subsystem :tasker)
+    (let ((task (gethash task-id tasks-on-hold)))
+      (when task
+        (remhash task-id tasks-on-hold)
+        task))))
+
 (defmethod lodds.subsystem:start ((subsys tasker))
   (with-accessors ((kernel kernel)
                    (channel channel)
