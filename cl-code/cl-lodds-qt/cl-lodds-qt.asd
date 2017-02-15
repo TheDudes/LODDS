@@ -22,4 +22,5 @@
                (:file "interface")
                (:file "dialog")
                (:file "dock")
+               (:file "select-file")
                (:file "gui")))

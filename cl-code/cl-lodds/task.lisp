@@ -394,11 +394,11 @@
              ,@body)
          (end-of-file ()
            (lodds.event:push-event :error
-                                   (list "end-of-file on handler"))
+                                   (list "end-of-file on tasker"))
            (cleanup-socket))
          (error (e)
            (lodds.event:push-event :error
-                                   (list "unknown error on handler:" e))
+                                   (list "unknown error on tasker:" e))
            (cleanup-socket)))
        ,(when close-socket-p
           `(unless is-closed
@@ -411,29 +411,41 @@
           (lodds.low-level-api:parse-request (usocket:socket-stream socket))
         (if (> error 0)
             (error "low level api Returned error ~a~%" error)
-            (lodds.task:submit-task
-             (case (car request)
-               (:file
-                (destructuring-bind (checksum start end) (cdr request)
-                  (make-instance 'lodds.task:task-request-file
-                                 :name "request-file"
-                                 :socket socket
-                                 :checksum checksum
-                                 :start start
-                                 :end end)))
-               (:info
-                (make-instance 'lodds.task:task-request-info
-                               :name "request-info"
-                               :socket socket
-                               :timestamp (cadr request)))
-               (:send-permission
-                (destructuring-bind (size timeout filename) (cdr request)
-                  (make-instance 'lodds.task:task-request-send-permission
-                                 :name "request-send-permission"
-                                 :socket socket
-                                 :size size
-                                 :timeout timeout
-                                 :filename filename))))))))))
+            (let ((task (case (car request)
+                          (:file
+                           (destructuring-bind (checksum start end) (cdr request)
+                             (make-instance 'task-request-file
+                                            :name "request-file"
+                                            :socket socket
+                                            :checksum checksum
+                                            :start start
+                                            :end end)))
+                          (:info
+                           (make-instance 'task-request-info
+                                          :name "request-info"
+                                          :socket socket
+                                          :timestamp (cadr request)))
+                          (:send-permission
+                           (if (lodds.event:callback-exists-p :send-permission)
+                               (destructuring-bind (size timeout filename)
+                                   (cdr request)
+                                 (let ((id (put-task-on-hold
+                                            (make-instance 'task-request-send-permission
+                                                           :name "request-send-permission"
+                                                           :socket socket
+                                                           :size size
+                                                           :timeout timeout
+                                                           :filename filename))))
+                                   (lodds.event:push-event :send-permission
+                                                           (list size timeout filename id))
+                                   nil))
+                               (progn
+                                 (lodds.event:push-event :send-permission
+                                                         (list "received and denied (no callback added)"))
+                                 (usocket:socket-close socket)
+                                 nil))))))
+              (when task
+                (submit-task task))))))))
 
 (defmethod run-task ((task task-request-file))
   (with-slots (socket
@@ -500,14 +512,15 @@
                size
                filename) task
     (with-socket socket t
-      ;; TODO: ask user here for file path
-      (with-open-file (file-stream (concatenate 'string "/tmp/" filename)
+      ;; TODO: load balancing
+      (with-open-file (file-stream filename
                                    :direction :output
                                    :if-exists :supersede
                                    :element-type '(unsigned-byte 8))
         (lodds.low-level-api:respond-send-permission (usocket:socket-stream socket)
                                                      file-stream
-                                                     size)))))
+                                                     size)))
+    (lodds.event:push-event :info (list "receiving file through send-permission complete"))))
 
 (defmethod run-task ((task task-client-info))
   (with-slots (name
@@ -573,7 +586,7 @@
                written) task
     (labels ((cleanup (&optional error-occured)
                (unless error-occured
-                 (lodds.event:push-event :info (list "send file"
+                 (lodds.event:push-event :info (list "send file complete"
                                                      filepath)))
                (when socket
                  (usocket:socket-close socket))
