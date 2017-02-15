@@ -146,7 +146,7 @@
         (lodds.event:push-event (lodds.subsystem:name subsys)
                                 (list "stopped!"))))))
 
-(defmethod initialize-instance :after ((task lodds.task:task-get-file-from-user) &rest initargs)
+(defmethod initialize-instance :after ((task task-get-file-from-user) &rest initargs)
   (with-slots (ip
                port
                size) task
@@ -160,7 +160,7 @@
        (setf size
              (car (lodds:get-file-info checksum user)))))))
 
-(defmethod initialize-instance :after ((task lodds.task:task-get-file-from-users) &rest initargs)
+(defmethod initialize-instance :after ((task task-get-file-from-users) &rest initargs)
   (let ((n-size (third (first (lodds:get-file-info (getf initargs :checksum))))))
     (lodds:update-load n-size)
     (with-slots (size part-size) task
@@ -176,7 +176,7 @@
                       ;; download it in one go
                       n-size)))))))
 
-(defmethod initialize-instance :after ((task lodds.task:task-get-folder) &rest initargs)
+(defmethod initialize-instance :after ((task task-get-folder) &rest initargs)
   (let* ((user (getf initargs :user))
          (remote-path (getf initargs :remote-path))
          (items (lodds:get-folder-info remote-path user)))
@@ -207,7 +207,7 @@
     (lodds.low-level-api:get-file (usocket:socket-stream socket) checksum start end)
     socket))
 
-(defmethod lodds.task:run-task ((task lodds.task:task-get-file-from-user))
+(defmethod run-task ((task task-get-file-from-user))
   (with-slots (local-file-path
                user
                ip
@@ -247,7 +247,7 @@
             (finish-output local-file-stream)
             (if (eql size read-bytes)
                 (cleanup)
-                (lodds.task:submit-task task)))
+                (submit-task task)))
         (error (e)
           (cleanup t e))))))
 
@@ -268,7 +268,7 @@
         (values ip port))
       (error "Could not find a user who shares ~a~%" checksum))))
 
-(defmethod lodds.task:run-task ((task lodds.task:task-get-file-from-users))
+(defmethod run-task ((task task-get-file-from-users))
   (with-slots (local-file-path
                checksum
                size
@@ -325,14 +325,14 @@
                     (incf current-part)
                     (setf read-bytes-part 0)
                     (cleanup nil nil))
-                  (lodds.task:submit-task task))))
+                  (submit-task task))))
         (error (e)
           (cleanup t t)
           (lodds:update-load (- read-bytes size))
           (lodds.event:push-event :error
                                   (list "on get file from users" local-file-path ":" e)))))))
 
-(defmethod lodds.task:run-task ((task lodds.task:task-get-folder))
+(defmethod run-task ((task task-get-folder))
   (with-slots (local-path
                remote-path
                remote-root
@@ -350,8 +350,8 @@
           ;; remove size from load since the new task will add it again
           (lodds:update-load (- size))
           (if checksum
-              (lodds.task:submit-task
-               (make-instance 'lodds.task:task-get-file-from-users
+              (submit-task
+               (make-instance 'task-get-file-from-users
                               :name "get-file"
                               :checksum checksum
                               :local-file-path (ensure-directories-exist
@@ -361,7 +361,7 @@
                               ;; resubmit current task-get-folder when file
                               ;; download is complete
                               :on-finish-hook (lambda ()
-                                                (lodds.task:submit-task task))))
+                                                (submit-task task))))
               (error "The file ~a from user ~a with checksum ~a does not exist anymore."
                      file user checksum)))
         (progn
@@ -404,7 +404,7 @@
           `(unless is-closed
              (cleanup-socket))))))
 
-(defmethod lodds.task:run-task ((task lodds.task:task-request))
+(defmethod run-task ((task task-request))
   (with-slots (socket) task
     (with-socket socket nil
       (multiple-value-bind (error request)
@@ -435,7 +435,7 @@
                                  :timeout timeout
                                  :filename filename))))))))))
 
-(defmethod lodds.task:run-task ((task lodds.task:task-request-file))
+(defmethod run-task ((task task-request-file))
   (with-slots (socket
                checksum
                start
@@ -459,7 +459,7 @@
                 (lodds.event:push-event :error
                                         (list "requested file could not be found"))
                 (cleanup t)
-                (return-from lodds.task:run-task))
+                (return-from run-task))
               (setf file-stream (open filename
                                       :direction :input
                                       :element-type '(unsigned-byte 8)))
@@ -480,14 +480,14 @@
               (finish-output file-stream)
               (if (eql (- end start) written)
                   (cleanup)
-                  (lodds.task:submit-task task))))
+                  (submit-task task))))
         (error (e)
           (cleanup t)
           (lodds:update-load (- written (- end start)))
           (lodds.event:push-event :error
                                   (list "on request file" filename ":" e)))))))
 
-(defmethod lodds.task:run-task ((task lodds.task:task-request-info))
+(defmethod run-task ((task task-request-info))
   (with-slots (socket
                timestamp) task
     (with-socket socket t
@@ -495,7 +495,7 @@
              (usocket:socket-stream socket)
              (lodds:generate-info-response timestamp)))))
 
-(defmethod lodds.task:run-task ((task lodds.task:task-request-send-permission))
+(defmethod run-task ((task task-request-send-permission))
   (with-slots (socket
                size
                filename) task
@@ -509,7 +509,7 @@
                                                      file-stream
                                                      size)))))
 
-(defmethod lodds.task:run-task ((task lodds.task:task-client-info))
+(defmethod run-task ((task task-client-info))
   (with-slots (name
                client-name
                ip
@@ -562,7 +562,7 @@
               (bt:release-lock (lodds:c-lock client-info)))
             (lodds.event:push-event :info (list :dropped task)))))))
 
-(defmethod lodds.task:run-task ((task lodds.task:task-send-file))
+(defmethod run-task ((task task-send-file))
   (with-slots (ip
                port
                filepath
@@ -624,7 +624,7 @@
               (finish-output file-stream)
               (if (eql size written)
                   (cleanup)
-                  (lodds.task:submit-task task))))
+                  (submit-task task))))
         (error (e)
           (cleanup t)
           ;;(lodds:update-load (- written (- end start)))
