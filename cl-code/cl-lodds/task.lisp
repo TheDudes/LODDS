@@ -73,6 +73,24 @@
               (lodds.core:format-size part-size)
               checksum))))
 
+(defmethod print-object ((object task-send-file) stream)
+  (print-unreadable-object (object stream :type t :identity t)
+    (with-slots (name
+                 ip
+                 port
+                 filepath
+                 timeout
+                 size
+                 written) object
+      (format stream "~a filepath: ~a address: ~a:~a timeout: ~a size: ~a written: ~a"
+              name
+              filepath
+              ip
+              port
+              timeout
+              (lodds.core:format-size size)
+              (lodds.core:format-size written)))))
+
 (defgeneric run-task (task)
   (:documentation "Generic Function which will be called if task was
   added to thread-pool"))
