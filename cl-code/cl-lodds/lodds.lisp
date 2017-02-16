@@ -55,10 +55,6 @@
 (defun event-callback (event)
   (format t "log: ~a~%" event))
 
-(defun update-load (load-diff)
-  (bt:with-lock-held ((current-load-lock *server*))
-    (incf (current-load *server*) load-diff)))
-
 (defmethod initialize-instance :after ((server lodds-server) &rest initargs)
   (declare (ignorable initargs))
   (with-server server ;; bind *server* for every subsystem of *server*
@@ -107,6 +103,9 @@
 (defun get-subsystem (name)
   "returns the requested subsystem, if not found nil will returned"
   (find name (subsystems *server*) :key #'lodds.subsystem:name))
+
+(defun get-load ()
+  (lodds.task:get-load (lodds:get-subsystem :tasker)))
 
 (defun switch-interface (interface)
   "Switch interface the server acts on.  Interface is a string, to

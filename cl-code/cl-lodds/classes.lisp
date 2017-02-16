@@ -42,6 +42,11 @@
             :initform nil
             :type lparallel:channel
             :documentation "tasker lparallel:channel")
+   (lock :initform (bt:make-recursive-lock "tasker lock")
+         :documentation "look to access tasks and tasks-on-hold")
+   (tasks :initform (make-hash-table :test #'equalp)
+          :type hash-table
+          :documentation "Hashtable containing all existing tasks.")
    (tasks-on-hold :initform (make-hash-table :test #'equalp)
                   :type hash-table
                   :documentation "Hashtable containing Tasks which are
@@ -49,15 +54,31 @@
                   and REMOVE-TASK-FROM-HOLD.")))
 
 (defclass task ()
-  ((name :initarg :name
+  ((id :initform nil
+       :type string)
+   (load :initarg :load
+         :initform 0
+         :documentation "The load a task produces, will be decremented
+         while the task is running")
+   (name :initarg :name
          :initform (error "please specify a task name!")
          :type string
          :documentation "Task Name.")
+   (resubmit-p :initform nil
+               :documentation "Flag which is t if the task should get
+               resubmittet")
+   (finished-p :initform nil
+               :documentation "Flag which is t if task has finished")
+   (aktive-p :initform nil
+             :type boolean
+             :documentation "Flag which is t if task is currently
+             aktive")
    (on-finish-hook :initarg :on-finish-hook
                    :initform nil
                    :type function
                    :documentation "Function which gets called when the
-                   task finishes.")))
+                   task finishes. Will be called before finish-task
+                   method gets called")))
 
 (defclass task-user (task)
     ((user :initarg :user
@@ -84,10 +105,10 @@
                 :type integer
                 :documentation "Timestamp of last change,received vom
                 client")
-   (load :initarg :load
-         :initform (error "Specify client load")
-         :type integer
-         :documentation "Advertised load of given Client")))
+   (user-load :initarg :user-load
+              :initform (error "Specify client load")
+              :type integer
+              :documentation "Advertised load of given Client")))
 
 (defclass task-request (task)
   ((socket :initform (error "Specify a socket pls.")
@@ -238,7 +259,11 @@
           :type list
           :documentation "List of files and (path checksum size) the
           Remote Folder contains. Will be filled by GET-FOLDER-INFO
-          when initialized")))
+          when initialized")
+   (items-done :initform nil
+               :type list
+               :documentation "List of files which are already
+               downloaded")))
 
 (defclass task-send-file (task-user)
   ((filepath :initarg :filepath
@@ -461,16 +486,6 @@
             :documentation "Hashtable containing all clients which
             their broadcast information. This table is updated by
             LISTENER. TODO: implement something to retrieve a copy.")
-   (current-load-lock :accessor current-load-lock
-                      :initform (bt:make-lock "current-load-lock")
-                      :documentation "Lock to modify CURRENT-LOAD")
-   (current-load :accessor current-load
-                 :initform 0
-                 :type rational
-                 :documentation "describes the sum of all outstanding
-                 bytes which need to be transfered. Do NOT set this
-                 variable (use update-load), retrieving it should be
-                 fine tho. TODO: who sets this?")
    (advertise-timeout :accessor advertise-timeout
                       :initform 1
                       :documentation "Timeout between

@@ -18,7 +18,7 @@
                   (list (lodds:get-ip-address interface)
                         (lodds:handler-port lodds:*server*)
                         (lodds:get-timestamp-last-change)
-                        (lodds:current-load lodds:*server*)
+                        (lodds:get-load)
                         (lodds:name lodds:*server*)))))))
     (let ((result (send)))
       (restart-case

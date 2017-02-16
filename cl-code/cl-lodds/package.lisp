@@ -54,6 +54,7 @@
            #:task
            #:name
            #:on-finish-hook
+           #:get-load
            #:run-task
            #:submit-task
            #:put-task-on-hold
@@ -121,7 +122,6 @@
            #:get-interface-info
            #:get-broadcast-address
            #:get-ip-address
-           #:update-load
            ;; client-info reader/accessor
            #:client-info
            #:c-name
@@ -141,12 +141,12 @@
            #:client-timeout
            #:interface
            #:clients
-           #:current-load
            #:list-of-changes-lock
            #:list-of-changes
            #:advertise-timeout
            ;; functions using bound *server*
            #:get-subsystem
+           #:get-load
            #:switch-interface
            #:remove-clients
            #:get-timestamp-last-change
