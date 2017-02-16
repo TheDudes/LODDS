@@ -59,8 +59,8 @@
            #:put-task-on-hold
            #:submit-task-from-hold
            #:remove-task-from-hold
-           #:task-client
-           #:task-client-info
+           #:task-user
+           #:task-info
            #:task-request
            #:task-request-file
            #:task-request-info

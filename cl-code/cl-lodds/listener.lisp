@@ -63,11 +63,11 @@
                                            key)))
                clients)
       ;; add client
-      (destructuring-bind (ip port timestamp-l-c load name) result
+      (destructuring-bind (ip port timestamp-l-c load user) result
         (lodds.task:submit-task
-         (make-instance 'lodds.task:task-client-info
-                        :name "update-client-info"
-                        :client-name name
+         (make-instance 'lodds.task:task-info
+                        :name "update-info"
+                        :user user
                         :ip ip
                         :port port
                         :timestamp current-time

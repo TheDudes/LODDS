@@ -5,13 +5,13 @@
     (format stream "~a"
             (slot-value object 'name))))
 
-(defmethod print-object ((object task-client) stream)
+(defmethod print-object ((object task-user) stream)
   (print-unreadable-object (object stream :type t :identity t)
     (with-slots (name
-                 client-name) object
-      (format stream "~a :client ~a"
+                 user) object
+      (format stream "~a :user ~a"
               name
-              client-name))))
+              user))))
 
 (defmethod print-object ((object task-request-file) stream)
   (print-unreadable-object (object stream :type t :identity t)
@@ -540,38 +540,38 @@
                                                      size)))
     (lodds.event:push-event :info (list "receiving file through send-permission complete"))))
 
-(defmethod run-task ((task task-client-info))
+(defmethod run-task ((task task-info))
   (with-slots (name
-               client-name
+               user
                ip
                port
                timestamp
                last-change
                load) task
-    (let ((client-info (lodds:get-user-info client-name)))
+    (let ((client-info (lodds:get-user-info user)))
       (if client-info
           (with-accessors ((old-load lodds:c-load)
                            (old-last-change lodds:c-last-change))
-              (lodds:get-user-info client-name)
+              (lodds:get-user-info user)
             (when (or (not (eql old-load load))
                       (<= old-last-change last-change))
               (lodds.event:push-event :client-updated
-                                      (list client-name
+                                      (list user
                                             load
                                             last-change))))
           (progn
             (setf client-info
                   (make-instance 'lodds:client-info
-                                 :c-name client-name
+                                 :c-name user
                                  :c-last-message timestamp
                                  :c-ip ip
                                  :c-port port
                                  :c-last-change 0
                                  :c-load load))
-            (setf (gethash client-name (lodds:clients lodds:*server*))
+            (setf (gethash user (lodds:clients lodds:*server*))
                   client-info)
             (lodds.event:push-event :client-added
-                                    (list client-name
+                                    (list user
                                           load
                                           last-change))))
       (let ((locked (bt:acquire-lock (lodds:c-lock client-info) nil)))

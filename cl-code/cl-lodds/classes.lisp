@@ -59,12 +59,11 @@
                    :documentation "Function which gets called when the
                    task finishes.")))
 
-(defclass task-client (task)
-    ((client-name :initarg :client-name
-                  :initform (error "Specify client-name")
-                  :type string
-                  :documentation "name of client, for example:
-                  d4yus@192.168.2.1:1234")
+(defclass task-user (task)
+    ((user :initarg :user
+           :initform (error "Specify user")
+           :documentation "name of user, for example:
+           d4yus@192.168.2.1:1234")
      (ip :initarg :ip
          :initform (error "Specify ip")
          :type vector
@@ -74,7 +73,7 @@
            :type integer
            :documentation "Port of client, for exampe: 1234")))
 
-(defclass task-client-info (task-client)
+(defclass task-info (task-user)
   ((timestamp :initarg :timestamp
               :initform nil
               :type integer
