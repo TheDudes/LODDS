@@ -658,6 +658,6 @@
                   (submit-task task))))
         (error (e)
           (cleanup t)
-          ;;(lodds:update-load (- written (- end start)))
+          (lodds:update-load (- (- size written)))
           (lodds.event:push-event :error
                                   (list "on send file" filepath ":" e)))))))
