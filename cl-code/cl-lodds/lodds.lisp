@@ -11,6 +11,18 @@
                     bt:*default-special-bindings*)))
      ,@body))
 
+(defmethod print-object ((object client-info) stream)
+  (print-unreadable-object (object stream :type t :identity t)
+    (with-slots (c-name
+                 c-last-message
+                 c-load
+                 c-file-table-name) object
+      (format stream "~a last-message: ~a load: ~a shares: ~a"
+              c-name
+              c-last-message
+              c-load
+              (hash-table-count c-file-table-name)))))
+
 (defun get-interfaces ()
   "returns a list containing names of all up and running interfaces.
    names inside that list can be used to retrieve the broadcast or
