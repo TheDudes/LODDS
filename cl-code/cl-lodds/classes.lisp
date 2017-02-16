@@ -139,7 +139,14 @@
    (filename :initarg :filename
              :initform nil
              :type string
-             :documentation "Name of the File requested to send")))
+             :documentation "Name of the File requested to send")
+   (file-stream :type file-stream
+                :initform nil
+                :documentation "File stream pointing to filename")
+   (read-bytes :type bignum
+               :initform 0
+               :documentation "Amount of bytes already read from the
+               socket-stream")))
 
 (defclass task-get-file (task)
   ((local-file-path :initform (error "Specify a local-file-path pls.")

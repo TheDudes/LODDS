@@ -528,17 +528,51 @@
 (defmethod run-task ((task task-request-send-permission))
   (with-slots (socket
                size
-               filename) task
-    (with-socket socket t
-      ;; TODO: load balancing
-      (with-open-file (file-stream filename
-                                   :direction :output
-                                   :if-exists :supersede
-                                   :element-type '(unsigned-byte 8))
-        (lodds.low-level-api:respond-send-permission (usocket:socket-stream socket)
-                                                     file-stream
-                                                     size)))
-    (lodds.event:push-event :info (list "receiving file through send-permission complete"))))
+               filename
+               file-stream
+               read-bytes) task
+    (labels ((cleanup (&optional error-occured)
+               (unless error-occured
+                 (lodds.event:push-event :info (list "receiving "
+                                                     filename
+                                                     "through send-permission completed")))
+               (when socket
+                 (usocket:socket-close socket))
+               (when file-stream
+                 (close file-stream))))
+      (handler-case
+          ;; TODO: chunk-size to settings
+          (let ((chunk-size (ash 1 21))) ;; 2 MB
+          (lodds.event:push-event :debug (list "here bitch"))
+            ;; open up file-stream if not open yet
+            (unless file-stream
+              (setf file-stream (open filename
+                                      :direction :output
+                                      :if-exists :supersede
+                                      :element-type '(unsigned-byte 8)))
+              (unless (eql 0 (lodds.low-level-api:respond-send-permission
+                              (usocket:socket-stream socket)))
+                (cleanup t))
+              (lodds:update-load size))
+            ;; transfer the file
+            (let ((left-to-receive (- size read-bytes)))
+              (lodds.core:copy-stream (usocket:socket-stream socket)
+                                      file-stream
+                                      (if (> left-to-receive chunk-size)
+                                          (progn (incf read-bytes chunk-size)
+                                                 (lodds:update-load (- chunk-size))
+                                                 chunk-size)
+                                          (progn (incf read-bytes left-to-receive)
+                                                 (lodds:update-load (- left-to-receive))
+                                                 left-to-receive)))
+              (if (eql size read-bytes)
+                  (cleanup)
+                  (submit-task task))))
+        (error (e)
+          (cleanup t)
+          (lodds:update-load (- (- size read-bytes)))
+          (lodds.event:push-event :error
+                                  (list "on request send-permission" filename":" e)))))))
 
 (defmethod run-task ((task task-info))
   (with-slots (name
