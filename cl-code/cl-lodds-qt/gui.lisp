@@ -94,55 +94,47 @@
 (define-signal (main-window reload-stylesheet) ())
 (define-signal (main-window fix-menubar-order) ())
 (define-signal (main-window change-title) (string))
-(define-signal (main-window received-send-permission) (int
-                                                       int
-                                                       ;; "unsigned long long"
-                                                       ;; "unsigned long long"
-                                                       string
-                                                       string))
+(define-signal (main-window received-send-permission) (string))
 
-(define-slot (main-window received-send-permission) ((size int)
-                                                     (timeout int)
-                                                     (filename string)
-                                                     (task-id string))
-  (declare (connected main-window (received-send-permission int
-                                                            int
-                                                            ;; "unsigned long long"
-                                                            ;; "unsigned long long"
-                                                            string
-                                                            string)))
-  (let ((widget (make-instance 'selected
-                               :timeout timeout
-                               :default-filename filename)))
-    (labels  ((cleanup-task (task-id)
-                (usocket:socket-close (slot-value (lodds.task:remove-task-from-hold task-id)
-                                                  'lodds.task::socket)))
-              (on-success ()
-                (let ((filename (get-full-filename widget)))
-                  (if filename
-                      (let ((task (lodds.task:remove-task-from-hold task-id)))
-                        (setf (slot-value task 'lodds.task::filename) filename)
-                        (lodds.task:submit-task task))
-                      (progn
-                        (cleanup-task task-id)
-                        (make-instance 'dialog
-                                       :title "Error - Invalid Input"
-                                       :text "The given input was invalid")))
-                  (finalize widget))))
-      (let ((dialog (make-instance 'dialog
-                                   :title (format nil "User (~a:~a) asked for send permission"
-                                                  "some-ip"
-                                                  "some-port")
-                                   :text (concatenate 'string
-                                                      "If you want to accept the Send Permission, "
-                                                      "select a folder and a filename and click OK")
-                                   :widget widget
-                                   :on-success-fn #'on-success
-                                   :on-cancel-fn (lambda ()
-                                                   (cleanup-task task-id)))))
-        (setf (slot-value widget 'on-timeout)
-              (lambda ()
-                (cancel dialog)))))))
+(define-slot (main-window received-send-permission) ((task-id string))
+  (declare (connected main-window (received-send-permission string)))
+  (let ((task (lodds.task:remove-task-from-hold task-id)))
+    (when task
+      (with-slots ((size lodds.task::size)
+                   (timeout lodds.task::timeout)
+                   (filename lodds.task::filename)
+                   (socket lodds.task::socket)) task
+        (let* ((widget (make-instance 'selected
+                                      :timeout timeout
+                                      :default-filename filename))
+               (user (lodds:get-user-by-ip
+                      (usocket:get-peer-address socket))))
+          (let ((dialog (make-instance 'dialog
+                                       :title (format nil "User ~{~a~^or~} asked for send permission"
+                                                      user)
+                                       :text (concatenate 'string
+                                                          "If you want to accept the Send Permission, "
+                                                          "select a folder and a filename and click OK")
+                                       :widget widget
+                                       :on-success-fn
+                                       (lambda ()
+                                         (let ((full-filename (get-full-filename widget)))
+                                           (if filename
+                                               (progn
+                                                 (setf filename full-filename)
+                                                 (lodds.task:submit-task task))
+                                               (progn
+                                                 (make-instance 'dialog
+                                                                :title "Error - Invalid Input"
+                                                                :text "The given input was invalid")
+                                                 (usocket:socket-close socket)))
+                                           (finalize widget)))
+                                       :on-cancel-fn
+                                       (lambda ()
+                                         (usocket:socket-close socket)))))
+            (setf (slot-value widget 'on-timeout)
+                  (lambda ()
+                    (cancel dialog)))))))))
 
 (define-initializer (main-window setup-callbacks)
   (lodds.event:add-callback :qt-main
@@ -155,19 +147,9 @@
                             :name-changed)
   (lodds.event:add-callback :qt-main
                             (lambda (event)
-                              (destructuring-bind (size timeout filename task-id)
-                                  (cdr event)
-                                (signal! main-window (received-send-permission
-                                                      int
-                                                      int
-                                                      ;; "unsigned long long"
-                                                      ;; "unsigned long long"
-                                                      string
-                                                      string)
-                                         size
-                                         timeout
-                                         filename
-                                         task-id)))
+                              (signal! main-window (received-send-permission
+                                                    string)
+                                       (second event)))
                             :send-permission))
 
 (define-finalizer (main-window cleanup-callbacks)

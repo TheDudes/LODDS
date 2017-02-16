@@ -444,24 +444,24 @@
                                           :socket socket
                                           :timestamp (cadr request)))
                           (:send-permission
-                           (if (lodds.event:callback-exists-p :send-permission)
-                               (destructuring-bind (size timeout filename)
-                                   (cdr request)
-                                 (let ((id (put-task-on-hold
-                                            (make-instance 'task-request-send-permission
-                                                           :name "request-send-permission"
-                                                           :socket socket
-                                                           :size size
-                                                           :timeout timeout
-                                                           :filename filename))))
+                           (progn
+                             (if (lodds.event:callback-exists-p :send-permission)
+                                 (destructuring-bind (size timeout filename)
+                                     (cdr request)
                                    (lodds.event:push-event :send-permission
-                                                           (list size timeout filename id))
-                                   nil))
-                               (progn
-                                 (lodds.event:push-event :send-permission
-                                                         (list "received and denied (no callback added)"))
-                                 (usocket:socket-close socket)
-                                 nil))))))
+                                                           (list (put-task-on-hold
+                                                                  (make-instance
+                                                                   'task-request-send-permission
+                                                                   :name "request-send-permission"
+                                                                   :socket socket
+                                                                   :size size
+                                                                   :timeout timeout
+                                                                   :filename filename)))))
+                                 (progn
+                                   (lodds.event:push-event :send-permission
+                                                           (list "received and denied (no callback added)"))
+                                   (usocket:socket-close socket)))
+                             nil)))))
               (when task
                 (submit-task task))))))))
 

@@ -233,16 +233,8 @@
           Remote Folder contains. Will be filled by GET-FOLDER-INFO
           when initialized")))
 
-(defclass task-send-file (task)
-  ((ip :initarg :ip
-       :initform (error "Specify ip")
-       :type vector
-       :documentation "Ip the file is sent to")
-   (port :initarg :port
-         :initform (error "Specify port")
-         :type integer
-         :documentation "Port of receiving user")
-   (filepath :initarg :filepath
+(defclass task-send-file (task-user)
+  ((filepath :initarg :filepath
              :initform (error "Specify file")
              :documentation "Full path to the local file which will be
              sent")
