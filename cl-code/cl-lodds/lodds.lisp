@@ -181,6 +181,18 @@
   Returns nil if user is not found."
   (gethash user (clients *server*)))
 
+(defun get-user-by-ip (ip)
+  "Returns a list with user names (in name@ip:port form) which match
+  the given ip. Ip can either be a string (\"192.168.2.1\") or a
+  vector (#(192 168 2 1)). The returned usernames can be used by
+  GET-USER-INFO to retrieve further info about a user"
+  (let ((ip (if (stringp ip)
+                (usocket:dotted-quad-to-vector-quad ip)
+                ip)))
+    (loop :for user-info :being :the :hash-value :of (clients lodds:*server*)
+          :if (equalp (c-ip user-info) ip)
+          :collect (c-name user-info))))
+
 (defun get-file-info (checksum &optional user)
   "Returns information about the given checksum.
   If user is left out it will return a list of user who own the given

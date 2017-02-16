@@ -152,6 +152,7 @@
            #:get-timestamp-last-change
            #:get-user-list
            #:get-user-info
+           #:get-user-by-ip
            #:get-file-info
            #:get-folder-info
            #:get-file-changes
