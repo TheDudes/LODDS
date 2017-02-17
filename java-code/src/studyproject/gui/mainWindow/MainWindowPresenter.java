@@ -117,12 +117,16 @@ public class MainWindowPresenter implements Initializable {
 				SendPermissionView sendPermissionView = new SendPermissionView();
 				permissionStage.setScene(new Scene(sendPermissionView.getView()));
 				permissionStage.setTitle("Permission Request");
+				sendPermissionModel.getDialogLabel().setValue(createPermissionText());
 				permissionStage.show();
-				String newText = sendPermissionModel.getSenderMap().keySet().size() + " Users want to send "
-						+ sendPermissionModel.getSenderMap().size() + " files to you'";
-				sendPermissionModel.getDialogLabel().setValue(newText);
 			}
 		});
+	}
+
+	private String createPermissionText() {
+		int numberOfUsers = sendPermissionModel.getSenderMap().keySet().size();
+		int numberOfFiles = sendPermissionModel.getSenderMap().size();
+		return numberOfUsers + " Users want to send " + numberOfFiles + " files to you";
 	}
 
 	public void loadInterface() {
