@@ -22,6 +22,6 @@
                (:file "interface")
                (:file "dialog")
                (:file "dock")
-               (:file "select-file")
+               (:file "send-permission")
                (:file "send-file")
                (:file "gui")))

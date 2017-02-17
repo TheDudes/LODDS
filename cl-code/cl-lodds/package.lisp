@@ -56,6 +56,7 @@
            #:on-finish-hook
            #:get-load
            #:run-task
+           #:finish-task
            #:submit-task
            #:put-task-on-hold
            #:submit-task-from-hold

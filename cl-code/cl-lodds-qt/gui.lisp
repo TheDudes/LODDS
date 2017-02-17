@@ -99,41 +99,7 @@
   (declare (connected main-window (received-send-permission string)))
   (let ((task (lodds.task:remove-task-from-hold task-id)))
     (when task
-      (with-slots ((size lodds.task::size)
-                   (timeout lodds.task::timeout)
-                   (filename lodds.task::filename)
-                   (socket lodds.task::socket)) task
-        (let* ((widget (make-instance 'selected
-                                      :timeout timeout
-                                      :default-filename filename))
-               (user (lodds:get-user-by-ip
-                      (usocket:get-peer-address socket))))
-          (let ((dialog (make-instance 'dialog
-                                       :title (format nil "User ~{~a~^or~} asked for send permission"
-                                                      user)
-                                       :text (concatenate 'string
-                                                          "If you want to accept the Send Permission, "
-                                                          "select a folder and a filename and click OK")
-                                       :widget widget
-                                       :on-success-fn
-                                       (lambda ()
-                                         (let ((full-filename (get-full-filename widget)))
-                                           (if filename
-                                               (progn
-                                                 (setf filename full-filename)
-                                                 (lodds.task:submit-task task))
-                                               (progn
-                                                 (make-instance 'dialog
-                                                                :title "Error - Invalid Input"
-                                                                :text "The given input was invalid")
-                                                 (usocket:socket-close socket)))
-                                           (finalize widget)))
-                                       :on-cancel-fn
-                                       (lambda ()
-                                         (usocket:socket-close socket)))))
-            (setf (slot-value widget 'on-timeout)
-                  (lambda ()
-                    (cancel dialog)))))))))
+      (open-send-permission-dialog task))))
 
 (define-initializer (main-window setup-callbacks)
   (lodds.event:add-callback :qt-main
