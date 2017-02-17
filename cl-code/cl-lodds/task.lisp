@@ -139,21 +139,22 @@
                  resubmit-p) task
       (setf aktive-p t)
       (handler-case
-          (progn
-            (call-next-method)
-            (if resubmit-p
-                (submit-task task)
-                (when finished-p
-                  (finish-task task)
-                  (lodds.event:push-event :tasker
-                                          (list "Task Finished:"
-                                                task)))))
+          (call-next-method)
         (error (err)
           (lodds.event:push-event :tasker
                                   (list "Task Failed"
                                         task
-                                        err))))
-      (setf aktive-p nil)))
+                                        err))
+          (setf finished-p t
+                resubmit-p nil)))
+      (setf aktive-p nil)
+      (if resubmit-p
+          (submit-task task)
+          (when finished-p
+            (finish-task task)
+            (lodds.event:push-event :tasker
+                                    (list "Task Finished:"
+                                          task))))))
 
   (:method ((task task))
     (declare (ignorable task))
