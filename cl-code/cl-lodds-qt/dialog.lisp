@@ -4,12 +4,21 @@
 (define-widget dialog (QDialog)
   ((on-success :initform nil
                :initarg :on-success-fn
-               :documentation "function which gets called when 'Ok'
-               was clicked")
+               :documentation "function which gets called when 'Ok'was
+               clicked. Will be called with the widget as arugment")
    (on-cancel :initform nil
               :initarg :on-cancel-fn
-              :documentation "function which gets called when 'Cancel'
-              was clicked")))
+              :documentation "function which gets called when
+              'Cancel'was clicked. Will be called with the widget as
+              argument")
+   (widget :initform nil
+           :initarg :widget
+           :documentation "Widget which will be displayed on the
+           dialog")
+   (finalize-widget-p :initform t
+                      :initarg :finalize-widget-p
+                      :documentation "If t the given widget will be
+                      finalized when the dialog closes")))
 
 (define-subwidget (dialog message) (q+:make-qlabel dialog))
 
@@ -24,7 +33,7 @@
                 (:cancel on-cancel)
                 (t nil))))
       (when fn
-        (funcall fn))
+        (funcall fn widget))
       (finalize dialog))))
 
 (define-slot (dialog ok-pressed) ()
@@ -46,8 +55,7 @@
 
 (defmethod initialize-instance :after ((dialog dialog) &key
                                                          (title "Dialog")
-                                                         (text "Text")
-                                                         (widget nil))
+                                                         (text "Text"))
   (with-slots-bound (dialog dialog)
     (q+:set-window-title dialog title)
     (q+:set-text message text)
@@ -61,3 +69,8 @@
 (define-initializer (dialog setup-widget)
   (q+:set-attribute dialog (q+:qt.wa_delete-on-close))
   (q+:show dialog))
+
+(define-finalizer (dialog cleanup-widget)
+  (when (and widget
+             finalize-widget-p)
+    (finalize widget)))

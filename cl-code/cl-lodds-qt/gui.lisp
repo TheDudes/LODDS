@@ -16,10 +16,9 @@
                (make-instance 'dialog
                               :title "Error - Interface not set!"
                               :text "Please select a Interface first."
-                              ;; TODO: interface instance might leak,
-                              ;; since dialog wont finalize it
                               :widget (make-instance 'interface)
-                              :on-success-fn (lambda ()
+                              :on-success-fn (lambda (widget)
+                                               (declare (ignore widget))
                                                (when (lodds:interface lodds:*server*)
                                                  (run)))))))
   (:item ("Stop" (ctrl s))
