@@ -3,8 +3,12 @@ package studyproject.API.Lvl.Mid;
 import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.net.Socket;
+import java.util.logging.Level;
 
 import studyproject.API.Core.File.Watcher.FileWatcherController;
+import studyproject.API.Errors.ErrLog;
+import studyproject.logging.APILvl;
+import studyproject.logging.LogKey;
 
 /**
  * This class provides functionality for the InfoSenderThread. The thread shares
@@ -48,8 +52,8 @@ public class InfoSenderThread extends Thread {
 			bufferedOutputStream.flush();
 			socket.close();
 		} catch (IOException e) {
-			// TODO IOException: Error handling
-			e.printStackTrace();
+			ErrLog.log(Level.SEVERE, LogKey.error, APILvl.mid, getClass().getName() + "run()",
+					"IOException thrown: " + e.getStackTrace());
 		}
 	}
 }

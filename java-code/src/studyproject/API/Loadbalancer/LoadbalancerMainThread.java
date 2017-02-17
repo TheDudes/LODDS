@@ -3,9 +3,13 @@ package studyproject.API.Loadbalancer;
 import java.util.Collections;
 import java.util.Vector;
 import java.util.concurrent.Executor;
+import java.util.logging.Level;
 
+import studyproject.API.Errors.ErrLog;
 import studyproject.API.Lvl.Mid.FileConnectionThread;
 import studyproject.API.Lvl.Mid.Core.UserInfo;
+import studyproject.logging.APILvl;
+import studyproject.logging.LogKey;
 
 /**
  * The workhorse of the Loadbalancing module,
@@ -86,7 +90,8 @@ public class LoadbalancerMainThread extends Thread {
 					Thread.sleep(SLEEP_TIME);
 					checkFinishedThreads();
 				} catch (InterruptedException e) {
-					// TODO error handling
+					ErrLog.log(Level.SEVERE, LogKey.error, APILvl.low, getClass().getName() + "run()",
+							"InterruptedException thrown: " + e.getStackTrace());
 				}
 			}
 		}

@@ -6,6 +6,7 @@ import java.net.URL;
 import java.security.NoSuchAlgorithmException;
 import java.util.List;
 import java.util.ResourceBundle;
+import java.util.logging.Level;
 
 import javax.inject.Inject;
 
@@ -18,12 +19,15 @@ import javafx.scene.control.MenuItem;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
+import studyproject.API.Errors.ErrLog;
 import studyproject.App;
 import studyproject.API.Core.File.FileInfo;
 import studyproject.gui.Core.Utils;
 import studyproject.gui.mainWindow.MainWindowModel;
 import studyproject.gui.mainWindow.usersList.UsersListModel;
 import studyproject.gui.settingsWindow.SettingsWindowView;
+import studyproject.logging.APILvl;
+import studyproject.logging.LogKey;
 
 public class TopMenuPresenter implements Initializable {
 
@@ -145,11 +149,11 @@ public class TopMenuPresenter implements Initializable {
 			fileInfo = new FileInfo(file.getPath(), file.getPath());
 			mainWindowModel.getLodds().sendFileWP(userName, timeout, fileInfo);
 		} catch (NoSuchAlgorithmException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			ErrLog.log(Level.SEVERE, LogKey.error, APILvl.gui, getClass().getName() + "sendSingleFileToUser()",
+					"NoSuchAlgorithmException thrown: " + e.getStackTrace());
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			ErrLog.log(Level.SEVERE, LogKey.error, APILvl.gui, getClass().getName() + "sendSingleFileToUser()",
+					"IOException thrown: " + e.getStackTrace());
 		}
 	}
 

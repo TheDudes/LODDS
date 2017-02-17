@@ -17,8 +17,7 @@ import javafx.scene.control.TableView;
 import studyproject.API.Errors.Error;
 import studyproject.logging.LogKey;
 
-// TODO Need to delete old Log-Messages in the LogArea, holding to much messages could cause a serious memory problem
-// While the memory was growing slow at the start, the program used around 4 GB of memory after 30 minutes
+
 
 public class LogAreaHandler extends Handler {
 

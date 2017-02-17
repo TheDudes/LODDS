@@ -106,11 +106,11 @@ public class SettingsWindowPresenter implements Initializable {
 					"Saved properties to " + App.pathToProperties);
 			App.properties.load(new FileInputStream(new File(App.pathToProperties)));
 		} catch (FileNotFoundException e) {
-			// TODO Error handling
-			e.printStackTrace();
+			ErrLog.log(Level.SEVERE, LogKey.error, APILvl.gui, getClass().getName() + "applySettings()",
+					"FileNotFoundException thrown: " + e.getStackTrace());
 		} catch (IOException e) {
-			// TODO Error handling
-			e.printStackTrace();
+			ErrLog.log(Level.SEVERE, LogKey.error, APILvl.gui, getClass().getName() + "applySettings()",
+					"IOException thrown: " + e.getStackTrace());
 		}
 	}
 

@@ -231,7 +231,8 @@ public class Lodds {
 	public void getFileWithLoadBal(String checksum, String localPath) {
 		Vector<UserInfo> owningUsers = getOwningUsers(checksum);
 		if (owningUsers != null && owningUsers.size() == 0 || owningUsers == null) {
-			// TODO error handling
+			ErrLog.log(Level.INFO, LogKey.error, APILvl.mid, getClass().getName() + "getFileWithLoadBal()",
+					"No owning users found for " + checksum);
 		} else {
 			if (owningUsers.size() == 1) {
 				getFile(owningUsers.get(0), checksum, localPath);
@@ -262,7 +263,6 @@ public class Lodds {
 	 * returns.
 	 * 
 	 * @param user
-	 * @param checksum
 	 */
 	public void sendFileWP(String user, long timeout, FileInfo fileInfo) {
 		SendFileWPThread sendFileWPThread = new SendFileWPThread(getUserConnectionInfo(user), timeout, fileInfo);
@@ -321,10 +321,11 @@ public class Lodds {
 				watchService.watchDirectoryRecursively(absolutePath, absolutePath);
 				setLastChange(System.currentTimeMillis() / 1000);
 			} catch (NoSuchAlgorithmException e) {
-				// TODO Error Handling
-				e.printStackTrace();
+				ErrLog.log(Level.SEVERE, LogKey.error, APILvl.mid, getClass().getName() + "shareFolder()",
+						"NoSuchAlgorithmException thrown: " + e.getStackTrace());
 			} catch (IOException e) {
-				e.printStackTrace();
+				ErrLog.log(Level.SEVERE, LogKey.error, APILvl.mid, getClass().getName() + "shareFolder()",
+						"IOException thrown: " + e.getStackTrace());
 				return 4;
 			}
 		}
@@ -570,11 +571,11 @@ public class Lodds {
 					new ServerSocket(ipPort, 100, InetAddress.getByName(networkAddress)));
 			threadExecutor.execute(requestHandlerThread);
 		} catch (UnknownHostException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			ErrLog.log(Level.SEVERE, LogKey.error, APILvl.mid, getClass().getName() + "startRequestHandlerThread()",
+					"UnknownHostException thrown: " + e.getStackTrace());
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			ErrLog.log(Level.SEVERE, LogKey.error, APILvl.mid, getClass().getName() + "startRequestHandlerThread()",
+					"IOException thrown: " + e.getStackTrace());
 		}
 	}
 

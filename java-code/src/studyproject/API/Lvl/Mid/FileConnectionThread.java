@@ -182,13 +182,13 @@ public class FileConnectionThread extends Thread implements MonitoredThread {
 					"IOException thrown: " + e.getMessage());
 		}
 
-		ErrLog.log(Level.INFO, LogKey.filetransferComplete, APILvl.mid, getClass().getName() + ".run() : " + this.getId(),
+		ErrLog.log(Level.INFO, LogKey.filetransferComplete, APILvl.mid,
+				getClass().getName() + ".run() : " + this.getId(),
 				"Download of '" + checksum + "' from user '" + user.toString() + "'finished");
 	}
 
 	@Override
 	public boolean isSubmitted() {
-		// TODO Auto-generated method stub
 		return submitted;
 	}
 

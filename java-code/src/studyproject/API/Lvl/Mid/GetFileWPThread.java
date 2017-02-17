@@ -6,8 +6,12 @@ import java.io.IOException;
 import java.net.Socket;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.logging.Level;
 
+import studyproject.API.Errors.ErrLog;
 import studyproject.API.Lvl.Low.Responses;
+import studyproject.logging.APILvl;
+import studyproject.logging.LogKey;
 
 /**
  * This Thread is used to receive a file if another user sent a "get-send
@@ -46,7 +50,7 @@ public class GetFileWPThread extends Thread {
 	@Override
 	public void run() {
 		FileOutputStream fileOutStream = null;
-
+		int error;
 		try {
 			// Create the parentDirectory and the file, if it does not exist
 			Files.createDirectories(Paths.get(pathToSaveTo));
@@ -54,22 +58,23 @@ public class GetFileWPThread extends Thread {
 			// create the fileoutputstream to write the file to the filesystem
 			fileOutStream = new FileOutputStream((Paths.get(pathToSaveTo).resolve(fileName)).toString());
 
-			if (Responses.respondSendPermission(socket, fileOutStream, fileSize) == 1)
-				;
-			// TODO Handle IO Error
+			if ((error = Responses.respondSendPermission(socket, fileOutStream, fileSize)) != 0)
+				ErrLog.log(Level.SEVERE, LogKey.error, APILvl.low, error, getClass().getName() + ".run()");
 
 		} catch (FileNotFoundException e) {
-			// TODO Error Handling
-			e.printStackTrace();
+			ErrLog.log(Level.SEVERE, LogKey.error, APILvl.low, getClass().getName() + ".run()",
+					"FileNotFoundException thrown " + e.getStackTrace());
 		} catch (IOException e) {
-			// TODO Error Handling
-			e.printStackTrace();
+			ErrLog.log(Level.SEVERE, LogKey.error, APILvl.low, getClass().getName() + ".run()",
+					"IOException thrown " + e.getStackTrace());
+
 		} finally {
 			try {
 				if (fileOutStream != null)
 					fileOutStream.close();
 			} catch (IOException e) {
-				// TODO Error Handling
+				ErrLog.log(Level.SEVERE, LogKey.error, APILvl.low, getClass().getName() + ".run()",
+						"IOException thrown " + e.getStackTrace());
 			}
 		}
 	}

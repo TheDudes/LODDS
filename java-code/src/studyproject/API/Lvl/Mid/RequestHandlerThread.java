@@ -4,15 +4,19 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.logging.Level;
 
 import studyproject.API.Core.File.FileInfo;
 import studyproject.API.Core.Request.GetFileRequest;
 import studyproject.API.Core.Request.GetInfoRequest;
 import studyproject.API.Core.Request.GetPermissionRequest;
 import studyproject.API.Core.Request.RequestContainer;
+import studyproject.API.Errors.ErrLog;
 import studyproject.API.Lvl.Low.RequestHandler;
 import studyproject.API.Lvl.Mid.Lodds.Lodds;
 import studyproject.API.Lvl.Mid.ThreadMonitoring.ThreadExecutor;
+import studyproject.logging.APILvl;
+import studyproject.logging.LogKey;
 
 public class RequestHandlerThread extends Thread {
 
@@ -44,6 +48,7 @@ public class RequestHandlerThread extends Thread {
 	public void run() {
 		RequestContainer reqContainer = new RequestContainer();
 		InputStream socketStream;
+		int errorCode;
 		while (run) {
 			try {
 				socket = serverSocket.accept();
@@ -52,15 +57,14 @@ public class RequestHandlerThread extends Thread {
 				try {
 					socket.close();
 				} catch (IOException e1) {
-					// TODO ErrorHandling MidLVL
-					e1.printStackTrace();
+					ErrLog.log(Level.SEVERE, LogKey.error, APILvl.mid, getClass().getName() + "run()",
+							"IOException thrown: " + e.getStackTrace());
 				}
-				e.printStackTrace();
 				continue;
 			}
 			reqContainer = new RequestContainer();
-			if (RequestHandler.parseRequest(socketStream, reqContainer) != 0) {
-				// TODO Errorhandling: wrong return value
+			if ((errorCode = RequestHandler.parseRequest(socketStream, reqContainer)) != 0) {
+				ErrLog.log(Level.SEVERE, LogKey.error, APILvl.mid, errorCode, getClass().getName() + "run()");
 				continue;
 			}
 
@@ -80,21 +84,13 @@ public class RequestHandlerThread extends Thread {
 
 				break;
 			case GET_SEND_PERMISSION:
-				System.out.println("Received a send-permission request");
 				GetPermissionRequest permissionReq = (GetPermissionRequest) reqContainer.request;
-				loddsObj.getLoddsModel().getPermissionList().add(permissionReq);
-//				// TODO Ask user to receive a file via GUI window
-//				// TODO Ask user where to save the file and under which name via
-//				// 'save as' GUI
-//				// TODO Split the returning path into path and filename, save
-//				// them in the two variables
-//				String pathToSave = "";
-//				String fileName = permissionReq.fileName;
-//				GetFileWPThread getFileThread = new GetFileWPThread(socket, pathToSave, fileName,
-//						permissionReq.fileSize);
-//				threadExecutor.execute(getFileThread);
+				String pathToSave = "";
+				String fileName = permissionReq.fileName;
+				GetFileWPThread getFileThread = new GetFileWPThread(socket, pathToSave, fileName,
+						permissionReq.fileSize);
+				threadExecutor.execute(getFileThread);
 				break;
-
 			}
 		}
 	}

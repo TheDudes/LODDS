@@ -68,8 +68,8 @@ public class SelectedInterfacePresenter implements Initializable {
 			try {
 				App.properties.store(new FileOutputStream(new File(App.pathToProperties)), null);
 			} catch (IOException e) {
-				// TODO Unhandled FileNotFound or IOException Exception
-				e.printStackTrace();
+				ErrLog.log(Level.SEVERE, LogKey.error, APILvl.gui, getClass().getName() + "okButClicked()",
+						"IOException thrown: " + e.getStackTrace());
 			}
 		}
 		mainWindowModel.getLodds().startUp(selectedInterface, (String) App.properties.get("userName"));

@@ -56,7 +56,8 @@ public class UpdateFileInfoThread extends Thread {
 			err = Handles.handleInfo(bufferedreader, fileInfoList, newFileListTimestamp, infoType);
 			if (err != 0) {
 				ErrLog.log(Level.SEVERE, LogKey.info, APILvl.mid, err, "Handles.handleInfo");
-				//TODO what shall happens with the thread if the handleInfo failed
+				// TODO what shall happen with the thread if the handleInfo
+				// failed
 			}
 			userInfo.setLastUpdate(newFileListTimestamp.value);
 			if (infoType.equals(InfoType.all)) {
@@ -65,7 +66,8 @@ public class UpdateFileInfoThread extends Thread {
 			}
 			updateEntries(fileInfoList);
 		} catch (IOException e) {
-			// TODO error handling
+			ErrLog.log(Level.SEVERE, LogKey.error, APILvl.mid, getClass().getName() + "run()",
+					"IOException thrown: " + e.getStackTrace());
 		}
 	}
 
