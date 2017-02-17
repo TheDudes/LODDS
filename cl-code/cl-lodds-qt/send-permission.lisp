@@ -32,14 +32,15 @@
     (q+:make-qtimer send-permission))
 
 (define-subwidget (send-permission time-left)
-    (q+:make-qlabel send-permission)
-  (q+:set-text time-left (prin1-to-string (- timeout 1))))
+    (q+:make-qprogressbar send-permission)
+  (qdoto time-left
+         (q+:set-maximum timeout)
+         (q+:set-format "%v seconds left to accept")))
 
 (define-subwidget (send-permission layout)
     (q+:make-qgridlayout send-permission)
   (qdoto layout
-         (q+:add-widget (q+:make-qlabel "Time left to accept:" send-permission) 0 0 1 2)
-         (q+:add-widget time-left 0 2 1 2)
+         (q+:add-widget time-left 0 0 1 5)
 
          (q+:add-widget (q+:make-qlabel "Save file to:" send-permission) 1 0 1 4)
 
@@ -50,10 +51,9 @@
   (declare (connected timer (timeout)))
   (incf time-vanished)
   (if (>= time-vanished timeout)
-      (if on-timeout
-          (funcall on-timeout)
-          (q+:set-text time-left "done"))
-      (q+:set-text time-left (prin1-to-string (- timeout time-vanished)))))
+      (when on-timeout
+        (funcall on-timeout))
+      (q+:set-value time-left (- timeout time-vanished))))
 
 (defmethod get-full-filename ((send-permission send-permission))
   (with-slots-bound (send-permission send-permission)
@@ -72,7 +72,8 @@
 (define-initializer (send-permission setup-widget)
   (q+:set-text folder default-folder)
   (q+:set-text filename default-filename)
-  (q+:start timer 1000))
+  (q+:start timer 1000)
+  (q+:set-value time-left timeout))
 
 (defun open-send-permission-dialog (task)
   (with-slots ((size lodds.task::size)
