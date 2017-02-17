@@ -53,8 +53,10 @@ public class GetFileWPThread extends Thread {
 		int error;
 		try {
 			// Create the parentDirectory and the file, if it does not exist
-			Files.createDirectories(Paths.get(pathToSaveTo));
-			Files.createFile(Paths.get(pathToSaveTo + "/" + fileName));
+			if (!Files.exists(Paths.get(pathToSaveTo + "/" + fileName))) {
+				Files.createDirectories(Paths.get(pathToSaveTo));
+				Files.createFile(Paths.get(pathToSaveTo + "/" + fileName));
+			}
 			// create the fileoutputstream to write the file to the filesystem
 			fileOutStream = new FileOutputStream((Paths.get(pathToSaveTo).resolve(fileName)).toString());
 
