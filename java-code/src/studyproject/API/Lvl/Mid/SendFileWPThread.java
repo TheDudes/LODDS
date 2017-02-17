@@ -1,6 +1,7 @@
 package studyproject.API.Lvl.Mid;
 
 import java.io.BufferedOutputStream;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.Socket;
@@ -56,7 +57,8 @@ public class SendFileWPThread extends Thread {
 				FileInputStream fileInStream = new FileInputStream(
 						(Paths.get(fileInfo.parentDirectory).resolve(fileInfo.fileName)).toString())) {
 			int errorCode;
-			if ((errorCode = Requests.getSendPermission(outStream, fileInfo.size, timeout, fileInfo.fileName)) != 0) {
+			if ((errorCode = Requests.getSendPermission(outStream, fileInfo.size, timeout,
+					new File(fileInfo.fileName).getName())) != 0) {
 				ErrLog.log(Level.INFO, LogKey.getSendPermission, APILvl.mid, errorCode,
 						getClass().getName() + ".run() : " + this.getId());
 			}

@@ -100,7 +100,7 @@ public class TopMenuPresenter implements Initializable {
 	 */
 	private void sendFilesToUser() {
 		String userName = usersListModel.getSelectedUser().get().getUserName();
-		long timeout = Long.parseLong((String) App.properties.get("getPermissionTimeout")) * 1000;
+		long timeout = Long.parseLong((String) App.properties.get("getPermissionTimeout"));
 		List<File> fileList = Utils.getChoosenMultipleFiles("Select Files to share");
 		for (File f : fileList) {
 			sendSingleFileToUser(userName, timeout, f);
