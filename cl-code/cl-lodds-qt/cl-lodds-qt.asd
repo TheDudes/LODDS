@@ -23,4 +23,5 @@
                (:file "dialog")
                (:file "dock")
                (:file "select-file")
+               (:file "send-file")
                (:file "gui")))

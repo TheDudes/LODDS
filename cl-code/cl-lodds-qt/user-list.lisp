@@ -28,10 +28,7 @@
     (lodds.core:split-user-identifier (name ip port t) user
       (connect send-file-button "pressed()"
                (lambda ()
-                 (let ((file (q+:qfiledialog-get-open-file-name)))
-                   (when (> (length file)
-                            0)
-                     (lodds:send-file file ip port 10))))))
+                 (open-send-file-dialog user ip port))))
     (q+:set-item-widget user-list
                         new-entry
                         +user-list-send-file+
