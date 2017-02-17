@@ -98,7 +98,6 @@ public class MainWindowPresenter implements Initializable {
 	}
 
 	private void permissionListChanged(Change<? extends GetPermissionRequest> c) {
-		System.out.println("PermissionList Changed");
 		if (sendPermissionModel.getTimer() == null) {
 			sendPermissionModel.initTimer(this, TIMER_DELAY);
 		}
