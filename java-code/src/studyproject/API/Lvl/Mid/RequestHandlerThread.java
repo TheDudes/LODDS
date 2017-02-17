@@ -85,11 +85,7 @@ public class RequestHandlerThread extends Thread {
 				break;
 			case GET_SEND_PERMISSION:
 				GetPermissionRequest permissionReq = (GetPermissionRequest) reqContainer.request;
-				String pathToSave = "";
-				String fileName = permissionReq.fileName;
-				GetFileWPThread getFileThread = new GetFileWPThread(socket, pathToSave, fileName,
-						permissionReq.fileSize);
-				threadExecutor.execute(getFileThread);
+				loddsObj.getLoddsModel().getPermissionList().add(permissionReq);
 				break;
 			}
 		}
