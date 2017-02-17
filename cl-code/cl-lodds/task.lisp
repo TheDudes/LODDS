@@ -145,12 +145,14 @@
                 (submit-task task)
                 (when finished-p
                   (finish-task task)
-                  (lodds.event:push-event :info (list "Task Finished:"
-                                                      task)))))
+                  (lodds.event:push-event :tasker
+                                          (list "Task Finished:"
+                                                task)))))
         (error (err)
-          (lodds.event:push-event :info (list "Task Failed"
-                                              task
-                                              err))))
+          (lodds.event:push-event :tasker
+                                  (list "Task Failed"
+                                        task
+                                        err))))
       (setf aktive-p nil)))
 
   (:method ((task task))
