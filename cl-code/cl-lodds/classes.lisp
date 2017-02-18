@@ -60,6 +60,11 @@
          :initform 0
          :documentation "The load a task produces, will be decremented
          while the task is running")
+   (max-load :initarg :max-load
+             :initform 0
+             :documentation "The maximum load a task will produce, set
+             in initialization. This can be used in conjunction with
+             load the determine the progress of the task")
    (name :initarg :name
          :initform (error "please specify a task name!")
          :type string
