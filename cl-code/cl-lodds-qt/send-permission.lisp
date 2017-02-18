@@ -96,15 +96,16 @@
                      :on-success-fn
                      (lambda (widget)
                        (let ((full-filename (get-full-filename widget)))
-                         (if filename
+                         (if full-filename
                              (progn
                                (setf filename full-filename)
-                               (lodds.task:submit-task task))
+                               (lodds.task:submit-task task)
+                               t)
                              (progn
                                (make-instance 'dialog
                                               :title "Error - Invalid Input"
                                               :text "The given input was invalid")
-                               (lodds.task:finish-task task)))))
+                               nil))))
                      :on-cancel-fn
                      (lambda (widget)
                        (declare (ignore widget))
