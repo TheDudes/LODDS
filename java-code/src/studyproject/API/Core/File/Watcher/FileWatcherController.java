@@ -281,6 +281,9 @@ public class FileWatcherController {
 			currentFilesListHashListAsKey.get(file.checksum).remove(fileToDelete);
 		}
 		
+		// Remove from currentFiles tree
+		FileWatcherTreeNode.removeFileNameAndGetRemovedFileInfoListEntries(currentFiles, file.fileName);
+		
 		if (currentFilesListHashListAsKey.size() == 0) {
 			this.firstShareTimestamp = null;
 		}
