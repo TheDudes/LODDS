@@ -55,6 +55,7 @@
            #:name
            #:on-finish-hook
            #:get-load
+           #:get-task-progresses
            #:run-task
            #:finish-task
            #:submit-task
