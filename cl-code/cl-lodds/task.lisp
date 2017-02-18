@@ -494,38 +494,6 @@
                                               "sucessfully downloaded to"
                                               local-path))))))
 
-(defmacro with-socket (socket close-socket-p &body body)
-  `(let ((is-closed nil))
-     (labels ((cleanup-socket ()
-                (when ,socket
-                  (handler-case
-                      (close (usocket:socket-stream ,socket))
-                    (error (e)
-                      (lodds.event:push-event :error
-                                              (list "could not close socket stream" e))))
-                  (handler-case
-                      (usocket:socket-close ,socket)
-                    (error (e)
-                      (lodds.event:push-event :error
-                                              (list "could not close socket" e))))
-                  (setf is-closed t))))
-       (handler-case
-           (progn
-             (unless ,socket
-               (error "Could not access socket, nil."))
-             ,@body)
-         (end-of-file ()
-           (lodds.event:push-event :error
-                                   (list "end-of-file on tasker"))
-           (cleanup-socket))
-         (error (e)
-           (lodds.event:push-event :error
-                                   (list "unknown error on tasker:" e))
-           (cleanup-socket)))
-       ,(when close-socket-p
-          `(unless is-closed
-             (cleanup-socket))))))
-
 (defmethod run-task ((task task-request))
   (with-slots (socket
                finished-p
