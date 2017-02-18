@@ -1,7 +1,6 @@
 package studyproject.gui.sendPermissionDialog;
 
 import java.util.Timer;
-import java.util.TimerTask;
 
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleStringProperty;
