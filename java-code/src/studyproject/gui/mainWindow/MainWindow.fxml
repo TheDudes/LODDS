@@ -8,7 +8,7 @@
 
 <BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="400.0" minWidth="600.0" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/8.0.112" xmlns:fx="http://javafx.com/fxml/1" fx:controller="studyproject.gui.mainWindow.MainWindowPresenter">
    <center>
-      <SplitPane dividerPositions="0.75" orientation="VERTICAL">
+      <SplitPane dividerPositions="0.5" orientation="VERTICAL">
          <items>
             <SplitPane dividerPositions="0.3" prefHeight="160.0" prefWidth="200.0">
               <items>
