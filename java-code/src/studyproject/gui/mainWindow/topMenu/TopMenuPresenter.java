@@ -4,7 +4,6 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.security.NoSuchAlgorithmException;
-import java.util.List;
 import java.util.ResourceBundle;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -38,9 +37,7 @@ public class TopMenuPresenter implements Initializable {
 	@FXML
 	MenuItem shareFolder;
 	@FXML
-	MenuItem sendFilesToUser;
-	@FXML
-	MenuItem sendFolderToUser;
+	MenuItem sendFileToUser;
 	@Inject
 	MainWindowModel mainWindowModel;
 	@Inject
@@ -55,18 +52,15 @@ public class TopMenuPresenter implements Initializable {
 
 		settingsItem.setOnAction(e -> settingsItemPressed());
 		shareFolder.setOnAction(e -> shareFolderPressed());
-		sendFilesToUser.setOnAction(e -> sendFilesToUser());
-		sendFolderToUser.setOnAction(e -> sendFolderToUser());
+		sendFileToUser.setOnAction(e -> sendFileToUser());
 
 	}
 
 	private void fileMenuPressed() {
 		if (usersListModel.getSelectedUser().get() == null) {
-			sendFilesToUser.setDisable(true);
-			sendFolderToUser.setDisable(true);
+			sendFileToUser.setDisable(true);
 		} else {
-			sendFilesToUser.setDisable(false);
-			sendFolderToUser.setDisable(false);
+			sendFileToUser.setDisable(false);
 		}
 	}
 
@@ -100,54 +94,12 @@ public class TopMenuPresenter implements Initializable {
 	}
 
 	/**
-	 * Send one or multiple files from the same directory to one specific user
+	 * Send one file to the selected User from the usersList
 	 */
-	private void sendFilesToUser() {
+	private void sendFileToUser() {
 		String userName = usersListModel.getSelectedUser().get().getUserName();
 		long timeout = Long.parseLong((String) App.properties.get("getPermissionTimeout"));
-		List<File> fileList = Utils.getChoosenMultipleFiles("Select Files to share");
-		for (File f : fileList) {
-			sendSingleFileToUser(userName, timeout * 1000, f);
-		}
-	}
-
-	/**
-	 * Send one folder to one specific user
-	 */
-	private void sendFolderToUser() {
-		String userName = usersListModel.getSelectedUser().getName();
-		long timeout = Long.parseLong((String) App.properties.get("getPermissionTimeout"));
-		File chosenFolder = new File(Utils.getChoosenDirPath("Select Folder to share"));
-		if (chosenFolder.isDirectory()) {
-			sendDirectoryToUser(userName, timeout * 1000, chosenFolder);
-		}
-	}
-
-	/**
-	 * 
-	 * @param userName
-	 * @param timeout
-	 *            time in ms
-	 * @param directoryFolder
-	 */
-	private void sendDirectoryToUser(String userName, long timeout, File directoryFolder) {
-		for (File f : directoryFolder.listFiles()) {
-			if (f.isDirectory()) {
-				sendDirectoryToUser(userName, timeout, f);
-			} else {
-				sendSingleFileToUser(userName, timeout, f);
-			}
-		}
-	}
-
-	/**
-	 * 
-	 * @param userName
-	 * @param timeout
-	 *            time in ms  
-	 * @param file
-	 */
-	private void sendSingleFileToUser(String userName, long timeout, File file) {
+		File file = new File(Utils.getChoosenDirPath("Select Files to share"));
 		FileInfo fileInfo;
 		try {
 			fileInfo = new FileInfo(file.getPath(), file.getPath());
