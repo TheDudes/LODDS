@@ -4,11 +4,9 @@ import java.net.Socket;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Timer;
-import java.util.TimerTask;
 
 import javafx.beans.property.SimpleStringProperty;
 import studyproject.API.Core.Request.GetPermissionRequest;
-import studyproject.gui.mainWindow.MainWindowPresenter;
 
 public class SendPermissionModel {
 
@@ -37,25 +35,6 @@ public class SendPermissionModel {
 
 	public ArrayList<GetPermissionRequest> getFileListFromSender(Socket socket) {
 		return senderMap.get(socket);
-	}
-
-	public void initTimer(MainWindowPresenter presenter, long timerDelay) {
-		Timer timer = new Timer(true);
-		timer.schedule(new TimerTask() {
-			@Override
-			public void run() {
-				presenter.timerRanOff();
-			}
-		}, timerDelay);
-		setTimer(timer);
-	}
-
-	public void setTimer(Timer timer) {
-		this.timer = timer;
-	}
-
-	public void clearTimer() {
-		timer = null;
 	}
 
 	public SimpleStringProperty getDialogLabel() {

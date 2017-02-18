@@ -30,14 +30,14 @@ import studyproject.gui.mainWindow.tasksList.TasksListView;
 import studyproject.gui.mainWindow.topMenu.TopMenuView;
 import studyproject.gui.mainWindow.usersList.UsersListView;
 import studyproject.gui.selectedInterface.SelectedInterfaceView;
+import studyproject.gui.sendPermissionDialog.SendPermissionDialog;
 import studyproject.gui.sendPermissionDialog.SendPermissionModel;
 import studyproject.gui.sendPermissionDialog.SendPermissionView;
 import studyproject.logging.LogKey;
 
 public class MainWindowPresenter implements Initializable {
 
-	private static final long TIMER_DELAY = 2000;
-	private Stage permissionStage;
+	private SendPermissionDialog permissionStage;
 
 	@FXML
 	AnchorPane usersListAnchor;
@@ -88,7 +88,7 @@ public class MainWindowPresenter implements Initializable {
 				.addListener(new ListChangeListener<GetPermissionRequest>() {
 					@Override
 					public void onChanged(Change<? extends GetPermissionRequest> c) {
-						permissionListChanged(c);
+						permissionListChanged2(c);
 					}
 				});
 	}
@@ -100,36 +100,25 @@ public class MainWindowPresenter implements Initializable {
 		AnchorPane.setRightAnchor(child, value);
 	}
 
-	private void permissionListChanged(Change<? extends GetPermissionRequest> c) {
-		if (sendPermissionModel.getTimer() == null) {
-			sendPermissionModel.initTimer(this, TIMER_DELAY);
-		}
-		while (c.next()) {
-			for (GetPermissionRequest permissionReq : c.getAddedSubList()) {
-				sendPermissionModel.addRequestedFile(permissionReq);
-			}
-		}
-	}
-
-	public void timerRanOff() {
-		sendPermissionModel.clearTimer();
+	private void permissionListChanged2(Change<? extends GetPermissionRequest> c) {
 		Platform.runLater(new Runnable() {
 			@Override
 			public void run() {
-				permissionStage = new Stage();
-				SendPermissionView sendPermissionView = new SendPermissionView();
-				permissionStage.setScene(new Scene(sendPermissionView.getView()));
-				permissionStage.setTitle("Permission Request");
-				sendPermissionModel.getDialogLabel().setValue(createPermissionText());
-				permissionStage.show();
+				while (c.next()) {
+					for (GetPermissionRequest permissionReq : c.getAddedSubList()) {
+						permissionStage = new SendPermissionDialog(permissionReq);
+						SendPermissionView sendPermissionView = new SendPermissionView();
+						permissionStage.setScene(new Scene(sendPermissionView.getView()));
+						permissionStage.setTitle("Permission Request");
+						String newText = permissionReq.socket.getInetAddress().toString() + " wants to send a File: "
+								+ permissionReq.fileName + " (" + permissionReq.fileSize + " Bytes)";
+						sendPermissionModel.getDialogLabel().setValue(newText);
+						permissionStage.show();
+						mainWindowModel.getLodds().getLoddsModel().getPermissionList().remove(permissionReq);
+					}
+				}
 			}
 		});
-	}
-
-	private String createPermissionText() {
-		int numberOfUsers = sendPermissionModel.getSenderMap().keySet().size();
-		int numberOfFiles = sendPermissionModel.getSenderMap().size();
-		return numberOfUsers + " Users want to send " + numberOfFiles + " files to you";
 	}
 
 	public void loadInterface() {
@@ -152,5 +141,4 @@ public class MainWindowPresenter implements Initializable {
 			mainWindowModel.getLodds().startUp(interf, (String) App.properties.get("userName"));
 		}
 	}
-
 }

@@ -1,9 +1,6 @@
 package studyproject.gui.sendPermissionDialog;
 
-import java.net.Socket;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.ResourceBundle;
 
 import javax.inject.Inject;
@@ -36,24 +33,18 @@ public class SendPermissionPresenter implements Initializable {
 		permissionMsg.textProperty().bindBidirectional(sendPermissionModel.getDialogLabel());
 	}
 
+	private void acceptPressed() {
+		SendPermissionDialog sendPermissionDialog = (SendPermissionDialog) acceptButton.getScene().getWindow();
+		GetPermissionRequest getPermissionRequest = sendPermissionDialog.getPermissionRequest();
+		String path = Utils.getChoosenDirPath("Choose folder to save files in");
+		mainWindowModel.getLodds().getFileWP(getPermissionRequest.socket, path, getPermissionRequest.fileName,
+				getPermissionRequest.fileSize);
+		acceptButton.getScene().getWindow().hide();
+	}
+
 	private void declinePressed() {
 		disableButtons();
 		declineButton.getScene().getWindow().hide();
-	}
-
-	private void acceptPressed() {
-		disableButtons();
-		Iterator<Socket> keyIterator = sendPermissionModel.getSenderMap().keySet().iterator();
-		String path = Utils.getChoosenDirPath("Choose folder to save files in");
-		while (keyIterator.hasNext()) {
-			ArrayList<GetPermissionRequest> permissionRequestList = sendPermissionModel
-					.getFileListFromSender(keyIterator.next());
-			for (GetPermissionRequest permissionReq : permissionRequestList) {
-				mainWindowModel.getLodds().getFileWP(permissionReq.socket, path, permissionReq.fileName,
-						permissionReq.fileSize);
-			}
-		}
-		acceptButton.getScene().getWindow().hide();
 	}
 
 	private void disableButtons() {
