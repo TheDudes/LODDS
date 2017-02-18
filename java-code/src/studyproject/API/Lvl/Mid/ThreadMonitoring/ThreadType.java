@@ -30,10 +30,11 @@ public enum ThreadType {
 	 */
 	public static ThreadType getType(Runnable runnable) {
 		if (runnable instanceof BroadcastListenerThread || runnable instanceof BroadcastSenderThread
-				|| runnable instanceof RequestHandlerThread || runnable instanceof LoadbalancerMainThread)
+				|| runnable instanceof RequestHandlerThread)
 			return ThreadType.fixed;
 
-		if (runnable instanceof FileConnectionThread || runnable instanceof GetFileWPThread)
+		if (runnable instanceof FileConnectionThread || runnable instanceof GetFileWPThread
+				|| runnable instanceof LoadbalancerMainThread)
 			return ThreadType.getFile;
 
 		if (runnable instanceof FileSenderThread || runnable instanceof SendFileWPThread)
