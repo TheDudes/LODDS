@@ -4,8 +4,12 @@
 (define-widget dialog (QDialog)
   ((on-success :initform nil
                :initarg :on-success-fn
-               :documentation "function which gets called when 'Ok'was
-               clicked. Will be called with the widget as arugment")
+               :documentation "function which gets called when 'Ok' was
+               clicked. Will be called with the widget as arugment. If
+               on-success is set and the callback returns nil, the
+               dialog wont be closed. That can be used to verify user
+               input on the widget and reject success, where the user
+               has a change to corret it and press OK again.")
    (on-cancel :initform nil
               :initarg :on-cancel-fn
               :documentation "function which gets called when
@@ -28,13 +32,16 @@
 
 (defmethod finish-dialog ((dialog dialog) result)
   (with-slots-bound (dialog dialog)
-    (let ((fn (case result
-                (:success on-success)
-                (:cancel on-cancel)
-                (t nil))))
-      (when fn
-        (funcall fn widget))
-      (finalize dialog))))
+    (case result
+      (:success (if on-success
+                    (when (funcall on-success widget)
+                      (finalize dialog))
+                    (finalize dialog)))
+      (:cancel (progn
+                 (when on-cancel
+                   (funcall on-cancel widget))
+                 (finalize dialog)))
+      (t nil))))
 
 (define-slot (dialog ok-pressed) ()
   (declare (connected ok (pressed)))

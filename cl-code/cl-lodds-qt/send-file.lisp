@@ -60,14 +60,14 @@
                    (with-slots-bound (widget send-file)
                      (let ((file-choosen (q+:text file)))
                        (if (uiop:file-exists-p file-choosen)
-                           (lodds:send-file file-choosen
-                                            ip
-                                            port
-                                            (q+:value timeout))
-                           (make-instance 'dialog
-                                          :title "Error - File does not exist"
-                                          :text "Selected File does not exist"
-                                          :on-success-fn
-                                          (lambda (widget)
-                                            (declare (ignore widget))
-                                            (open-send-file-dialog user ip port)))))))))
+                           (progn
+                             (lodds:send-file file-choosen
+                                              ip
+                                              port
+                                              (q+:value timeout))
+                             t)
+                           (progn
+                             (make-instance 'dialog
+                                            :title "Error - File does not exist"
+                                            :text "Selected File does not exist")
+                             nil)))))))

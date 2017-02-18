@@ -20,7 +20,8 @@
                               :on-success-fn (lambda (widget)
                                                (declare (ignore widget))
                                                (when (lodds:interface lodds:*server*)
-                                                 (run)))))))
+                                                 (run))
+                                               t)))))
   (:item ("Stop" (ctrl s))
          (progn
            (lodds.subsystem:stop (lodds:get-subsystem :tasker))
