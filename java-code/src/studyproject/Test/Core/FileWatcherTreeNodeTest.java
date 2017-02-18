@@ -56,7 +56,7 @@ public class FileWatcherTreeNodeTest {
 		assertEquals(found.fileName, fileName);
 		
 		// Add second file
-		String fileName2 = "/Users/robinhood/Desktop/testData/ahoi/ahoi.zip";
+		String fileName2 = testDirectory+"twoFiles/1.txt";
 		FileInfoListEntry entry2 = new FileInfoListEntry(fileName2, testDirectory);
 		root.addFileInfoEntry(FileWatcherTreeNode.convertFileNameToStringList(entry2.fileName), entry2);
 		

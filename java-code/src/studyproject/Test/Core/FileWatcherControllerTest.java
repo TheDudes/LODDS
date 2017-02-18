@@ -23,14 +23,14 @@ public class FileWatcherControllerTest {
 	public void listShouldContainOneFile() throws Exception {
 		FileWatcherController controller = new FileWatcherController();
 		controller.watchDirectoryRecursively(testDirectory+"oneFile",testDirectory);
-		assertEquals(1,controller.fileInfoList.size());
+		assertEquals(1,controller.fileInfoHistory.size());
 	}
 	
 	@Test
 	public void listShouldContainTwoFiles() throws Exception {
 		FileWatcherController controller = new FileWatcherController();
 		controller.watchDirectoryRecursively(testDirectory+"twoFiles",testDirectory);
-		assertEquals(2,controller.fileInfoList.size());
+		assertEquals(2,controller.fileInfoHistory.size());
 	}
 	
 	@Test
@@ -116,7 +116,7 @@ public class FileWatcherControllerTest {
 		FileWatcherController controller = new FileWatcherController();
 		controller.watchDirectoryRecursively(path, testDirectory);
 		
-		assertEquals(0,controller.fileInfoList.size());
+		assertEquals(0,controller.fileInfoHistory.size());
 		
 		// Wait short till fileController was initialized
 		Thread.sleep(1000);
@@ -125,11 +125,11 @@ public class FileWatcherControllerTest {
 		f.getParentFile().mkdirs(); 
 		f.createNewFile();
 		
-		while (controller.fileInfoList.size() == 0) {
+		while (controller.fileInfoHistory.size() == 0) {
 			
 		}
 		
-		assertEquals(1,controller.fileInfoList.size());
+		assertEquals(1,controller.fileInfoHistory.size());
 		
 		String actualResponse = controller.getInfo(0);
 		String expectedResponse = 
@@ -159,13 +159,13 @@ public class FileWatcherControllerTest {
 		Thread.sleep(1000);
 		
 		// List should contain one file
-		assertEquals(1,controller.fileInfoList.size());
+		assertEquals(1,controller.fileInfoHistory.size());
 		
 		// Delete file
 		cleanupTempFolder();
 		
 		// List should contain two files
-		while (controller.fileInfoList.size() != 2) {
+		while (controller.fileInfoHistory.size() != 2) {
 			// Test will time out if list will not contain zero files
 			// System.out.println(controller.fileInfoList.size());
 		}

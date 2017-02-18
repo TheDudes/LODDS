@@ -35,28 +35,6 @@ public class FileWatcherTreeNode {
 			fileName = "root";
 		}
 	}
-	/**
-	 * Just some testing
-	 * @param args
-	 * @throws Exception
-	 */
-	public static void main(String[] args) throws Exception {
-		String fileName = "/Users/robinhood/Desktop/testData/test.zip";
-		String virtualRoot = "/Users/robinhood/Desktop/testData/";
-		FileInfoListEntry entry = new FileInfoListEntry(fileName, virtualRoot);
-		
-		String fileName2 = "/Users/robinhood/Desktop/testData/ahoi/ahoi.zip";
-		FileInfoListEntry entry2 = new FileInfoListEntry(fileName2, virtualRoot);
-
-		
-		FileWatcherTreeNode root = new FileWatcherTreeNode(true);
-		root.addFileInfoEntry(convertFileNameToStringList(entry.fileName), entry);
-		root.addFileInfoEntry(convertFileNameToStringList(entry2.fileName), entry2);
-
-		// System.out.println("Tree:");
-		root.printTree(0);
-		
-	}
 	
 	/**
 	 * Prints tree and adds 'depth' lines before the fileName

@@ -31,7 +31,7 @@ public class FileWatcherController {
 	public FileWatcherTreeNode currentFiles = new FileWatcherTreeNode(true);
 
 	// History of all file modifications as specified in the protocol
-	public Vector<FileInfoListEntry> fileInfoList = new Vector<FileInfoListEntry>();
+	public Vector<FileInfoListEntry> fileInfoHistory = new Vector<FileInfoListEntry>();
 
 	// Javas watchService can only watch directories, no single files
 	// In order to watch a file we need to watch the whole directory
@@ -40,8 +40,10 @@ public class FileWatcherController {
 
 	// Helps to prevent that files are added multiple times
 	// static Semaphore semaphore = new Semaphore(0);
-
 	public ReentrantLock lock = new ReentrantLock();
+	
+	// Timestamp of first share
+	private Long firstShareTimestamp;
 
 	/**
 	 * Test code
@@ -79,13 +81,9 @@ public class FileWatcherController {
 	}
 
 	/**
-	 * 'get info timestamp\n' Will request an update about his files from a
-	 * client. Timestamp is specifying the last known state. So if client A
-	 * changes his files the timestamp he broadcasts will update. If client B
-	 * sees the change he will send 'get info timestamp' to A, specifying the
-	 * last timestamp of A he saw. So A will respond with all his updates since
-	 * the given timestamp. If timestamp is 0, a complete list of shared files
-	 * from the specific client is requested.
+	 * 'get info timestamp\n' 
+	 * 
+	 * Returns file history since given timestamp-1sec
 	 * 
 	 * @param timestamp
 	 *            unix timestamp in seconds
@@ -98,27 +96,27 @@ public class FileWatcherController {
 		Long currentTimestampSec = System.currentTimeMillis() / 1000L;
 		Long currentTimestampMinusOneSec = currentTimestampSec - 1;
 
+		Boolean shareAllFiles = false;
+		
+		if (timestamp < this.firstShareTimestamp) {
+			shareAllFiles = true;
+		}
+
 		// Body
 		int filesMatched = 0;
-		for (FileInfoListEntry file : fileInfoList) {
+		for (FileInfoListEntry file : fileInfoHistory) {
 
 			Long fileLastModifiedSec = file.file.lastModified() / 1000L;
 
-			// Check if file was added after given timestamp but not during last
-			// sec
+			// Check if file was added after given timestamp but not during last sec
 			Boolean addedCheck = file.timestampAdded >= timestamp
 					&& file.timestampAdded < currentTimestampMinusOneSec;
 
-			// Check if file was last modified after given timestamp but not
-			// during last sec
+			// Check if file was last modified after given timestamp but not during last sec
 			Boolean lastModifiedCheck = fileLastModifiedSec >= timestamp
 					&& fileLastModifiedSec < currentTimestampMinusOneSec;
-			
-			// If requested timestamp < file was monitored we always add it to the list
-			Boolean timestampBeforeFileWasAdded = timestamp < file.timestampAdded;
 
-			if (timestamp == 0 || lastModifiedCheck || addedCheck || timestampBeforeFileWasAdded) {
-				
+			if (timestamp == 0 || lastModifiedCheck || addedCheck || shareAllFiles) {
 				body = this.convertFileInfoToString(file) + body;
 				filesMatched++;
 			}
@@ -283,8 +281,12 @@ public class FileWatcherController {
 			currentFilesListHashListAsKey.get(file.checksum).remove(fileToDelete);
 		}
 		
+		if (currentFilesListHashListAsKey.size() == 0) {
+			this.firstShareTimestamp = null;
+		}
+		
 		if (foundInList) {
-			// Create DEL entry for FileInfoList
+			// Create DEL entry for FileInfoList:
 			
 			// Create FileInfoListEntry object
 			Long timestamp = System.currentTimeMillis() / 1000L;
@@ -293,13 +295,20 @@ public class FileWatcherController {
 					timestamp, virtualRoot);
 
 			// Add to FileInfoList
-			fileInfoList.add(deletedFile);	
+			fileInfoHistory.add(deletedFile);	
 		}
 
+	}
+	
+	private void setFirstShareTimestamp() {
+		this.firstShareTimestamp = System.currentTimeMillis() / 1000L;
 	}
 
 	public FileInfoListEntry addFileToLists(String fileName, String virtualRoot) throws Exception {
 		// System.out.println("Add new file: "+fileName);
+		if (this.firstShareTimestamp == null) {
+			this.setFirstShareTimestamp();
+		}
 		
 		FileInfoListEntry existingFile = currentFiles.getFileInfoListEntryByFileName(fileName);
 
@@ -307,13 +316,11 @@ public class FileWatcherController {
 			
 			FileInfoListEntry newFile = new FileInfoListEntry(fileName, virtualRoot);
 
-			// System.out.println("File will really be added");
-
 			// Add to tree
 			currentFiles.addFileInfoEntry(newFile.fileName, newFile);
 
 			// Add to file info list
-			fileInfoList.add(newFile);
+			fileInfoHistory.add(newFile);
 
 			// Add to currentFilesListHashListAsKey
 			if (currentFilesListHashListAsKey.containsKey(newFile.checksum)) {
