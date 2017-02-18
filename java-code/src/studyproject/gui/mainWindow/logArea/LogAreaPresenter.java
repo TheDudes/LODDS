@@ -40,9 +40,9 @@ public class LogAreaPresenter implements Initializable {
     @FXML
     TableColumn<Error, String> logKeyCol;
     @FXML
-    TableColumn<Error, String> apiLvlCol;
+    TableColumn<Error, String> sourceMethodCol;
     @FXML
-    TableColumn<Error, String> thrownByCol;
+    TableColumn<Error, String> sourceClassCol;
     @FXML
     TableColumn<Error, String> msgCol;
     @FXML
@@ -108,8 +108,8 @@ public class LogAreaPresenter implements Initializable {
     private void setTableColumnCellFactories() {
         timestampCol.setCellValueFactory(new PropertyValueFactory<Error, String>("timestamp"));
         logKeyCol.setCellValueFactory(new PropertyValueFactory<Error, String>("logKey"));
-        apiLvlCol.setCellValueFactory(new PropertyValueFactory<Error, String>("apiLvl"));
-        thrownByCol.setCellValueFactory(new PropertyValueFactory<Error, String>("thrownBy"));
+        sourceMethodCol.setCellValueFactory(new PropertyValueFactory<Error, String>("sourceMethodName"));
+        sourceClassCol.setCellValueFactory(new PropertyValueFactory<Error, String>("sourceClassName"));
         msgCol.setCellValueFactory(new PropertyValueFactory<Error, String>("msg"));
         logLvlCol.setCellValueFactory(new PropertyValueFactory<Error, String>("logLevelString"));
     }

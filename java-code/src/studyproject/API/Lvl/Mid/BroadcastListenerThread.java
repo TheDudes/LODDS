@@ -5,15 +5,15 @@ import java.net.UnknownHostException;
 import java.util.Vector;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import javafx.collections.ObservableList;
 import studyproject.API.Core.BroadcastInfo;
-import studyproject.API.Errors.ErrLog;
+import studyproject.API.Errors.ErrorFactory;
 import studyproject.API.Lvl.Low.Broadcast;
 import studyproject.API.Lvl.Mid.Core.FileCoreInfo;
 import studyproject.API.Lvl.Mid.Core.UserInfo;
 import studyproject.API.Lvl.Mid.Lodds.Lodds;
-import studyproject.logging.APILvl;
 import studyproject.logging.LogKey;
 
 public class BroadcastListenerThread extends Thread {
@@ -26,6 +26,7 @@ public class BroadcastListenerThread extends Thread {
 	private InetAddress inetAddress;
 	private boolean written;
 	private boolean run;
+	private Logger logger = Logger.getGlobal();
 
 	public BroadcastListenerThread(Lodds loddsObject) {
 		this.loddsObject = loddsObject;
@@ -40,11 +41,10 @@ public class BroadcastListenerThread extends Thread {
 		int errorCode;
 		while (run) {
 			if ((errorCode = Broadcast.getLocalIp(loddsObject.getInterface(), localAddress)) != 0) {
-				ErrLog.log(Level.SEVERE, LogKey.error, APILvl.mid, errorCode, getClass().getName() + ".run");
+				logger.log(ErrorFactory.build(Level.SEVERE, LogKey.error, errorCode));
 			}
 			if ((errorCode = Broadcast.readAdvertise(brInfo)) != 0) {
-				ErrLog.log(Level.SEVERE, LogKey.broadcastReceived, APILvl.mid, errorCode,
-						getClass().getName() + ".run");
+				logger.log(ErrorFactory.build(Level.SEVERE, LogKey.broadcastReceived, errorCode));
 				continue;
 			}
 			try {
@@ -66,8 +66,7 @@ public class BroadcastListenerThread extends Thread {
 					}
 				}
 				if (written == false) {
-					ErrLog.log(Level.INFO, LogKey.info, APILvl.gui, "BroadcastListenerThread.run()",
-							"BroadcastListenerThread: Added to Userlist: " + brInfo.toString());
+					logger.log(ErrorFactory.build(Level.INFO, LogKey.info, "Added to Userlist: " + brInfo.toString()));
 					userInfo = new UserInfo(inetAddress, brInfo.ipPort, brInfo.name, 0, brInfo.load,
 							new ConcurrentHashMap<String, FileCoreInfo>(),
 							new ConcurrentHashMap<String, Vector<String>>());
@@ -85,8 +84,8 @@ public class BroadcastListenerThread extends Thread {
 			for (int index = 0; index < clientList.size();) {
 				if (((clientList.get(index).getLastReceivedBroadcast() + 5) < currentTime)
 						&& (clientList.get(index).getLastReceivedBroadcast() != 0)) {
-					ErrLog.log(Level.SEVERE, LogKey.error, APILvl.mid, getName() + getId() + ": broadCastListener",
-							"Removed User :" + clientList.get(index).toString());
+					logger.log(ErrorFactory.build(Level.WARNING, LogKey.warning,
+							"Removed User :" + clientList.get(index).toString()));
 					clientList.remove(index);
 				} else {
 					index++;

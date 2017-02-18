@@ -5,17 +5,17 @@ import java.io.InputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import studyproject.API.Core.File.FileInfo;
 import studyproject.API.Core.Request.GetFileRequest;
 import studyproject.API.Core.Request.GetInfoRequest;
 import studyproject.API.Core.Request.GetPermissionRequest;
 import studyproject.API.Core.Request.RequestContainer;
-import studyproject.API.Errors.ErrLog;
+import studyproject.API.Errors.ErrorFactory;
 import studyproject.API.Lvl.Low.RequestHandler;
 import studyproject.API.Lvl.Mid.Lodds.Lodds;
 import studyproject.API.Lvl.Mid.ThreadMonitoring.ThreadExecutor;
-import studyproject.logging.APILvl;
 import studyproject.logging.LogKey;
 
 public class RequestHandlerThread extends Thread {
@@ -25,6 +25,7 @@ public class RequestHandlerThread extends Thread {
 	ServerSocket serverSocket;
 	Socket socket;
 	private boolean run;
+	private Logger logger = Logger.getGlobal();
 
 	/**
 	 * RequestThread constructor
@@ -57,14 +58,14 @@ public class RequestHandlerThread extends Thread {
 				try {
 					socket.close();
 				} catch (IOException e1) {
-					ErrLog.log(Level.SEVERE, LogKey.error, APILvl.mid, getClass().getName() + "run()",
-							"IOException thrown: " + e.getStackTrace());
+					logger.log(ErrorFactory.build(Level.SEVERE, LogKey.error,
+							"IOException thrown: " , e));
 				}
 				continue;
 			}
 			reqContainer = new RequestContainer();
 			if ((errorCode = RequestHandler.parseRequest(socketStream, reqContainer)) != 0) {
-				ErrLog.log(Level.SEVERE, LogKey.error, APILvl.mid, errorCode, getClass().getName() + "run()");
+				logger.log(ErrorFactory.build(Level.SEVERE, LogKey.error, errorCode));
 				continue;
 			}
 

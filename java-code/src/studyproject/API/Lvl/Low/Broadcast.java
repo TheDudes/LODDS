@@ -6,12 +6,12 @@ import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.NoSuchElementException;
 import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.regex.Pattern;
 
 import studyproject.API.Core.BroadcastInfo;
 import studyproject.API.Core.Utils;
-import studyproject.API.Errors.ErrLog;
-import studyproject.logging.APILvl;
+import studyproject.API.Errors.ErrorFactory;
 import studyproject.logging.LogKey;
 
 /**
@@ -119,10 +119,10 @@ public class Broadcast {
 		} catch (SocketException e) {
 			return 1;
 		} catch (NoSuchElementException f) {
-			ErrLog.log(Level.SEVERE, LogKey.error, APILvl.low, "getAddress", f.getStackTrace().toString());
+			Logger.getGlobal().log(ErrorFactory.build(Level.SEVERE, LogKey.error, f));
 			System.exit(1);
 		}
-		ErrLog.log(Level.SEVERE, LogKey.error, APILvl.low, "getAddress", "No Suitable Interface found");
+		Logger.getGlobal().log(ErrorFactory.build(Level.SEVERE, LogKey.error, "No Suitable Interface found"));
 		System.exit(1);
 		return 0;
 	}
@@ -163,14 +163,14 @@ public class Broadcast {
 			socket.setBroadcast(true);
 			byte[] packetContents = (name + "@" + networkAddress + ":" + ipPort + " " + timestamp + " " + load + "\n")
 					.getBytes();
-			ErrLog.log(Level.INFO, LogKey.broadcastSent, APILvl.low, "sendAdvertise",
-					networkAddress + " " + ipPort + " " + timestamp + " " + load + " " + name);
+			Logger.getGlobal().log(ErrorFactory.build(Level.INFO, LogKey.broadcastSent,
+					networkAddress + " " + ipPort + " " + timestamp + " " + load + " " + name));
 			packet = new DatagramPacket(packetContents, packetContents.length, InetAddress.getByName(broadcastAddress),
 					broadcastPort);
 			socket.send(packet);
 			// socket.disconnect();
 		} catch (UnknownHostException e) {
-			ErrLog.log(Level.SEVERE, LogKey.broadcastSent, APILvl.low, "sendAdvertise", e.getStackTrace().toString());
+			Logger.getGlobal().log(ErrorFactory.build(Level.SEVERE, LogKey.broadcastSent, e));
 			System.exit(1);
 		} catch (SocketException e) {
 			return 1;
@@ -212,7 +212,8 @@ public class Broadcast {
 			broadcastInfo.ipPort = Integer.parseInt(packetParts[2]);
 			broadcastInfo.timestamp = Long.parseLong(packetParts[3]);
 			broadcastInfo.load = Long.parseLong(packetParts[4]);
-			ErrLog.log(Level.INFO, LogKey.broadcastReceived, APILvl.low, "readAdvertise", broadcastInfo.toString());
+			Logger.getGlobal().log(ErrorFactory.build(Level.INFO, LogKey.broadcastReceived, broadcastInfo.toString()));
+
 		} catch (IOException e) {
 			return 1;
 		} catch (NumberFormatException f) {

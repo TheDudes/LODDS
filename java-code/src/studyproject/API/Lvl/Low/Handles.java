@@ -1,14 +1,11 @@
 package studyproject.API.Lvl.Low;
 
-import java.io.BufferedInputStream;
-import java.io.BufferedReader;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.net.Socket;
 import java.net.SocketTimeoutException;
 import java.util.ArrayList;
 import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.regex.Pattern;
 
 import studyproject.API.Core.Timestamp;
@@ -18,8 +15,7 @@ import studyproject.API.Core.File.FileHasher;
 import studyproject.API.Core.File.FileInfo;
 import studyproject.API.Core.File.InfoList.FileInfoListType;
 import studyproject.API.Core.File.InfoList.InfoType;
-import studyproject.API.Errors.ErrLog;
-import studyproject.logging.APILvl;
+import studyproject.API.Errors.ErrorFactory;
 import studyproject.logging.LogKey;
 
 public class Handles {
@@ -52,10 +48,10 @@ public class Handles {
 		int numberOfLines;
 		try {
 			currentLine = socketStream.readLine();
-			ErrLog.log(Level.INFO, LogKey.info, APILvl.mid, "handleInfo", currentLine);
+			Logger.getGlobal().log(ErrorFactory.build(Level.INFO, LogKey.info, currentLine));
 			if (!Pattern.matches(GET_INFO_HEAD_REGEX, currentLine)) {
-				ErrLog.log(Level.WARNING, LogKey.warning, APILvl.low, "handleInfo",
-						"Pattern does not match. Return value not equals zero");
+				Logger.getGlobal().log(ErrorFactory.build(Level.WARNING, LogKey.warning,
+						"Pattern does not match. Return value not equals zero"));
 				return 2;
 			}
 			params = currentLine.split(" ");
@@ -68,11 +64,11 @@ public class Handles {
 			numberOfLines = Integer.parseInt(params[2]);
 			for (int i = 0; i < Integer.valueOf(numberOfLines); i++) {
 				currentLine = socketStream.readLine();
-				ErrLog.log(Level.INFO, LogKey.info, APILvl.mid, "handleInfo", currentLine);
+				Logger.getGlobal().log(ErrorFactory.build(Level.INFO, LogKey.info, currentLine));
 
 				if (!Pattern.matches(GET_INFO_BODY_LINE_REGEX, currentLine)) {
-					ErrLog.log(Level.WARNING, LogKey.warning, APILvl.low, "handleInfo",
-							"Pattern does not match. Return value not equals zero");
+					Logger.getGlobal().log(ErrorFactory.build(Level.WARNING, LogKey.warning,
+							"Pattern does not match. Return value not equals zero"));
 					return 2;
 				}
 				params = currentLine.split(" ");
@@ -89,12 +85,10 @@ public class Handles {
 				fileInfos.add(fileInfo);
 			}
 		} catch (IOException e) {
-			ErrLog.log(Level.SEVERE, LogKey.error, APILvl.low, "handleInfo",
-					"IOException thrown: " + e.getStackTrace());
+			Logger.getGlobal().log(ErrorFactory.build(Level.SEVERE, LogKey.error, "IOException thrown: ", e));
 			return 1;
 		} catch (NumberFormatException e) {
-			ErrLog.log(Level.SEVERE, LogKey.error, APILvl.low, "handleInfo",
-					"NumberFormatException thrown: " + e.getStackTrace());
+			Logger.getGlobal().log(ErrorFactory.build(Level.SEVERE, LogKey.error, "NumberFormatException thrown: " + e));
 			return 2;
 		}
 		return 0;
@@ -148,17 +142,15 @@ public class Handles {
 			if (readLine.equals("OK")) {
 				return 0;
 			} else {
-				ErrLog.log(Level.INFO, LogKey.respondSendPermission, APILvl.low, "handleSendPermission",
-						"handleSendPermission failed. Return negative value");
+				Logger.getGlobal().log(ErrorFactory.build(Level.INFO, LogKey.respondSendPermission,
+						"handleSendPermission failed. Return negative value"));
 				return 5;
 			}
 		} catch (SocketTimeoutException s) {
-			ErrLog.log(Level.SEVERE, LogKey.error, APILvl.low, "handleSendPermission",
-					"SocketTimeoutException thrown: " + s.getStackTrace());
+			Logger.getGlobal().log(ErrorFactory.build(Level.SEVERE, LogKey.error, "SocketTimeoutException thrown: ", s));
 			return 3;
 		} catch (IOException e) {
-			ErrLog.log(Level.SEVERE, LogKey.error, APILvl.low, "handleSendPermission",
-					"IOException thrown: " + e.getStackTrace());
+			Logger.getGlobal().log(ErrorFactory.build(Level.SEVERE, LogKey.error, "IOException thrown: ", e));
 			return 1;
 		}
 	}

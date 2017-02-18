@@ -7,6 +7,7 @@ import java.security.NoSuchAlgorithmException;
 import java.util.List;
 import java.util.ResourceBundle;
 import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import javax.inject.Inject;
 
@@ -19,14 +20,13 @@ import javafx.scene.control.MenuItem;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
-import studyproject.API.Errors.ErrLog;
+import studyproject.API.Errors.ErrorFactory;
 import studyproject.App;
 import studyproject.API.Core.File.FileInfo;
 import studyproject.gui.Core.Utils;
 import studyproject.gui.mainWindow.MainWindowModel;
 import studyproject.gui.mainWindow.usersList.UsersListModel;
 import studyproject.gui.settingsWindow.SettingsWindowView;
-import studyproject.logging.APILvl;
 import studyproject.logging.LogKey;
 
 public class TopMenuPresenter implements Initializable {
@@ -46,14 +46,18 @@ public class TopMenuPresenter implements Initializable {
 	@Inject
 	UsersListModel usersListModel;
 
+	private Logger logger;
+
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {
+		logger = Logger.getGlobal();
 		fileMenu.setOnShowing(e -> fileMenuPressed());
 
 		settingsItem.setOnAction(e -> settingsItemPressed());
 		shareFolder.setOnAction(e -> shareFolderPressed());
 		sendFilesToUser.setOnAction(e -> sendFilesToUser());
 		sendFolderToUser.setOnAction(e -> sendFolderToUser());
+
 	}
 
 	private void fileMenuPressed() {
@@ -149,11 +153,9 @@ public class TopMenuPresenter implements Initializable {
 			fileInfo = new FileInfo(file.getPath(), file.getPath());
 			mainWindowModel.getLodds().sendFileWP(userName, timeout, fileInfo);
 		} catch (NoSuchAlgorithmException e) {
-			ErrLog.log(Level.SEVERE, LogKey.error, APILvl.gui, getClass().getName() + "sendSingleFileToUser()",
-					"NoSuchAlgorithmException thrown: " + e.getStackTrace());
+			logger.log(ErrorFactory.build(Level.SEVERE, LogKey.error, "NoSuchAlgorithmException thrown: ", e));
 		} catch (IOException e) {
-			ErrLog.log(Level.SEVERE, LogKey.error, APILvl.gui, getClass().getName() + "sendSingleFileToUser()",
-					"IOException thrown: " + e.getStackTrace());
+			logger.log(ErrorFactory.build(Level.SEVERE, LogKey.error, "IOException thrown: ", e));
 		}
 	}
 

@@ -1,20 +1,16 @@
 package studyproject.API.Lvl.Mid;
 
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
+import java.io.*;
 import java.net.Socket;
 import java.util.logging.Level;
+import java.util.logging.Logger;
 
-import studyproject.API.Errors.ErrLog;
+import studyproject.API.Errors.ErrorFactory;
 import studyproject.API.Loadbalancer.ProgressInfo;
 import studyproject.API.Lvl.Low.Handles;
 import studyproject.API.Lvl.Low.Requests;
 import studyproject.API.Lvl.Mid.Core.UserInfo;
 import studyproject.API.Lvl.Mid.ThreadMonitoring.MonitoredThread;
-import studyproject.logging.APILvl;
 import studyproject.logging.LogKey;
 
 /**
@@ -30,6 +26,7 @@ public class FileConnectionThread extends Thread implements MonitoredThread {
 	private UserInfo user;
 	private String checksum;
 	private String localPath;
+	private Logger logger = Logger.getGlobal();
 	private long size;
 	private long startIndex = 0;
 	private long endIndex = 0;
@@ -139,8 +136,8 @@ public class FileConnectionThread extends Thread implements MonitoredThread {
 	 * starts pulling the file with the parameters set in the constructor
 	 */
 	public void run() {
-		ErrLog.log(Level.INFO, LogKey.filetransferInit, APILvl.mid, getClass().getName() + ".run() : " + this.getId(),
-				"Filetransfer initiated to user: '" + user.toString() + "' for file '" + checksum + "'");
+		logger.log(ErrorFactory.build(Level.INFO, LogKey.filetransferInit,
+				"Filetransfer initiated to user: '" + user.toString() + "' for file '" + checksum + "'"));
 		int returnValue;
 		try (Socket socket = new Socket(user.getIpAddress(), user.getPort());
 				BufferedOutputStream outStream = new BufferedOutputStream(socket.getOutputStream());
@@ -157,11 +154,10 @@ public class FileConnectionThread extends Thread implements MonitoredThread {
 				returnValue = Requests.getFile(outStream, checksum, startIndex, endIndex);
 			}
 			if (returnValue != 0) {
-				ErrLog.log(Level.SEVERE, LogKey.error, APILvl.mid, returnValue,
-						getClass().getName() + ".run() : " + this.getId());
+				logger.log(ErrorFactory.build(Level.SEVERE, LogKey.error, returnValue));
 			}
-			ErrLog.log(Level.INFO, LogKey.getFile, APILvl.mid, getClass().getName() + ".run() : " + this.getId(),
-					"Sent getFile to user '" + user.toString() + "' for file '" + checksum + "'");
+			logger.log(ErrorFactory.build(Level.INFO, LogKey.getFile,
+					"Sent getFile to user '" + user.toString() + "' for file '" + checksum + "'"));
 			// whole file?
 			if (endIndex == 0) {
 				returnValue = Handles.handleFile(inStream, fileOutStream, size);
@@ -169,8 +165,7 @@ public class FileConnectionThread extends Thread implements MonitoredThread {
 				returnValue = Handles.handleFile(inStream, fileOutStream, endIndex - startIndex);
 			}
 			if (returnValue != 0) {
-				ErrLog.log(Level.SEVERE, LogKey.error, APILvl.mid, returnValue,
-						getClass().getName() + ".run() : " + this.getId());
+				logger.log(ErrorFactory.build(Level.SEVERE, LogKey.error, returnValue));
 			} else {
 				if (supportLoadbalancing) {
 					progressInfo.setFinishedSuccessfully(true);
@@ -178,13 +173,12 @@ public class FileConnectionThread extends Thread implements MonitoredThread {
 			}
 			fileOutStream.close();
 		} catch (IOException e) {
-			ErrLog.log(Level.SEVERE, LogKey.error, APILvl.mid, getClass().getName() + ".run() : " + this.getId(),
-					"IOException thrown: " + e.getMessage());
+			logger.log(ErrorFactory.build(Level.SEVERE, LogKey.error,
+					"IOException thrown: " , e));
 		}
 
-		ErrLog.log(Level.INFO, LogKey.filetransferComplete, APILvl.mid,
-				getClass().getName() + ".run() : " + this.getId(),
-				"Download of '" + checksum + "' from user '" + user.toString() + "'finished");
+		logger.log(ErrorFactory.build(Level.INFO, LogKey.filetransferComplete,
+				"Download of '" + checksum + "' from user '" + user.toString() + "'finished"));
 	}
 
 	@Override
@@ -204,8 +198,7 @@ public class FileConnectionThread extends Thread implements MonitoredThread {
 				return fileOutStream.getChannel().position();
 			}
 		} catch (IOException e) {
-			ErrLog.log(Level.SEVERE, LogKey.error, APILvl.mid, getClass().getName() + ".getProgress : " + this.getId(),
-					"IOException thrown: " + e.getMessage());
+			logger.log(ErrorFactory.build(Level.SEVERE, LogKey.error, "IOException thrown: ", e));
 		}
 		return 0;
 	}

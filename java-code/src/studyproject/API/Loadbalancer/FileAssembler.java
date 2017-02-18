@@ -6,10 +6,10 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.Vector;
 import java.util.logging.Level;
+import java.util.logging.Logger;
 
+import studyproject.API.Errors.ErrorFactory;
 import studyproject.App;
-import studyproject.API.Errors.ErrLog;
-import studyproject.logging.APILvl;
 import studyproject.logging.LogKey;
 
 /**
@@ -33,6 +33,7 @@ public class FileAssembler extends Thread {
 	private int readBytes;
 	private int chunksTotal;
 	private int lastWrittenChunk;
+	private Logger logger = Logger.getGlobal();
 
 	/**
 	 * 
@@ -81,9 +82,9 @@ public class FileAssembler extends Thread {
 						}
 					}
 					File doneTmpFile = new File(tmpFilePath + (lastWrittenChunk + 1));
-					if(!doneTmpFile.delete()){
-						ErrLog.log(Level.INFO, LogKey.warning, APILvl.mid, "FileAssembler.run()",
-								"could not delete tmp file with name " + tmpFilePath + (lastWrittenChunk + 1));
+					if (!doneTmpFile.delete()) {
+						logger.log(ErrorFactory.build(Level.INFO, LogKey.warning,
+								"could not delete tmp file with name " + tmpFilePath + (lastWrittenChunk + 1)));
 					}
 					lastWrittenChunk++;
 				} else {
@@ -91,11 +92,11 @@ public class FileAssembler extends Thread {
 				}
 			}
 		} catch (IOException e) {
-			ErrLog.log(Level.SEVERE, LogKey.error, APILvl.mid, "FileAssembler.run()",
-					"Encountered IOException while assembling a file: \n" + e.getMessage());
+			logger.log(
+					ErrorFactory.build(Level.SEVERE, LogKey.error, "Encountered IOException while assembling a file" + e));
 		} catch (InterruptedException e) {
-			ErrLog.log(Level.SEVERE, LogKey.error, APILvl.mid, "FileAssembler.run()",
-					"Encountered InterruptedException while assembling a file: \n" + e.getMessage());
+			logger.log(ErrorFactory.build(Level.SEVERE, LogKey.error,
+					"Encountered InterruptedException while assembling a file", e));
 		}
 	}
 

@@ -13,11 +13,10 @@ import javax.inject.Inject;
 import javafx.application.Application;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
-import studyproject.API.Errors.ErrLog;
+import studyproject.API.Errors.ErrorFactory;
 import studyproject.gui.mainWindow.MainWindowPresenter;
 import studyproject.gui.mainWindow.MainWindowView;
 import studyproject.gui.selectedInterface.SelectedInterfaceModel;
-import studyproject.logging.APILvl;
 import studyproject.logging.FileLogHandler;
 import studyproject.logging.LogConsoleHandler;
 import studyproject.logging.LogKey;
@@ -46,10 +45,11 @@ public class App extends Application {
 	 * user Load default properties first then load properties changed by the
 	 * user
 	 * 
-	 * @return ErrLog value
+	 * @return ErrorFactory value
 	 */
 	public int loadProperties() {
 		File propertiesFile = new File(pathToProperties);
+		Logger logger = Logger.getGlobal();
 		properties = new Properties();
 		try {
 			properties.load(getClass().getResourceAsStream("resources/lodds.properties"));
@@ -59,16 +59,16 @@ public class App extends Application {
 				propertiesFile.createNewFile();
 				properties.put("userName", System.getProperty("user.name"));
 				properties.store(new FileOutputStream(propertiesFile), null);
-				ErrLog.log(Level.INFO, LogKey.info, APILvl.gui, "loadProperties()",
-						"new propertiesfile created at " + propertiesFile.getAbsolutePath());
+				logger.log(ErrorFactory.build(Level.INFO, LogKey.info,
+						"new propertiesfile created at " + propertiesFile.getAbsolutePath()));
 			}
 			properties.load(new FileInputStream(propertiesFile));
 			// properties.store(new FileOutputStream(propertiesFile), null);
-			ErrLog.log(Level.INFO, LogKey.info, APILvl.gui, "loadProperties()",
-					"using properties from " + propertiesFile.getAbsolutePath());
+			logger.log(ErrorFactory.build(Level.INFO, LogKey.info,
+					"using properties from " + propertiesFile.getAbsolutePath()));
 		} catch (IOException e) {
-			e.printStackTrace();
-			return 1; // TODO check ErrLog value
+			logger.log(ErrorFactory.build(Level.SEVERE, LogKey.error, e));
+			return 1;
 		}
 
 		return 0;
@@ -89,10 +89,9 @@ public class App extends Application {
 
 	public static void main(String... args) {
 		App application = new App();
-		int errorCode;
-		if ((errorCode = application.loadProperties()) > 0) {
-			ErrLog.log(Level.SEVERE, LogKey.error, APILvl.gui, errorCode, "loadProperties");
-		}
+
+		application.loadProperties();
+
 		application.configureLogging();
 		launch(args);
 

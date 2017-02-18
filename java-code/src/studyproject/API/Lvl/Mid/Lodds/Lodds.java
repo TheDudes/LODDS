@@ -10,18 +10,18 @@ import java.nio.file.Paths;
 import java.security.NoSuchAlgorithmException;
 import java.util.Vector;
 import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import javafx.collections.ObservableList;
+import studyproject.API.Errors.ErrorFactory;
 import studyproject.App;
 import studyproject.API.Core.File.FileInfo;
 import studyproject.API.Core.File.Watcher.FileWatcherController;
-import studyproject.API.Errors.ErrLog;
 import studyproject.API.Loadbalancer.Loadbalancer;
 import studyproject.API.Lvl.Low.Broadcast;
 import studyproject.API.Lvl.Mid.*;
 import studyproject.API.Lvl.Mid.Core.UserInfo;
 import studyproject.API.Lvl.Mid.ThreadMonitoring.ThreadExecutor;
-import studyproject.logging.APILvl;
 import studyproject.logging.LogKey;
 
 /**
@@ -58,6 +58,7 @@ public class Lodds {
 	private ThreadExecutor threadExecutor;
 	private LoddsModel loddsModel;
 	private RequestHandlerThread requestHandlerThread;
+	private Logger logger = Logger.getGlobal();
 
 	/**
 	 * Initiates all lists and maps, sets the IP and advertise ports to the
@@ -231,8 +232,7 @@ public class Lodds {
 	public void getFileWithLoadBal(String checksum, String localPath) {
 		Vector<UserInfo> owningUsers = getOwningUsers(checksum);
 		if (owningUsers != null && owningUsers.size() == 0 || owningUsers == null) {
-			ErrLog.log(Level.INFO, LogKey.error, APILvl.mid, getClass().getName() + "getFileWithLoadBal()",
-					"No owning users found for " + checksum);
+			logger.log(ErrorFactory.build(Level.INFO, LogKey.error, "No owning users found for " + checksum));
 		} else {
 			if (owningUsers.size() == 1) {
 				getFile(owningUsers.get(0), checksum, localPath);
@@ -321,11 +321,9 @@ public class Lodds {
 				watchService.watchDirectoryRecursively(absolutePath, absolutePath);
 				setLastChange(System.currentTimeMillis() / 1000);
 			} catch (NoSuchAlgorithmException e) {
-				ErrLog.log(Level.SEVERE, LogKey.error, APILvl.mid, getClass().getName() + "shareFolder()",
-						"NoSuchAlgorithmException thrown: " + e.getStackTrace());
+				logger.log(ErrorFactory.build(Level.SEVERE, LogKey.error, "NoSuchAlgorithmException thrown: ", e));
 			} catch (IOException e) {
-				ErrLog.log(Level.SEVERE, LogKey.error, APILvl.mid, getClass().getName() + "shareFolder()",
-						"IOException thrown: " + e.getStackTrace());
+				logger.log(ErrorFactory.build(Level.SEVERE, LogKey.error, "IOException thrown: " + e));
 				return 4;
 			}
 		}
@@ -555,12 +553,12 @@ public class Lodds {
 		StringBuilder broadcastAddr = new StringBuilder();
 		int errorCode = 0;
 		if ((errorCode = Broadcast.getBroadcastAddress(interfaceName, broadcastAddr)) != 0) {
-			ErrLog.log(Level.SEVERE, LogKey.error, APILvl.gui, errorCode, "setNetworkAddresses");
+			logger.log(ErrorFactory.build(Level.SEVERE, LogKey.error, errorCode));
 		}
 		broadcastAddress = broadcastAddr.toString();
 		StringBuilder networkAddr = new StringBuilder();
 		if ((errorCode = Broadcast.getLocalIp(interfaceName, networkAddr)) != 0) {
-			ErrLog.log(Level.SEVERE, LogKey.broadcastReceived, APILvl.mid, errorCode, "setNetworkAddresses");
+			logger.log(ErrorFactory.build(Level.SEVERE, LogKey.broadcastReceived, errorCode));
 		}
 		networkAddress = networkAddr.toString();
 	}
@@ -571,11 +569,9 @@ public class Lodds {
 					new ServerSocket(ipPort, 100, InetAddress.getByName(networkAddress)));
 			threadExecutor.execute(requestHandlerThread);
 		} catch (UnknownHostException e) {
-			ErrLog.log(Level.SEVERE, LogKey.error, APILvl.mid, getClass().getName() + "startRequestHandlerThread()",
-					"UnknownHostException thrown: " + e.getStackTrace());
+			logger.log(ErrorFactory.build(Level.SEVERE, LogKey.error, "UnknownHostException thrown: ", e));
 		} catch (IOException e) {
-			ErrLog.log(Level.SEVERE, LogKey.error, APILvl.mid, getClass().getName() + "startRequestHandlerThread()",
-					"IOException thrown: " + e.getStackTrace());
+			logger.log(ErrorFactory.build(Level.SEVERE, LogKey.error, "IOException thrown: ", e));
 		}
 	}
 

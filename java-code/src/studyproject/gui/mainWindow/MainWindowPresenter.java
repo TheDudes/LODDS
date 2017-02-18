@@ -4,6 +4,7 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.ResourceBundle;
 import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import javax.inject.Inject;
 
@@ -21,7 +22,7 @@ import javafx.stage.Modality;
 import javafx.stage.Stage;
 import studyproject.App;
 import studyproject.API.Core.Request.GetPermissionRequest;
-import studyproject.API.Errors.ErrLog;
+import studyproject.API.Errors.ErrorFactory;
 import studyproject.API.Lvl.Low.Broadcast;
 import studyproject.gui.mainWindow.filesTree.FilesTreeView;
 import studyproject.gui.mainWindow.logArea.LogAreaView;
@@ -31,7 +32,6 @@ import studyproject.gui.mainWindow.usersList.UsersListView;
 import studyproject.gui.selectedInterface.SelectedInterfaceView;
 import studyproject.gui.sendPermissionDialog.SendPermissionModel;
 import studyproject.gui.sendPermissionDialog.SendPermissionView;
-import studyproject.logging.APILvl;
 import studyproject.logging.LogKey;
 
 public class MainWindowPresenter implements Initializable {
@@ -58,8 +58,11 @@ public class MainWindowPresenter implements Initializable {
 	@Inject
 	MainWindowModel mainWindowModel;
 
+	private Logger logger;
+
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {
+		logger = Logger.getGlobal();
 		FilesTreeView filesTreeView = new FilesTreeView();
 		filesTreeAnchor.getChildren().addAll(filesTreeView.getView());
 
@@ -133,7 +136,7 @@ public class MainWindowPresenter implements Initializable {
 		ArrayList<String> interfaces = new ArrayList<String>();
 		int err;
 		if ((err = Broadcast.getNetworkAddresses(interfaces)) != 0) {
-			ErrLog.log(Level.SEVERE, LogKey.error, APILvl.gui, err, "loadInterface");
+			logger.log(ErrorFactory.build(Level.SEVERE, LogKey.error, err));
 		}
 		String interf = (String) App.properties.get("defaultInterface");
 		if ((interf == null) || interf.isEmpty() || (!interfaces.contains(interf))) {

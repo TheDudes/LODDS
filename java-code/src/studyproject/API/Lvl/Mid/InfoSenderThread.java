@@ -4,10 +4,10 @@ import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.net.Socket;
 import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import studyproject.API.Core.File.Watcher.FileWatcherController;
-import studyproject.API.Errors.ErrLog;
-import studyproject.logging.APILvl;
+import studyproject.API.Errors.ErrorFactory;
 import studyproject.logging.LogKey;
 
 /**
@@ -52,8 +52,7 @@ public class InfoSenderThread extends Thread {
 			bufferedOutputStream.flush();
 			socket.close();
 		} catch (IOException e) {
-			ErrLog.log(Level.SEVERE, LogKey.error, APILvl.mid, getClass().getName() + "run()",
-					"IOException thrown: " + e.getStackTrace());
+			Logger.getGlobal().log(ErrorFactory.build(Level.SEVERE, LogKey.error, "IOException thrown: ", e));
 		}
 	}
 }

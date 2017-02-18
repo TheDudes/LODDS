@@ -1,14 +1,11 @@
 package studyproject.gui.settingsWindow;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
+import java.io.*;
 import java.net.URL;
 import java.util.Map.Entry;
-import java.util.logging.Level;
 import java.util.ResourceBundle;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
@@ -19,9 +16,8 @@ import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Priority;
+import studyproject.API.Errors.ErrorFactory;
 import studyproject.App;
-import studyproject.API.Errors.ErrLog;
-import studyproject.logging.APILvl;
 import studyproject.logging.LogKey;
 
 /**
@@ -41,8 +37,11 @@ public class SettingsWindowPresenter implements Initializable {
 	@FXML
 	GridPane settingsGrid;
 
+	private Logger logger;
+
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {
+		logger = Logger.getGlobal();
 		okButton.setOnAction(ok -> okSettings());
 		applyButton.setOnAction(apply -> applySettings());
 		cancelButton.setOnAction(cancel -> cancelSettings());
@@ -102,15 +101,12 @@ public class SettingsWindowPresenter implements Initializable {
 		}
 		try {
 			App.properties.store(new FileOutputStream(App.pathToProperties), null);
-			ErrLog.log(Level.INFO, LogKey.info, APILvl.gui, "applySettings",
-					"Saved properties to " + App.pathToProperties);
+			logger.log(ErrorFactory.build(Level.INFO, LogKey.info, "Saved properties to " + App.pathToProperties));
 			App.properties.load(new FileInputStream(new File(App.pathToProperties)));
 		} catch (FileNotFoundException e) {
-			ErrLog.log(Level.SEVERE, LogKey.error, APILvl.gui, getClass().getName() + "applySettings()",
-					"FileNotFoundException thrown: " + e.getStackTrace());
+			logger.log(ErrorFactory.build(Level.SEVERE, LogKey.error, "FileNotFoundException thrown: ", e));
 		} catch (IOException e) {
-			ErrLog.log(Level.SEVERE, LogKey.error, APILvl.gui, getClass().getName() + "applySettings()",
-					"IOException thrown: " + e.getStackTrace());
+			logger.log(ErrorFactory.build(Level.SEVERE, LogKey.error, "IOException thrown: ", e));
 		}
 	}
 

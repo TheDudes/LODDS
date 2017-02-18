@@ -4,11 +4,11 @@ import java.util.Collections;
 import java.util.Vector;
 import java.util.concurrent.Executor;
 import java.util.logging.Level;
+import java.util.logging.Logger;
 
-import studyproject.API.Errors.ErrLog;
+import studyproject.API.Errors.ErrorFactory;
 import studyproject.API.Lvl.Mid.FileConnectionThread;
 import studyproject.API.Lvl.Mid.Core.UserInfo;
-import studyproject.logging.APILvl;
 import studyproject.logging.LogKey;
 
 /**
@@ -90,8 +90,8 @@ public class LoadbalancerMainThread extends Thread {
 					Thread.sleep(SLEEP_TIME);
 					checkFinishedThreads();
 				} catch (InterruptedException e) {
-					ErrLog.log(Level.SEVERE, LogKey.error, APILvl.low, getClass().getName() + "run()",
-							"InterruptedException thrown: " + e.getStackTrace());
+					Logger.getGlobal()
+							.log(ErrorFactory.build(Level.SEVERE, LogKey.error, e));
 				}
 			}
 		}

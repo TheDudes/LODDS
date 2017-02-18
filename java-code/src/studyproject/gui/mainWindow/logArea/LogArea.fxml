@@ -1,28 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import java.lang.*?>
-<?import javafx.geometry.*?>
-<?import javafx.scene.canvas.*?>
-<?import javafx.scene.control.*?>
-<?import javafx.scene.layout.*?>
-<?import javafx.geometry.Insets?>
-<?import javafx.scene.canvas.Canvas?>
-<?import javafx.scene.control.CheckBox?>
-<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.CheckMenuItem?>
+<?import javafx.scene.control.ContextMenu?>
+<?import javafx.scene.control.SeparatorMenuItem?>
 <?import javafx.scene.control.TableColumn?>
 <?import javafx.scene.control.TableView?>
-<?import javafx.scene.layout.BorderPane?>
-<?import javafx.scene.layout.HBox?>
-<?import javafx.scene.layout.VBox?>
 
-
-<TableView fx:id="logTableView" tableMenuButtonVisible="true" xmlns="http://javafx.com/javafx/8.0.76-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="studyproject.gui.mainWindow.logArea.LogAreaPresenter">
+<TableView fx:id="logTableView" tableMenuButtonVisible="true" xmlns="http://javafx.com/javafx/8.0.112" xmlns:fx="http://javafx.com/fxml/1" fx:controller="studyproject.gui.mainWindow.logArea.LogAreaPresenter">
   <columns>
       <TableColumn fx:id="timestampCol" maxWidth="-1.0" minWidth="100.0" prefWidth="100.0" text="Timestamp" />
       <TableColumn fx:id="logLvlCol" maxWidth="-1.0" minWidth="100.0" prefWidth="100.0" text="LogLvl" />
     <TableColumn fx:id="logKeyCol" minWidth="100.0" prefWidth="150.0" text="LogKey" />
-    <TableColumn fx:id="apiLvlCol" minWidth="75.0" prefWidth="75.0" text="APILvl" />
-      <TableColumn fx:id="thrownByCol" minWidth="100.0" prefWidth="158.0" text="Thrown By" />
+      <TableColumn fx:id="sourceClassCol" minWidth="100.0" prefWidth="158.0" text="SourceClass" />
+    <TableColumn fx:id="sourceMethodCol" minWidth="75.0" prefWidth="75.0" text="SourceMethod" />
       <TableColumn fx:id="msgCol" minWidth="100.0" prefWidth="442.0" text="Message" />
   </columns>
    <contextMenu>

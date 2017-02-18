@@ -4,6 +4,7 @@ import java.io.File;
 import java.net.URL;
 import java.util.ResourceBundle;
 import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import javax.inject.Inject;
 
@@ -13,14 +14,13 @@ import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.*;
-import studyproject.API.Errors.ErrLog;
+import studyproject.API.Errors.ErrorFactory;
 import studyproject.API.Lvl.Mid.Core.FileCoreInfo;
 import studyproject.API.Lvl.Mid.Core.UserInfo;
 import studyproject.gui.Core.Utils;
 import studyproject.gui.mainWindow.MainWindowModel;
 import studyproject.gui.mainWindow.tasksList.TasksListModel;
 import studyproject.gui.mainWindow.usersList.UsersListModel;
-import studyproject.logging.APILvl;
 import studyproject.logging.LogKey;
 
 public class FilesTreePresenter implements Initializable {
@@ -104,7 +104,7 @@ public class FilesTreePresenter implements Initializable {
 		try {
 			chosenFolder = new File(Utils.getChoosenDirPath("Choose folder to save files in"));
 		} catch (NullPointerException e) {
-			ErrLog.log(Level.INFO, LogKey.info, APILvl.mid, "downloadPressed", "Non folder choosen. Download aborted.");
+			Logger.getGlobal().log(ErrorFactory.build(Level.INFO, LogKey.info, "No folder chosen. Download aborted."));
 			return;
 		}
 		absolutePath = chosenFolder.getAbsolutePath().replace("\\", "/");

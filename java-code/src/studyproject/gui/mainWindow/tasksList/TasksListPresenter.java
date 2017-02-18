@@ -6,6 +6,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import javax.inject.Inject;
 
@@ -18,8 +19,7 @@ import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.AnchorPane;
-import studyproject.API.Errors.ErrLog;
-import studyproject.logging.APILvl;
+import studyproject.API.Errors.ErrorFactory;
 import studyproject.logging.LogKey;
 
 public class TasksListPresenter implements Initializable {
@@ -32,8 +32,6 @@ public class TasksListPresenter implements Initializable {
 
 	@Inject
 	TasksListModel taskModel;
-
-
 
 	private TaskProgressView<Task<Void>> tasksProgressView;
 	private ExecutorService executorService;
@@ -59,7 +57,7 @@ public class TasksListPresenter implements Initializable {
 		executorService.submit(task);
 		tasksProgressView.getTasks().add(task);
 
-		ErrLog.log(Level.SEVERE, LogKey.filetransferInit, APILvl.gui, 0, "setButtonAction");
+		Logger.getGlobal().log(ErrorFactory.build(Level.SEVERE, LogKey.filetransferInit, 0));
 	}
 
 	private void setAllAnchorPoints(Node child, double value) {

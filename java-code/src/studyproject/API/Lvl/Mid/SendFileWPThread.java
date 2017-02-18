@@ -7,14 +7,14 @@ import java.io.IOException;
 import java.net.Socket;
 import java.nio.file.Paths;
 import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import studyproject.API.Core.File.FileInfo;
-import studyproject.API.Errors.ErrLog;
+import studyproject.API.Errors.ErrorFactory;
 import studyproject.API.Lvl.Low.Handles;
 import studyproject.API.Lvl.Low.Requests;
 import studyproject.API.Lvl.Low.Responses;
 import studyproject.API.Lvl.Mid.Core.UserInfo;
-import studyproject.logging.APILvl;
 import studyproject.logging.LogKey;
 
 /**
@@ -33,6 +33,7 @@ public class SendFileWPThread extends Thread {
 	private UserInfo user;
 	private FileInfo fileInfo;
 	private long timeout;
+	private Logger logger = Logger.getGlobal();
 
 	/**
 	 * Constructor for an new SendFileWithPermissionThread
@@ -59,24 +60,20 @@ public class SendFileWPThread extends Thread {
 			int errorCode;
 			if ((errorCode = Requests.getSendPermission(outStream, fileInfo.size, timeout,
 					new File(fileInfo.fileName).getName())) != 0) {
-				ErrLog.log(Level.INFO, LogKey.getSendPermission, APILvl.mid, errorCode,
-						getClass().getName() + ".run() : " + this.getId());
+				logger.log(ErrorFactory.build(Level.INFO, LogKey.getSendPermission, errorCode));
 			}
 			errorCode = Handles.handleSendPermission(socket, timeout);
 			if (errorCode == 0) {
 				errorCode = Responses.respondFile(outStream, fileInStream, 0, fileInfo.size);
 				if (errorCode != 0) {
-					ErrLog.log(Level.SEVERE, LogKey.filetransferInit, APILvl.mid, errorCode,
-							getClass().getName() + ".run() : " + this.getId());
+					logger.log(ErrorFactory.build(Level.SEVERE, LogKey.filetransferInit, errorCode));
 				}
 			} else {
 
-				ErrLog.log(Level.INFO, LogKey.handleSendPermission, APILvl.mid, errorCode,
-						getClass().getName() + ".run() : " + this.getId());
+				logger.log(ErrorFactory.build(Level.INFO, LogKey.handleSendPermission, errorCode));
 			}
 		} catch (IOException e) {
-			ErrLog.log(Level.WARNING, LogKey.getSendPermission, APILvl.mid,
-					getClass().getName() + ".run() : " + this.getId(), e.getStackTrace().toString());
+			logger.log(ErrorFactory.build(Level.WARNING, LogKey.getSendPermission, e));
 		}
 	}
 }

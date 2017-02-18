@@ -6,12 +6,12 @@ import java.io.IOException;
 import java.net.Socket;
 import java.nio.file.Paths;
 import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import studyproject.API.Core.File.FileInfo;
-import studyproject.API.Errors.ErrLog;
+import studyproject.API.Errors.ErrorFactory;
 import studyproject.API.Lvl.Low.Responses;
 import studyproject.API.Lvl.Mid.Core.UserInfo;
-import studyproject.logging.APILvl;
 import studyproject.logging.LogKey;
 
 /**
@@ -28,6 +28,7 @@ public class FileSenderThread extends Thread {
 	private long endIndex = 0;
 	private FileInfo fileInfo;
 	private Socket socket;
+	private Logger logger = Logger.getGlobal();
 
 	/**
 	 * This constructor is used to send a whole file to the specified user
@@ -77,11 +78,11 @@ public class FileSenderThread extends Thread {
 				returnValue = Responses.respondFile(outStream, fileInStream, startIndex, endIndex);
 			}
 			if (returnValue != 0) {
-				ErrLog.log(Level.SEVERE, LogKey.filetransferInit, APILvl.mid, "FileSenderThread.run", "Responses.respondFile returned error key " + returnValue);
+				logger.log(ErrorFactory.build(Level.SEVERE, LogKey.filetransferInit, returnValue));
 			}
 
 		} catch (IOException e) {
-			ErrLog.log(Level.SEVERE, LogKey.filetransferInit, APILvl.mid, "FileSenderThread.run", e.getMessage());
+			logger.log(ErrorFactory.build(Level.SEVERE, LogKey.filetransferInit, e));
 		}
 	}
 }

@@ -9,18 +9,18 @@ import java.util.ArrayList;
 import java.util.Vector;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import studyproject.API.Core.Timestamp;
 import studyproject.API.Core.File.FileAction;
 import studyproject.API.Core.File.FileInfo;
 import studyproject.API.Core.File.InfoList.FileInfoListType;
 import studyproject.API.Core.File.InfoList.InfoType;
-import studyproject.API.Errors.ErrLog;
+import studyproject.API.Errors.ErrorFactory;
 import studyproject.API.Lvl.Low.Handles;
 import studyproject.API.Lvl.Low.Requests;
 import studyproject.API.Lvl.Mid.Core.FileCoreInfo;
 import studyproject.API.Lvl.Mid.Core.UserInfo;
-import studyproject.logging.APILvl;
 import studyproject.logging.LogKey;
 
 /**
@@ -35,6 +35,7 @@ import studyproject.logging.LogKey;
 public class UpdateFileInfoThread extends Thread {
 
 	private UserInfo userInfo;
+	private Logger logger = Logger.getGlobal();
 
 	public UpdateFileInfoThread(UserInfo userConnectionInfo) {
 		this.userInfo = userConnectionInfo;
@@ -50,12 +51,12 @@ public class UpdateFileInfoThread extends Thread {
 			FileInfoListType infoType = new FileInfoListType();
 			int err = Requests.getInfo(bufferedOutputStream, userInfo.getLastUpdate());
 			if (err != 0)
-				ErrLog.log(Level.SEVERE, LogKey.info, APILvl.mid, err, "Requests.getInfo");
-			ErrLog.log(Level.INFO, LogKey.info, APILvl.mid, "Requests.getInfo",
-					"Get Info " + userInfo.getUserName() + " timestamp: " + userInfo.getLastUpdate());
+				logger.log(ErrorFactory.build(Level.SEVERE, LogKey.error, err));
+			logger.log(ErrorFactory.build(Level.INFO, LogKey.info,
+					"Get Info " + userInfo.getUserName() + " timestamp: " + userInfo.getLastUpdate()));
 			err = Handles.handleInfo(bufferedreader, fileInfoList, newFileListTimestamp, infoType);
 			if (err != 0) {
-				ErrLog.log(Level.SEVERE, LogKey.info, APILvl.mid, err, "Handles.handleInfo");
+				logger.log(ErrorFactory.build(Level.SEVERE, LogKey.info, err));
 				// TODO what shall happen with the thread if the handleInfo
 				// failed
 			}
@@ -66,8 +67,7 @@ public class UpdateFileInfoThread extends Thread {
 			}
 			updateEntries(fileInfoList);
 		} catch (IOException e) {
-			ErrLog.log(Level.SEVERE, LogKey.error, APILvl.mid, getClass().getName() + "run()",
-					"IOException thrown: " + e.getStackTrace());
+			logger.log(ErrorFactory.build(Level.SEVERE, LogKey.error, "IOException thrown: ", e));
 		}
 	}
 

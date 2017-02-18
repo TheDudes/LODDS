@@ -17,7 +17,8 @@ public class LogRecFormatter extends Formatter {
 
 	@Override
 	public String format(LogRecord record) {
-		return (Utils.formatUnixTimestamp(record.getMillis()) + ": " + record.getMessage());
+		return (Utils.formatUnixTimestamp(record.getMillis()) + ": " + record.getSourceClassName() + ": "
+				+ record.getSourceMethodName() + ": " + record.getMessage());
 	}
 
 }

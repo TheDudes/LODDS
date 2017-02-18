@@ -5,11 +5,10 @@ import java.util.logging.LogRecord;
 
 import studyproject.logging.LogKey;
 import studyproject.API.Core.Utils;
-import studyproject.logging.APILvl;
 
 /**
  * java.util.logging {@link LogRecord} class which holds enhanced information
- * about a log message like, {@link APILvl} and {@link LogKey}
+ * about a log message like{@link LogKey}
  * 
  * @author ninti
  *
@@ -18,7 +17,6 @@ public class Error extends LogRecord {
 
 	private static final long serialVersionUID = 4997203555037544881L;
 	private LogKey logKey;
-	private APILvl apiLvl;
 	private String msg;
 	private String thrownBy;
 	private String timestamp;
@@ -43,20 +41,16 @@ public class Error extends LogRecord {
 	 *            the LogLevel {@link Level}
 	 * @param logKey
 	 *            the {@link LogKey}
-	 * @param apiLvl
-	 *            the {@link APILvl} where the Error is produced
 	 * @param msg
 	 *            the specific error message which all non gui logger shall log
 	 * @param errorMsg
 	 *            the single error message returned by
-	 *            ErrLog.getErrorMsg(errorCode)
+	 *            ErrorFactory.getErrorMsg(errorCode)
 	 */
-	public Error(Level level, LogKey logKey, APILvl apiLvl, String thrownBy, String msg, String errorMsg) {
+	public Error(Level level, LogKey logKey, String msg, String errorMsg) {
 		super(level, msg);
 		this.logKey = logKey;
-		this.apiLvl = apiLvl;
 		this.msg = errorMsg;
-		this.thrownBy = thrownBy;
 		this.timestamp = Utils.formatUnixTimestamp(this.getMillis());
 		this.logLevelString = getLvlMessage();
 	}
@@ -79,14 +73,6 @@ public class Error extends LogRecord {
 
 	public void setLogKey(LogKey logKey) {
 		this.logKey = logKey;
-	}
-
-	public APILvl getApiLvl() {
-		return apiLvl;
-	}
-
-	public void setApiLvl(APILvl apiLvl) {
-		this.apiLvl = apiLvl;
 	}
 
 	public String getMsg() {

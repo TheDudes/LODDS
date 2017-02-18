@@ -7,6 +7,7 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.ResourceBundle;
 import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import javax.inject.Inject;
 
@@ -17,11 +18,10 @@ import javafx.fxml.Initializable;
 import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.ListView;
-import studyproject.API.Errors.ErrLog;
 import studyproject.App;
+import studyproject.API.Errors.ErrorFactory;
 import studyproject.API.Lvl.Low.Broadcast;
 import studyproject.gui.mainWindow.MainWindowModel;
-import studyproject.logging.APILvl;
 import studyproject.logging.LogKey;
 
 public class SelectedInterfacePresenter implements Initializable {
@@ -42,16 +42,18 @@ public class SelectedInterfacePresenter implements Initializable {
 
 	private ArrayList<String> interfaces;
 	private ObservableList<String> interfacesObs;
+	private Logger logger;
 
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {
+		logger = Logger.getGlobal();
 		interfaces = new ArrayList<>();
 		interfacesObs = FXCollections.observableArrayList();
 		okBut.setOnAction(e -> okButClicked());
 		cancelBut.setOnAction(e -> interfaceList.getScene().getWindow().hide());
 		int errorCode;
 		if ((errorCode = Broadcast.getNetworkAddresses(interfaces)) != 0) {
-			ErrLog.log(Level.SEVERE, LogKey.error, APILvl.gui, errorCode, getClass().getName() + "initialize");
+			logger.log(ErrorFactory.build(Level.SEVERE, LogKey.error, errorCode));
 		}
 		interfacesObs.addAll(interfaces);
 		selectedInterfaceModel.setAvailableInterfaces(interfacesObs);
@@ -68,8 +70,7 @@ public class SelectedInterfacePresenter implements Initializable {
 			try {
 				App.properties.store(new FileOutputStream(new File(App.pathToProperties)), null);
 			} catch (IOException e) {
-				ErrLog.log(Level.SEVERE, LogKey.error, APILvl.gui, getClass().getName() + "okButClicked()",
-						"IOException thrown: " + e.getStackTrace());
+				logger.log(ErrorFactory.build(Level.SEVERE, LogKey.error, "IOException thrown: ", e));
 			}
 		}
 		mainWindowModel.getLodds().startUp(selectedInterface, (String) App.properties.get("userName"));

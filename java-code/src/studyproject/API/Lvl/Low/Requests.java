@@ -3,14 +3,15 @@ package studyproject.API.Lvl.Low;
 import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.util.logging.Level;
+import java.util.logging.Logger;
 
-import studyproject.API.Errors.ErrLog;
-import studyproject.logging.APILvl;
+import studyproject.API.Errors.ErrorFactory;
 import studyproject.logging.LogKey;
 
 /**
- * Class that sends requests to other clients,
- * formatted according to the LODDS specification
+ * Class that sends requests to other clients, formatted according to the LODDS
+ * specification
+ * 
  * @author Michael
  *
  */
@@ -39,8 +40,7 @@ public class Requests {
 			socketStream.write((GET_INFO_UP + timestamp + "\n").getBytes());
 			socketStream.flush();
 		} catch (IOException e) {
-			ErrLog.log(Level.SEVERE, LogKey.error, APILvl.low, "getInfo",
-					"IOException thrown: " + e.getStackTrace());
+			Logger.getGlobal().log(ErrorFactory.build(Level.SEVERE, LogKey.error, "IOException thrown: ", e));
 			return 1;
 		}
 		return 0;
@@ -72,8 +72,7 @@ public class Requests {
 			socketStream.write((GET_FILE + checksum + " " + startIndex + " " + endIndex + "\n").getBytes());
 			socketStream.flush();
 		} catch (IOException e) {
-			ErrLog.log(Level.SEVERE, LogKey.error, APILvl.low, "getInfo",
-					"IOException thrown: " + e.getStackTrace());
+			Logger.getGlobal().log(ErrorFactory.build(Level.SEVERE, LogKey.error, "IOException thrown: ", e));
 			return 1;
 		}
 		return 0;
@@ -101,13 +100,13 @@ public class Requests {
 	public static int getSendPermission(BufferedOutputStream socketStream, long size, long timeout, String fileName) {
 		timeout /= 1000;
 		try {
-			ErrLog.log(Level.INFO, LogKey.debug, APILvl.low, "getSendPermission",
-					(GET_SEND_PERMISSION + size + " " + timeout + " " + fileName));
+			Logger.getGlobal().log(ErrorFactory.build(Level.INFO, LogKey.debug,
+					(GET_SEND_PERMISSION + size + " " + timeout + " " + fileName)));
 			socketStream.write((GET_SEND_PERMISSION + size + " " + timeout + " " + fileName + "\n").getBytes());
 			socketStream.flush();
 		} catch (IOException e) {
-			ErrLog.log(Level.SEVERE, LogKey.error, APILvl.low, "getInfo",
-					"IOException thrown: " + e.getStackTrace());
+			Logger.getGlobal()
+					.log(ErrorFactory.build(Level.SEVERE, LogKey.error, "IOException thrown: " + e.getStackTrace()));
 			return 1;
 		}
 		return 0;

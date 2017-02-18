@@ -7,10 +7,10 @@ import java.net.Socket;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.logging.Level;
+import java.util.logging.Logger;
 
-import studyproject.API.Errors.ErrLog;
+import studyproject.API.Errors.ErrorFactory;
 import studyproject.API.Lvl.Low.Responses;
-import studyproject.logging.APILvl;
 import studyproject.logging.LogKey;
 
 /**
@@ -27,6 +27,7 @@ public class GetFileWPThread extends Thread {
 	private String pathToSaveTo;
 	private long fileSize;
 	private String fileName;
+	private Logger logger = Logger.getGlobal();
 
 	/**
 	 * The constructor to create a new get file with permission thread
@@ -61,22 +62,19 @@ public class GetFileWPThread extends Thread {
 			fileOutStream = new FileOutputStream((Paths.get(pathToSaveTo).resolve(fileName)).toString());
 
 			if ((error = Responses.respondSendPermission(socket, fileOutStream, fileSize)) != 0)
-				ErrLog.log(Level.SEVERE, LogKey.error, APILvl.low, error, getClass().getName() + ".run()");
+				logger.log(ErrorFactory.build(Level.SEVERE, LogKey.error, error));
 
 		} catch (FileNotFoundException e) {
-			ErrLog.log(Level.SEVERE, LogKey.error, APILvl.low, getClass().getName() + ".run()",
-					"FileNotFoundException thrown " + e.getStackTrace());
+			logger.log(ErrorFactory.build(Level.SEVERE, LogKey.error, "FileNotFoundException thrown ", e));
 		} catch (IOException e) {
-			ErrLog.log(Level.SEVERE, LogKey.error, APILvl.low, getClass().getName() + ".run()",
-					"IOException thrown " + e.getStackTrace());
+			logger.log(ErrorFactory.build(Level.SEVERE, LogKey.error, "IOException thrown ", e));
 
 		} finally {
 			try {
 				if (fileOutStream != null)
 					fileOutStream.close();
 			} catch (IOException e) {
-				ErrLog.log(Level.SEVERE, LogKey.error, APILvl.low, getClass().getName() + ".run()",
-						"IOException thrown " + e.getStackTrace());
+				logger.log(ErrorFactory.build(Level.SEVERE, LogKey.error, "IOException thrown ", e));
 			}
 		}
 	}

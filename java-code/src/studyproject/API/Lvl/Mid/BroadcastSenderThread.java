@@ -1,13 +1,13 @@
 package studyproject.API.Lvl.Mid;
 
-import studyproject.API.Errors.ErrLog;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+import studyproject.API.Errors.ErrorFactory;
 import studyproject.API.Lvl.Low.Broadcast;
 import studyproject.API.Lvl.Low.Load;
 import studyproject.API.Lvl.Mid.Lodds.Lodds;
-import studyproject.logging.APILvl;
 import studyproject.logging.LogKey;
-
-import java.util.logging.Level;
 
 /**
  * Thread that broadcasts the informations about this client so that other
@@ -44,8 +44,7 @@ public class BroadcastSenderThread extends Thread {
 						loddsObject.getNetworkAddress(), loddsObject.getIpPort(), loddsObject.getLastChange(),
 						Load.getCurrentLoad(), loddsObject.getUserName());
 				if (errorCode != 0)
-					ErrLog.log(Level.SEVERE, LogKey.broadcastSent, APILvl.mid, errorCode,
-							getClass().getName() + ".run()");
+					Logger.getGlobal().log(ErrorFactory.build(Level.SEVERE, LogKey.broadcastSent, errorCode));
 				Thread.sleep(loddsObject.getTimeInterval());
 			} catch (InterruptedException e) {
 				break;
