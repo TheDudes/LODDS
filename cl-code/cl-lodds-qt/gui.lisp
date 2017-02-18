@@ -52,13 +52,6 @@
     (make-instance 'dock :title "Download"
                          :widget (make-instance 'download)
                          :main-window main-window
-                         :side :left
-                         :menu view-menu))
-
-(define-subwidget (main-window settings-dock)
-    (make-instance 'dock :title "Settings"
-                         :widget (make-instance 'interface)
-                         :main-window main-window
                          :side :right
                          :menu view-menu))
 
