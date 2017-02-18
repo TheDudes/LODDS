@@ -103,7 +103,7 @@ public class TopMenuPresenter implements Initializable {
 		long timeout = Long.parseLong((String) App.properties.get("getPermissionTimeout"));
 		List<File> fileList = Utils.getChoosenMultipleFiles("Select Files to share");
 		for (File f : fileList) {
-			sendSingleFileToUser(userName, timeout, f);
+			sendSingleFileToUser(userName, timeout * 1000, f);
 		}
 	}
 
@@ -112,10 +112,10 @@ public class TopMenuPresenter implements Initializable {
 	 */
 	private void sendFolderToUser() {
 		String userName = usersListModel.getSelectedUser().getName();
-		long timeout = Long.parseLong((String) App.properties.get("getPermissionTimeout")) * 1000;
+		long timeout = Long.parseLong((String) App.properties.get("getPermissionTimeout"));
 		File chosenFolder = new File(Utils.getChoosenDirPath("Select Folder to share"));
 		if (chosenFolder.isDirectory()) {
-			sendDirectoryToUser(userName, timeout, chosenFolder);
+			sendDirectoryToUser(userName, timeout * 1000, chosenFolder);
 		}
 	}
 
@@ -140,7 +140,7 @@ public class TopMenuPresenter implements Initializable {
 	 * 
 	 * @param userName
 	 * @param timeout
-	 *            time in ms
+	 *            time in ms  
 	 * @param file
 	 */
 	private void sendSingleFileToUser(String userName, long timeout, File file) {

@@ -99,6 +99,7 @@ public class Requests {
 	 * @return 0 or an error value
 	 */
 	public static int getSendPermission(BufferedOutputStream socketStream, long size, long timeout, String fileName) {
+		timeout /= 1000;
 		try {
 			ErrLog.log(Level.INFO, LogKey.debug, APILvl.low, "getSendPermission",
 					(GET_SEND_PERMISSION + size + " " + timeout + " " + fileName));
