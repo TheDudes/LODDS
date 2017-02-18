@@ -52,13 +52,24 @@ multiple-value-bind.
     (apply #'format nil control-string format-arguments))
    destination))
 
-(defun read-line-from-socket (socket-stream)
+(defun read-line-from-socket (socket)
   "read-line for socket-stream of type '(unsigned-byte 8)"
-  (map 'string
-       #'code-char
-       (loop :for byte = (read-byte socket-stream)
-             :until (eql 10 byte) ;; newline
-             :collect byte)))
+  (let ((line (list))
+        (byte nil)
+        (stream (usocket:socket-stream socket)))
+    ;; TODO: set default timeout in settings
+    (loop :until nil
+          :do
+          (multiple-value-bind (socket-rdy time-left)
+              (usocket:wait-for-input socket :timeout 15)
+            (if (and time-left socket-rdy)
+                (setf byte (read-byte stream))
+                ;; TODO: default from settings
+                (error "no response after ~a seconds." 15))
+            (if (eql 10 byte)
+                (return-from read-line-from-socket
+                  (map 'string #'code-char (reverse line)))
+                (push byte line))))))
 
 ;; broadcast family
 
@@ -108,7 +119,7 @@ multiple-value-bind.
                    user))))
       2))
 
-(defun parse-request (socket-stream)
+(defun parse-request (socket)
   "parses a direct communication request. returns multiple values,
    the first is a number describing the error (or 0 on success) and
    one of the following lists, depending on request:
@@ -116,7 +127,7 @@ multiple-value-bind.
    (:info timestamp)
    (:send-permission size timeout filename)
    will use *get-scanner* to to check for syntax errors"
-  (let ((line (read-line-from-socket socket-stream)))
+  (let ((line (read-line-from-socket socket)))
     (unless (cl-ppcre:scan *get-scanner* line)
       (return-from parse-request 2))
     (destructuring-bind (get type . args)
@@ -225,11 +236,11 @@ multiple-value-bind.
   (copy-stream socket-stream file-stream size)
   0)
 
-(defun handle-info (socket-stream)
+(defun handle-info (socket)
   "handles a successfull 'get info' request and returns (as second
    value) a list containing the parsed data. The list has the same format
    as 'file-infos' argument from respond-info function"
-  (let ((line (read-line-from-socket socket-stream)))
+  (let ((line (read-line-from-socket socket)))
     (if (cl-ppcre:scan *info-head-scanner* line)
         (destructuring-bind (type timestamp count) (cl-strings:split line)
           (values 0
@@ -240,7 +251,7 @@ multiple-value-bind.
                   (parse-integer timestamp)
                   (loop :repeat (parse-integer count)
                         :collect (progn
-                                   (setf line (read-line-from-socket socket-stream))
+                                   (setf line (read-line-from-socket socket))
                                    (if (cl-ppcre:scan *info-body-scanner* line)
                                        (destructuring-bind (type checksum size . name)
                                            (cl-strings:split line)
@@ -264,7 +275,7 @@ multiple-value-bind.
           (usocket:wait-for-input socket :timeout timeout)
         (if (and time-left socket-rdy)
             (if (string= "OK"
-                         (read-line-from-socket (usocket:socket-stream socket-rdy)))
+                         (read-line-from-socket socket-rdy))
                 0
                 2)
             3))

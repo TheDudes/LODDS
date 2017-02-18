@@ -534,7 +534,7 @@
     (setf resubmit-p nil
           finished-p t)
     (multiple-value-bind (error request)
-        (lodds.low-level-api:parse-request (usocket:socket-stream socket))
+        (lodds.low-level-api:parse-request socket)
       (if (> error 0)
           (error "low-level-api:parse-request Returned error ~a~%" error)
           (case (car request)
@@ -719,16 +719,12 @@
             ;;will update on the next advertise. unwind-protect to be sure
             ;;we unlock that lock.
             (unwind-protect
-                 (handler-case
-                     (progn
-                       (setf (lodds:c-last-message client-info) timestamp
-                             (lodds:c-load client-info) user-load)
-                       (when (<= (lodds:c-last-change client-info)
-                                 last-change)
-                         (lodds.listener:update-client-list client-info)))
-                   (error (e)
-                     (lodds.event:push-event :error (list "error inside update-client-list"
-                                                          e))))
+                 (progn
+                   (setf (lodds:c-last-message client-info) timestamp
+                         (lodds:c-load client-info) user-load)
+                   (when (<= (lodds:c-last-change client-info)
+                             last-change)
+                     (lodds.listener:update-client-list client-info)))
               (bt:release-lock (lodds:c-lock client-info)))
             (lodds.event:push-event :info (list :dropped task)))))))
 

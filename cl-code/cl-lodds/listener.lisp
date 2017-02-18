@@ -14,7 +14,7 @@
              (unless (eql 0 error)
                (error "low level api threw error ~a in get-info" error)))
            (multiple-value-bind (error type timestamp changes)
-               (lodds.low-level-api:handle-info (usocket:socket-stream socket))
+               (lodds.low-level-api:handle-info socket)
              (unless (eql 0 error)
                (error "low level api threw error ~a in handle-info" error))
              (lodds.event:push-event :list-update
