@@ -503,18 +503,19 @@
           ;; remove size from load since the new task will add it again
           (decf-load task size)
           (if checksum
-              (let ((task (make-instance 'task-get-file-from-users
-                                         :name "get-file-from-users (folder)"
-                                         :checksum checksum
-                                         :local-file-path (ensure-directories-exist
-                                                           (concatenate 'string
-                                                                        local-path
-                                                                        (subseq file (length remote-root))))
-                                         ;; resubmit current task-get-folder when file
-                                         ;; download is complete
-                                         :on-finish-hook (lambda (file-task)
-                                                           (declare (ignore file-task))
-                                                           (submit-task task)))))
+              (let ((task (make-instance
+                           'task-get-file-from-users
+                           :name "get-file-from-users (folder)"
+                           :checksum checksum
+                           :local-file-path (ensure-directories-exist
+                                             (concatenate 'string
+                                                          local-path
+                                                          (subseq file (length remote-root))))
+                           ;; resubmit current task-get-folder when file
+                           ;; download is complete
+                           :on-finish-hook (lambda (file-task)
+                                             (declare (ignore file-task))
+                                             (submit-task task)))))
                 (submit-task task))
               (error "The file ~a from user ~a with checksum ~a does not exist anymore."
                      file user checksum)))
