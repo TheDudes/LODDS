@@ -124,7 +124,7 @@ public class FileWatcherController {
 		}
 
 		// Header
-		if (timestamp == 0) {
+		if (timestamp == 0 || shareAllFiles) {
 			header = "all " + currentTimestampSec + " " + filesMatched + "\n";
 		} else {
 			header = "upd " + currentTimestampSec + " " + filesMatched + "\n";
