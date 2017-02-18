@@ -98,7 +98,7 @@ public class FileWatcherController {
 
 		Boolean shareAllFiles = false;
 		
-		if (timestamp < this.firstShareTimestamp) {
+		if (this.firstShareTimestamp != null && timestamp < this.firstShareTimestamp) {
 			shareAllFiles = true;
 		}
 
