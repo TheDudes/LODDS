@@ -12,6 +12,24 @@
           (reduce #'+ loads)
           0))))
 
+(defmethod get-task-progresses ((tasker tasker))
+  "returns a list containing each tasks id, max-load, progress, type
+  and info.
+  CL-USER> (get-task-progresses tasker)
+  => ((\"id1234\" 5903 1324 :send-file \"blub.txt\")
+      (\"id3142\" 141204 4214 :get-file \"somename@123.123.1.2:8282\"))
+  Each of the inner lists describe a task, with its id, its maximum
+  load, already processed load, type and info."
+  (with-slots (tasks tasks-on-hold lock) tasker
+    (let ((result nil))
+      (bt:with-recursive-lock-held (lock)
+        (setf result
+              (loop :for task :being :the :hash-value :of tasks
+                    :unless (gethash (slot-value task 'id) tasks-on-hold)
+                    :collect (with-slots (id max-load load type info) task
+                               (list id max-load (- max-load load) type info)))))
+      result)))
+
 (defmethod initialize-instance :after ((task task) &rest initargs)
   (declare (ignorable initargs))
   (with-slots (tasks lock (alive-p lodds.subsystem:alive-p))
