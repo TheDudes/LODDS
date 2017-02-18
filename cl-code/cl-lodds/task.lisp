@@ -14,14 +14,16 @@
 
 (defmethod initialize-instance :after ((task task) &rest initargs)
   (declare (ignorable initargs))
-  (with-slots (tasks lock) (lodds:get-subsystem :tasker)
-    (with-slots (id) task
-      (bt:with-lock-held (lock)
-        (setf id (copy-seq (string (gensym "id"))))
-        (loop :while (gethash id tasks)
-              :do (setf id (copy-seq (string (gensym "id")))))
-        (setf (gethash id tasks) task)
-        id))))
+  (with-slots (tasks lock (alive-p lodds.subsystem:alive-p))
+      (lodds:get-subsystem :tasker)
+    (when alive-p
+      (with-slots (id) task
+        (bt:with-lock-held (lock)
+          (setf id (copy-seq (string (gensym "id"))))
+          (loop :while (gethash id tasks)
+                :do (setf id (copy-seq (string (gensym "id")))))
+          (setf (gethash id tasks) task)
+          id)))))
 
 (defmethod print-object ((object task) stream)
   (print-unreadable-object (object stream :type t :identity t)
