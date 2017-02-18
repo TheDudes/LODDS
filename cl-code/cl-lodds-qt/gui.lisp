@@ -69,6 +69,13 @@
                          :side :right
                          :menu view-menu))
 
+(define-subwidget (main-window info-dock)
+    (make-instance 'dock :title "Info"
+                         :widget (make-instance 'info)
+                         :main-window main-window
+                         :side :right
+                         :menu view-menu))
+
 (define-initializer (main-window setup-widget)
   (connect shares-widget
            "itemClicked(QTreeWidgetItem *, int)"

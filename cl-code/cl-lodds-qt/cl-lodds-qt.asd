@@ -24,4 +24,5 @@
                (:file "dock")
                (:file "send-permission")
                (:file "send-file")
+               (:file "info")
                (:file "gui")))
