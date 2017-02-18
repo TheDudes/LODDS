@@ -56,6 +56,11 @@
 (defclass task ()
   ((id :initform nil
        :type string)
+   (type :initform :task)
+   (info :initform "task"
+         :type string
+         :documentation "information about the task can be placed in
+         this slot")
    (load :initarg :load
          :initform 0
          :documentation "The load a task produces, will be decremented
@@ -123,7 +128,8 @@
            other end :D")))
 
 (defclass task-request-file (task-request)
-  ((checksum :initarg :checksum
+  ((type :initform :request-file)
+   (checksum :initarg :checksum
              :initform nil
              :type string
              :documentation "Requested File checksum.")
@@ -153,7 +159,8 @@
               :documentation "Requested info timestamp.")))
 
 (defclass task-request-send-permission (task-request)
-  ((size :initarg :size
+  ((type :initform :request-send-permisison)
+   (size :initarg :size
          :initform nil
          :type rational
          :documentation "Size of the File requested to send.")
@@ -175,7 +182,8 @@
                socket-stream")))
 
 (defclass task-get-file (task)
-  ((local-file-path :initform (error "Specify a local-file-path pls.")
+  ((type :initform :get-file)
+   (local-file-path :initform (error "Specify a local-file-path pls.")
                     :initarg :local-file-path
                     :type string
                     :documentation "String describing the local file
@@ -208,7 +216,8 @@
                been read from the socket and saved to the file.")))
 
 (defclass task-get-file-from-user (task-get-file)
-  ((user :initform (error "Specify a user pls.")
+  ((type :initform :get-file-from-user)
+   (user :initform (error "Specify a user pls.")
          :initarg :user
          :type string
          :documentation "The User where the file is getting downloaded
@@ -225,7 +234,8 @@
          instance. Can be parsed from get-user.")))
 
 (defclass task-get-file-from-users (task-get-file)
-  ((current-part :initform 0
+  ((type :initform :get-file-from-users)
+   (current-part :initform 0
                  :type bignum
                  :documentation "The current part which is
                  downloaded.")
@@ -238,7 +248,8 @@
               again for a the user with the lowest load.")))
 
 (defclass task-get-folder (task)
-  ((user :initarg :user
+  ((type :initform :get-folder)
+   (user :initarg :user
          :initform (error "please specify the User who contains ~ the
          wanted Folder")
          :type string
@@ -271,7 +282,8 @@
                downloaded")))
 
 (defclass task-send-file (task-user)
-  ((filepath :initarg :filepath
+  ((type :initform :send-file)
+   (filepath :initarg :filepath
              :initform (error "Specify file")
              :documentation "Full path to the local file which will be
              sent")

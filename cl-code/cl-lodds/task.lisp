@@ -361,11 +361,13 @@
                socket
                local-file-stream
                resubmit-p
-               finished-p) task
+               finished-p
+               info) task
     (unless socket
       (setf socket (request-file ip port checksum 0 size)))
     (unless local-file-stream
-      (setf local-file-stream (open-file local-file-path)))
+      (setf local-file-stream (open-file local-file-path))
+      (setf info (concatenate 'string user ":" local-file-path)))
     (let ((transfered (load-chunk (usocket:socket-stream socket)
                                   local-file-stream
                                   (- size read-bytes))))
@@ -395,7 +397,7 @@
                                              ", ip:" ip
                                              ", port:" port
                                              ", load:" (lodds.core:format-size best-load)))
-        (values ip port))
+        (values name ip port))
       (error "Could not find a user who shares ~a~%" checksum))))
 
 (defmethod run-task ((task task-get-file-from-users))
@@ -409,11 +411,12 @@
                read-bytes-part
                part-size
                resubmit-p
-               finished-p) task
+               finished-p
+               info) task
     (unless local-file-stream
       (setf local-file-stream (open-file local-file-path)))
     (unless socket
-      (multiple-value-bind (ip port) (find-best-user checksum)
+      (multiple-value-bind (user ip port) (find-best-user checksum)
         (setf socket
               (request-file
                ip
@@ -428,7 +431,8 @@
                        (setf part-size (- size
                                           (* current-part part-size)))
                        size)
-                     end-next-part))))))
+                     end-next-part))))
+        (setf info (concatenate 'string user ":" local-file-path))))
     (let ((written (load-chunk (usocket:socket-stream socket)
                                local-file-stream
                                (- part-size read-bytes-part))))
@@ -443,7 +447,7 @@
           (setf resubmit-p nil
                 finished-p t))
         (progn
-          (setf  resubmit-p t)
+          (setf resubmit-p t)
           (when (eql read-bytes-part part-size)
             (incf current-part)
             (setf read-bytes-part 0)
@@ -458,10 +462,18 @@
                items-done
                user
                finished-p
-               resubmit-p) task
+               resubmit-p
+               info) task
     (setf resubmit-p nil)
     (if items
         (destructuring-bind (file checksum size) (pop items)
+          (let* ((left (length items))
+                 (done (length items-done))
+                 (total (+ left done)))
+            (setf info (format nil "(File ~a/~a) ~a"
+                               done
+                               total
+                               file)))
           (setf items-done (append (list (list file checksum size))
                                    items-done))
           (unless checksum
@@ -553,7 +565,8 @@
                finished-p
                resubmit-p
                load
-               max-load) task
+               max-load
+               info) task
     ;; TODO: chunk-size to settings
     (let ((chunk-size (ash 1 21))) ;; 2 MB
       (unless filename
@@ -570,7 +583,8 @@
           (setf load size
                 max-load size))
         (unless (eql start 0)
-          (file-position file-stream start)))
+          (file-position file-stream start))
+        (setf info filename))
       (let ((left-to-upload (- (- end start)
                                written)))
         (lodds.core:copy-stream file-stream
@@ -608,7 +622,8 @@
                finished-p
                resubmit-p
                load
-               max-load) task
+               max-load
+               info) task
     ;; TODO: chunk-size to settings
     (let ((chunk-size (ash 1 21))) ;; 2 MB
       ;; open up file-stream if not open yet
@@ -622,7 +637,8 @@
           (setf resubmit-p nil
                 finished-p t))
         (setf load size
-              max-load size))
+              max-load size)
+        (setf info filename))
       ;; transfer the file
       (let ((left-to-receive (- size read-bytes)))
         (lodds.core:copy-stream (usocket:socket-stream socket)
@@ -709,7 +725,8 @@
                finished-p
                resubmit-p
                load
-               max-load) task
+               max-load
+               info) task
     ;; TODO: chunk-size to settings
     (let ((chunk-size (ash 1 21))) ;; 2 MB
       ;; open up file-stream if not open yet
@@ -718,7 +735,8 @@
                                 :element-type '(unsigned-byte 8)))
         (setf size (file-length file-stream))
         (setf load size
-              max-load size))
+              max-load size)
+        (setf info filepath))
       ;; open up socket
       (unless socket
         (setf socket (usocket:socket-connect ip
