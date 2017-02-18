@@ -81,10 +81,10 @@ public class RequestHandlerThread extends Thread {
 				InfoSenderThread infoSenderThread = new InfoSenderThread(socket, loddsObj.getWatchService(),
 						infoReq.timestamp);
 				threadExecutor.execute(infoSenderThread);
-
 				break;
 			case GET_SEND_PERMISSION:
 				GetPermissionRequest permissionReq = (GetPermissionRequest) reqContainer.request;
+				permissionReq.socket = socket;
 				loddsObj.getLoddsModel().getPermissionList().add(permissionReq);
 				break;
 			}
