@@ -15,8 +15,6 @@ import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.Node;
 import javafx.scene.Scene;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
 import javafx.scene.layout.AnchorPane;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
@@ -32,6 +30,7 @@ import studyproject.gui.mainWindow.usersList.UsersListView;
 import studyproject.gui.selectedInterface.SelectedInterfaceView;
 import studyproject.gui.sendPermissionDialog.SendPermissionDialog;
 import studyproject.gui.sendPermissionDialog.SendPermissionModel;
+import studyproject.gui.sendPermissionDialog.SendPermissionPresenter;
 import studyproject.gui.sendPermissionDialog.SendPermissionView;
 import studyproject.logging.LogKey;
 
@@ -49,10 +48,6 @@ public class MainWindowPresenter implements Initializable {
 	AnchorPane topMenuAnchor;
 	@FXML
 	AnchorPane logAreaAnchor;
-	@FXML
-	Label permissionMsg;
-	@FXML
-	Button acceptButton;
 	@Inject
 	SendPermissionModel sendPermissionModel;
 	@Inject
@@ -106,13 +101,15 @@ public class MainWindowPresenter implements Initializable {
 			public void run() {
 				while (c.next()) {
 					for (GetPermissionRequest permissionReq : c.getAddedSubList()) {
-						permissionStage = new SendPermissionDialog(permissionReq);
+						String newText = permissionReq.socket.getInetAddress().toString() + " wants to send a File: "
+								+ permissionReq.fileName + " (" + permissionReq.fileSize + " Bytes)";
+						permissionStage = new SendPermissionDialog(permissionReq, newText);
 						SendPermissionView sendPermissionView = new SendPermissionView();
 						permissionStage.setScene(new Scene(sendPermissionView.getView()));
 						permissionStage.setTitle("Permission Request");
-						String newText = permissionReq.socket.getInetAddress().toString() + " wants to send a File: "
-								+ permissionReq.fileName + " (" + permissionReq.fileSize + " Bytes)";
 						sendPermissionModel.getDialogLabel().setValue(newText);
+						permissionStage.setOnShown(e -> ((SendPermissionPresenter) sendPermissionView.getPresenter())
+								.permissionStageOnShown());
 						permissionStage.show();
 						mainWindowModel.getLodds().getLoddsModel().getPermissionList().remove(permissionReq);
 					}
