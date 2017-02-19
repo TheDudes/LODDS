@@ -351,5 +351,5 @@
 
 ;; TODO: default timeout from settings
 (defun send-file-user (file user &optional (timeout 300))
-  (lodds.core:split-user-identifier (name ip port) user
+  (lodds.core:split-user-identifier (name ip port t) user
     (send-file file ip port timeout)))
