@@ -7,7 +7,7 @@
 (defparameter *ignored-log-events*
   (list :listener
         :advertiser
-        :tasker))
+        :task-finished))
 
 ;; info-log-list columns
 (defvar +log-time+ 0)
