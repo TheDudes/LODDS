@@ -418,8 +418,7 @@
                                   local-file-stream
                                   (- size read-bytes))))
       (decf-load task transfered)
-      (incf read-bytes
-            transfered))
+      (incf read-bytes transfered))
     (finish-output local-file-stream)
     (if (eql size read-bytes)
         (progn
@@ -644,8 +643,7 @@
                timestamp
                finished-p
                resubmit-p) task
-    (setf resubmit-p nil
-          finished-p t)
+    (setf finished-p t)
     (apply #'lodds.low-level-api:respond-info
            (usocket:socket-stream socket)
            (lodds:generate-info-response timestamp))))
