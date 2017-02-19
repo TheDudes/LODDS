@@ -465,13 +465,12 @@
                (* current-part part-size)
                (let ((end-next-part (* (+ 1 current-part)
                                        part-size)))
-                 (if (> end-next-part
-                        size)
+                 (if (> size end-next-part)
+                     end-next-part
                      (progn
                        (setf part-size (- size
                                           (* current-part part-size)))
-                       size)
-                     end-next-part))))
+                       size)))))
         (setf info (concatenate 'string user ":" local-file-path))))
     (let ((written (load-chunk (usocket:socket-stream socket)
                                local-file-stream
@@ -481,17 +480,14 @@
       (incf read-bytes-part written))
     (finish-output local-file-stream)
     (if (eql size read-bytes)
+        (setf finished-p t)
         (progn
-          (lodds.event:push-event :info (list "downloaded file"
-                                              local-file-path))
-          (setf finished-p t))
-        (progn
-          (setf resubmit-p t)
           (when (eql read-bytes-part part-size)
             (incf current-part)
             (setf read-bytes-part 0)
-            (setf local-file-stream nil)
-            (setf resubmit-p t))))))
+            (secure-close socket)
+            (setf socket nil))
+          (setf resubmit-p t)))))
 
 (defmethod run-task ((task task-get-folder))
   (with-slots (local-path
