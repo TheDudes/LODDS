@@ -346,6 +346,11 @@
       (setf load size
             max-load size))))
 
+(defmethod initialize-instance :after ((task task-request-send-permission) &rest initargs)
+  (declare (ignorable initargs))
+  (with-slots (info filename) task
+    (setf info (format nil "file request ~a" filename))))
+
 (defun load-chunk (stream-from stream-to size &optional (chunk-size (ash 1 21)))
   (let ((transfered (if (> size chunk-size)
                         chunk-size
@@ -656,8 +661,7 @@
           (setf resubmit-p nil
                 finished-p t))
         (setf load size
-              max-load size)
-        (setf info filename))
+              max-load size))
       ;; transfer the file
       (let ((left-to-receive (- size read-bytes)))
         (lodds.core:copy-stream (usocket:socket-stream socket)
