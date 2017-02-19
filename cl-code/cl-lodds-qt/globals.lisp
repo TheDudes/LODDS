@@ -22,13 +22,16 @@
 (defvar +events+
   '(:advertiser
     :listener
+    :tasker
+    :task-finished
+    :task-failed
+    :task-canceled
     :info
     :client-added
     :client-removed
     :client-updated
     :debug
     :watcher
-    :tasker
     :handler
     :list-update
     :shared-directory

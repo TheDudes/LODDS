@@ -173,24 +173,29 @@
   (:method :around ((task task))
     (with-slots (aktive-p
                  finished-p
-                 resubmit-p) task
+                 resubmit-p
+                 id) task
+      (when finished-p
+        (finish-task task)
+        (lodds.event:push-event :task-canceled
+                                (list id))
+        (return-from run-task))
       (setf aktive-p t)
       (handler-case
-          (unless finished-p
-            (call-next-method))
+        (call-next-method)
         (error (err)
-          (lodds.event:push-event :tasker
-                                  (list "Task Failed"
-                                        task
-                                        err))
-          (setf finished-p t)))
+          (setf aktive-p nil
+                finished-p t)
+          (finish-task task)
+          (lodds.event:push-event :task-failed
+                                  (list id err))
+          (return-from run-task)))
       (setf aktive-p nil)
       (if finished-p
           (progn
             (finish-task task)
-            (lodds.event:push-event :tasker
-                                    (list "Task Finished:"
-                                          task)))
+            (lodds.event:push-event :task-finished
+                                    (list id)))
           (when resubmit-p
             (submit-task task)))))
 
