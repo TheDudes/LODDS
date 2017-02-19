@@ -180,6 +180,13 @@
     (declare (ignorable task))
     (error "overwrite run-task with ur task!")))
 
+(defun secure-close (socket)
+  (when socket
+    (handler-case
+        (usocket:socket-close socket)
+      (error (e)
+        (declare (ignore e))))))
+
 (defgeneric finish-task (task)
   (:documentation "Generic Function which will be called if task has
   finished and will be deleted")
@@ -197,45 +204,38 @@
 
   (:method ((task task-get-file-from-user))
     (with-slots (socket local-file-stream) task
-      (when socket
-        (usocket:socket-close socket))
+      (secure-close socket)
       (when local-file-stream
         (close local-file-stream))))
 
   (:method ((task task-get-file-from-users))
     (with-slots (socket local-file-stream) task
-      (when socket
-        (usocket:socket-close socket))
+      (secure-close socket)
       (when local-file-stream
         (close local-file-stream))))
 
   (:method ((task task-request))
     (with-slots (socket) task
-      (when socket (usocket:socket-close socket))))
+      (secure-close socket)))
 
   (:method ((task task-request-file))
     (with-slots (socket file-stream) task
-      (when socket
-        (usocket:socket-close socket))
+      (secure-close socket)
       (when file-stream
         (close file-stream))))
 
   (:method ((task task-request-info))
-    (with-slots (socket) task
-      (when socket
-        (usocket:socket-close socket))))
+    (secure-close (slot-value task 'socket)))
 
   (:method ((task task-request-send-permission))
     (with-slots (socket file-stream) task
-      (when socket
-        (usocket:socket-close socket))
+      (secure-close socket)
       (when file-stream
         (close file-stream))))
 
   (:method ((task task-send-file))
     (with-slots (socket file-stream) task
-      (when socket
-        (usocket:socket-close socket))
+      (secure-close socket)
       (when file-stream
         (close file-stream)))))
 
