@@ -310,7 +310,7 @@
          (file-infos (get-file-changes current-timestamp
                                        (case type
                                          (:all nil)
-                                         (:upd timestamp)))))
+                                         (:upd current-timestamp)))))
     (list type
           current-timestamp
           file-infos)))
