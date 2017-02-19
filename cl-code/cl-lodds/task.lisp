@@ -159,22 +159,23 @@
                  resubmit-p) task
       (setf aktive-p t)
       (handler-case
-          (call-next-method)
+          (unless finished-p
+            (call-next-method))
         (error (err)
           (lodds.event:push-event :tasker
                                   (list "Task Failed"
                                         task
                                         err))
-          (setf finished-p t
-                resubmit-p nil)))
+          (setf finished-p t)))
       (setf aktive-p nil)
-      (if resubmit-p
-          (submit-task task)
-          (when finished-p
+      (if finished-p
+          (progn
             (finish-task task)
             (lodds.event:push-event :tasker
                                     (list "Task Finished:"
-                                          task))))))
+                                          task)))
+          (when resubmit-p
+            (submit-task task)))))
 
   (:method ((task task))
     (declare (ignorable task))
@@ -400,8 +401,7 @@
     (finish-output local-file-stream)
     (if (eql size read-bytes)
         (progn
-          (setf resubmit-p nil
-                finished-p t)
+          (setf finished-p t)
           (lodds.event:push-event :info (list "downloaded file"
                                               local-file-path)))
         (setf resubmit-p t))))
@@ -467,8 +467,7 @@
         (progn
           (lodds.event:push-event :info (list "downloaded file"
                                               local-file-path))
-          (setf resubmit-p nil
-                finished-p t))
+          (setf finished-p t))
         (progn
           (setf resubmit-p t)
           (when (eql read-bytes-part part-size)
@@ -525,8 +524,7 @@
               (error "The file ~a from user ~a with checksum ~a does not exist anymore."
                      file user checksum)))
         (progn
-          (setf finished-p t
-                resubmit-p nil)
+          (setf finished-p t)
           (lodds.event:push-event :info (list "folder"
                                               remote-path
                                               "sucessfully downloaded to"
@@ -536,8 +534,7 @@
   (with-slots (socket
                finished-p
                resubmit-p) task
-    (setf resubmit-p nil
-          finished-p t)
+    (setf finished-p t)
     (multiple-value-bind (error request)
         (lodds.low-level-api:parse-request socket)
       (if (> error 0)
@@ -597,8 +594,7 @@
         (unless (setf filename (lodds.watcher:get-file-info checksum))
           (lodds.event:push-event :error
                                   (list "requested file could not be found"))
-          (setf resubmit-p nil
-                finished-p t)
+          (setf finished-p t)
           (return-from run-task))
         (setf file-stream (open filename
                                 :direction :input
@@ -622,8 +618,7 @@
                                            left-to-upload)))
         (finish-output file-stream)
         (if (eql (- end start) written)
-            (setf resubmit-p nil
-                  finished-p t)
+            (setf finished-p t)
             (setf resubmit-p t))))))
 
 (defmethod run-task ((task task-request-info))
@@ -658,8 +653,7 @@
                                 :element-type '(unsigned-byte 8)))
         (unless (eql 0 (lodds.low-level-api:respond-send-permission
                         (usocket:socket-stream socket)))
-          (setf resubmit-p nil
-                finished-p t))
+          (setf finished-p t))
         (setf load size
               max-load size))
       ;; transfer the file
@@ -674,8 +668,7 @@
                                            (decf-load task left-to-receive)
                                            left-to-receive)))
         (if (eql size read-bytes)
-            (setf resubmit-p nil
-                  finished-p t)
+            (setf finished-p t)
             (setf resubmit-p t))))))
 
 (defmethod run-task ((task task-info))
@@ -689,8 +682,7 @@
                load
                finished-p
                resubmit-p) task
-    (setf resubmit-p nil
-          finished-p t)
+    (setf finished-p t)
     (let ((client-info (lodds:get-user-info user)))
       (if client-info
           (with-accessors ((old-load lodds:c-load)
@@ -791,6 +783,5 @@
                                            left-to-send)))
         (finish-output file-stream)
         (if (eql size written)
-            (setf resubmit-p nil
-                  finished-p t)
+            (setf finished-p t)
             (setf resubmit-p t))))))
