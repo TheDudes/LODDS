@@ -3,7 +3,8 @@
 
 (defvar +info-info+ 0)
 (defvar +info-progress+ 1)
-(defvar +info-id+ 2)
+(defvar +info-cancel+ 2)
+(defvar +info-id+ 3)
 
 (define-widget info (QTreeWidget)
   ((tracked-tasks :initform (make-hash-table :test #'equalp)
@@ -17,7 +18,8 @@
 (defmethod add-info ((info info) id max done info-text)
   (with-slots-bound (info info)
     (let* ((new-entry (q+:make-qtreewidgetitem info))
-           (progress (q+:make-qprogressbar info)))
+           (progress (q+:make-qprogressbar info))
+           (cancel (q+:make-qpushbutton "Cancel" info)))
       (qdoto progress
              (q+:set-maximum max)
              (q+:set-value done))
@@ -25,6 +27,13 @@
                           new-entry
                           +info-progress+
                           progress)
+      (connect cancel "pressed()"
+               (lambda ()
+                 (lodds.task:cancel-task id)))
+      (q+:set-item-widget info
+                          new-entry
+                          +info-cancel+
+                          cancel)
       (qdoto new-entry
              (q+:set-text +info-info+ info-text)
              (q+:set-text +info-id+ id))
@@ -72,9 +81,9 @@
 
 (define-initializer (info setup-widget)
   (qdoto info
-         (q+:set-column-count 3)
+         (q+:set-column-count 4)
          (q+:set-uniform-row-heights t)
-         (q+:set-header-labels (list "Info" "Progress" "ID"))
+         (q+:set-header-labels (list "Info" "Progress" "Stop" "ID"))
          (q+:hide-column +info-id+)
          (q+:set-alternating-row-colors t)
          (q+:set-animated t)))
