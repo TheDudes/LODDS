@@ -150,6 +150,7 @@
            #:get-subsystem
            #:get-load
            #:switch-interface
+           #:switch-name
            #:remove-clients
            #:get-timestamp-last-change
            #:get-user-list
