@@ -56,6 +56,8 @@
            #:on-finish-hook
            #:get-load
            #:get-task-progresses
+           #:get-task-by-id
+           #:cancel-task
            #:run-task
            #:finish-task
            #:submit-task

@@ -30,6 +30,23 @@
                                (list id max-load (- max-load load) type info)))))
       result)))
 
+(defmethod get-task-by-id (task-id)
+  "Returns task with given id, nil if task is not found"
+  (with-slots (tasks lock) (lodds:get-subsystem :tasker)
+    (let ((result nil))
+      (bt:with-recursive-lock-held (lock)
+        (setf result
+              (gethash task-id tasks)))
+      result)))
+
+(defgeneric cancel-task (task)
+  (:method ((task task))
+    (setf (slot-value task 'finished-p) t))
+  (:method ((task-id string))
+    (let ((task (get-task-by-id task-id)))
+      (when task
+        (cancel-task task)))))
+
 (defmethod initialize-instance :after ((task task) &rest initargs)
   (declare (ignorable initargs))
   (with-slots (tasks lock (alive-p lodds.subsystem:alive-p))
