@@ -2,7 +2,10 @@
 (in-readtable :qtools)
 
 (define-widget send-file (QWidget)
-  ())
+  ((users-selected :initarg :users-selected
+                   :initform (list)
+                   :type list
+                   :documentation "All users the user has checked.")))
 
 (define-subwidget (send-file file)
     (q+:make-qlineedit send-file)
@@ -30,9 +33,9 @@
              0)
       (q+:set-text file file-choosen))))
 
-(define-subwidget (send-file sub-layout)
+(define-subwidget (send-file file-layout)
     (q+:make-qhboxlayout)
-  (qdoto sub-layout
+  (qdoto file-layout
          (q+:add-widget file)
          (q+:add-widget button)))
 
@@ -44,28 +47,85 @@
          (q+:set-maximum 3600)
          (q+:set-value 30)))
 
-(define-subwidget (send-file layout)
-    (q+:make-qformlayout send-file)
-  (qdoto layout
-         (q+:add-row "File:" sub-layout)
-         (q+:add-row "Timeout:" timeout)))
+(define-subwidget (send-file users)
+    (q+:make-qtreewidget send-file)
+  (qdoto users
+         (q+:set-column-count 2)
+         (q+:set-header-labels (list "Name" "Send File"))
+         (q+:set-alternating-row-colors t)
+         (q+:hide))
+  (qdoto (q+:header users)
+         (q+:set-stretch-last-section nil)
+         (q+:set-resize-mode 0 (q+:qheaderview.stretch))
+         (q+:set-resize-mode 1 (q+:qheaderview.resize-to-contents)))
+  (loop :for user :in (lodds:get-user-list)
+        :do (let ((new-entry (q+:make-qtreewidgetitem users))
+                  (checkbox (q+:make-qcheckbox send-file)))
+              (q+:set-item-widget users
+                                  new-entry
+                                  1
+                                  checkbox)
+              (when (find user users-selected :test #'equalp)
+                (q+:set-checked checkbox t))
+              (q+:set-text new-entry 0 user)
+              (connect checkbox "toggled(bool)"
+                       (lambda (checked)
+                         (let ((user (q+:text new-entry 0)))
+                           (if checked
+                               (push user users-selected)
+                               (setf users-selected
+                                     (remove user users-selected
+                                             :test #'equalp)))))))))
 
-(defun open-send-file-dialog (user ip port)
+(define-subwidget (send-file sub-layout)
+    (q+:make-qwidget send-file)
+  (let ((layout (q+:make-qformlayout sub-layout)))
+    (qdoto layout
+           (q+:add-row "File:" file-layout)
+           (q+:add-row "Timeout:" timeout))))
+
+(define-subwidget (send-file show-users)
+    (q+:make-qpushbutton "User Selection" send-file)
+  (connect show-users "toggled(bool)"
+           (lambda (checked)
+             (if checked
+                 (q+:show users)
+                 (q+:hide users))))
+  (qdoto show-users
+         (q+:set-checkable t)
+         (q+:set-minimum-width 400)
+         (q+:set-checked nil)))
+
+(define-subwidget (send-file layout)
+    (q+:make-qvboxlayout send-file)
+  (qdoto layout
+         (q+:add-widget sub-layout)
+         (q+:add-widget show-users)
+         (q+:add-widget users)))
+
+(defun open-send-file-dialog (user)
   (make-instance 'dialog
                  :title "Send File"
-                 :text (format nil "Select a File and a Timeout to send to ~a" user)
-                 :widget (make-instance 'send-file)
+                 :text "Select a File and a Timeout"
+                 :widget (make-instance 'send-file
+                                        :users-selected (list user))
                  :on-success-fn
                  (lambda (widget)
                    (with-slots-bound (widget send-file)
-                     (let ((file-choosen (q+:text file)))
+                     (let ((file-choosen (q+:text file))
+                           (users (slot-value widget 'users-selected)))
                        (if (uiop:file-exists-p file-choosen)
-                           (progn
-                             (lodds:send-file file-choosen
-                                              ip
-                                              port
-                                              (q+:value timeout))
-                             t)
+                           (if users
+                               (loop :for selected-user :in (slot-value widget 'users-selected)
+                                     :do (lodds:send-file-user file-choosen
+                                                               selected-user
+                                                               (q+:value timeout))
+                                     :finally (return t))
+                               (progn
+                                 (make-instance 'dialog
+                                                :title "Error - No Users selected"
+                                                :text "Please Select at least one User")
+                                 nil))
                            (progn
                              (make-instance 'dialog
                                             :title "Error - File does not exist"

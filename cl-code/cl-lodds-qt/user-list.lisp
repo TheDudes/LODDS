@@ -25,10 +25,9 @@
                                           string)))
   (let* ((new-entry (q+:make-qtreewidgetitem user-list))
          (send-file-button (q+:make-qpushbutton "Send File" user-list)))
-    (lodds.core:split-user-identifier (name ip port t) user
-      (connect send-file-button "pressed()"
-               (lambda ()
-                 (open-send-file-dialog user ip port))))
+    (connect send-file-button "pressed()"
+             (lambda ()
+               (open-send-file-dialog user)))
     (q+:set-item-widget user-list
                         new-entry
                         +user-list-send-file+
