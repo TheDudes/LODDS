@@ -70,8 +70,8 @@
          (checksum (car (gethash pathname ft-name))))
     (let ((entry (gethash pathname ft-name)))
       (if (not entry)
-          (error "watcher:remove-file entry '~a' not found"
-                 pathname)
+          (format t "watcher:remove-file entry ~a not found~%"
+                  pathname)
           (progn
             (funcall (change-hook dir-watcher)
                      (destructuring-bind (checksum size)

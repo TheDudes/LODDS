@@ -10,8 +10,7 @@
       (ironclad:byte-array-to-hex-string
        (ironclad:digest-file :sha1 pathname))
     (error (e)
-      (lodds.event:push-event :error
-                              (list e))
+      (declare (ignore e))
       "0000000000000000000000000000000000000000")))
 
 (defun copy-stream (stream-from stream-to size)
