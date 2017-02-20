@@ -509,9 +509,17 @@
                user
                finished-p
                resubmit-p
-               info) task
+               canceled-p
+               info
+               id) task
     (setf resubmit-p nil)
-    (if items
+    (if (not items)
+        (progn
+          (setf finished-p t)
+          (lodds.event:push-event :info (list "folder"
+                                              remote-path
+                                              "sucessfully downloaded to"
+                                              local-path)))
         (destructuring-bind (file checksum size) (pop items)
           (let* ((left (length items))
                  (done (length items-done))
@@ -530,29 +538,30 @@
             (setf checksum (lodds:get-checksum-from-path remote-path user)))
           ;; remove size from load since the new task will add it again
           (decf-load task size)
-          (if checksum
-              (let ((task (make-instance
-                           'task-get-file-from-users
-                           :name "get-file-from-users (folder)"
-                           :checksum checksum
-                           :local-file-path (ensure-directories-exist
-                                             (concatenate 'string
-                                                          local-path
-                                                          (subseq file (length remote-root))))
-                           ;; resubmit current task-get-folder when file
-                           ;; download is complete
-                           :on-finish-hook (lambda (file-task)
-                                             (declare (ignore file-task))
-                                             (submit-task task)))))
-                (submit-task task))
-              (error "The file ~a from user ~a with checksum ~a does not exist anymore."
-                     file user checksum)))
-        (progn
-          (setf finished-p t)
-          (lodds.event:push-event :info (list "folder"
-                                              remote-path
-                                              "sucessfully downloaded to"
-                                              local-path))))))
+          (let ((on-error-hook
+                  (lambda (file-task)
+                    (declare (ignore file-task))
+                    (if (lodds.event:callback-exists-p :directory-error)
+                        (lodds.event:push-event :directory-error id)
+                        ;; just skip the file
+                        (submit-task task)))))
+            (if checksum
+                (submit-task (make-instance
+                              'task-get-file-from-users
+                              :name "get-file-from-users (folder)"
+                              :checksum checksum
+                              :local-file-path (ensure-directories-exist
+                                                (concatenate 'string
+                                                             local-path
+                                                             (subseq file (length remote-root))))
+                              ;; resubmit current task-get-folder when file
+                              ;; download is complete
+                              :on-finish-hook (lambda (file-task)
+                                                (declare (ignore file-task))
+                                                (submit-task task))
+                              :on-error-hook on-error-hook
+                              :on-cancel-hook on-error-hook))
+                (funcall on-error-hook nil)))))))
 
 (defmethod run-task ((task task-request))
   (with-slots (socket
