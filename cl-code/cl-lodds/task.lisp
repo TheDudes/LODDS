@@ -703,7 +703,7 @@
       (if client-info
           (with-accessors ((old-load lodds:c-load)
                            (old-last-change lodds:c-last-change))
-              (lodds:get-user-info user)
+              client-info
             (when (or (not (eql old-load user-load))
                       (<= old-last-change last-change))
               (lodds.event:push-event :client-updated
