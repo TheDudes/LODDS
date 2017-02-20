@@ -90,7 +90,17 @@
                    :type function
                    :documentation "Function which gets called when the
                    task finishes. Will be called before finish-task
-                   method gets called")))
+                   method gets called")
+   (on-error-hook :initarg :on-error-hook
+                  :initform nil
+                  :type function
+                  :documentation "Function which gets called when the
+                  task errors.")
+   (on-cancel-hook :initarg :on-cancel-hook
+                   :initform nil
+                   :type function
+                   :documentation "Function which gets called when the
+                   task was canceled.")))
 
 (defclass task-user (task)
     ((user :initarg :user

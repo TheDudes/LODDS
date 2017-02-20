@@ -175,19 +175,26 @@
                  finished-p
                  resubmit-p
                  canceled-p
-                 id) task
+                 id
+                 on-finish-hook
+                 on-cancel-hook
+                 on-error-hook) task
       (when canceled-p
         (finish-task task)
+        (when on-cancel-hook
+          (funcall on-cancel-hook task))
         (lodds.event:push-event :task-canceled
                                 (list id))
         (return-from run-task))
       (setf aktive-p t)
       (handler-case
-        (call-next-method)
+          (call-next-method)
         (error (err)
           (setf aktive-p nil
                 finished-p t)
           (finish-task task)
+          (when on-error-hook
+            (funcall on-error-hook task))
           (lodds.event:push-event :task-failed
                                   (list id err))
           (return-from run-task)))
@@ -195,6 +202,8 @@
       (if finished-p
           (progn
             (finish-task task)
+            (when on-finish-hook
+              (funcall on-finish-hook task))
             (lodds.event:push-event :task-finished
                                     (list id)))
           (when resubmit-p
@@ -219,12 +228,9 @@
     nil)
 
   (:method :before ((task task))
-    (with-slots (id on-finish-hook) task
-      (with-slots (lock tasks) (lodds:get-subsystem :tasker)
-        (bt:with-recursive-lock-held (lock)
-          (remhash id tasks))
-        (when on-finish-hook
-          (funcall on-finish-hook task)))))
+    (with-slots (lock tasks) (lodds:get-subsystem :tasker)
+      (bt:with-recursive-lock-held (lock)
+        (remhash (slot-value task 'id) tasks))))
 
   (:method ((task task-get-file-from-user))
     (with-slots (socket local-file-stream) task
