@@ -112,7 +112,8 @@
                      :on-cancel-fn
                      (lambda (widget)
                        (declare (ignore widget))
-                       (lodds.task:finish-task task)))))
+                       (lodds.task:cancel-task task)
+                       (lodds.task:submit-task task)))))
         (setf (slot-value widget 'on-timeout)
               (lambda ()
                 (cancel dialog)))))))

@@ -77,6 +77,8 @@
    (resubmit-p :initform nil
                :documentation "Flag which is t if the task should get
                resubmittet")
+   (canceled-p :initform nil
+               :documentation "Flag which is t if task was canceled")
    (finished-p :initform nil
                :documentation "Flag which is t if task has finished")
    (aktive-p :initform nil

@@ -41,7 +41,7 @@
 
 (defgeneric cancel-task (task)
   (:method ((task task))
-    (setf (slot-value task 'finished-p) t))
+    (setf (slot-value task 'canceled-p) t))
   (:method ((task-id string))
     (let ((task (get-task-by-id task-id)))
       (when task
@@ -174,8 +174,9 @@
     (with-slots (aktive-p
                  finished-p
                  resubmit-p
+                 canceled-p
                  id) task
-      (when finished-p
+      (when canceled-p
         (finish-task task)
         (lodds.event:push-event :task-canceled
                                 (list id))
