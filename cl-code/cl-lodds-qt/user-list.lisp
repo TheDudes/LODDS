@@ -25,10 +25,9 @@
                                           string)))
   (let* ((new-entry (q+:make-qtreewidgetitem user-list))
          (send-file-button (q+:make-qpushbutton "Send File" user-list)))
-    (lodds.core:split-user-identifier (name ip port t) user
-      (connect send-file-button "pressed()"
-               (lambda ()
-                 (open-send-file-dialog user ip port))))
+    (connect send-file-button "pressed()"
+             (lambda ()
+               (open-send-file-dialog user)))
     (q+:set-item-widget user-list
                         new-entry
                         +user-list-send-file+
@@ -69,7 +68,8 @@
   (qdoto user-list
          (q+:set-column-count 6)
          (q+:set-header-labels (list "User" "IP" "Port" "Load" "Last Change" ""))
-         (q+:set-alternating-row-colors t))
+         (q+:set-alternating-row-colors t)
+         (q+:set-accept-drops t))
 
   (qdoto (q+:header user-list)
          (q+:set-stretch-last-section nil)
@@ -79,6 +79,33 @@
          (q+:set-resize-mode +user-list-load+ (q+:qheaderview.resize-to-contents))
          (q+:set-resize-mode +user-list-last-change+ (q+:qheaderview.resize-to-contents))
          (q+:set-resize-mode +user-list-send-file+ (q+:qheaderview.resize-to-contents))))
+
+(define-override (user-list drag-enter-event) (ev)
+  (when (q+:has-urls (q+:mime-data ev))
+    (q+:accept-proposed-action ev)))
+
+(define-override (user-list drag-move-event) (ev)
+  (q+:accept-proposed-action ev))
+
+(define-override (user-list drop-event) (ev)
+  (let ((dropped-link (q+:const-data
+                       (q+:data (q+:mime-data ev)
+                                "text/uri-list"))))
+    (when (cl-strings:starts-with dropped-link "file://")
+      (let ((filepath (subseq (lodds.core:remove-newline dropped-link) 7)))
+        (cond
+          ((uiop:directory-exists-p filepath)
+           (make-instance
+            'dialog
+            :title "Error - Cannot send Directory"
+            :text "Its not possible to send a directory, select a file please."))
+          ((uiop:file-exists-p filepath)
+           (open-send-file-dialog nil filepath))
+          (t
+           (make-instance
+            'dialog
+            :title "Error - Dont know what to do"
+            :text "Whatever you dropped there is neither a dir nor a file.")))))))
 
 (define-initializer (user-list setup-callbacks)
   (lodds.event:add-callback :qt-user-list

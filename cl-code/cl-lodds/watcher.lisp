@@ -53,14 +53,14 @@
                  checksum
                  size
                  (subseq pathname (length (root-dir-path dir-watcher)))))
-  (let ((ft-hash (file-table-hash dir-watcher)))
-    (setf (gethash pathname (file-table-name dir-watcher))
-          (list checksum size))
-    (let ((val (gethash checksum ft-hash)))
-      (setf (gethash checksum ft-hash)
-            (if val
-                (cons pathname val)
-                (list pathname))))))
+  (setf (gethash pathname (file-table-name dir-watcher))
+        (list checksum size))
+  (let* ((ft-hash (file-table-hash dir-watcher))
+         (val (gethash checksum ft-hash)))
+    (setf (gethash checksum ft-hash)
+          (if val
+              (cons pathname val)
+              (list pathname)))))
 
 (defun remove-file (dir-watcher pathname)
   "removes a file from the dir-watcher, will be called bei
@@ -70,8 +70,8 @@
          (checksum (car (gethash pathname ft-name))))
     (let ((entry (gethash pathname ft-name)))
       (if (not entry)
-          (error "watcher:remove-file entry '~a' not found"
-                 pathname)
+          (format t "watcher:remove-file entry ~a not found~%"
+                  pathname)
           (progn
             (funcall (change-hook dir-watcher)
                      (destructuring-bind (checksum size)

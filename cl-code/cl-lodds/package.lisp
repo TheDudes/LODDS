@@ -9,7 +9,9 @@
            #:split-directory
            #:format-size
            #:split-user-identifier
-           #:split-path))
+           #:split-path
+           #:add-missing-slash
+           #:remove-newline))
 
 (defpackage #:lodds.low-level-api
   (:use #:cl
@@ -56,6 +58,8 @@
            #:on-finish-hook
            #:get-load
            #:get-task-progresses
+           #:get-task-by-id
+           #:cancel-task
            #:run-task
            #:finish-task
            #:submit-task
@@ -150,6 +154,7 @@
            #:get-subsystem
            #:get-load
            #:switch-interface
+           #:switch-name
            #:remove-clients
            #:get-timestamp-last-change
            #:get-user-list

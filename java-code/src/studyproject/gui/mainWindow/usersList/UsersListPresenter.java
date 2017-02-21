@@ -26,14 +26,14 @@ public class UsersListPresenter implements Initializable {
 	@Inject
 	MainWindowModel mainWindowModel;
 
-	private FilteredList<UserInfo> filteredList;
+	private FilteredList<UserInfo> filteredUserList;
 
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {
 		linkLoddsUserList();
 		addUserListMouseClickSelection();
-		filteredList = new FilteredList<UserInfo>(userListModel.getUsers(), s -> true);
-		usersListV.setItems(filteredList);
+		filteredUserList = new FilteredList<UserInfo>(userListModel.getUsers(), s -> true);
+		usersListV.setItems(filteredUserList);
 		addUsersSearchListener();
 	}
 
@@ -81,9 +81,9 @@ public class UsersListPresenter implements Initializable {
 	private void addUsersSearchListener() {
 		usersSearch.textProperty().addListener(l -> {
 			if (usersSearch.textProperty().get() == null || usersSearch.textProperty().get().isEmpty()) {
-				filteredList.setPredicate(s -> true);
+				filteredUserList.setPredicate(s -> true);
 			} else {
-				filteredList.setPredicate(s -> s.getUserName().contains(usersSearch.textProperty().get()));
+				filteredUserList.setPredicate(s -> s.getUserName().contains(usersSearch.textProperty().get()));
 			}
 		});
 	}

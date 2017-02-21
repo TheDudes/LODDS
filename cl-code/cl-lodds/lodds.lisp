@@ -262,28 +262,31 @@
 (defun get-file-changes (current-timestamp &optional (timestamp nil))
   "returns a list of all changes since the given timestamp. if
   timestamp is nil a full list of all files will be returnd"
-  (if timestamp
-      (reverse
-       (loop :for (ts . change) :in (lodds.watcher:list-of-changes (get-subsystem :watcher))
-             ;; only collect infos with timestamps not equal to
-             ;; CURRENT-TIMESTAMP and which are not older than TIMESTAMP
-             :when (and (>= ts timestamp)
-                        (not (eql ts current-timestamp)))
-             :collect change :into result
-             :else
-             ;; stop and return only if this :else was triggerd by TS
-             ;; beeing older then TIMESTAMP, and not if TS was eql to
-             ;; CURRENT-TIMESTAMP
-             :do (when (<= ts timestamp)
-                   (return result))
-             :finally (return result)))
-      (apply #'append
-             (mapcar
-              (lambda (watcher)
-                (loop :for info :in (lodds.watcher:get-all-tracked-file-infos watcher)
-                      :collect (cons :add
-                                     info)))
-              (lodds.watcher:dir-watchers (get-subsystem :watcher))))))
+  (let* ((watcher (get-subsystem :watcher))
+         (lock (lodds.watcher::list-of-changes-lock watcher)))
+    (bt:with-lock-held (lock)
+      (if timestamp
+          (reverse
+           (loop :for (ts . change) :in (lodds.watcher:list-of-changes watcher)
+                 ;; only collect infos with timestamps not equal to
+                 ;; CURRENT-TIMESTAMP and which are not older than TIMESTAMP
+                 :if (and (>= ts timestamp)
+                          (not (eql ts current-timestamp)))
+                 :collect change :into result
+                 :else
+                 ;; stop and return only if this :else was triggerd by TS
+                 ;; beeing older then TIMESTAMP, and not if TS was eql to
+                 ;; CURRENT-TIMESTAMP
+                 :do (when (< ts timestamp)
+                       (return result))
+                 :finally (return result)))
+          (apply #'append
+                 (mapcar
+                  (lambda (watcher)
+                    (let ((files (lodds.watcher:get-all-tracked-file-infos watcher)))
+                      (loop :for info :in files
+                            :collect (cons :add info))))
+                  (lodds.watcher:dir-watchers (get-subsystem :watcher))))))))
 
 (defun shutdown ()
   "shuts down the whole server, removes all handles and joins all
@@ -302,7 +305,7 @@
 (defun generate-info-response (timestamp)
   (let* ((started-tracking (lodds.watcher:started-tracking (get-subsystem :watcher)))
          (type (if (or (eql 0 timestamp)
-                       (< timestamp started-tracking)
+                       (<= timestamp started-tracking)
                        (not (lodds.subsystem:alive-p (get-subsystem :watcher))))
                    :all
                    :upd))
@@ -339,17 +342,18 @@
 
 ;; TODO: default timeout from settings
 (defun send-file (file ip port &optional (timeout 300))
-  (let ((users (get-user-by-ip ip)))
-    (lodds.task:submit-task
-     (make-instance 'lodds.task:task-send-file
-                    :name "send-file"
-                    :user users
-                    :ip ip
-                    :port port
-                    :filepath file
-                    :timeout timeout))))
+  (let* ((users (get-user-by-ip ip))
+         (task (make-instance 'lodds.task:task-send-file
+                              :name "send-file"
+                              :user users
+                              :ip ip
+                              :port port
+                              :filepath file
+                              :timeout timeout)))
+    (lodds.task:submit-task task)
+    (slot-value task 'lodds.task::id)))
 
 ;; TODO: default timeout from settings
 (defun send-file-user (file user &optional (timeout 300))
-  (lodds.core:split-user-identifier (name ip port) user
+  (lodds.core:split-user-identifier (name ip port t) user
     (send-file file ip port timeout)))

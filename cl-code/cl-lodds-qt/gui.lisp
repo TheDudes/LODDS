@@ -95,12 +95,52 @@
 (define-signal (main-window fix-menubar-order) ())
 (define-signal (main-window change-title) (string))
 (define-signal (main-window received-send-permission) (string))
+(define-signal (main-window directory-error) (string))
 
 (define-slot (main-window received-send-permission) ((task-id string))
   (declare (connected main-window (received-send-permission string)))
   (let ((task (lodds.task:remove-task-from-hold task-id)))
     (when task
       (open-send-permission-dialog task))))
+
+(define-slot (main-window directory-error) ((task-id string))
+  (declare (connected main-window (directory-error string)))
+  (let ((task (lodds.task:get-task-by-id task-id)))
+    (with-slots ((items lodds.task::items)
+                 (items-done lodds.task::items-done)
+                 (remote-path lodds.task::remote-path)
+                 (canceled-p lodds.task::canceled-p)) task
+      (destructuring-bind (file checksum size) (car items-done)
+        (declare (ignore checksum))
+        (let ((options (list (list :skip
+                                   "skip current file")
+                             (list :abort
+                                   "abort directory download")
+                             (list :retry
+                                   "retry loading file"))))
+          (flet ((on-close (widget)
+                   (case (get-selected-solution widget)
+                     (:skip (lodds.task:submit-task task))
+                     (:abort (progn
+                               (setf canceled-p t)
+                               (lodds.task:submit-task task)))
+                     (:retry (progn
+                               (setf items
+                                     (append (list (pop items-done))
+                                             items))
+                               (lodds.task:submit-task task))))
+                   t))
+            (make-instance 'dialog
+                           :title "Error - File from Directory Download failed"
+                           :text (format nil "File ~a (~a) which is part of directory download (~a) failed"
+                                         file
+                                         (lodds.core:format-size size)
+                                         remote-path)
+                           :widget (make-instance 'directory-error
+                                                  :title "Solutions:"
+                                                  :solutions options)
+                           :on-success-fn #'on-close
+                           :on-cancel-fn #'on-close)))))))
 
 (define-initializer (main-window setup-callbacks)
   (lodds.event:add-callback :qt-main
@@ -116,11 +156,18 @@
                               (signal! main-window (received-send-permission
                                                     string)
                                        (second event)))
-                            :send-permission))
+                            :send-permission)
+  (lodds.event:add-callback :qt-main
+                            (lambda (event)
+                              (signal! main-window (directory-error
+                                                    string)
+                                       (second event)))
+                            :directory-error))
 
 (define-finalizer (main-window cleanup-callbacks)
   (lodds.event:remove-callback :qt-main :name-changed)
-  (lodds.event:remove-callback :qt-main :send-permission))
+  (lodds.event:remove-callback :qt-main :send-permission)
+  (lodds.event:remove-callback :qt-main :directory-error))
 
 (define-slot (main-window fix-menubar-order) ()
   (declare (connected main-window (fix-menubar-order)))

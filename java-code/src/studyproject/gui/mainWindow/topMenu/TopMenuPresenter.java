@@ -98,8 +98,8 @@ public class TopMenuPresenter implements Initializable {
 	 */
 	private void sendFileToUser() {
 		String userName = usersListModel.getSelectedUser().get().getUserName();
-		long timeout = Long.parseLong((String) App.properties.get("getPermissionTimeout"));
-		File file = new File(Utils.getChoosenDirPath("Select Files to share"));
+		long timeout = Long.parseLong((String) App.properties.get("getPermissionTimeout")) * 1000;
+		File file = Utils.getChoosenFile("Select File to share");
 		FileInfo fileInfo;
 		try {
 			fileInfo = new FileInfo(file.getPath(), file.getPath());
