@@ -90,7 +90,8 @@ public class Requests {
 	 * 
 	 * @param timeout
 	 *            the time until the request times out. Not a timestamp but a
-	 *            set amount of time in ms
+	 *            set amount of time in ms. This value is divided by 1000 and
+	 *            sent as seconds over the network
 	 * 
 	 * @param fileName
 	 *            the name of the file that permission to send is asked for
