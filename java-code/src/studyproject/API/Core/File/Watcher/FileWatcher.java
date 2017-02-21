@@ -14,6 +14,7 @@ import java.nio.file.WatchEvent;
 import java.nio.file.WatchKey;
 import java.nio.file.WatchService;
 import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
 
 /**
  * Watches a specific folder for changes and executes handlers for updating the
@@ -184,13 +185,15 @@ public class FileWatcher implements Runnable {
 				// Delete all sub folders from
 				// watchtedInternalDirectories
 				System.out.println("Delete all sub folders from watchtedInternalDirectories");
+				ArrayList<String> removeList = new ArrayList<String>();
 				for (String subfolder : controller.watchedInternalDirectories) {
 					if (subfolder.contains(fullPath)) {
-						controller.watchedInternalDirectories.remove(subfolder);
+						removeList.add(subfolder);
 						System.out.println("Subfolder deleted: " + subfolder);
 					}
 				}
 				
+				controller.watchedInternalDirectories.removeAll(removeList);
 				controller.deleteFolderFromLists(fullPath);
 				
 			}
