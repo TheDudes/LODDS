@@ -3,6 +3,7 @@ package studyproject.gui.mainWindow.filesTree;
 import java.io.File;
 import java.net.URL;
 import java.util.ResourceBundle;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -10,7 +11,9 @@ import javax.inject.Inject;
 
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
+import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.collections.transformation.FilteredList;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.*;
@@ -40,7 +43,8 @@ public class FilesTreePresenter implements Initializable {
 	@FXML
 	Button downloadButton;
 
-	private final TreeItem<FileCoreInfo> root = new TreeItem<>();
+	private final TreeItem<FileCoreInfo> root = new TreeItem<FileCoreInfo>();
+	private FilteredList<TreeItem<FileCoreInfo>> filteredFileList;
 
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {
@@ -55,6 +59,10 @@ public class FilesTreePresenter implements Initializable {
 			}
 		});
 		reloadTreeCM.setOnAction(e -> createTree(userListModel.getSelectedUser().get()));
+		filesTreeSearch.textProperty().addListener(e -> {
+			filesTreeSearchChanged();
+		});
+		filteredFileList = new FilteredList<TreeItem<FileCoreInfo>>(root.getChildren(), p -> true);
 	}
 
 	public void createTree(UserInfo userInfo) {
@@ -123,4 +131,40 @@ public class FilesTreePresenter implements Initializable {
 		return;
 	}
 
+	private void filesTreeSearchChanged() {
+		if (filesTreeSearch.textProperty().get() == null || filesTreeSearch.textProperty().get().isEmpty()) {
+			// No searchString. Show full files tree
+			System.out.println("filesTreeSearch is null or empty");
+			filteredFileList.setPredicate(p -> true);
+			createTree(userListModel.getSelectedUser().get());
+		} else {
+			// searchString entered
+			int index;
+			FileCoreInfo fileCoreInfo;
+			String[] subPaths;
+			ConcurrentHashMap<String, FileCoreInfo> userFileMap = userListModel.getSelectedUser().get()
+					.getPathToFileInfo();
+			javafx.collections.ObservableList<String> fileCoreInfoList;
+
+			fileCoreInfoList = javafx.collections.FXCollections
+					.synchronizedObservableList(FXCollections.observableArrayList());
+			fileCoreInfoList.addAll(userFileMap.keySet());
+
+			FilteredList<String> filteredPathList = fileCoreInfoList
+					.filtered(p -> p.contains(filesTreeSearch.textProperty().get()));
+
+			System.out.println("Files in new filteredFileList (size: " + filteredFileList.size() + "):");
+			root.getChildren().clear();
+			for (String path : filteredPathList) {
+				fileCoreInfo = userFileMap.get(path);
+				System.out.println(fileCoreInfo.getFileName());
+				index = 0;
+				subPaths = path.split("/");
+				if (subPaths[0].isEmpty())
+					index = 1;
+				addTreeItem(fileCoreInfo, subPaths, index, root);
+				
+			}
+		}
+	}
 }
