@@ -103,14 +103,21 @@
          (q+:add-widget show-users)
          (q+:add-widget users)))
 
-(defun open-send-file-dialog (&optional user)
+(defmethod initialize-instance :after ((send-file send-file) &key selected-file)
+  (when selected-file
+    (with-slots-bound (send-file send-file)
+      (q+:set-text file
+                   selected-file))))
+
+(defun open-send-file-dialog (&optional user file)
   (make-instance 'dialog
                  :title "Send File"
                  :text "Select a File and a Timeout"
                  :widget (make-instance 'send-file
                                         :users-selected (if user
                                                             (list user)
-                                                            nil))
+                                                            nil)
+                                        :selected-file file)
                  :on-success-fn
                  (lambda (widget)
                    (with-slots-bound (widget send-file)

@@ -100,7 +100,7 @@
             :title "Error - Cannot send Directory"
             :text "Its not possible to send a directory, select a file please."))
           ((uiop:file-exists-p filepath)
-           (open-send-file-dialog))
+           (open-send-file-dialog nil filepath))
           (t
            (make-instance
             'dialog
