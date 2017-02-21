@@ -9,7 +9,9 @@
            #:split-directory
            #:format-size
            #:split-user-identifier
-           #:split-path))
+           #:split-path
+           #:add-missing-slash
+           #:remove-newline))
 
 (defpackage #:lodds.low-level-api
   (:use #:cl
