@@ -25,7 +25,7 @@ public class RequestsTest {
 	private String filePath = "testFile";
 	private String checksum = "96fa8f226d3801741e807533552bc4b177ac4544d834073b6a5298934d34b40b";
 	private String infoMessage = "get info 2189391831";
-	private String permissionMessage = "get send-permission 3898324 5000 testFile";
+	private String permissionMessage = "get send-permission 3898324 5 testFile";
 	private String fileMessage = "get file 96fa8f226d3801741e807533552bc4b177ac4544d834073b6a5298934d34b40b 0 90000";
 	private long timeStamp = 2189391831L;
 	private long fileSize = 3898324L;
