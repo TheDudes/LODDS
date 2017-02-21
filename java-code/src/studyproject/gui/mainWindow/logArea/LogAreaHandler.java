@@ -29,13 +29,6 @@ public class LogAreaHandler extends Handler {
 	private SimpleBooleanProperty broadcast;
 
 	/**
-	 * @deprecated do not use this constructor!
-	 */
-	public LogAreaHandler() {
-		super();
-	}
-
-	/**
 	 * Creates a new instance of an LogAreaHandler
 	 *
 	 * @param level
