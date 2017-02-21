@@ -159,7 +159,6 @@
                             :send-permission)
   (lodds.event:add-callback :qt-main
                             (lambda (event)
-                              (format t "iam here on catching signals~%")
                               (signal! main-window (directory-error
                                                     string)
                                        (second event)))
