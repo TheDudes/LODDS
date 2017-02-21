@@ -10,10 +10,11 @@ import studyproject.App;
 
 /**
  * Multiple used functions for GUI Lvl
+ * 
  * @author Chris
  */
 public class Utils {
-	
+
 	/**
 	 * 
 	 * @return choosen directorypath
@@ -27,17 +28,23 @@ public class Utils {
 		}
 		directoryChooser.setTitle(title);
 		File chosenFolder = directoryChooser.showDialog(new Stage());
-		
+
 		if (chosenFolder == null) {
 			return null;
 		}
 		return chosenFolder.getPath();
 	}
-	
+
 	public static List<File> getChoosenMultipleFiles(String title) {
 		FileChooser fileChooser = new FileChooser();
 		fileChooser.setTitle(title);
 		return fileChooser.showOpenMultipleDialog(new Stage());
+	}
+
+	public static File getChoosenFile(String title) {
+		FileChooser fileChooser = new FileChooser();
+		fileChooser.setTitle(title);
+		return fileChooser.showOpenDialog(new Stage());
 	}
 
 }
