@@ -57,7 +57,7 @@ public class FileWatcherControllerTest {
 		String actualResponse = controller.getInfo(0);
 		String expectedResponse = 
 				"all "+System.currentTimeMillis() / 1000L+" 1\n"
-				+ "add 736bf95996d40c71307e3727931b721dfb17bd27c441b903a6dd483b37021ac1 8 /"+virtualRoot+"oneFile/testFile.txt\n";
+				+ "add 8a691dcb75083df7c836d0b4e895c83bc12b6ce6 8 /"+virtualRoot+"oneFile/testFile.txt\n";
 		
 		assertEquals(expectedResponse,actualResponse);
 	}
@@ -96,11 +96,10 @@ public class FileWatcherControllerTest {
 		
 		// Get second line and compare with expected response	
 		String actualLineTwo = actualResponseLines[1]; 	
-		String expectedLineTwo = "add e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855 0 /"+virtualRoot+"temp/2.txt";
+		String expectedLineTwo = "add da39a3ee5e6b4b0d3255bfef95601890afd80709 0 /"+virtualRoot+"temp/2.txt";
 		assertEquals(expectedLineTwo,actualLineTwo);
 		
-		// Should be only two lines long cause header + one file
-		assertEquals(2, actualResponseLines.length);
+		assertEquals(3, actualResponseLines.length);
 		
 		cleanupTempFolder();
 	}
@@ -121,7 +120,41 @@ public class FileWatcherControllerTest {
 		// Wait short till fileController was initialized
 		Thread.sleep(1000);
 		
-		File f = new File(path+"temp.txt");
+		createDummyFile(path);
+		
+		while (controller.fileInfoHistory.size() == 0) {
+			
+		}
+		
+		assertEquals(1,controller.fileInfoHistory.size());
+		
+		String actualResponse = controller.getInfo(0);
+		String expectedResponse = 
+				"all "+System.currentTimeMillis() / 1000L+" 1\n"
+				+ "add da39a3ee5e6b4b0d3255bfef95601890afd80709 0 /"+virtualRoot+"temp/temp.txt\n";
+		
+		assertEquals(expectedResponse,actualResponse);
+		
+		cleanupTempFolder();
+	}
+	
+	@Test(timeout=20000)
+	public void shouldDetectFolderWithFileAddedDuringRuntime() throws Exception {
+		System.out.println("shouldDetectFolderWithFileAddedDuringRuntime");
+		
+		cleanupTempFolder();
+		
+		String path = testDirectory+"temp/";
+		
+		FileWatcherController controller = new FileWatcherController();
+		controller.watchDirectoryRecursively(path, testDirectory);
+		
+		assertEquals(0,controller.fileInfoHistory.size());
+		
+		// Wait short till fileController was initialized
+		Thread.sleep(1000);
+		
+		File f = new File(path+"folder/temp.txt");
 		f.getParentFile().mkdirs(); 
 		f.createNewFile();
 		
@@ -134,7 +167,7 @@ public class FileWatcherControllerTest {
 		String actualResponse = controller.getInfo(0);
 		String expectedResponse = 
 				"all "+System.currentTimeMillis() / 1000L+" 1\n"
-				+ "add e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855 0 /"+virtualRoot+"temp/temp.txt\n";
+				+ "add da39a3ee5e6b4b0d3255bfef95601890afd80709 0 /"+virtualRoot+"temp/folder/temp.txt\n";
 		
 		assertEquals(expectedResponse,actualResponse);
 		
@@ -147,9 +180,7 @@ public class FileWatcherControllerTest {
 		
 		// Create dummy file
 		String path = testDirectory+"temp/";
-		File f = new File(path+"temp.txt");
-		f.getParentFile().mkdirs(); 
-		f.createNewFile();
+		createDummyFile(path);
 		
 		// Start watching
 		FileWatcherController controller = new FileWatcherController();
@@ -173,10 +204,79 @@ public class FileWatcherControllerTest {
 		String actualResponse = controller.getInfo(0);
 		String expectedResponse = 
 				"all "+System.currentTimeMillis() / 1000L+" 2\n"
-				+ "del e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855 0 /"+virtualRoot+"temp/temp.txt\n"
-				+ "add e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855 0 /"+virtualRoot+"temp/temp.txt\n";
+				+ "del da39a3ee5e6b4b0d3255bfef95601890afd80709 0 /"+virtualRoot+"temp/temp.txt\n"
+				+ "add da39a3ee5e6b4b0d3255bfef95601890afd80709 0 /"+virtualRoot+"temp/temp.txt\n";
 		
 		assertEquals(expectedResponse,actualResponse);
+	}
+	
+	@Test(timeout=20000)
+	public void shouldDetectFolderWithSubDirsDeletedDuringRuntime() throws Exception {
+		cleanupTempFolder();
+		
+		// Create dummy file
+		String path = testDirectory+"temp/";
+		createDummyFile(path);
+		createDummyFile(path+"subfolder/");
+		createDummyFile(path+"subfolder/subfolder2/");
+
+		// Start watching
+		FileWatcherController c = new FileWatcherController();
+		c.watchDirectoryRecursively(path, testDirectory);
+		
+		// Wait short till fileController was initialized
+		Thread.sleep(1000);
+		
+		// List should contain two files
+		assertEquals(3,c.fileInfoHistory.size());
+		
+		// Delete file
+		cleanupTempFolder();
+				
+		// List should contain four files, 3 add + 3 del
+		while (c.fileInfoHistory.size() != 6) {
+			// Test will time out if list will not contain zero files
+			//System.out.println(c.fileInfoHistory.size());
+		}
+		
+		String actualResponse = c.getInfo(0);
+		String expectedResponse = 
+				"all "+System.currentTimeMillis() / 1000L+" 6\n"
+				+ "del da39a3ee5e6b4b0d3255bfef95601890afd80709 0 /"+virtualRoot+"temp/subfolder/subfolder2/temp.txt\n"
+				+ "del da39a3ee5e6b4b0d3255bfef95601890afd80709 0 /"+virtualRoot+"temp/subfolder/temp.txt\n"
+				+ "del da39a3ee5e6b4b0d3255bfef95601890afd80709 0 /"+virtualRoot+"temp/temp.txt\n"
+				+ "add da39a3ee5e6b4b0d3255bfef95601890afd80709 0 /"+virtualRoot+"temp/temp.txt\n"
+				+ "add da39a3ee5e6b4b0d3255bfef95601890afd80709 0 /"+virtualRoot+"temp/subfolder/temp.txt\n"
+				+ "add da39a3ee5e6b4b0d3255bfef95601890afd80709 0 /"+virtualRoot+"temp/subfolder/subfolder2/temp.txt\n";
+
+		
+		assertEquals(expectedResponse,actualResponse);
+		
+		// Watched internal directories should only have one entry (root)
+		System.out.println(c.watchedInternalDirectories);
+		assert(c.watchedInternalDirectories.size()==1);
+		
+		
+		// Should only have one thread left that is alive
+		
+		System.out.println(c.fileWatcherThreads);
+		c.fileWatcherThreads.forEach((k,v) -> {
+			System.out.println("Checking if thread is alive: " + k);
+
+			if (v.isAlive()) {
+				System.out.println(".. yes");
+
+				assertEquals(path, k);
+			} else {
+				System.out.println(".. no");
+			}
+		});
+	}
+
+	private void createDummyFile(String path) throws IOException {
+		File f = new File(path+"temp.txt");
+		f.getParentFile().mkdirs(); 
+		f.createNewFile();
 	}
 	
 	private void touch(String fileName) throws IOException{
@@ -194,10 +294,14 @@ public class FileWatcherControllerTest {
 	
 	private void cleanupTempFolder() {
 		File dir = new File(testDirectory+"temp/");
+		purgeDirectory(dir);
+	}
 	
-		for(File file: dir.listFiles()) 
-		    if (!file.isDirectory())
-		    	file.delete(); 
+	void purgeDirectory(File dir) {
+	    for (File file: dir.listFiles()) {
+	        if (file.isDirectory()) purgeDirectory(file);
+	        file.delete();
+	    }
 	}
 	
 

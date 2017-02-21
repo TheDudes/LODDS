@@ -236,6 +236,10 @@ public class FileWatcherTreeNode {
 
 	}
 	
+	public Boolean hasChildren() {
+		return this.children.size() > 0;
+	}
+	
 	/**
 	 * Gets all FileInfoListEntrys that are in the given node
 	 * @param node node that is being walked through

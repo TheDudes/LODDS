@@ -21,12 +21,14 @@ import java.util.ArrayList;
  * list
  *
  */
-public class FileWatcher implements Runnable {
+public class FileWatcher extends Thread {
 
 	private String directoryPath;
 	private String virtualRoot;
 	private Boolean watchForNewFiles;
 	private FileWatcherController controller;
+	public WatchService watcher;
+	public WatchKey key;
 
 	public FileWatcher(String path, Boolean watchForNewFiles, FileWatcherController controller, String virtualRoot) {
 		super();
@@ -44,10 +46,23 @@ public class FileWatcher implements Runnable {
 	 * @return
 	 */
 	private String addSlashToFileNameIfNecessary(String fileName) {
-		if (!fileName.substring(fileName.length() - 1).equals("/")) {
-			return fileName + "/";
+		if (fileName.charAt(fileName.length() - 1) != File.separatorChar) {
+			return fileName + File.separatorChar;
 		} else {
 			return fileName;
+		}
+	}
+	
+	public void stopWatching() {
+		if (watcher != null) {
+			try {
+				System.out.println("Watcher stop called");
+				key.cancel();
+				watcher.close();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 		}
 	}
 
@@ -60,19 +75,23 @@ public class FileWatcher implements Runnable {
 	 */
 	public void run() {
 		try {
-			WatchService watcher = FileSystems.getDefault().newWatchService();
+			watcher = FileSystems.getDefault().newWatchService();
 
 			// Register
 			Path dir = Paths.get(directoryPath);
 			dir.register(watcher, ENTRY_CREATE, ENTRY_DELETE, ENTRY_MODIFY);
 
-			while (true) {
-
-				WatchKey key;
+			while (!Thread.currentThread().isInterrupted()) {
+				
+				System.out.println("Start new wait round: " + directoryPath);
+				
 				try {
 					// wait for a key to be available
 					key = watcher.take();
 				} catch (InterruptedException ex) {
+					stopWatching();
+					Thread.currentThread().interrupt();
+					System.out.println("INTERRUPTED");
 					break;
 				}
 
@@ -88,6 +107,7 @@ public class FileWatcher implements Runnable {
 					@SuppressWarnings("unchecked")
 					WatchEvent<Path> ev = (WatchEvent<Path>) event;
 					Path fileName = ev.context();
+
 					String fullPath = directoryPath + fileName.toString();
 
 					File newFile = new File(fullPath);
@@ -103,7 +123,7 @@ public class FileWatcher implements Runnable {
 
 						// New directory was created
 						if (newFile.isDirectory()) {
-							controller.watchDirectoryRecursively(newFile.getPath(), virtualRoot);
+							controller.watchDirectoryRecursively(addSlashToFileNameIfNecessary(newFile.getPath()), virtualRoot);
 						}
 						
 						// New file was created
@@ -128,9 +148,13 @@ public class FileWatcher implements Runnable {
 							
 							// File is a folder
 							else {
-								folderWasDeleted(fullPath);
+								if (node.hasChildren()) {
+									folderWasDeleted(addSlashToFileNameIfNecessary(fullPath));
+								} else {
+									System.out.println("Folder has no subfolders - Only remove from internal dir list");
+									controller.watchedInternalDirectories.remove(addSlashToFileNameIfNecessary(fullPath));
+								}
 							}
-	 
 						}
 						
 						// File was modified
@@ -138,9 +162,7 @@ public class FileWatcher implements Runnable {
 						if (node != null && node.fileInfo != null && eventType == ENTRY_MODIFY) {
 							fileWasModified(fullPath, node);
 						}
-
 					}
-
 				}
 
 				// Reset key
@@ -149,7 +171,6 @@ public class FileWatcher implements Runnable {
 					break;
 				}
 
-				// FileWatcherController.semaphore.release();
 				controller.lock.unlock();
 
 			}
@@ -170,8 +191,7 @@ public class FileWatcher implements Runnable {
 		
 		// Check if folder is in our list
 		System.out.println("Check if folder is in our list: " + fullPath);
-		if (controller.watchedInternalDirectories.contains(fullPath)
-				|| controller.watchedInternalDirectories.contains(fullPath + "/")) {
+		if (controller.watchedInternalDirectories.contains(fullPath)) {
 
 			File probablyDeletedFolder = new File(fullPath);
 
@@ -180,21 +200,22 @@ public class FileWatcher implements Runnable {
 			
 			if (!probablyDeletedFolder.exists()) {
 				controller.watchedInternalDirectories.remove(fullPath);
-				controller.watchedInternalDirectories.remove(fullPath + "/");
+				controller.stopWatchThread(fullPath);
 
-				// Delete all sub folders from
-				// watchtedInternalDirectories
-				System.out.println("Delete all sub folders from watchtedInternalDirectories");
+				// Delete all sub folders from watchtedInternalDirectories
+				System.out.println("Delete all sub folders from watchedInternalDirectories");
 				ArrayList<String> removeList = new ArrayList<String>();
 				for (String subfolder : controller.watchedInternalDirectories) {
 					if (subfolder.contains(fullPath)) {
 						removeList.add(subfolder);
-						System.out.println("Subfolder deleted: " + subfolder);
+						controller.stopWatchThread(subfolder);
+						System.out.println("Subfolder added to delete list: " + subfolder);
 					}
 				}
 				
 				controller.watchedInternalDirectories.removeAll(removeList);
 				controller.deleteFolderFromLists(fullPath);
+				
 				
 			}
 												

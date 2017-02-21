@@ -1,6 +1,7 @@
 package studyproject.API.Core.File.Watcher;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Vector;
@@ -44,6 +45,8 @@ public class FileWatcherController {
 	
 	// Timestamp of first share
 	private Long firstShareTimestamp;
+	
+	public ConcurrentHashMap<String, FileWatcher> fileWatcherThreads = new ConcurrentHashMap<>();
 
 	/**
 	 * Test code
@@ -54,18 +57,19 @@ public class FileWatcherController {
 	public static void main(String[] args) throws Exception {
 		try {
 
-			FileWatcherController myWatchService = new FileWatcherController();
+			FileWatcherController c = new FileWatcherController();
 			String virtualRoot = "/Users/robinhood/Desktop/testData/";
 
-			myWatchService.watchDirectoryRecursively("/Users/robinhood/Desktop/testData/", virtualRoot);
+			c.watchDirectoryRecursively("/Users/robinhood/Desktop/testData/", virtualRoot);
 
 			while (true) {
 				System.out.println("");
-				System.out.println(myWatchService.getInfo(0));
+				System.out.println(c.getInfo(0));
 				System.out.println("Watched directories:");
-				System.out.println(myWatchService.watchedInternalDirectories);
+				System.out.println(c.watchedInternalDirectories);
 				Thread.sleep(5 * 1000);
-				myWatchService.currentFiles.printTree();
+				c.currentFiles.printTree();
+				c.printThreadsInfo();
 			}
 
 		} catch (Exception e) {
@@ -76,8 +80,33 @@ public class FileWatcherController {
 	}
 
 	public void unwatchDirectory(String directory) {
-		// System.out.println("Unwatch: "+directory);
 		watchedInternalDirectories.remove(directory);
+	}
+	
+	@SuppressWarnings("deprecation")
+	public void stopWatchThread(String relativePath) {
+		System.out.println("Stop watch thread: " + relativePath);
+		
+		fileWatcherThreads.forEach((k,v) -> {
+			if (v.isAlive() && k == relativePath) {
+				System.out.println("Interrupting watch thread: " + relativePath);
+				v.interrupt();
+				try {
+					v.key.cancel();
+					v.watcher.close();
+					
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				
+				
+				v.stop();
+				
+			} else {
+				System.out.println("Already not alive anymore: " + relativePath);
+			}
+		});
 	}
 
 	/**
@@ -169,8 +198,19 @@ public class FileWatcherController {
 	 * @param path
 	 */
 	public void watchDirectory(String path, Boolean watchForNewFiles, String virtualRoot) {
-		// System.out.println("watchDirectory(): "+path);
-		(new Thread(new FileWatcher(path, watchForNewFiles, this, virtualRoot))).start();
+		FileWatcher t = new FileWatcher(path, watchForNewFiles, this, virtualRoot);
+		t.start();
+		fileWatcherThreads.put(path, t);
+	}
+	
+	public void printThreadsInfo() {
+		fileWatcherThreads.forEach((k,v) -> {
+			if (v.isAlive()) {
+				System.out.println("Thread is alive: " + k);
+			} else {
+				System.out.println("Thread is not alive: " + k);
+			}
+		});
 	}
 
 	/**
@@ -241,20 +281,19 @@ public class FileWatcherController {
 	 * Deletes folder including all subdirectories and files from list
 	 * @param node
 	 */
-	public void deleteFolderFromLists(String fileName) {		
+	public void deleteFolderFromLists(String fileName) {	
+		
+		System.out.println("Delete folder from lists: " + fileName);
 		
 		// Get all fileInfoList entries
 		ArrayList<FileInfoListEntry> entries = FileWatcherTreeNode.removeFileNameAndGetRemovedFileInfoListEntries(currentFiles, fileName);
 		
-		if (entries.size() > 1) {
+		if (entries.size() > 0) {
+			System.out.println("Deleted folder seems to have children");
 			// Call deleteFileFromLists for all fileInfoListEntries inside that dir but not the parent one cause it's a dir
-			int i = 0;
 			for (FileInfoListEntry entry:entries) {
-				if (i > 0) {
 					System.out.println("Recursive delete call: "+entry.fileName);
 					deleteFileFromLists(entry);
-				}
-				i++;
 			}
 		}
 	}
