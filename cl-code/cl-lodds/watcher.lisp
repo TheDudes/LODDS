@@ -171,41 +171,44 @@
   "returns a list of all currently shared folders."
   (mapcar #'cl-fs-watcher:dir (dir-watchers (lodds:get-subsystem :watcher))))
 
+(defun folder-already-shared-p (folder-path)
+  (if (find folder-path (get-shared-folders))
+      t
+      (loop :for watcher :in (dir-watchers (lodds:get-subsystem :watcher))
+            :do (loop :for dir
+                      :being :the :hash-key :of (cl-fs-watcher:directory-handles watcher)
+                      :do (when (string= dir folder-path)
+                            (return-from folder-already-shared-p t))))))
+
 (defun share-folder (folder-path)
   "share a given folder, adds a watcher to handle updates."
   ;; check if a folder like the given one exists already
   (let* ((dir (car (directory folder-path)))
-         (absolute-path (format nil "~a" dir))
          (watcher (lodds:get-subsystem :watcher)))
-    (if (null dir)
-        (error "TODO: some error on given directory :( (does it exist?)")
-        (multiple-value-bind (path name) (lodds.core:split-directory absolute-path)
-          (declare (ignore path))
-          (loop :for shared-folder :in (get-shared-folders)
-                :do (multiple-value-bind (p n) (lodds.core:split-directory shared-folder)
-                      (declare (ignore p))
-                      (when (string= name n)
-                        (error "TODO: the given directory can not be shared ~
-                               since a directory with that name already exists :("))))))
-    (when (find folder-path (get-shared-folders))
+    (when (null dir)
+      (error "TODO: some error on given directory :( (does it exist?)"))
+    (when (folder-already-shared-p folder-path)
       (error "TODO: the folder you tried to share is already shared"))
-    (let* ((hook (lambda (change)
-                   (bt:with-lock-held ((list-of-changes-lock watcher))
-                     (push change (list-of-changes watcher))
-                     (setf (last-change watcher) (car change)))))
-           (new-dir-watcher
-             (make-instance 'dir-watcher
-                            :change-hook hook
-                            :dir folder-path
-                            :recursive-p t)))
-      (when (eql 0 (started-tracking watcher))
-        (setf (started-tracking watcher)
-              (lodds.core:get-timestamp)))
-      (push new-dir-watcher
-            (dir-watchers watcher))
-      (setf (lodds.subsystem:alive-p watcher) t)
-      (lodds.event:push-event :shared-directory
-                              (list folder-path)))))
+    (bt:make-thread
+     (lambda ()
+       (let* ((hook (lambda (change)
+                      (bt:with-lock-held ((list-of-changes-lock watcher))
+                        (push change (list-of-changes watcher))
+                        (setf (last-change watcher) (car change)))))
+              (new-dir-watcher
+                (make-instance 'dir-watcher
+                               :change-hook hook
+                               :dir folder-path
+                               :recursive-p t)))
+         (when (eql 0 (started-tracking watcher))
+           (setf (started-tracking watcher)
+                 (lodds.core:get-timestamp)))
+         (push new-dir-watcher
+               (dir-watchers watcher))
+         (setf (lodds.subsystem:alive-p watcher) t)
+         (lodds.event:push-event :shared-directory
+                                 (list folder-path)))
+       :name "Sharing Directory"))))
 
 (defun unshare-folder (folder-path)
   "unshare the given folder"

@@ -92,6 +92,7 @@
            #:get-all-tracked-file-infos
            #:get-file-info
            #:get-shared-folders
+           #:folder-already-shared-p
            #:share-folder
            #:unshare-folder))
 

@@ -12,19 +12,24 @@
 
 (defmethod share-directory ((directories directories) dir)
   (setf dir (lodds.core:add-missing-slash dir))
-  (with-slots-bound (directories directories)
-    (let ((new-entry (q+:make-qtreewidgetitem directories))
-          (spinner (q+:make-qprogressbar directories)))
-      (qdoto spinner
-             (q+:set-maximum 0)
-             (q+:set-minimum 0)
-             (q+:set-format "..."))
-      (q+:set-item-widget directories new-entry +shared-widget+ spinner)
-      (q+:set-text new-entry +shared-path+ dir)
-      (setf (gethash dir dirs) new-entry)))
-  (bt:make-thread (lambda ()
-                    (lodds.watcher:share-folder dir))
-                  :name "Sharing Directory"))
+  (if (lodds.watcher:folder-already-shared-p dir)
+      (make-instance 'dialog
+                     :title (format nil "Error - ~a already Shared"
+                                    dir)
+                     :text (format nil
+                                   "Sorry, cannot share ~a since its already shared"
+                                   dir))
+      (with-slots-bound (directories directories)
+        (let ((new-entry (q+:make-qtreewidgetitem directories))
+              (spinner (q+:make-qprogressbar directories)))
+          (qdoto spinner
+                 (q+:set-maximum 0)
+                 (q+:set-minimum 0)
+                 (q+:set-format "..."))
+          (q+:set-item-widget directories new-entry +shared-widget+ spinner)
+          (q+:set-text new-entry +shared-path+ dir)
+          (setf (gethash dir dirs) new-entry))
+        (lodds.watcher:share-folder dir))))
 
 (define-signal (directories add-directory) (string))
 (define-signal (directories remove-directory) (string))
