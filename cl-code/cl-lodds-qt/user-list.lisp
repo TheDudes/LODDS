@@ -10,16 +10,16 @@
   ((users :initform (make-hash-table :test 'equalp)
           :accessor users)))
 
-(define-signal (user-list add-user) (string string string))
+(define-signal (user-list add-user) (string string int))
 (define-signal (user-list remove-user) (string))
-(define-signal (user-list update-user) (string string string))
+(define-signal (user-list update-user) (string string int))
 
 (define-slot (user-list add-user) ((user string)
                                    (load string)
-                                   (last-change string))
+                                   (last-change int))
   (declare (connected user-list (add-user string
                                           string
-                                          string)))
+                                          int)))
   (let* ((new-entry (q+:make-qtreewidgetitem user-list))
          (send-file-button (q+:make-qpushbutton "Send File" user-list)))
     (connect send-file-button "pressed()"
@@ -34,7 +34,10 @@
              (q+:set-text +user-list-name+ name)
              (q+:set-tool-tip +user-list-name+
                               (format nil "Ip: ~a~%Port: ~a~%Last Change: ~a"
-                                      ip port last-change))
+                                      ip port
+                                      (if (eql 0 last-change)
+                                          "-"
+                                          (generate-timestamp last-change))))
              (q+:set-text +user-list-load+ (lodds.core:format-size (parse-integer load)))
              (q+:set-text-alignment +user-list-load+ (q+:qt.align-right))))
     (setf (gethash user (users user-list)) new-entry)))
@@ -49,10 +52,10 @@
 
 (define-slot (user-list update-user) ((user string)
                                       (load string)
-                                      (last-change string))
+                                      (last-change int))
   (declare (connected user-list (update-user string
                                              string
-                                             string)))
+                                             int)))
   (let ((entry (gethash user (users user-list))))
     (when entry
       (lodds.core:split-user-identifier (name ip port) user
@@ -61,7 +64,11 @@
                             (lodds.core:format-size (parse-integer load)))
                (q+:set-tool-tip +user-list-name+
                                 (format nil "Ip: ~a~%Port: ~a~%Last Change: ~a"
-                                        ip port last-change)))))))
+                                        ip
+                                        port
+                                        (if (eql 0 last-change)
+                                            "-"
+                                            (generate-timestamp last-change)))))))))
 
 (define-initializer (user-list setup-widget)
   (qdoto user-list
@@ -108,10 +115,10 @@
                             (lambda (event)
                               (destructuring-bind (name load last-change) (cdr event)
                                 (signal! user-list
-                                         (add-user string string string)
+                                         (add-user string string int)
                                          name
                                          (prin1-to-string load)
-                                         (prin1-to-string last-change))))
+                                         last-change)))
                             :client-added)
   (lodds.event:add-callback :qt-user-list
                             (lambda (event)
@@ -123,10 +130,10 @@
                             (lambda (event)
                               (destructuring-bind (name load last-change) (cdr event)
                                 (signal! user-list
-                                         (update-user string string string)
+                                         (update-user string string int)
                                          name
                                          (prin1-to-string load)
-                                         (prin1-to-string last-change))))
+                                         last-change)))
                             :client-updated))
 
 (define-initializer (user-list setup-add-users)
@@ -134,10 +141,10 @@
         :do (let ((user-info (lodds:get-user-info user)))
               ;; add user
               (signal! user-list
-                       (add-user string string string)
+                       (add-user string string int)
                        user
                        (prin1-to-string (lodds:c-load user-info))
-                       (prin1-to-string (lodds:c-last-change user-info))))))
+                       (lodds:c-last-change user-info)))))
 
 (define-finalizer (user-list cleanup-callbacks)
   (lodds.event:remove-callback :qt-user-list :client-added)
