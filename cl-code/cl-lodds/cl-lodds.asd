@@ -12,7 +12,6 @@
                :cl-strings
                :cl-ppcre
                :bordeaux-threads
-               :cffi
                :cl-fs-watcher
                :lparallel)
   :components ((:file "package")
