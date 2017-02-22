@@ -80,7 +80,7 @@
   (qdoto (q+:header user-list)
          (q+:set-stretch-last-section nil)
          (q+:set-resize-mode +user-list-name+ (q+:qheaderview.stretch))
-         (q+:set-resize-mode +user-list-load+ (q+:qheaderview.resize-to-contents))
+         (q+:resize-section +user-list-load+ 55)
          (q+:set-resize-mode +user-list-send-file+ (q+:qheaderview.resize-to-contents))))
 
 (define-override (user-list drag-enter-event) (ev)
