@@ -11,7 +11,8 @@
            #:split-user-identifier
            #:split-path
            #:add-missing-slash
-           #:remove-newline))
+           #:remove-newline
+           #:get-folder))
 
 (defpackage #:lodds.low-level-api
   (:use #:cl

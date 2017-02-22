@@ -145,3 +145,18 @@
     (t
      ;; just return it
      string)))
+
+(defun get-folder (fullpath)
+  "Returns the folder describted by fullpath. If given fullpath is
+  root (/) a empty string (\"\") is returned. Given fullpath _must_
+  end with a slash (/).
+  CL-USER> (get-folder \"/home/someone/somehwere/\")
+  => \"somewhere/\"
+
+  CL-USER> (get-folder \"/\")
+  => \"\""
+  (let* ((folders (pathname-directory fullpath))
+         (folder (car (last folders))))
+    (if (> (length folders) 1)
+        (lodds.core:add-missing-slash folder)
+        "")))
