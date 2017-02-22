@@ -3,10 +3,8 @@
 
 ;; shares columns
 (defvar +shares-name+ 0)
-(defvar +shares-items+ 1)
-(defvar +shares-size+ 2)
-(defvar +shares-checksum+ 3)
-(defvar +shares-id+ 4)
+(defvar +shares-size+ 1)
+(defvar +shares-id+ 2)
 
 (define-widget shares (QTreeWidget)
   ((changes :accessor changes
@@ -147,7 +145,6 @@
              :type string
              :documentation "File entries checksum")))
 
-
 (defmethod initialize-instance :after ((entry shares-entry) &rest initargs)
   (declare (ignorable initargs))
   (with-accessors ((name shares-entry-name)
@@ -159,12 +156,10 @@
     (let ((font (q+:make-qfont "Consolas, Inconsolata, Monospace" 10)))
       (setf (q+:style-hint font) (q+:qfont.type-writer))
       (qdoto widget
+             (q+:set-tool-tip +shares-size+ (format nil "~a bytes" size))
              (q+:set-font +shares-name+ font)
-             (q+:set-font +shares-items+ font)
              (q+:set-font +shares-size+ font)
-             (q+:set-font +shares-checksum+ font)
              (q+:set-text-alignment +shares-size+ (q+:qt.align-right))
-             (q+:set-text-alignment +shares-items+ (q+:qt.align-right))
              (q+:set-text +shares-name+ name)
              (q+:set-text +shares-size+ (lodds.core:format-size size))
              (q+:set-text +shares-id+ id)))))
@@ -173,17 +168,13 @@
   (declare (ignorable initargs))
   (with-accessors ((items shares-entry-items)
                    (widget shares-entry-widget)) entry
-    (qdoto widget
-           (q+:set-text +shares-items+ (prin1-to-string items))
-           (q+:set-text +shares-checksum+ ""))))
+    (q+:set-tool-tip widget +shares-name+ (format nil "Items: ~a" items))))
 
 (defmethod initialize-instance :after ((entry shares-entry-file) &rest initargs)
   (declare (ignorable initargs))
   (with-accessors ((checksum shares-entry-checksum)
                    (widget shares-entry-widget)) entry
-    (qdoto widget
-           (q+:set-text +shares-items+ "")
-           (q+:set-text +shares-checksum+ checksum))))
+    (q+:set-tool-tip widget +shares-name+ (format nil "Checksum: ~a" checksum))))
 
 (define-signal (shares update-entries) (string))
 (define-signal (shares remove-entry) (string))
@@ -251,13 +242,13 @@
                        :size *new-size*
                        :user *new-user*
                        :widget new-entry))
-    (q+:set-text parent
-                 +shares-items+
-                 (prin1-to-string
-                  (incf (shares-entry-items
-                         (gethash
-                          (q+:text parent +shares-id+)
-                          (entries shares))))))
+    (q+:set-tool-tip parent
+                     +shares-name+
+                     (format nil "Items: ~a"
+                             (incf (shares-entry-items
+                                    (gethash
+                                     (q+:text parent +shares-id+)
+                                     (entries shares))))))
     (q+:add-child parent new-entry)
     ;; if there is path left, add those under the new node. If there
     ;; is no path left it means we reached the last node, so return t
@@ -287,13 +278,13 @@
   (do-childs (element i parent)
     ;; check if node matches, if it does not continue
     (flet ((update-parent-items ()
-             (q+:set-text parent
-                          +shares-items+
-                          (prin1-to-string
-                           (decf (shares-entry-items
-                                  (gethash
-                                   (q+:text parent +shares-id+)
-                                   (entries shares))))))))
+             (q+:set-tool-tip parent
+                              +shares-name+
+                              (format nil "Items: ~a"
+                                      (decf (shares-entry-items
+                                             (gethash
+                                              (q+:text parent +shares-id+)
+                                              (entries shares))))))))
       (when (string= (car path)
                      (q+:text element +shares-name+))
         ;; check if we have a path left and need to call
@@ -388,9 +379,9 @@
                  :user ""
                  :widget (q+:invisible-root-item shares))
   (qdoto shares
-         (q+:set-column-count 5)
+         (q+:set-column-count 3)
          (q+:set-uniform-row-heights t)
-         (q+:set-header-labels (list "Name" "Items" "Size" "Checksum" "ID"))
+         (q+:set-header-labels (list "Name" "Size" "ID"))
          (q+:hide-column +shares-id+)
          (q+:set-alternating-row-colors t)
          (q+:set-animated t)
@@ -399,9 +390,7 @@
   (qdoto (q+:header shares)
          (q+:set-stretch-last-section nil)
          (q+:set-resize-mode +shares-name+ (q+:qheaderview.stretch))
-         (q+:set-resize-mode +shares-items+ (q+:qheaderview.resize-to-contents))
-         (q+:set-resize-mode +shares-size+ (q+:qheaderview.resize-to-contents))
-         (q+:set-resize-mode +shares-checksum+ (q+:qheaderview.resize-to-contents))))
+         (q+:set-resize-mode +shares-size+ (q+:qheaderview.resize-to-contents))))
 
 (define-initializer (shares setup-callbacks)
   ;; move this to list-view later
