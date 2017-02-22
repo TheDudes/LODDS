@@ -3,11 +3,8 @@
 
 ;; user-list columns
 (defvar +user-list-name+ 0)
-(defvar +user-list-ip+ 1)
-(defvar +user-list-port+ 2)
-(defvar +user-list-load+ 3)
-(defvar +user-list-last-change+ 4)
-(defvar +user-list-send-file+ 5)
+(defvar +user-list-load+ 1)
+(defvar +user-list-send-file+ 2)
 
 (define-widget user-list (QTreeWidget)
   ((users :initform (make-hash-table :test 'equalp)
@@ -35,10 +32,10 @@
     (lodds.core:split-user-identifier (name ip port) user
       (qdoto new-entry
              (q+:set-text +user-list-name+ name)
-             (q+:set-text +user-list-ip+ ip)
-             (q+:set-text +user-list-port+ port)
+             (q+:set-tool-tip +user-list-name+
+                              (format nil "Ip: ~a~%Port: ~a~%Last Change: ~a"
+                                      ip port last-change))
              (q+:set-text +user-list-load+ (lodds.core:format-size (parse-integer load)))
-             (q+:set-text +user-list-last-change+ last-change)
              (q+:set-text-alignment +user-list-load+ (q+:qt.align-right))))
     (setf (gethash user (users user-list)) new-entry)))
 
@@ -58,26 +55,25 @@
                                              string)))
   (let ((entry (gethash user (users user-list))))
     (when entry
-      (qdoto entry
-             (q+:set-text +user-list-load+
-                          (lodds.core:format-size (parse-integer load)))
-             (q+:set-text +user-list-last-change+
-                          last-change)))))
+      (lodds.core:split-user-identifier (name ip port) user
+        (qdoto entry
+               (q+:set-text +user-list-load+
+                            (lodds.core:format-size (parse-integer load)))
+               (q+:set-tool-tip +user-list-name+
+                                (format nil "Ip: ~a~%Port: ~a~%Last Change: ~a"
+                                        ip port last-change)))))))
 
 (define-initializer (user-list setup-widget)
   (qdoto user-list
-         (q+:set-column-count 6)
-         (q+:set-header-labels (list "User" "IP" "Port" "Load" "Last Change" ""))
+         (q+:set-column-count 3)
+         (q+:set-header-labels (list "User" "Load" ""))
          (q+:set-alternating-row-colors t)
          (q+:set-accept-drops t))
 
   (qdoto (q+:header user-list)
          (q+:set-stretch-last-section nil)
          (q+:set-resize-mode +user-list-name+ (q+:qheaderview.stretch))
-         (q+:set-resize-mode +user-list-ip+ (q+:qheaderview.resize-to-contents))
-         (q+:set-resize-mode +user-list-port+ (q+:qheaderview.resize-to-contents))
          (q+:set-resize-mode +user-list-load+ (q+:qheaderview.resize-to-contents))
-         (q+:set-resize-mode +user-list-last-change+ (q+:qheaderview.resize-to-contents))
          (q+:set-resize-mode +user-list-send-file+ (q+:qheaderview.resize-to-contents))))
 
 (define-override (user-list drag-enter-event) (ev)
