@@ -24,7 +24,7 @@
                (:file "send-permission")
                (:file "send-file")
                (:file "info")
-               (:file "directory-error")
+               (:file "selection")
                (:file "download-file")
                (:file "download-folder")
                (:file "gui")))

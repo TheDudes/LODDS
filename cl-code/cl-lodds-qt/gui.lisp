@@ -134,7 +134,7 @@
                                          file
                                          (lodds.core:format-size size)
                                          remote-path)
-                           :widget (make-instance 'directory-error
+                           :widget (make-instance 'selection
                                                   :title "Solutions:"
                                                   :solutions options)
                            :on-success-fn #'on-close
