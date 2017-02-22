@@ -133,7 +133,12 @@
          (q+:set-header-labels (list "Info" "Progress" "Stop" "ID"))
          (q+:hide-column +info-id+)
          (q+:set-alternating-row-colors t)
-         (q+:set-animated t)))
+         (q+:set-animated t))
+  (qdoto (q+:header info)
+         (q+:set-stretch-last-section nil)
+         (q+:set-resize-mode +info-info+ (q+:qheaderview.stretch))
+         (q+:resize-section +info-progress+ 150)
+         (q+:set-resize-mode +info-cancel+ (q+:qheaderview.resize-to-contents))))
 
 (define-initializer (info setup-timer)
   ;; TODO: get/set timeout from settings
