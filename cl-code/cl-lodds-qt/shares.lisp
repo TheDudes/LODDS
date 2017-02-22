@@ -156,7 +156,7 @@
     (let ((font (q+:make-qfont "Consolas, Inconsolata, Monospace" 10)))
       (setf (q+:style-hint font) (q+:qfont.type-writer))
       (qdoto widget
-             (q+:set-tool-tip +shares-size+ (format nil "~a bytes" size))
+             (q+:set-tool-tip +shares-size+ (format nil "~:d bytes" size))
              (q+:set-font +shares-name+ font)
              (q+:set-font +shares-size+ font)
              (q+:set-text-alignment +shares-size+ (q+:qt.align-right))
@@ -208,10 +208,12 @@
         (with-accessors ((old-size shares-entry-size))
             (gethash (q+:text element +shares-id+) (entries shares))
           (incf old-size *new-size*)
-          (q+:set-text element
-                       +shares-size+
-                       (lodds.core:format-size
-                        old-size)))
+          (qdoto element
+                 (q+:set-text +shares-size+
+                              (lodds.core:format-size
+                               old-size))
+                 (q+:set-tool-tip +shares-size+
+                                  (format nil "~:d bytes" old-size))))
         (return-from add-node t))
       ;; if add-child-node was not successfull, just return
       ;; nil
@@ -317,10 +319,12 @@
                     (with-accessors ((old-size shares-entry-size))
                         (gethash (q+:text element +shares-id+) (entries shares))
                       (decf old-size size)
-                      (q+:set-text element
-                                   +shares-size+
-                                   (lodds.core:format-size
-                                    old-size))))
+                      (qdoto element
+                             (q+:set-text +shares-size+
+                                          (lodds.core:format-size
+                                           old-size))
+                             (q+:set-tool-tip +shares-size+
+                                              (format nil "~:d bytes" old-size)))))
                 ;; return size here, since recursive remove
                 ;; was successfull
                 (return-from remove-node size))))))))
