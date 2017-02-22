@@ -65,16 +65,13 @@
 
 (defmethod remove-info ((info info) id)
   (with-slots-bound (info info)
-    (destructuring-bind (widget progress) (gethash id tracked-tasks)
-      (declare (ignore widget))
-      (let ((root (q+:invisible-root-item info)))
-        (do-childs (element index root)
-          (when (equalp (q+:text element +info-id+)
-                        id)
-            (finalize (q+:take-child root index))
-            ;; (finalize progress)
-            (remhash id tracked-tasks)
-            (return-from remove-info)))))))
+    (let ((root (q+:invisible-root-item info)))
+      (do-childs (element index root)
+        (when (equalp (q+:text element +info-id+)
+                      id)
+          (finalize (q+:take-child root index))
+          (remhash id tracked-tasks)
+          (return-from remove-info))))))
 
 (define-slot (info tick) ()
   (declare (connected timer (timeout)))
@@ -102,18 +99,21 @@
         (setf finished-tasks (list)
               failed-tasks (list)
               canceled-tasks (list)))
-      (flet ((update-color (id color)
+      (flet ((update-color (id color status)
                (let ((entry (gethash id tracked-tasks)))
                  (when entry
                    (destructuring-bind (widget progress) entry
-                     (declare (ignore widget))
-                     (q+:set-style-sheet progress
-                                         (format nil
-                                                 "QProgressBar::chunk { background: ~a; }"
-                                                 color)))
+                     (declare (ignore progress))
+                     (q+:remove-item-widget info widget +info-progress+)
+                     (let ((label (q+:make-qlabel (format nil "<b><font color=\"~a\">~a</font></b>"
+                                                          color
+                                                          status)
+                                                  info)))
+                       (q+:set-alignment label (q+:qt.align-center))
+                       (q+:set-item-widget info widget +info-progress+
+                                           label)))
                    (push id old-tasks)))))
         (dolist (id finished)
-          (update-color id "green")
           (let ((entry (gethash id tracked-tasks)))
             (when entry
               (destructuring-bind (widget progress) entry
@@ -122,9 +122,9 @@
                       (q+:maximum progress)))
               (push id old-tasks))))
         (dolist (id failed)
-          (update-color id "red"))
+          (update-color id "#FF0000" "FAILED"))
         (dolist (id canceled)
-          (update-color id "yellow"))))))
+          (update-color id "#FF5C14" "CANCELED"))))))
 
 (define-initializer (info setup-widget)
   (qdoto info
