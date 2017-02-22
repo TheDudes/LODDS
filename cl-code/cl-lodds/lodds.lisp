@@ -331,14 +331,21 @@
                       :checksum checksum
                       :local-file-path local-file-path))))
 
-(defun get-folder (remote-path remote-root local-path user)
-  (lodds.task:submit-task
-   (make-instance 'lodds.task:task-get-folder
-                  :name "get-folder"
-                  :user user
-                  :remote-root remote-root
-                  :remote-path remote-path
-                  :local-path local-path)))
+(defun get-folder (full-folder-path local-path user)
+  "gets given folder and saves it to local-path"
+  (setf full-folder-path
+        (lodds.core:add-missing-slash full-folder-path))
+  (let ((folder (lodds.core:get-folder full-folder-path)))
+    (lodds.task:submit-task
+     (make-instance 'lodds.task:task-get-folder
+                    :name "get-folder"
+                    :user user
+                    :remote-root (subseq full-folder-path
+                                         0
+                                         (- (length full-folder-path)
+                                            (length folder)))
+                    :remote-path full-folder-path
+                    :local-path local-path))))
 
 ;; TODO: default timeout from settings
 (defun send-file (file ip port &optional (timeout 300))

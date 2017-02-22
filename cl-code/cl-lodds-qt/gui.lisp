@@ -48,13 +48,6 @@
                          :side :bottom
                          :menu view-menu))
 
-(define-subwidget (main-window download-dock)
-    (make-instance 'dock :title "Download"
-                         :widget (make-instance 'download)
-                         :main-window main-window
-                         :side :right
-                         :menu view-menu))
-
 (define-subwidget (main-window user-dock)
     (make-instance 'dock :title "User List"
                          :widget (make-instance 'user-list)
@@ -78,12 +71,17 @@
 
 (define-initializer (main-window setup-widget)
   (connect shares-widget
-           "itemClicked(QTreeWidgetItem *, int)"
+           "itemDoubleClicked(QTreeWidgetItem *, int)"
            (lambda (selected-item column)
              (declare (ignore column))
-             (apply #'update-download
-                    (slot-value download-dock 'widget)
-                    (get-selected-file shares-widget selected-item))))
+             (destructuring-bind (type info)
+                 (get-selected-file shares-widget selected-item)
+               (case type
+                 (:file
+                  (apply #'open-download-file-dialog info))
+                 (:dir
+                  (apply #'open-download-folder-dialog info))))))
+
   (qdoto main-window
          (q+:set-window-title (format nil "LODDS - ~a" (lodds:name lodds:*server*)))
          (q+:set-window-icon (q+:make-qicon "./res/lodds.png"))

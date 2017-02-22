@@ -49,33 +49,43 @@
 
 (defmethod get-selected-file ((shares shares) selected-item)
   "returns a list with info about the selected item. This list will be
-  used by the download widget to set its fields"
+  used by the download widget to set its fields.
+  (get-selected-file shares selected-item)
+  => (:file (\"21f2a2f...\"
+             \"test.txt\"
+             1789213
+            (\"pete@192...\" \"steve@192...\")))
+  (get-selected-file shares selected-item)
+  => (:dir (\"/some/dir/somewhere/\"
+            \"somewhere/\"
+            \"pete@192.168.2.101:43210\"
+            92421312
+            17))"
   (let ((info (gethash (q+:text selected-item +shares-id+) (entries shares))))
     (if (eql (type-of info)
              'shares-entry-dir)
         (with-accessors ((user shares-entry-user)
                          (name shares-entry-name)
-                         (path shares-entry-path)) info
-          (list path
-                ;; checksum
-                name
-                ;; name
-                (if (qobject-alive-p (q+:parent selected-item))
-                    name
-                    "")
-                ;; user
-                user))
+                         (fullpath shares-entry-path)
+                         (size shares-entry-size)
+                         (items shares-entry-items)) info
+          (list :dir
+                (list fullpath
+                      name
+                      user
+                      size
+                      items)))
         ;; file was clicked
         (with-accessors ((name shares-entry-name)
-                         (checksum shares-entry-checksum)) info
-          (list nil
-                ;; checksum
-                checksum
-                ;; name
-                name
-                ;; users
-                (loop :for (user . rest) :in (lodds:get-file-info checksum)
-                      :collect user))))))
+                         (checksum shares-entry-checksum)
+                         (size shares-entry-size)) info
+          (list :file
+                (list checksum
+                      name
+                      size
+                      (loop :for (user . rest)
+                            :in (lodds:get-file-info checksum)
+                            :collect user)))))))
 
 (let ((current-id 0)
       (id-lock (bt:make-lock "id-lock")))
@@ -385,7 +395,7 @@
          (q+:set-alternating-row-colors t)
          (q+:set-animated t)
          (q+:set-items-expandable t)
-         (q+:set-expands-on-double-click t))
+         (q+:set-expands-on-double-click nil))
   (qdoto (q+:header shares)
          (q+:set-stretch-last-section nil)
          (q+:set-resize-mode +shares-name+ (q+:qheaderview.stretch))
