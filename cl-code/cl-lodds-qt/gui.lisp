@@ -3,7 +3,7 @@
 
 (define-widget main-window (QMainWindow) ())
 
-(define-menu (main-window File)
+(define-menu (main-window Lodds)
   (:item ("Run" (ctrl r))
          (flet ((run () (progn
                           (lodds.subsystem:start (lodds:get-subsystem :event-queue))
@@ -171,7 +171,7 @@
   (declare (connected main-window (fix-menubar-order)))
   (let* ((menu-bar (q+:menu-bar main-window)))
     (with-finalizing ((menu (q+:make-qmenu)))
-      (let ((order (list (cons "File" nil)
+      (let ((order (list (cons "Lodds" nil)
                          (cons "View" nil))))
         (loop :for child :in (find-children menu-bar menu)
               :collect (let ((entry (find (q+:title child) order
