@@ -55,16 +55,16 @@
                          :side :right
                          :menu view-menu))
 
-(define-subwidget (main-window shared-dock)
-    (make-instance 'dock :title "Directories Shared"
-                         :widget (make-instance 'shared)
+(define-subwidget (main-window info-dock)
+    (make-instance 'dock :title "Info"
+                         :widget (make-instance 'info)
                          :main-window main-window
                          :side :right
                          :menu view-menu))
 
-(define-subwidget (main-window info-dock)
-    (make-instance 'dock :title "Info"
-                         :widget (make-instance 'info)
+(define-subwidget (main-window shared-dock)
+    (make-instance 'dock :title "Directories Shared"
+                         :widget (make-instance 'shared)
                          :main-window main-window
                          :side :right
                          :menu view-menu))
