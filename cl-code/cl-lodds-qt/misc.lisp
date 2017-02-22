@@ -8,10 +8,15 @@
                :collect `(,fn ,(car arguments) ,inst ,@ (cdr arguments)))
        ,inst)))
 
-(defun generate-timestamp ()
-  "Returns current date as a string."
+(defun generate-timestamp (&optional unix-timestamp)
+  "Returns current date formatted as a string. if unix-timestamp is
+  given it formats that"
   (multiple-value-bind (sec min hr day mon yr dow dst-p tz)
-      (get-decoded-time)
+      (if unix-timestamp
+          (decode-universal-time
+           (+ lodds.core::*unix-epoch-difference*
+              unix-timestamp))
+          (get-decoded-time))
     (declare (ignore dow dst-p tz))
     (format nil "~4,'0d-~2,'0d-~2,'0d ~2,'0d:~2,'0d:~2,'0d"
             yr mon day hr min sec) ))
