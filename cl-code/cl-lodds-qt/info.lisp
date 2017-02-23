@@ -104,7 +104,9 @@
                  (when entry
                    (destructuring-bind (widget progress) entry
                      (declare (ignore progress))
-                     (q+:remove-item-widget info widget +info-progress+)
+                     (let ((old-widget (q+:item-widget info widget +info-progress+)))
+                       (q+:remove-item-widget info widget +info-progress+)
+                       (finalize old-widget))
                      (let ((label (q+:make-qlabel (format nil "<b><font color=\"~a\">~a</font></b>"
                                                           color
                                                           status)
