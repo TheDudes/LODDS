@@ -71,21 +71,27 @@
   (let ((dropped-link (q+:const-data
                        (q+:data (q+:mime-data ev)
                                 "text/uri-list"))))
-    (when (cl-strings:starts-with dropped-link "file://")
-      (let ((filepath (subseq (lodds.core:remove-newline dropped-link) 7)))
-        (cond
-          ((uiop:file-exists-p filepath)
-           (make-instance
-            'dialog
-            :title "Error - Cannot share File"
-            :text "Its not possible to share a single File, select a directory please."))
-          ((uiop:directory-exists-p filepath)
-           (share-directory directories filepath))
-          (t
-           (make-instance
-            'dialog
-            :title "Error - Dont know what to do"
-            :text "Whatever you dropped there is neither a dir nor a file.")))))))
+    (loop :for link
+          :in (cl-strings:split dropped-link
+                                (format nil "~C~C"
+                                        #\return #\linefeed))
+          :do
+          (when (cl-strings:starts-with link "file://")
+            (let ((filepath (subseq link 7)))
+              (cond
+                ((uiop:file-exists-p filepath)
+                 (make-instance
+                  'dialog
+                  :title (format nil "Error - Cannot share File (~a)"
+                                 filepath)
+                  :text "Its not possible to share a single File, select a directory please."))
+                ((uiop:directory-exists-p filepath)
+                 (share-directory directories filepath))
+                (t
+                 (make-instance
+                  'dialog
+                  :title "Error - Dont know what to do"
+                  :text "Whatever you dropped there is neither a dir nor a file."))))))))
 
 (define-initializer (directories setup-widget)
   (qdoto directories
