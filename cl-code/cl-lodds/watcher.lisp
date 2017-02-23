@@ -207,8 +207,8 @@
                (dir-watchers watcher))
          (setf (lodds.subsystem:alive-p watcher) t)
          (lodds.event:push-event :shared-directory
-                                 (list folder-path)))
-       :name "Sharing Directory"))))
+                                 (list folder-path))))
+     :name "Sharing Directory")))
 
 (defun unshare-folder (folder-path)
   "unshare the given folder"
