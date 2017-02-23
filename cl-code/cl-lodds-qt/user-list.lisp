@@ -5,6 +5,7 @@
 (defvar +user-list-name+ 0)
 (defvar +user-list-load+ 1)
 (defvar +user-list-send-file+ 2)
+(defvar +user-list-full-name+ 3)
 
 (define-widget user-list (QTreeWidget)
   ((users :initform (make-hash-table :test 'equalp)
@@ -39,7 +40,8 @@
                                           "-"
                                           (generate-timestamp last-change))))
              (q+:set-text +user-list-load+ (lodds.core:format-size (parse-integer load)))
-             (q+:set-text-alignment +user-list-load+ (q+:qt.align-right))))
+             (q+:set-text-alignment +user-list-load+ (q+:qt.align-right))
+             (q+:set-text +user-list-full-name+ user)))
     (setf (gethash user (users user-list)) new-entry)))
 
 (define-slot (user-list remove-user) ((user string))
@@ -75,10 +77,11 @@
          (q+:set-object-name "UserList")
          (q+:set-focus-policy (q+:qt.no-focus))
          (q+:set-selection-mode 0)
-         (q+:set-column-count 3)
-         (q+:set-header-labels (list "User" "Load" ""))
+         (q+:set-column-count 4)
+         (q+:set-header-labels (list "User" "Load" "" ""))
          (q+:set-alternating-row-colors t)
-         (q+:set-accept-drops t))
+         (q+:set-accept-drops t)
+         (q+:hide-column +user-list-full-name+))
 
   (qdoto (q+:header user-list)
          (q+:hide)
@@ -113,7 +116,11 @@
                                  filepath)
                   :text "Its not possible to send a directory, select a file please."))
                 ((uiop:file-exists-p filepath)
-                 (open-send-file-dialog nil filepath))
+                 (let ((item (q+:item-at user-list (q+:pos ev))))
+                   (open-send-file-dialog
+                    (when (qobject-alive-p item)
+                      (q+:text item +user-list-full-name+))
+                    filepath)))
                 (t
                  (make-instance
                   'dialog
