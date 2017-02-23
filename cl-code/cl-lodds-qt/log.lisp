@@ -110,16 +110,18 @@
           (let* ((scrollbar (q+:vertical-scroll-bar info-log-list))
                  (position (q+:value scrollbar)))
             (loop :while (> (q+:top-level-item-count info-log-list) +log-message-maximum+)
-                  :do (progn (finalize (q+:take-top-level-item info-log-list 0))
-                             (q+:set-value scrollbar (- position 1)))))
-          (let ((visual-rect (if last-item
-                                 (q+:visual-item-rect info-log-list last-item)
-                                 nil)))
-            (when (and visual-rect
-                       (< (- (q+:bottom visual-rect)
-                             (q+:height (q+:viewport info-log-list)))
-                          (q+:height visual-rect)))
-              (q+:scroll-to-item info-log-list new-entry)))))))
+                  :do (progn
+                        (finalize (q+:take-top-level-item info-log-list 0))
+                        (q+:set-value scrollbar (- position 1)))))
+          (unless (q+:is-empty (q+:visible-region info-log))
+            (let ((visual-rect (if last-item
+                                   (q+:visual-item-rect info-log-list last-item)
+                                   nil)))
+              (when (and visual-rect
+                         (< (- (q+:bottom visual-rect)
+                               (q+:height (q+:viewport info-log-list)))
+                            (q+:height visual-rect)))
+                (q+:scroll-to-item info-log-list new-entry))))))))
 
 (define-initializer (info-log setup-widget)
     (qdoto info-log
