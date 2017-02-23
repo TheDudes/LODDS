@@ -156,6 +156,8 @@
     (let ((font (q+:make-qfont "Consolas, Inconsolata, Monospace" 10)))
       (setf (q+:style-hint font) (q+:qfont.type-writer))
       (qdoto widget
+             (q+:set-flags (qt:enum-or (q+:qt.item-is-selectable)
+                                       (q+:qt.item-is-enabled)))
              (q+:set-tool-tip +shares-size+ (format nil "~:d bytes" size))
              (q+:set-font +shares-name+ font)
              (q+:set-font +shares-size+ font)
@@ -374,7 +376,6 @@
   ;; TODO: since iam using invisible-root-item everything looked
   ;; 'disabled', by setting this it got away. But its still not
   ;; getting highlighted by clicking an item. strange...
-  (q+:set-disabled (q+:invisible-root-item shares) nil)
   (make-instance 'shares-entry-dir
                  :shares shares
                  :name ""
@@ -384,7 +385,8 @@
                  :widget (q+:invisible-root-item shares))
   (qdoto shares
          (q+:set-object-name "Shares")
-         (q+:set-selection-mode 1)
+         (q+:set-selection-behavior (q+:qabstractitemview.select-rows))
+         (q+:set-selection-mode (q+:qabstractitemview.extended-selection))
          (q+:set-column-count 3)
          (q+:set-uniform-row-heights t)
          (q+:set-header-labels (list "Name" "Size" "ID"))
