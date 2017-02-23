@@ -17,8 +17,6 @@
                (lodds.low-level-api:handle-info socket)
              (unless (eql 0 error)
                (error "low level api threw error ~a in handle-info" error))
-             (lodds.event:push-event :list-update
-                                     (list name type timestamp changes))
              (when (eql type :all)
                (setf table-hash (make-hash-table :test 'equal)
                      table-name (make-hash-table :test 'equal)))
@@ -39,7 +37,9 @@
                                    new-val)
                              (remhash cs table-hash))
                          (remhash name table-name)))
-             (setf last-change timestamp)))
+             (setf last-change timestamp)
+             (lodds.event:push-event :list-update
+                                     (list name type timestamp changes))))
       (when socket
         (usocket:socket-close socket)))))
 

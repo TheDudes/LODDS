@@ -715,32 +715,27 @@
                finished-p
                resubmit-p) task
     (setf finished-p t)
-    (let ((client-info (lodds:get-user-info user)))
+    (let ((client-info (lodds:get-user-info user))
+          (event nil))
       (if client-info
           (with-accessors ((old-load lodds:c-load)
                            (old-last-change lodds:c-last-change))
               client-info
             (when (or (not (eql old-load user-load))
                       (<= old-last-change last-change))
-              (lodds.event:push-event :client-updated
-                                      (list user
-                                            user-load
-                                            last-change))))
-          (progn
-            (setf client-info
-                  (make-instance 'lodds:client-info
-                                 :c-name user
-                                 :c-last-message timestamp
-                                 :c-ip ip
-                                 :c-port port
-                                 :c-last-change 0
-                                 :c-load user-load))
-            (setf (gethash user (lodds:clients lodds:*server*))
-                  client-info)
-            (lodds.event:push-event :client-added
-                                    (list user
-                                          user-load
-                                          last-change))))
+              (setf event :client-updated)))
+          (setf client-info
+                (make-instance 'lodds:client-info
+                               :c-name user
+                               :c-last-message timestamp
+                               :c-ip ip
+                               :c-port port
+                               :c-last-change 0
+                               :c-load user-load)
+                (gethash user (lodds:clients lodds:*server*))
+                client-info
+                event
+                :client-added))
       (let ((locked (bt:acquire-lock (lodds:c-lock client-info) nil)))
         (if locked
             ;; only go on if we locked, if not, just drop the update, we
@@ -754,7 +749,12 @@
                              last-change)
                      (lodds.listener:update-client-list client-info)))
               (bt:release-lock (lodds:c-lock client-info)))
-            (lodds.event:push-event :info (list :dropped task)))))))
+            (lodds.event:push-event :info (list :dropped task))))
+      (when event
+        (lodds.event:push-event event
+                                (list user
+                                      user-load
+                                      last-change))))))
 
 (defmethod run-task ((task task-send-file))
   (with-slots (ip
