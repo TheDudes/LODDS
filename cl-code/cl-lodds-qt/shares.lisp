@@ -372,21 +372,34 @@
   (loop :for i :from 0 :below (q+:top-level-item-count shares)
         :do (dump-item (q+:top-level-item shares i))))
 
+(defmethod download-item ((shares shares) selected-item)
+  (destructuring-bind (type info)
+      (get-selected-file shares selected-item)
+    (case type
+      (:file
+       (apply #'open-download-file-dialog info))
+      (:dir
+       (apply #'open-download-folder-dialog info)))))
+
+(define-override (shares key-press-event) (ev)
+  (call-next-qmethod)
+  (when (or (= (q+:key ev) (q+:qt.key_enter))
+            (= (q+:key ev) (q+:qt.key_return)))
+    (let ((selected-items (q+:selected-items shares)))
+      (case (length selected-items)
+        (0 nil)
+        (1 (download-item shares (car selected-items)))
+        (t (open-download-multiple-dialog
+            (mapcar (lambda (item)
+                      (get-selected-file shares item))
+                    (q+:selected-items shares))))))))
+
 (define-initializer (shares setup-widget)
-  ;; TODO: since iam using invisible-root-item everything looked
-  ;; 'disabled', by setting this it got away. But its still not
-  ;; getting highlighted by clicking an item. strange...
   (connect shares
            "itemDoubleClicked(QTreeWidgetItem *, int)"
            (lambda (selected-item column)
              (declare (ignore column))
-             (destructuring-bind (type info)
-                 (get-selected-file shares selected-item)
-               (case type
-                 (:file
-                  (apply #'open-download-file-dialog info))
-                 (:dir
-                  (apply #'open-download-folder-dialog info))))))
+             (download-item shares selected-item)))
   (make-instance 'shares-entry-dir
                  :shares shares
                  :name ""

@@ -27,4 +27,5 @@
                (:file "selection")
                (:file "download-file")
                (:file "download-folder")
+               (:file "download-multiple")
                (:file "gui")))
