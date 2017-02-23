@@ -17,7 +17,7 @@
    QTreeView#Shares::branch:open:has-children:has-siblings  {
      border-image: none;
      image: url(./res/folder-open.png);
-   }
+   }")
 
 (defvar +events+
   '(:advertiser
