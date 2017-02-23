@@ -39,7 +39,8 @@
           (path (q+:text entry +shared-path+)))
       (connect button "pressed()"
                (lambda ()
-                 (lodds.watcher:unshare-folder path)))
+                 (when (lodds.watcher:folder-already-shared-p path)
+                   (lodds.watcher:unshare-folder path))))
       (q+:set-item-widget directories
                           entry
                           +shared-widget+
