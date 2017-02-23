@@ -394,6 +394,7 @@
          (q+:set-items-expandable t)
          (q+:set-expands-on-double-click nil))
   (qdoto (q+:header shares)
+         (q+:hide)
          (q+:set-stretch-last-section nil)
          (q+:set-resize-mode +shares-name+ (q+:qheaderview.stretch))
          (q+:resize-section +shares-size+ 55)))

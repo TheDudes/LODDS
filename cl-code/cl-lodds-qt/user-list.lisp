@@ -80,6 +80,7 @@
          (q+:set-accept-drops t))
 
   (qdoto (q+:header user-list)
+         (q+:hide)
          (q+:set-stretch-last-section nil)
          (q+:set-resize-mode +user-list-name+ (q+:qheaderview.stretch))
          (q+:resize-section +user-list-load+ 55)

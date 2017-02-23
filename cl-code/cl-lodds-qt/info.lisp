@@ -137,6 +137,7 @@
          (q+:set-alternating-row-colors t)
          (q+:set-animated t))
   (qdoto (q+:header info)
+         (q+:hide)
          (q+:set-stretch-last-section nil)
          (q+:set-resize-mode +info-info+ (q+:qheaderview.stretch))
          (q+:resize-section +info-progress+ 150)

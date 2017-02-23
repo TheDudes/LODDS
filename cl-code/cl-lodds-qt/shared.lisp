@@ -96,6 +96,7 @@
          (q+:set-alternating-row-colors t)
          (q+:set-accept-drops t))
   (qdoto (q+:header directories)
+         (q+:hide)
          (q+:set-stretch-last-section nil)
          (q+:set-resize-mode +shared-path+
                              (q+:qheaderview.stretch))
