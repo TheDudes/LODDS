@@ -65,7 +65,7 @@
                                   new-entry
                                   1
                                   checkbox)
-              (when (find user users-selected :test #'equalp)
+              (when (find user users-selected :test #'equal)
                 (q+:set-checked checkbox t))
               (q+:set-text new-entry 0 user)
               (connect checkbox "toggled(bool)"
@@ -75,7 +75,7 @@
                                (push user users-selected)
                                (setf users-selected
                                      (remove user users-selected
-                                             :test #'equalp)))))))))
+                                             :test #'equal)))))))))
 
 (define-subwidget (send-file sub-layout)
     (q+:make-qwidget send-file)

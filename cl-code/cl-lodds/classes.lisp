@@ -44,10 +44,10 @@
             :documentation "tasker lparallel:channel")
    (lock :initform (bt:make-recursive-lock "tasker lock")
          :documentation "look to access tasks and tasks-on-hold")
-   (tasks :initform (make-hash-table :test #'equalp)
+   (tasks :initform (make-hash-table :test #'equal)
           :type hash-table
           :documentation "Hashtable containing all existing tasks.")
-   (tasks-on-hold :initform (make-hash-table :test #'equalp)
+   (tasks-on-hold :initform (make-hash-table :test #'equal)
                   :type hash-table
                   :documentation "Hashtable containing Tasks which are
                   on hold. See PUT-TASK-ON-HOLD, SUBMIT-TASK-FROM-HOLD
@@ -510,7 +510,7 @@
               list of available interfaces use GET-INTERFACES. Use
               SWITCH-INTERFACE to change, or set, the interface.")
    (clients :accessor clients
-            :initform (make-hash-table :test #'equalp)
+            :initform (make-hash-table :test #'equal)
             :type hashtable
             :documentation "Hashtable containing all clients which
             their broadcast information. This table is updated by

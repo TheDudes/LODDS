@@ -22,7 +22,7 @@
                  the same time. Lock is used by ADD-CHANGE and
                  GET-CHANGE.")
    (entries :accessor entries
-            :initform (make-hash-table :test 'equalp)
+            :initform (make-hash-table :test 'equal)
             :type hashtable
             :documentation "hash-table mapping generated widget id's
             to Information. Each element in shares has a hidden id

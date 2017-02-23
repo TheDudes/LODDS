@@ -332,8 +332,8 @@
     (when alive-p
       (let ((lparallel:*kernel* kernel))
         (lparallel:end-kernel :wait t)
-        (setf tasks (make-hash-table :test #'equalp)
-              tasks-on-hold (make-hash-table :test #'equalp)
+        (setf tasks (make-hash-table :test #'equal)
+              tasks-on-hold (make-hash-table :test #'equal)
               alive-p nil)
         (lodds.event:push-event (lodds.subsystem:name subsys)
                                 (list "stopped!"))))))

@@ -189,7 +189,7 @@
                 (usocket:dotted-quad-to-vector-quad ip)
                 ip)))
     (loop :for user-info :being :the :hash-value :of (clients lodds:*server*)
-          :if (equalp (c-ip user-info) ip)
+          :if (equal (c-ip user-info) ip)
           :collect (c-name user-info))))
 
 (defun get-file-info (checksum &optional user)

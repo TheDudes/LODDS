@@ -7,7 +7,7 @@
 (defvar +info-id+ 3)
 
 (define-widget info (QTreeWidget)
-  ((tracked-tasks :initform (make-hash-table :test #'equalp)
+  ((tracked-tasks :initform (make-hash-table :test #'equal)
                   :type hashtable
                   :documentation "hashtable which has task-id as key
                   and a list out of the treewidgetitem and the
@@ -67,8 +67,8 @@
   (with-slots-bound (info info)
     (let ((root (q+:invisible-root-item info)))
       (do-childs (element index root)
-        (when (equalp (q+:text element +info-id+)
-                      id)
+        (when (equal (q+:text element +info-id+)
+                     id)
           (finalize (q+:take-child root index))
           (remhash id tracked-tasks)
           (return-from remove-info))))))

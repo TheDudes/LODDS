@@ -8,7 +8,7 @@
 (defvar +user-list-full-name+ 3)
 
 (define-widget user-list (QTreeWidget)
-  ((users :initform (make-hash-table :test 'equalp)
+  ((users :initform (make-hash-table :test 'equal)
           :accessor users)))
 
 (define-signal (user-list add-user) (string string int))

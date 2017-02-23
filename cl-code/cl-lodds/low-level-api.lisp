@@ -245,8 +245,8 @@ multiple-value-bind.
         (destructuring-bind (type timestamp count) (cl-strings:split line)
           (values 0
                   (cond
-                    ((equalp type "all") :all)
-                    ((equalp type "upd") :upd)
+                    ((equal type "all") :all)
+                    ((equal type "upd") :upd)
                     (t (error "TODO: handle-info all|upd error ~a" type)))
                   (parse-integer timestamp)
                   (loop :repeat (parse-integer count)
@@ -256,8 +256,8 @@ multiple-value-bind.
                                        (destructuring-bind (type checksum size . name)
                                            (cl-strings:split line)
                                          (list (cond
-                                                 ((equalp type "add") :add)
-                                                 ((equalp type "del") :del)
+                                                 ((equal type "add") :add)
+                                                 ((equal type "del") :del)
                                                  (t (error "TODO: handle-info add|del error")))
                                                checksum
                                                (parse-integer size)

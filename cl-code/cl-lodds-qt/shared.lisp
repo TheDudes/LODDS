@@ -7,7 +7,7 @@
 (defvar +shared-widget-type+ 2)
 
 (define-widget directories (QTreeWidget)
-  ((dirs :initform (make-hash-table :test #'equalp)
+  ((dirs :initform (make-hash-table :test #'equal)
          :documentation "Shared directories with directory path as key
          and qtreewidgetitem as value")))
 
