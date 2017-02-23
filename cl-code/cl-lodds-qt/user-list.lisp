@@ -15,6 +15,22 @@
 (define-signal (user-list remove-user) (string))
 (define-signal (user-list update-user) (string string int))
 
+(defun gen-tool-tip (user)
+  (let* ((client-info (lodds:get-user-info user))
+         (all-files (hash-table-count (lodds:c-file-table-name client-info)))
+         (unique-files (hash-table-count (lodds:c-file-table-hash client-info)))
+         (last-change (lodds:c-last-change client-info)))
+    (lodds.core:split-user-identifier (name ip port) user
+      (format nil "Ip: ~a~%Port: ~a~%Last Change: ~a~%Shared: ~a Files"
+              ip
+              port
+              (if (eql 0 last-change)
+                  "-"
+                  (generate-timestamp last-change))
+              (format nil "~:d (unique ~:d)"
+                      all-files
+                      unique-files)))))
+
 (define-slot (user-list add-user) ((user string)
                                    (load string)
                                    (last-change int))
@@ -34,11 +50,7 @@
       (qdoto new-entry
              (q+:set-text +user-list-name+ name)
              (q+:set-tool-tip +user-list-name+
-                              (format nil "Ip: ~a~%Port: ~a~%Last Change: ~a"
-                                      ip port
-                                      (if (eql 0 last-change)
-                                          "-"
-                                          (generate-timestamp last-change))))
+                              (gen-tool-tip user))
              (q+:set-text +user-list-load+ (lodds.core:format-size (parse-integer load)))
              (q+:set-text-alignment +user-list-load+ (q+:qt.align-right))
              (q+:set-text +user-list-full-name+ user)))
@@ -60,17 +72,10 @@
                                              int)))
   (let ((entry (gethash user (users user-list))))
     (when entry
-      (lodds.core:split-user-identifier (name ip port) user
-        (qdoto entry
-               (q+:set-text +user-list-load+
-                            (lodds.core:format-size (parse-integer load)))
-               (q+:set-tool-tip +user-list-name+
-                                (format nil "Ip: ~a~%Port: ~a~%Last Change: ~a"
-                                        ip
-                                        port
-                                        (if (eql 0 last-change)
-                                            "-"
-                                            (generate-timestamp last-change)))))))))
+      (qdoto entry
+             (q+:set-text +user-list-load+
+                          (lodds.core:format-size (parse-integer load)))
+             (q+:set-tool-tip +user-list-name+ (gen-tool-tip user))))))
 
 (define-initializer (user-list setup-widget)
   (qdoto user-list
