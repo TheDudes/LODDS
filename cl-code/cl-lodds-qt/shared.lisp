@@ -4,11 +4,56 @@
 ;; shared columns
 (defvar +shared-path+ 0)
 (defvar +shared-widget+ 1)
+(defvar +shared-widget-type+ 2)
 
 (define-widget directories (QTreeWidget)
   ((dirs :initform (make-hash-table :test #'equalp)
          :documentation "Shared directories with directory path as key
          and qtreewidgetitem as value")))
+
+(defmethod set-spinner ((directories directories) entry)
+  (unless (string= (q+:text entry +shared-widget-type+)
+                   "spinner")
+    (q+:set-text entry +shared-widget-type+ "spinner")
+    (let ((old-widget (q+:item-widget directories entry +shared-widget+)))
+      (q+:remove-item-widget directories entry +shared-widget+)
+      (finalize old-widget))
+    (let ((spinner (q+:make-qprogressbar directories)))
+      (qdoto spinner
+             (q+:set-maximum 0)
+             (q+:set-minimum 0)
+             (q+:set-format "..."))
+      (q+:set-item-widget directories
+                          entry
+                          +shared-widget+
+                          spinner))))
+
+(defmethod set-button ((directories directories) entry)
+  (unless (string= (q+:text entry +shared-widget-type+)
+                   "button")
+    (q+:set-text entry +shared-widget-type+ "button")
+    (let ((old-widget (q+:item-widget directories entry +shared-widget+)))
+      (q+:remove-item-widget directories entry +shared-widget+)
+      (finalize old-widget))
+    (let ((button (q+:make-qpushbutton "Unshare" directories))
+          (path (q+:text entry +shared-path+)))
+      (connect button "pressed()"
+               (lambda ()
+                 (lodds.watcher:unshare-folder path)))
+      (q+:set-item-widget directories
+                          entry
+                          +shared-widget+
+                          button))))
+
+(define-subwidget (directories timer) (q+:make-qtimer directories))
+
+(define-slot (directories tick) ()
+  (declare (connected timer (timeout)))
+  (maphash (lambda (dir widget)
+             (if (lodds.watcher:folder-busy-p dir)
+                 (set-spinner directories widget)
+                 (set-button directories widget)))
+           dirs))
 
 (defmethod share-directory ((directories directories) dir)
   (setf dir (lodds.core:add-missing-slash dir))
@@ -20,15 +65,10 @@
                                    "Sorry, cannot share ~a since its already shared"
                                    dir))
       (with-slots-bound (directories directories)
-        (let ((new-entry (q+:make-qtreewidgetitem directories))
-              (spinner (q+:make-qprogressbar directories)))
-          (qdoto spinner
-                 (q+:set-maximum 0)
-                 (q+:set-minimum 0)
-                 (q+:set-format "..."))
-          (q+:set-item-widget directories new-entry +shared-widget+ spinner)
+        (let ((new-entry (q+:make-qtreewidgetitem directories)))
           (q+:set-text new-entry +shared-path+ dir)
-          (setf (gethash dir dirs) new-entry))
+          (setf (gethash dir dirs) new-entry)
+          (set-spinner directories new-entry))
         (lodds.watcher:share-folder dir))))
 
 (define-signal (directories add-directory) (string))
@@ -37,20 +77,12 @@
 (define-slot (directories add-directory) ((path string))
   (declare (connected directories (add-directory string)))
   (let ((widget (gethash path dirs)))
-    (if widget
-        (q+:remove-item-widget directories widget +shared-widget+)
-        (let ((new-entry (q+:make-qtreewidgetitem directories)))
-          (q+:set-text new-entry +shared-path+ path)
-          (setf widget new-entry
-                (gethash path dirs) new-entry)))
-    (let ((remove-button (q+:make-qpushbutton "Unshare" directories)))
-      (connect remove-button "pressed()"
-               (lambda ()
-                 (lodds.watcher:unshare-folder path)))
-      (q+:set-item-widget directories
-                          widget
-                          +shared-widget+
-                          remove-button))))
+    (unless widget
+      (let ((new-entry (q+:make-qtreewidgetitem directories)))
+        (q+:set-text new-entry +shared-path+ path)
+        (setf widget new-entry
+              (gethash path dirs) new-entry)))
+    (set-button directories widget)))
 
 (define-slot (directories remove-directory) ((path string))
   (declare (connected directories (remove-directory string)))
@@ -98,10 +130,11 @@
          (q+:set-object-name "Shared")
          (q+:set-focus-policy (q+:qt.no-focus))
          (q+:set-selection-mode 0)
-         (q+:set-column-count 2)
-         (q+:set-header-labels (list "Path" ""))
+         (q+:set-column-count 3)
+         (q+:set-header-labels (list "Path" "" ""))
          (q+:set-alternating-row-colors t)
-         (q+:set-accept-drops t))
+         (q+:set-accept-drops t)
+         (q+:hide-column +shared-widget-type+))
   (qdoto (q+:header directories)
          (q+:hide)
          (q+:set-stretch-last-section nil)
@@ -145,6 +178,10 @@
                (when (> (length dir)
                         0)
                  (share-directory shared-directories dir))))))
+
+(define-initializer (directories setup-timer)
+  ;; TODO: get/set timeout from settings
+  (q+:start timer 1000))
 
 (define-initializer (shared setup-widget)
   (let ((layout (q+:make-qvboxlayout shared)))
