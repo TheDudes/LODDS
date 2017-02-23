@@ -19,6 +19,7 @@
 
 (define-subwidget (info-log info-log-list) (q+:make-qtreewidget info-log)
   (qdoto info-log-list
+         (q+:set-object-name "Log")
          (q+:set-column-count 4)
          (q+:set-header-labels (list "Time" "Event" "Message" ""))
          (q+:set-alternating-row-colors t))

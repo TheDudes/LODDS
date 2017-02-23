@@ -128,6 +128,7 @@
 
 (define-initializer (info setup-widget)
   (qdoto info
+         (q+:set-object-name "Info")
          (q+:set-column-count 4)
          (q+:set-uniform-row-heights t)
          (q+:set-header-labels (list "Info" "Progress" "Stop" "ID"))

@@ -72,6 +72,7 @@
 
 (define-initializer (user-list setup-widget)
   (qdoto user-list
+         (q+:set-object-name "UserList")
          (q+:set-column-count 3)
          (q+:set-header-labels (list "User" "Load" ""))
          (q+:set-alternating-row-colors t)

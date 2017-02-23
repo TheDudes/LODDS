@@ -2,22 +2,22 @@
 (in-readtable :qtools)
 
 (defparameter *style-sheet*
-  "QTreeView {
+  "QTreeView#Shares {
      alternate-background-color: #eeeeef;
      background-color: #ffffff;
    }
 
-  QTreeView::branch:has-children:!has-siblings:closed,
-  QTreeView::branch:closed:has-children:has-siblings {
-    border-image: none;
-    image: url(./res/folder-closed.png);
-  }
+   QTreeView#Shares::branch:has-children:!has-siblings:closed,
+   QTreeView#Shares::branch:closed:has-children:has-siblings {
+     border-image: none;
+     image: url(./res/folder-closed.png);
+   }
 
-  QTreeView::branch:open:has-children:!has-siblings,
-  QTreeView::branch:open:has-children:has-siblings  {
-    border-image: none;
-    image: url(./res/folder-open.png);
-  }")
+   QTreeView#Shares::branch:open:has-children:!has-siblings,
+   QTreeView#Shares::branch:open:has-children:has-siblings  {
+     border-image: none;
+     image: url(./res/folder-open.png);
+   }
 
 (defvar +events+
   '(:advertiser
