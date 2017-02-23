@@ -70,18 +70,6 @@
                          :menu view-menu))
 
 (define-initializer (main-window setup-widget)
-  (connect shares-widget
-           "itemDoubleClicked(QTreeWidgetItem *, int)"
-           (lambda (selected-item column)
-             (declare (ignore column))
-             (destructuring-bind (type info)
-                 (get-selected-file shares-widget selected-item)
-               (case type
-                 (:file
-                  (apply #'open-download-file-dialog info))
-                 (:dir
-                  (apply #'open-download-folder-dialog info))))))
-
   (qdoto main-window
          (q+:set-window-title (format nil "LODDS - ~a" (lodds:name lodds:*server*)))
          (q+:set-window-icon (q+:make-qicon "./res/lodds.png"))

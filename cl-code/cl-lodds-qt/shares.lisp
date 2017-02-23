@@ -376,6 +376,17 @@
   ;; TODO: since iam using invisible-root-item everything looked
   ;; 'disabled', by setting this it got away. But its still not
   ;; getting highlighted by clicking an item. strange...
+  (connect shares
+           "itemDoubleClicked(QTreeWidgetItem *, int)"
+           (lambda (selected-item column)
+             (declare (ignore column))
+             (destructuring-bind (type info)
+                 (get-selected-file shares selected-item)
+               (case type
+                 (:file
+                  (apply #'open-download-file-dialog info))
+                 (:dir
+                  (apply #'open-download-folder-dialog info))))))
   (make-instance 'shares-entry-dir
                  :shares shares
                  :name ""
