@@ -384,6 +384,7 @@
                  :widget (q+:invisible-root-item shares))
   (qdoto shares
          (q+:set-object-name "Shares")
+         (q+:set-selection-mode 1)
          (q+:set-column-count 3)
          (q+:set-uniform-row-heights t)
          (q+:set-header-labels (list "Name" "Size" "ID"))

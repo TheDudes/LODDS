@@ -90,6 +90,7 @@
 (define-initializer (directories setup-widget)
   (qdoto directories
          (q+:set-object-name "Shared")
+         (q+:set-selection-mode 0)
          (q+:set-column-count 2)
          (q+:set-header-labels (list "Path" ""))
          (q+:set-alternating-row-colors t)
