@@ -21,8 +21,7 @@
   (qdoto info-log-list
          (q+:set-object-name "Log")
          (q+:set-column-count 4)
-         (q+:set-header-labels (list "Time" "Event" "Message" ""))
-         (q+:set-alternating-row-colors t))
+         (q+:set-header-labels (list "Time" "Event" "Message" "")))
 
   (qdoto (q+:header info-log-list)
          (q+:set-stretch-last-section nil)
