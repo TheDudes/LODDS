@@ -94,7 +94,8 @@
            #:get-shared-folders
            #:folder-already-shared-p
            #:share-folder
-           #:unshare-folder))
+           #:unshare-folder
+           #:folder-busy-p))
 
 (defpackage #:lodds.event
   (:use #:cl)

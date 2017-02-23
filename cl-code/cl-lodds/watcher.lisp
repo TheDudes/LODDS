@@ -222,3 +222,10 @@
             (stop-dir-watcher rem-watcher)
             (error "TODO: could not find watcher to unshare with given ~
                    folder-path"))))))
+
+(defun folder-busy-p (folder)
+  (let ((watcher (find folder (dir-watchers (lodds:get-subsystem :watcher))
+                       :key #'cl-fs-watcher:dir
+                       :test #'string=)))
+    (when watcher
+      (cl-fs-watcher:busy-p watcher))))
