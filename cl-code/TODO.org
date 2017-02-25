@@ -3,53 +3,64 @@
    - [ ] File Header with Description
 
 * GUI
-** TODO missing [10/21]
+** TODO missing [14/21]
+   - [ ] Close Gui on shutdown
+   - [ ] Infobar (Statusbar) with Current Transfers, Load, Connections, ...
+   - [ ] Tooltips
+   - [ ] Settings
+   - [ ] Label & more Info on Interface ComboBox
+   - [ ] colorize logmessage count
+   - [ ] Download Button with Icon
+   - [ ] Icons for Up/Download
+   - [ ] Stylesheet into res/ folder
+   - [ ] Send File Dialog while waiting/sending
+   - [ ] "About" Dialog
+   - [ ] Incognito Mode
    - [X] Share Directory Functionality
    - [X] Display of Shared Directories
    - [X] Info about found Users
-   - [ ] Infobar (Statusbar) with Current Transfers, Load, Connections, ...
-   - [ ] Tooltips
    - [X] Log message filtering
    - [X] Display Sizes in readable format
-   - [ ] Settings
-   - [ ] Edit/Reload Style
-   - [ ] Error Dialogs
-   - [ ] Label & more Info on Interface ComboBox
+   - [X] Edit/Reload Style
+   - [X] Error Dialogs
    - [X] Download File User
    - [X] Download File with load balancing
    - [X] Download Folder from a User
-   - [ ] colorize logmessage count
    - [X] Split up User Display (name, ip, port)
-   - [ ] Display Info on who has a given file (+ where its located)
-   - [ ] Download Button with Icon
-   - [ ] Spinner or something similar on Share File
-   - [ ] Icons for Up/Download
+   - [X] Display Info on who has a given file (+ where its located)
+   - [X] Spinner or something similar on Share File
    - [X] SendPermission
 
 * Lodds Lib
 ** TODO missing [4/7]
-   - [X] Share File on Extra Thread(pool) with Queue
    - [ ] logging
    - [ ] Error Handling
-   - [X] directory watcher (cl-async)
    - [ ] initargs (interface -> overwrite initialize-instance)
+   - [X] Share File on Extra Thread(pool) with Queue
+   - [X] directory watcher (cl-async)
    - [X] Get file with load balancing
    - [X] Use Systemname as Default
 
 ** TODO Code changes [4/5]
+   - [ ] replace all parse-integer calls
+   - [ ] Indicate functions which need lodds:*server* bound
    - [X] rename and export accessors
    - [X] global/dynamic bound server, subsystem and event-queue to not
          pass those around all the time
-   - [ ] replace all parse-integer calls
    - [X] Use [[https://github.com/cosmos72/stmx][STMX]] instead of Locks
    - [X] replace all 'bt:destroy-thread'
 
-** TODO Bugs
-   - [ ] Blocks on Sharing Directory -> Async Hashing
+** TODO Bugs [1/1]
+   - [ ] Timeout on Sockets (copy-stream)
+   - [ ] Watcher errors on pathes with wildname
+   - [ ] Watcher errors when there are no read rights on folder
+   - [X] Blocks on Sharing Directory -> Async Hashing
 
 * Low Level API
 ** TODO missing [1/6]
-   - [X] check protocol syntax with regular expressions (cl-ppcre)
+   - [ ] some error-code-to-string functionality
+   - [ ] tests (Prove)
+   - [ ] Regex to check SendPermission Path (forbit: / \ . .. : * ? " < > |)
    - [1/5] return correct error codes
      - [ ] 1: connection-closed
      - [X] 2: malformed-data
@@ -57,10 +68,9 @@
      - [ ] 4: file-not-found
      - [ ] 5: connection denied (needs to be added)
      - [ ] 6: network-unreachable
-   - [ ] some error-code-to-string functionality
-   - [ ] tests (Prove)
+   - [X] check protocol syntax with regular expressions (cl-ppcre)
 
-** TODO BUGS [0/3]
-   - [ ] readline on sockets should timeout and stop after specified amount
+** TODO BUGS [2/3]
    - [ ] replace ~a with fitting format specifier
-   - [ ] "could not determine file type" occured on cl-fs-watcher
+   - [X] readline on sockets should timeout and stop after specified amount
+   - [X] "could not determine file type" occured on cl-fs-watcher
