@@ -11,12 +11,15 @@ import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.Node;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Priority;
 import studyproject.API.Errors.ErrorFactory;
+import studyproject.API.Lvl.Mid.Core.UserInfo;
 import studyproject.App;
 import studyproject.logging.LogKey;
 
@@ -70,15 +73,16 @@ public class SettingsWindowPresenter implements Initializable {
 	 * of the 'Apply' and 'Cancel' buttons
 	 */
 	private void okSettings() {
-		applySettings();
-		cancelSettings();
+		if (applySettings())
+			cancelSettings();
 	}
 
 	/**
 	 * Action that happens when pressing the 'Apply' button. Saves the Key-Value
 	 * pairs to the properties file
+	 * Returns true if input is valid and data was saved successfully, otherwise false
 	 */
-	private void applySettings() {
+	private Boolean applySettings() {
 		ObservableList<Node> observList = settingsGrid.getChildren();
 		Label label;
 		TextField textField;
@@ -94,8 +98,16 @@ public class SettingsWindowPresenter implements Initializable {
 				if (GridPane.getRowIndex(tf) == GridPane.getRowIndex(l)
 						&& GridPane.getColumnIndex(tf) == GridPane.getColumnIndex(l) + 1) {
 					textField = (TextField) tf;
+
+					// Show error message if username is invalid
+					if (label.getText().equals("userName") && UserInfo.validateUserName(textField.getText()) == false) {
+						showInputError("Please make sure to choose a valid username.");
+						return false;
+					}
+
 					App.properties.setProperty(label.getText(), textField.getText());
 					break;
+
 				}
 			}
 		}
@@ -103,11 +115,22 @@ public class SettingsWindowPresenter implements Initializable {
 			App.properties.store(new FileOutputStream(App.pathToProperties), null);
 			logger.log(ErrorFactory.build(Level.INFO, LogKey.info, "Saved properties to " + App.pathToProperties));
 			App.properties.load(new FileInputStream(new File(App.pathToProperties)));
+			return true;
 		} catch (FileNotFoundException e) {
 			logger.log(ErrorFactory.build(Level.SEVERE, LogKey.error, "FileNotFoundException thrown: ", e));
 		} catch (IOException e) {
 			logger.log(ErrorFactory.build(Level.SEVERE, LogKey.error, "IOException thrown: ", e));
 		}
+
+		return false;
+	}
+
+	private void showInputError(String msg) {
+		Alert alert = new Alert(AlertType.ERROR);
+		alert.setTitle("Error");
+		alert.setHeaderText("Invalid input");
+		alert.setContentText(msg);
+		alert.showAndWait();
 	}
 
 	/**

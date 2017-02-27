@@ -255,5 +255,12 @@ public class UserInfo {
 	public String toString() {
 		return userName + "@" + ipAddress;
 	}
+	
+	public static Boolean validateUserName(String userName) {
+		// Rules
+		// Length: [1-32]
+		// Characters: digits, a-z A-Z - _
+		return userName.matches("^([a-zA-Z]|\\d|_|-){1,32}$");
+	}
 
 }

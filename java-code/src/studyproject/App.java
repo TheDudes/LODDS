@@ -57,6 +57,8 @@ public class App extends Application {
 				Files.createDirectories(Paths.get(propertiesFile.getParent()));
 				propertiesFile.getParentFile().mkdirs();
 				propertiesFile.createNewFile();
+				
+				// Todo strip all invalid characters
 				properties.put("userName", System.getProperty("user.name"));
 				properties.store(new FileOutputStream(propertiesFile), null);
 				logger.log(ErrorFactory.build(Level.INFO, LogKey.info,
