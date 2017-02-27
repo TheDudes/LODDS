@@ -379,7 +379,7 @@
 (defmethod initialize-instance :after ((task task-request-send-permission) &rest initargs)
   (declare (ignorable initargs))
   (with-slots (info filename) task
-    (setf info (format nil "file request ~a" filename))))
+    (setf info (format nil "[Request] (Incomming Request):~a" filename))))
 
 (defun load-chunk (stream-from stream-to size &optional (chunk-size (ash 1 21)))
   (let ((transfered (if (> size chunk-size)
@@ -420,7 +420,8 @@
       (setf socket (request-file ip port checksum 0 size)))
     (unless local-file-stream
       (setf local-file-stream (open-file local-file-path))
-      (setf info (concatenate 'string user ":" local-file-path)))
+      (setf info (format nil "[Download] (~a):~a "
+                         user local-file-path)))
     (let ((transfered (load-chunk (usocket:socket-stream socket)
                                   local-file-stream
                                   (- size read-bytes))))
@@ -482,7 +483,7 @@
                        (setf part-size (- size
                                           (* current-part part-size)))
                        size)))))
-        (setf info (concatenate 'string user ":" local-file-path))))
+        (setf info (concatenate 'string "[Download] (" user "):" local-file-path))))
     (let ((written (load-chunk (usocket:socket-stream socket)
                                local-file-stream
                                (- part-size read-bytes-part))))
@@ -524,7 +525,7 @@
           (let* ((left (length items))
                  (done (length items-done))
                  (total (+ left done)))
-            (setf info (format nil "(File ~a/~a) ~a"
+            (setf info (format nil "[Folder Download] (File ~a/~a):~a"
                                done
                                total
                                file)))
@@ -634,10 +635,12 @@
                                 :element-type '(unsigned-byte 8)))
         (let ((size (- end start)))
           (setf load size
-                max-load size))
-        (unless (eql start 0)
-          (file-position file-stream start))
-        (setf info filename))
+                max-load size)
+          (unless (eql start 0)
+            (file-position file-stream start))
+          (setf info (format nil "[Upload] (~a):~a"
+                             (lodds.core:format-size size)
+                             filename))))
       (let ((left-to-upload (- (- end start)
                                written)))
         (lodds.core:copy-stream file-stream
