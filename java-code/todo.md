@@ -6,7 +6,7 @@
 ## GUI
 - [ ] About menu entry and dialog with license information
 - [ ] Download whole folder (gitmalong)
-- [ ] Validate user name (gitmalong)
+- [x] Validate user name (gitmalong)
 
 ## Doc
 
