@@ -13,7 +13,6 @@
       (declare (ignore e))
       "0000000000000000000000000000000000000000")))
 
-(defun copy-stream (stream-from stream-to size)
 (defun input-rdy-p (socket timeout)
   "returns t if socket has input rdy, nil if it timed out without any
   input"
@@ -23,22 +22,28 @@
         t
         nil)))
 
+(defun copy-stream (stream-from stream-to size &optional check-input-fn)
   "will read from stream-from and write to stream-to size bytes"
   (loop :with written = 0
-        :with buffer-size = (if (< size 8192)
+        :with buffer-size = (if (< size 4096)
                                 size
-                                8192)
+                                4096)
         :with buffer = (make-array (list buffer-size)
                                    :element-type '(unsigned-byte 8))
-        :for read = (read-sequence buffer stream-from)
-        :until (zerop read)
+        :for read = (if (or (not check-input-fn)
+                            (funcall check-input-fn))
+                        (read-sequence buffer stream-from)
+                        (return-from copy-stream written))
+        :if (zerop read)
+        :do (error "Peer closed Socket")
+        :else
         :do (progn
               (if (>= (+ read written)
                       size)
                   (progn
                     (write-sequence buffer stream-to :end (- size written))
                     ;; TODO: error handling
-                    (return))
+                    (return-from copy-stream written))
                   (progn
                     (write-sequence buffer stream-to :end read)
                     (incf written read)
@@ -50,7 +55,7 @@
                                                :element-type '(unsigned-byte 8))))))
               ;; TODO: error handling
               (when (< read buffer-size)
-                (return)))))
+                (return-from copy-stream written)))))
 
 ;; got code from lisptips http://lisptips.com/page/4 modified it to my needs :)
 
