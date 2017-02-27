@@ -15,7 +15,10 @@
                   :type integer)
    (on-timeout :initarg :on-timeout
                :initform nil
-               :type function)))
+               :type function)
+   (task :initarg :task
+         :documentation "Send Permission task, used to check on tick
+         if task was canceled, if so call on-timeout.")))
 
 (define-subwidget (send-permission folder)
     (q+:make-qlineedit send-permission )
@@ -50,7 +53,8 @@
 (define-slot (send-permission tick) ()
   (declare (connected timer (timeout)))
   (incf time-vanished)
-  (if (>= time-vanished timeout)
+  (if (or (>= time-vanished timeout)
+          (slot-value task 'lodds.task::canceled-p))
       (when on-timeout
         (funcall on-timeout))
       (q+:set-value time-left (- timeout time-vanished))))
@@ -84,7 +88,8 @@
                   (usocket:get-peer-address socket)))
            (widget (make-instance 'send-permission
                                   :timeout timeout
-                                  :default-filename filename)))
+                                  :default-filename filename
+                                  :task task)))
       (let ((dialog (make-instance
                      'dialog
                      :title
