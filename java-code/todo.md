@@ -1,7 +1,7 @@
 # Todo
 
 ## Core
-- [ ] Validate user name (gitmalong)
+- [x] Validate user name and strip invalid chars from system user name (gitmalong)
 
 ## GUI
 - [ ] About menu entry and dialog with license information
