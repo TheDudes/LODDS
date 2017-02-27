@@ -14,6 +14,15 @@
       "0000000000000000000000000000000000000000")))
 
 (defun copy-stream (stream-from stream-to size)
+(defun input-rdy-p (socket timeout)
+  "returns t if socket has input rdy, nil if it timed out without any
+  input"
+  (multiple-value-bind (socket-rdy time-left)
+      (usocket:wait-for-input socket :timeout timeout)
+    (if (and socket-rdy time-left)
+        t
+        nil)))
+
   "will read from stream-from and write to stream-to size bytes"
   (loop :with written = 0
         :with buffer-size = (if (< size 8192)

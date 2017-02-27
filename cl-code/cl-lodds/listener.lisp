@@ -79,18 +79,14 @@
          (buffer (make-array buffer-size
                              :element-type '(unsigned-byte 8)
                              :initial-element 0)))
-    (multiple-value-bind (return-sockets real-time)
-        (usocket:wait-for-input socket :timeout 1)
-      (declare (ignore return-sockets))
-      (if (not real-time)
-          nil
-          (multiple-value-bind (recv n remote-host remote-port)
-              (usocket:socket-receive socket buffer buffer-size)
-            (declare (ignore recv remote-host remote-port))
-            (if (plusp n)
-                (flexi-streams:octets-to-string
-                 (subseq buffer 0 n))
-                (error "listener:get-next-message: receive error: ~A" n)))))))
+    (when (lodds.core:input-rdy-p socket 1)
+      (multiple-value-bind (recv n remote-host remote-port)
+          (usocket:socket-receive socket buffer buffer-size)
+        (declare (ignore recv remote-host remote-port))
+        (if (plusp n)
+            (flexi-streams:octets-to-string
+             (subseq buffer 0 n))
+            (error "listener:get-next-message: receive error: ~A" n))))))
 
 (defun run ()
   (let ((socket nil))

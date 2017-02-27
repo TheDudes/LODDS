@@ -3,6 +3,7 @@
 (defpackage #:lodds.core
   (:use #:cl)
   (:export #:generate-checksum
+           #:input-rdy-p
            #:copy-stream
            #:get-timestamp
            #:str-case

@@ -59,17 +59,15 @@ multiple-value-bind.
         (stream (usocket:socket-stream socket)))
     ;; TODO: set default timeout in settings
     (loop :until nil
-          :do
-          (multiple-value-bind (socket-rdy time-left)
-              (usocket:wait-for-input socket :timeout 15)
-            (if (and time-left socket-rdy)
-                (setf byte (read-byte stream))
-                ;; TODO: default from settings
-                (error "no response after ~a seconds." 15))
-            (if (eql 10 byte)
-                (return-from read-line-from-socket
-                  (map 'string #'code-char (reverse line)))
-                (push byte line))))))
+          :do (progn
+                (if (lodds.core:input-rdy-p socket 15)
+                    (setf byte (read-byte stream))
+                    ;; TODO: default from settings
+                    (error "no response after ~a seconds." 15))
+                (if (eql 10 byte)
+                    (return-from read-line-from-socket
+                      (map 'string #'code-char (reverse line)))
+                    (push byte line))))))
 
 ;; broadcast family
 
@@ -271,14 +269,12 @@ multiple-value-bind.
    and the socket should be rdy to send the file. If timeout is
    reached 5 will be returned"
   (handler-case
-      (multiple-value-bind (socket-rdy time-left)
-          (usocket:wait-for-input socket :timeout timeout)
-        (if (and time-left socket-rdy)
-            (if (string= "OK"
-                         (read-line-from-socket socket-rdy))
-                0
-                2)
-            3))
+      (if (lodds.core:input-rdy-p socket timeout)
+          (if (string= "OK"
+                       (read-line-from-socket socket))
+              0
+              2)
+          3)
     (end-of-file (e)
       (declare (ignore e))
       1)))
