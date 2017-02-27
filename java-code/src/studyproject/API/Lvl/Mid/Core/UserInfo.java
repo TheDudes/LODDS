@@ -260,7 +260,7 @@ public class UserInfo {
 		// Rules
 		// Length: [1-32]
 		// Characters: digits, a-z A-Z - _
-		return userName.matches("^([a-zA-Z]|\\d|_|-){1,32}$");
+		return userName.matches("^(\\w|-){1,32}$");
 	}
 
 }
