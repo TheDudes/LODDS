@@ -248,19 +248,20 @@ multiple-value-bind.
                     (t (error "TODO: handle-info all|upd error ~a" type)))
                   (parse-integer timestamp)
                   (loop :repeat (parse-integer count)
-                        :collect (progn
-                                   (setf line (read-line-from-socket socket))
-                                   (if (cl-ppcre:scan *info-body-scanner* line)
-                                       (destructuring-bind (type checksum size . name)
-                                           (cl-strings:split line)
-                                         (list (cond
-                                                 ((equal type "add") :add)
-                                                 ((equal type "del") :del)
-                                                 (t (error "TODO: handle-info add|del error")))
-                                               checksum
-                                               (parse-integer size)
-                                               (cl-strings:join name :separator " ")))
-                                       (return-from handle-info 2))))))
+                        :collect
+                        (progn
+                          (setf line (read-line-from-socket socket))
+                          (if (cl-ppcre:scan *info-body-scanner* line)
+                              (destructuring-bind (type checksum size . name)
+                                  (cl-strings:split line)
+                                (list (cond
+                                        ((equal type "add") :add)
+                                        ((equal type "del") :del)
+                                        (t (error "TODO: handle-info add|del error")))
+                                      checksum
+                                      (parse-integer size)
+                                      (cl-strings:join name :separator " ")))
+                              (return-from handle-info 2))))))
         2)))
 
 (defun handle-send-permission (socket timeout)
