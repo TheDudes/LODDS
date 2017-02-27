@@ -330,13 +330,38 @@
                tasks-on-hold
                (alive-p lodds.subsystem:alive-p)) subsys
     (when alive-p
-      (let ((lparallel:*kernel* kernel))
-        (lparallel:end-kernel :wait t)
-        (setf tasks (make-hash-table :test #'equal)
-              tasks-on-hold (make-hash-table :test #'equal)
-              alive-p nil)
-        (lodds.event:push-event (lodds.subsystem:name subsys)
-                                (list "stopped!"))))))
+      (bt:make-thread
+       (lambda ()
+         (let ((tasks-running t)
+               (tries 0)
+               (tries-max 8))
+           (loop :while tasks-running
+                 :do (let ((msg (format nil "shutting down remaining tasks... (~a/~a)"
+                                        tries tries-max)))
+                       (when (eql tries tries-max)
+                         (format t "forcing tasker shutdown~%")
+                         (lodds.event:push-event (lodds.subsystem:name subsys)
+                                                 (list "forcing tasker shutdown"))
+                         (return))
+                       (format t "~a~%" msg)
+                       (lodds.event:push-event (lodds.subsystem:name subsys)
+                                               (list msg))
+                       (setf tasks-running nil)
+                       (maphash (lambda (task-id task)
+                                  (unless (gethash task-id tasks-on-hold)
+                                    (cancel-task task)
+                                    (setf tasks-running t)))
+                                tasks)
+                       (incf tries)
+                       (sleep 0.5))))
+         (let ((lparallel:*kernel* kernel))
+           (lparallel:end-kernel :wait t)
+           (setf tasks (make-hash-table :test #'equal)
+                 tasks-on-hold (make-hash-table :test #'equal)
+                 alive-p nil)
+           (lodds.event:push-event (lodds.subsystem:name subsys)
+                                   (list "stopped!"))))
+       :name "Tasker Shutdown"))))
 
 (defmethod initialize-instance :after ((task task-get-file-from-user) &rest initargs)
   (declare (ignorable initargs))
@@ -378,17 +403,19 @@
 
 (defmethod initialize-instance :after ((task task-request-send-permission) &rest initargs)
   (declare (ignorable initargs))
-  (with-slots (info filename) task
-    (setf info (format nil "[Request] (Incomming Request):~a" filename))))
+  (with-slots (info filename id) task
+    (setf info (format nil "[Request] (Incomming Request): <~a> ~a" id filename))))
 
-(defun load-chunk (stream-from stream-to size &optional (chunk-size (ash 1 21)))
-  (let ((transfered (if (> size chunk-size)
-                        chunk-size
-                        size)))
-    (lodds.core:copy-stream stream-from
-                            stream-to
-                            transfered)
-    transfered))
+(defun load-chunk (stream-from stream-to size &optional check-input-fn (chunk-size (ash 1 21)))
+  "Transfers bytes from STREAM-FROM to STREAM-TO. It will never
+  transfer more then (max size chunk-size) bytes. Returns the Amount
+  of transfered Bytes."
+  (lodds.core:copy-stream stream-from
+                          stream-to
+                          (if (> size chunk-size)
+                              chunk-size
+                              size)
+                          check-input-fn))
 
 (defun open-file (file-path)
   (open file-path :direction :output
@@ -399,7 +426,8 @@
 
 (defun request-file (ip port checksum start end)
   (let ((socket (usocket:socket-connect ip port
-                                        :element-type '(unsigned-byte 8))))
+                                        :element-type '(unsigned-byte 8)
+                                        :timeout 1)))
     (lodds.low-level-api:get-file (usocket:socket-stream socket) checksum start end)
     socket))
 
@@ -622,40 +650,34 @@
                load
                max-load
                info) task
-    ;; TODO: chunk-size to settings
-    (let ((chunk-size (ash 1 21))) ;; 2 MB
-      (unless filename
-        (unless (setf filename (lodds.watcher:get-file-info checksum))
-          (lodds.event:push-event :error
-                                  (list "requested file could not be found"))
-          (setf finished-p t)
-          (return-from run-task))
-        (setf file-stream (open filename
-                                :direction :input
-                                :element-type '(unsigned-byte 8)))
-        (let ((size (- end start)))
-          (setf load size
-                max-load size)
-          (unless (eql start 0)
-            (file-position file-stream start))
-          (setf info (format nil "[Upload] (~a):~a"
-                             (lodds.core:format-size size)
-                             filename))))
-      (let ((left-to-upload (- (- end start)
-                               written)))
-        (lodds.core:copy-stream file-stream
-                                (usocket:socket-stream socket)
-                                (if (> left-to-upload chunk-size)
-                                    (progn (incf written chunk-size)
-                                           (decf-load task chunk-size)
-                                           chunk-size)
-                                    (progn (incf written left-to-upload)
-                                           (decf-load task left-to-upload)
-                                           left-to-upload)))
-        (finish-output file-stream)
-        (if (eql (- end start) written)
-            (setf finished-p t)
-            (setf resubmit-p t))))))
+    (unless filename
+      (unless (setf filename (lodds.watcher:get-file-info checksum))
+        (lodds.event:push-event :error
+                                (list "requested file could not be found"))
+        (setf finished-p t)
+        (return-from run-task))
+      (setf file-stream (open filename
+                              :direction :input
+                              :element-type '(unsigned-byte 8)))
+      (let ((size (- end start)))
+        (setf load size
+              max-load size)
+        (unless (eql start 0)
+          (file-position file-stream start))
+        (setf info (format nil "[Upload] (~a):~a"
+                           (lodds.core:format-size size)
+                           filename))))
+    (let ((transfered
+            (load-chunk file-stream
+                        (usocket:socket-stream socket)
+                        (- (- end start)
+                           written))))
+      (incf written transfered)
+      (decf-load task transfered))
+    (finish-output file-stream)
+    (if (eql (- end start) written)
+        (setf finished-p t)
+        (setf resubmit-p t))))
 
 (defmethod run-task ((task task-request-info))
   (with-slots (socket
@@ -678,33 +700,30 @@
                load
                max-load
                info) task
-    ;; TODO: chunk-size to settings
-    (let ((chunk-size (ash 1 21))) ;; 2 MB
-      ;; open up file-stream if not open yet
-      (unless file-stream
-        (setf file-stream (open filename
-                                :direction :output
-                                :if-exists :supersede
-                                :element-type '(unsigned-byte 8)))
-        (unless (eql 0 (lodds.low-level-api:respond-send-permission
-                        (usocket:socket-stream socket)))
-          (setf finished-p t))
-        (setf load size
-              max-load size))
-      ;; transfer the file
-      (let ((left-to-receive (- size read-bytes)))
-        (lodds.core:copy-stream (usocket:socket-stream socket)
-                                file-stream
-                                (if (> left-to-receive chunk-size)
-                                    (progn (incf read-bytes chunk-size)
-                                           (decf-load task chunk-size)
-                                           chunk-size)
-                                    (progn (incf read-bytes left-to-receive)
-                                           (decf-load task left-to-receive)
-                                           left-to-receive)))
-        (if (eql size read-bytes)
-            (setf finished-p t)
-            (setf resubmit-p t))))))
+    ;; open up file-stream if not open yet
+    (unless file-stream
+      (setf file-stream (open filename
+                              :direction :output
+                              :if-exists :supersede
+                              :element-type '(unsigned-byte 8)))
+      (unless (eql 0 (lodds.low-level-api:respond-send-permission
+                      (usocket:socket-stream socket)))
+        (setf finished-p t))
+      (setf load size
+            max-load size))
+    ;; transfer the file
+    (format t "ok checking again~%")
+    (let ((transfered
+            (load-chunk (usocket:socket-stream socket)
+                        file-stream
+                        (- size read-bytes)
+                        (lambda ()
+                          (lodds.core:input-rdy-p socket 1)))))
+      (incf read-bytes transfered)
+      (decf-load task transfered))
+    (if (eql size read-bytes)
+        (setf finished-p t)
+        (setf resubmit-p t))))
 
 (defmethod run-task ((task task-info))
   (with-slots (name
@@ -774,58 +793,55 @@
                max-load
                info
                time-waited) task
-    ;; TODO: chunk-size to settings
-    (let ((chunk-size (ash 1 21))) ;; 2 MB
-      ;; open up file-stream if not open yet
-      (unless file-stream
-        (setf file-stream (open filepath
-                                :element-type '(unsigned-byte 8)))
-        (setf size (file-length file-stream)))
-      ;; open up socket
-      (unless socket
-        (setf socket (usocket:socket-connect ip
-                                             port
-                                             :element-type '(unsigned-byte 8)))
-        (lodds.event:push-event :debug
-                                (list "Asking for send permission"))
-        (let ((ret 0))
-          ;; send a send-permission request
-          (setf ret
-                (lodds.low-level-api:get-send-permission (usocket:socket-stream socket)
-                                                         size
-                                                         timeout
-                                                         (file-namestring filepath)))
-          (unless (eql 0 ret)
-            (error "get-send-permission returned: ~a" ret))))
-      (setf resubmit-p t)
-      (if (< time-waited timeout)
-          ;; wait timeout seconds for a response from the client, if
-          ;; after 1 second we got nothing, just resubmit the task and
-          ;; try again later. if time is already equal to timeout, we
-          ;; have successfull waited and can start transfer.
-          (case (lodds.low-level-api:handle-send-permission socket 1)
-            (0 (progn ;; success, set time to timeout
-                 (setf time-waited timeout)
-                 (setf load size
-                       max-load size)
-                 (setf info (format nil "[Send File] (Sending):~a" filepath))))
-            (3 (progn ;; on timeout wait another second
-                 (incf time-waited)
-                 (setf info (format nil "[Send File] (Waiting for accept (~a/~a seconds)):~a"
-                                    time-waited timeout filepath))))
-            (t (error "handle-send-permission returned error")))
-          ;; transfer the file
-          (let ((left-to-send (- size written)))
-            (lodds.core:copy-stream file-stream
-                                    (usocket:socket-stream socket)
-                                    (if (> left-to-send chunk-size)
-                                        (progn (incf written chunk-size)
-                                               (decf-load task chunk-size)
-                                               chunk-size)
-                                        (progn (incf written left-to-send)
-                                               (decf-load task left-to-send)
-                                               left-to-send)))
-            (finish-output file-stream)
-            (if (eql size written)
-                (setf finished-p t)
-                (setf resubmit-p t)))))))
+    ;; open up file-stream if not open yet
+    (unless file-stream
+      (setf file-stream (open filepath
+                              :element-type '(unsigned-byte 8)))
+      (setf size (file-length file-stream)))
+    ;; open up socket
+    (unless socket
+      (setf socket (usocket:socket-connect ip
+                                           port
+                                           :element-type '(unsigned-byte 8)
+                                           :timeout 1))
+      (lodds.event:push-event :debug
+                              (list "Asking for send permission"))
+      (let ((ret 0))
+        ;; send a send-permission request
+        (setf ret
+              (lodds.low-level-api:get-send-permission (usocket:socket-stream socket)
+                                                       size
+                                                       timeout
+                                                       (file-namestring filepath)))
+        (unless (eql 0 ret)
+          (error "get-send-permission returned: ~a" ret))))
+    (setf resubmit-p t)
+    (if (< time-waited timeout)
+        ;; wait timeout seconds for a response from the client, if
+        ;; after 1 second we got nothing, just resubmit the task and
+        ;; try again later. if time is already equal to timeout, we
+        ;; have successfull waited and can start transfer.
+        (case (lodds.low-level-api:handle-send-permission socket 1)
+          (0 (progn ;; success, set time to timeout
+               (setf time-waited timeout)
+               (setf load size
+                     max-load size)
+               (setf info (format nil "[Send File] (Sending):~a" filepath))))
+          (3 (progn ;; on timeout wait another second
+               (incf time-waited)
+               (if (>= time-waited timeout)
+                   (error "Timeout. No Response from user, aborting Send File.")
+                   (setf info (format nil "[Send File] (Waiting for accept (~a/~a seconds)):~a"
+                                      time-waited timeout filepath)))))
+          (t (error "handle-send-permission returned error")))
+        ;; transfer the file
+        (let ((transfered
+                (load-chunk file-stream
+                            (usocket:socket-stream socket)
+                            (- size written))))
+          (incf written transfered)
+          (decf-load task transfered)
+          (finish-output file-stream)
+          (if (eql size written)
+              (setf finished-p t)
+              (setf resubmit-p t))))))

@@ -59,17 +59,15 @@ multiple-value-bind.
         (stream (usocket:socket-stream socket)))
     ;; TODO: set default timeout in settings
     (loop :until nil
-          :do
-          (multiple-value-bind (socket-rdy time-left)
-              (usocket:wait-for-input socket :timeout 15)
-            (if (and time-left socket-rdy)
-                (setf byte (read-byte stream))
-                ;; TODO: default from settings
-                (error "no response after ~a seconds." 15))
-            (if (eql 10 byte)
-                (return-from read-line-from-socket
-                  (map 'string #'code-char (reverse line)))
-                (push byte line))))))
+          :do (progn
+                (if (lodds.core:input-rdy-p socket 15)
+                    (setf byte (read-byte stream))
+                    ;; TODO: default from settings
+                    (error "no response after ~a seconds." 15))
+                (if (eql 10 byte)
+                    (return-from read-line-from-socket
+                      (map 'string #'code-char (reverse line)))
+                    (push byte line))))))
 
 ;; broadcast family
 
@@ -187,14 +185,6 @@ multiple-value-bind.
 
 ;; response family
 
-(defun respond-file (socket-stream file-stream start end)
-  "response to a get-file writing data from file-stream to socket-stream.
-   file-stream will be positioned at start, and only transfer till end."
-  (unless (eql start 0)
-    (file-position file-stream start))
-  (lodds.core:copy-stream file-stream socket-stream (- end start))
-  0)
-
 (defun respond-info (socket-stream type timestamp file-infos)
   "response to a 'get info' request. Will format type timestamp and
    file-infos and write it onto socket-stream. type can be either :all or :upt.
@@ -229,13 +219,6 @@ multiple-value-bind.
 
 ;; handle family
 
-(defun handle-file (socket-stream file-stream size)
-  "handles a successfull 'get file' request and writes the incomming
-   file content from socket-stream to file-stream. Size describes the
-   maximum bytes read/written"
-  (copy-stream socket-stream file-stream size)
-  0)
-
 (defun handle-info (socket)
   "handles a successfull 'get info' request and returns (as second
    value) a list containing the parsed data. The list has the same format
@@ -250,19 +233,20 @@ multiple-value-bind.
                     (t (error "TODO: handle-info all|upd error ~a" type)))
                   (parse-integer timestamp)
                   (loop :repeat (parse-integer count)
-                        :collect (progn
-                                   (setf line (read-line-from-socket socket))
-                                   (if (cl-ppcre:scan *info-body-scanner* line)
-                                       (destructuring-bind (type checksum size . name)
-                                           (cl-strings:split line)
-                                         (list (cond
-                                                 ((equal type "add") :add)
-                                                 ((equal type "del") :del)
-                                                 (t (error "TODO: handle-info add|del error")))
-                                               checksum
-                                               (parse-integer size)
-                                               (cl-strings:join name :separator " ")))
-                                       (return-from handle-info 2))))))
+                        :collect
+                        (progn
+                          (setf line (read-line-from-socket socket))
+                          (if (cl-ppcre:scan *info-body-scanner* line)
+                              (destructuring-bind (type checksum size . name)
+                                  (cl-strings:split line)
+                                (list (cond
+                                        ((equal type "add") :add)
+                                        ((equal type "del") :del)
+                                        (t (error "TODO: handle-info add|del error")))
+                                      checksum
+                                      (parse-integer size)
+                                      (cl-strings:join name :separator " ")))
+                              (return-from handle-info 2))))))
         2)))
 
 (defun handle-send-permission (socket timeout)
@@ -271,14 +255,12 @@ multiple-value-bind.
    and the socket should be rdy to send the file. If timeout is
    reached 5 will be returned"
   (handler-case
-      (multiple-value-bind (socket-rdy time-left)
-          (usocket:wait-for-input socket :timeout timeout)
-        (if (and time-left socket-rdy)
-            (if (string= "OK"
-                         (read-line-from-socket socket-rdy))
-                0
-                2)
-            3))
+      (if (lodds.core:input-rdy-p socket timeout)
+          (if (string= "OK"
+                       (read-line-from-socket socket))
+              0
+              2)
+          3)
     (end-of-file (e)
       (declare (ignore e))
       1)))
