@@ -260,7 +260,20 @@ public class UserInfo {
 		// Rules
 		// Length: [1-32]
 		// Characters: digits, a-z A-Z - _
-		return userName.matches("^(\\w|-){1,32}$");
+		return userName.matches("^\\w|-{1,32}$");
+	}
+	
+	/*
+	 * Strips invalid characters from username
+	 * If there are no characters left it uses "user" + timestampms
+	 */
+	public static String stripInvalidUsernameChars(String userName) {
+		String un = userName.replaceAll("[^\\w|-]", "");
+		un = un.substring(0, Math.min(un.length(), 32));
+		if (un.length() == 0) {
+			un = "user-" + System.currentTimeMillis();
+		}
+		return un;
 	}
 
 }
