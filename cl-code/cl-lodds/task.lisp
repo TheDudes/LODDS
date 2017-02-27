@@ -426,7 +426,8 @@
 
 (defun request-file (ip port checksum start end)
   (let ((socket (usocket:socket-connect ip port
-                                        :element-type '(unsigned-byte 8))))
+                                        :element-type '(unsigned-byte 8)
+                                        :timeout 1)))
     (lodds.low-level-api:get-file (usocket:socket-stream socket) checksum start end)
     socket))
 
