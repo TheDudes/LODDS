@@ -2,7 +2,16 @@
 (in-readtable :qtools)
 
 (define-widget dialog (QDialog)
-  ((on-success :initform nil
+  ((ok-button-text :initform "Ok"
+                   :initarg :ok-text
+                   :documentation "Text which will be displayed on the
+                   right \"Ok\" Button which confirms the dialog")
+   (cancel-button-text :initform "Cancel"
+                       :initarg :cancel-text
+                       :documentation "Text which will be displayed on
+                       the left\"Cancel\" Button which closes the
+                       dialog without confirming it")
+   (on-success :initform nil
                :initarg :on-success-fn
                :documentation "function which gets called when 'Ok' was
                clicked. Will be called with the widget as arugment. If
@@ -66,6 +75,8 @@
   (with-slots-bound (dialog dialog)
     (q+:set-window-title dialog title)
     (q+:set-text message text)
+    (q+:set-text ok ok-button-text)
+    (q+:set-text cancel cancel-button-text)
     (when widget
       (q+:add-widget layout widget))
     (q+:add-widget layout button-area)))

@@ -113,6 +113,7 @@
                  :widget
                  (make-instance 'download-multiple
                                 :items selected-items-infos)
+                 :ok-text "Download"
                  :on-success-fn
                  (lambda (widget)
                    (download widget))))

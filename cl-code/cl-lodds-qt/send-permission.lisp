@@ -96,6 +96,8 @@
                                   "If you want to accept the File, "
                                   "select a folder and a filename and click OK")
                      :widget widget
+                     :ok-text "Accept"
+                     :cancel-text "Deny"
                      :on-success-fn
                      (lambda (widget)
                        (let ((full-filename (get-full-filename widget)))

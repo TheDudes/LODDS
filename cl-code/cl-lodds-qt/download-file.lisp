@@ -106,6 +106,7 @@
                                 :users users
                                 :checksum checksum
                                 :size size)
+                 :ok-text "Download"
                  :on-success-fn
                  (lambda (widget)
                    (download widget))))

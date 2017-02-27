@@ -82,6 +82,7 @@
                                 :user user
                                 :size size
                                 :files files)
+                 :ok-text "Download"
                  :on-success-fn
                  (lambda (widget)
                    (download widget))))

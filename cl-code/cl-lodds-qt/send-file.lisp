@@ -118,6 +118,7 @@
                                                             (list user)
                                                             nil)
                                         :selected-file file)
+                 :ok-text "Send"
                  :on-success-fn
                  (lambda (widget)
                    (with-slots-bound (widget send-file)
