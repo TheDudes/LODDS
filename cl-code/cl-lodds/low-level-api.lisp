@@ -185,14 +185,6 @@ multiple-value-bind.
 
 ;; response family
 
-(defun respond-file (socket-stream file-stream start end)
-  "response to a get-file writing data from file-stream to socket-stream.
-   file-stream will be positioned at start, and only transfer till end."
-  (unless (eql start 0)
-    (file-position file-stream start))
-  (lodds.core:copy-stream file-stream socket-stream (- end start))
-  0)
-
 (defun respond-info (socket-stream type timestamp file-infos)
   "response to a 'get info' request. Will format type timestamp and
    file-infos and write it onto socket-stream. type can be either :all or :upt.
@@ -226,13 +218,6 @@ multiple-value-bind.
   0)
 
 ;; handle family
-
-(defun handle-file (socket-stream file-stream size)
-  "handles a successfull 'get file' request and writes the incomming
-   file content from socket-stream to file-stream. Size describes the
-   maximum bytes read/written"
-  (copy-stream socket-stream file-stream size)
-  0)
 
 (defun handle-info (socket)
   "handles a successfull 'get info' request and returns (as second
