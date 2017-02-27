@@ -321,7 +321,11 @@
    (written :initform 0
             :type bignum
             :documentation "Amount of bytes already written to the
-            Socket")))
+            Socket")
+   (time-waited :initform 0
+                :type bignum
+                :documentation "Amount of seconds already waited for a
+                response")))
 
 ;; lodds.event classes
 
