@@ -811,8 +811,10 @@
                  (setf info (format nil "[Send File] (Sending):~a" filepath))))
             (3 (progn ;; on timeout wait another second
                  (incf time-waited)
-                 (setf info (format nil "[Send File] (Waiting for accept (~a/~a seconds)):~a"
-                                    time-waited timeout filepath))))
+                 (if (>= time-waited timeout)
+                     (error "Timeout. No Response from user, aborting Send File.")
+                     (setf info (format nil "[Send File] (Waiting for accept (~a/~a seconds)):~a"
+                                        time-waited timeout filepath)))))
             (t (error "handle-send-permission returned error")))
           ;; transfer the file
           (let ((left-to-send (- size written)))
