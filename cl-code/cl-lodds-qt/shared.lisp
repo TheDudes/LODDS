@@ -56,21 +56,27 @@
                  (set-button directories widget)))
            dirs))
 
-(defmethod share-directory ((directories directories) dir)
-  (setf dir (lodds.core:add-missing-slash dir))
-  (if (lodds.watcher:folder-already-shared-p dir)
+(defmethod share-directories ((directories directories) dirs)
+  (let ((dirs-with-slash (mapcar #'lodds.core:add-missing-slash
+                                 dirs))
+        (failed-dirs (list)))
+    (loop :for dir :in dirs-with-slash
+          :do
+          (multiple-value-bind (shareable-p error) (lodds.watcher:folder-shareable-p dir)
+            (if shareable-p
+                (with-slots-bound (directories directories)
+                  (let ((new-entry (q+:make-qtreewidgetitem directories)))
+                    (q+:set-text new-entry +shared-path+ dir)
+                    (setf (gethash dir dirs) new-entry)
+                    (set-spinner directories new-entry))
+                  (lodds.watcher:share-folder dir))
+                (push (list dir error) failed-dirs))))
+    (when (> (length failed-dirs) 0)
       (make-instance 'dialog
-                     :title (format nil "Error - ~a already Shared"
-                                    dir)
+                     :title (format nil "Error - Could not Share directories")
                      :text (format nil
-                                   "Sorry, cannot share ~a since its already shared"
-                                   dir))
-      (with-slots-bound (directories directories)
-        (let ((new-entry (q+:make-qtreewidgetitem directories)))
-          (q+:set-text new-entry +shared-path+ dir)
-          (setf (gethash dir dirs) new-entry)
-          (set-spinner directories new-entry))
-        (lodds.watcher:share-folder dir))))
+                                   "Sorry, was not able to share the following directories:~%~:{~%~a (~a)~}"
+                                   failed-dirs)))))
 
 (define-signal (directories add-directory) (string))
 (define-signal (directories remove-directory) (string))
@@ -101,30 +107,18 @@
   (q+:accept-proposed-action ev))
 
 (define-override (directories drop-event) (ev)
-  (let ((dropped-link (q+:const-data
-                       (q+:data (q+:mime-data ev)
-                                "text/uri-list"))))
-    (loop :for link
-          :in (cl-strings:split dropped-link
-                                (format nil "~C~C"
-                                        #\return #\linefeed))
-          :do
-          (when (cl-strings:starts-with link "file://")
-            (let ((filepath (subseq link 7)))
-              (cond
-                ((uiop:file-exists-p filepath)
-                 (make-instance
-                  'dialog
-                  :title (format nil "Error - Cannot share File (~a)"
-                                 filepath)
-                  :text "Its not possible to share a single File, select a directory please."))
-                ((uiop:directory-exists-p filepath)
-                 (share-directory directories filepath))
-                (t
-                 (make-instance
-                  'dialog
-                  :title "Error - Dont know what to do"
-                  :text "Whatever you dropped there is neither a dir nor a file."))))))))
+  (let* ((dropped-link (q+:const-data
+                        (q+:data (q+:mime-data ev)
+                                 "text/uri-list")))
+         (links (cl-strings:split dropped-link
+                                  (format nil "~C~C"
+                                          #\return #\linefeed))))
+    (share-directories directories
+                       (mapcar (lambda (link)
+                                 (subseq link 7))
+                               (remove-if-not (lambda (link)
+                                                (cl-strings:starts-with link "file://"))
+                                              links)))))
 
 (define-initializer (directories setup-widget)
   (qdoto directories
@@ -178,7 +172,7 @@
              (let ((dir (q+:qfiledialog-get-existing-directory)))
                (when (> (length dir)
                         0)
-                 (share-directory shared-directories dir))))))
+                 (share-directories shared-directories (list dir)))))))
 
 (define-initializer (directories setup-timer)
   ;; TODO: get/set timeout from settings

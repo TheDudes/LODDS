@@ -93,6 +93,7 @@
            #:get-file-info
            #:get-shared-folders
            #:folder-already-shared-p
+           #:folder-shareable-p
            #:share-folder
            #:unshare-folder
            #:folder-busy-p))
