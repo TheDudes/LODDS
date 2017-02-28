@@ -712,7 +712,6 @@
       (setf load size
             max-load size))
     ;; transfer the file
-    (format t "ok checking again~%")
     (let ((transfered
             (load-chunk (usocket:socket-stream socket)
                         file-stream
