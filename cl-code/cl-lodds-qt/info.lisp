@@ -71,7 +71,8 @@
       (qdoto widget
              (q+:set-text +info-info+ info-text)
              (q+:set-tool-tip +info-info+
-                              (format nil "Total: ~a (~:d)~%Transfered: ~a (~:d)"
+                              (format nil
+                                      "Total: ~a (~:d bytes)~%Transfered: ~a (~:d bytes)"
                                       (lodds.core:format-size max) max
                                       (lodds.core:format-size done) done))))))
 
