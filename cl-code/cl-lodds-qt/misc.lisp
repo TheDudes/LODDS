@@ -10,7 +10,11 @@
 
 (defun generate-timestamp (&optional unix-timestamp)
   "Returns current date formatted as a string. if unix-timestamp is
-  given it formats that"
+  given it formats that
+  CL-USER> (generate-timestamp)
+  => \"2017-02-28 13:02:24\"
+  CL-USER> generate-timestamp (lodds.core:get-timestamp))
+  => \"2017-02-28 13:02:59\""
   (multiple-value-bind (sec min hr day mon yr dow dst-p tz)
       (if unix-timestamp
           (decode-universal-time
