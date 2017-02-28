@@ -4,7 +4,7 @@
 <?import javafx.scene.layout.VBox?>
 
 
-<VBox alignment="CENTER" prefHeight="81.0" prefWidth="254.0" xmlns="http://javafx.com/javafx/8.0.111" xmlns:fx="http://javafx.com/fxml/1">
+<VBox alignment="CENTER" prefHeight="81.0" prefWidth="254.0" xmlns="http://javafx.com/javafx/8.0.111" xmlns:fx="http://javafx.com/fxml/1" fx:controller="studyproject.gui.aboutWindow.AboutWindowPresenter">
    <children>
       <Label fx:id="aboutLabel" text="About Window" />
    </children>
