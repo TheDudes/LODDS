@@ -423,7 +423,7 @@
          (q+:hide)
          (q+:set-stretch-last-section nil)
          (q+:set-resize-mode +shares-name+ (q+:qheaderview.stretch))
-         (q+:resize-section +shares-size+ 55)))
+         (q+:resize-section +shares-size+ 60)))
 
 (define-initializer (shares setup-callbacks)
   ;; move this to list-view later
