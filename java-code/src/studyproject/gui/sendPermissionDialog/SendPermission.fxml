@@ -22,12 +22,15 @@
       <Label fx:id="permissionMsg" text="User XYZ wants to send you this file: file.filetype (size in MB)" />
       <HBox alignment="CENTER_RIGHT" prefHeight="96.0" prefWidth="419.0" GridPane.rowIndex="2">
          <children>
-            <Button fx:id="declineButton" cancelButton="true" mnemonicParsing="false" text="Decline" />
             <Button fx:id="acceptButton" mnemonicParsing="false" text="Accept">
                <HBox.margin>
-                  <Insets left="5.0" />
+                  <Insets />
                </HBox.margin>
             </Button>
+            <Button fx:id="declineButton" cancelButton="true" mnemonicParsing="false" text="Decline">
+               <HBox.margin>
+                  <Insets left="10.0" />
+               </HBox.margin></Button>
          </children>
       </HBox>
       <ProgressBar fx:id="permissionProgress" prefHeight="18.0" prefWidth="300.0" progress="1.0" GridPane.hgrow="ALWAYS" GridPane.rowIndex="1" />
