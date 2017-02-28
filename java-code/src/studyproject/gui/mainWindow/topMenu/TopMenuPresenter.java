@@ -23,6 +23,7 @@ import studyproject.API.Errors.ErrorFactory;
 import studyproject.App;
 import studyproject.API.Core.File.FileInfo;
 import studyproject.gui.Core.Utils;
+import studyproject.gui.aboutWindow.AboutWindowView;
 import studyproject.gui.mainWindow.MainWindowModel;
 import studyproject.gui.mainWindow.usersList.UsersListModel;
 import studyproject.gui.settingsWindow.SettingsWindowView;
@@ -33,11 +34,13 @@ public class TopMenuPresenter implements Initializable {
 	@FXML
 	Menu fileMenu;
 	@FXML
-	MenuItem settingsItem;
-	@FXML
 	MenuItem shareFolder;
 	@FXML
 	MenuItem sendFileToUser;
+	@FXML
+	MenuItem settingsItem;
+	@FXML
+	MenuItem aboutItem;
 	@Inject
 	MainWindowModel mainWindowModel;
 	@Inject
@@ -53,7 +56,7 @@ public class TopMenuPresenter implements Initializable {
 		settingsItem.setOnAction(e -> settingsItemPressed());
 		shareFolder.setOnAction(e -> shareFolderPressed());
 		sendFileToUser.setOnAction(e -> sendFileToUser());
-
+		aboutItem.setOnAction(e -> aboutItemPressed());
 	}
 
 	private void fileMenuPressed() {
@@ -87,8 +90,7 @@ public class TopMenuPresenter implements Initializable {
 
 	private void settingsItemPressed() {
 		Stage stage = new Stage();
-		SettingsWindowView settingsView = new SettingsWindowView();
-		stage.setScene(new Scene(settingsView.getView()));
+		stage.setScene(new Scene(new SettingsWindowView().getView()));
 		stage.initModality(Modality.APPLICATION_MODAL);
 		stage.show();
 	}
@@ -109,6 +111,13 @@ public class TopMenuPresenter implements Initializable {
 		} catch (IOException e) {
 			logger.log(ErrorFactory.build(Level.SEVERE, LogKey.error, "IOException thrown: ", e));
 		}
+	}
+	
+	private void aboutItemPressed() {
+		Stage stage = new Stage();
+		stage.setScene(new Scene(new AboutWindowView().getView()));
+		stage.initModality(Modality.APPLICATION_MODAL);
+		stage.show();
 	}
 
 }
