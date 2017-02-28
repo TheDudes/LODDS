@@ -10,8 +10,8 @@
   ((tracked-tasks :initform (make-hash-table :test #'equal)
                   :type hashtable
                   :documentation "hashtable which has task-id as key
-                  and a list out of the treewidgetitem and the
-                  displayed progressbar.")
+                  and a list out of the treewidgetitem, the
+                  displayed progressbar and max.")
    (lock :initform (bt:make-recursive-lock "info-lock")
          :documentation "lock to synchronize
          failed/canceled/finished-tasks")
@@ -38,8 +38,8 @@
            (progress (q+:make-qprogressbar info))
            (cancel (q+:make-qpushbutton "Cancel" info)))
       (qdoto progress
-             (q+:set-maximum max)
-             (q+:set-value done))
+             (q+:set-maximum 100)
+             (q+:set-value (round (/ (* 100 done) max))))
       (q+:set-item-widget info
                           new-entry
                           +info-progress+
@@ -55,12 +55,14 @@
              (q+:set-text +info-info+ info-text)
              (q+:set-text +info-id+ id))
       (setf (gethash id tracked-tasks) (list new-entry
-                                             progress)))))
+                                             progress
+                                             max)))))
 
-(defmethod update-info ((info info) id max done info-text)
+(defmethod update-info ((info info) id done info-text)
   (with-slots-bound (info info)
-    (destructuring-bind (widget progress) (gethash id tracked-tasks)
-      (q+:set-value progress done)
+    (destructuring-bind (widget progress max) (gethash id tracked-tasks)
+      (q+:set-value progress
+                    (round (/ (* 100 done) max)))
       (q+:set-text widget +info-info+ info-text))))
 
 (defmethod remove-info ((info info) id)
@@ -80,7 +82,7 @@
     ;; add all missing, and update all we already have
     (loop :for (id max done type info-text) :in tasks
           :do (if (gethash id tracked-tasks)
-                  (update-info info id max done info-text)
+                  (update-info info id done info-text)
                   (unless (eql type :task)
                     (add-info info id max done info-text))))
     ;; remove all old tasks
@@ -102,8 +104,8 @@
       (flet ((update-color (id color status)
                (let ((entry (gethash id tracked-tasks)))
                  (when entry
-                   (destructuring-bind (widget progress) entry
-                     (declare (ignore progress))
+                   (destructuring-bind (widget progress max) entry
+                     (declare (ignore progress max))
                      (let ((old-widget (q+:item-widget info widget +info-progress+)))
                        (q+:remove-item-widget info widget +info-progress+)
                        (finalize old-widget))
@@ -118,8 +120,8 @@
         (dolist (id finished)
           (let ((entry (gethash id tracked-tasks)))
             (when entry
-              (destructuring-bind (widget progress) entry
-                (declare (ignore widget))
+              (destructuring-bind (widget progress max) entry
+                (declare (ignore widget max))
                 (setf (q+:value progress)
                       (q+:maximum progress)))
               (push id old-tasks))))
