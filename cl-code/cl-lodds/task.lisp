@@ -570,8 +570,8 @@
           (let ((on-error-hook
                   (lambda (file-task)
                     (declare (ignore file-task))
-                    (if (lodds.event:callback-exists-p :directory-error)
-                        (lodds.event:push-event :directory-error id)
+                    (if (lodds.event:callback-exists-p :folder-download-error)
+                        (lodds.event:push-event :folder-download-error id)
                         ;; just skip the file
                         (submit-task task)))))
             (if checksum

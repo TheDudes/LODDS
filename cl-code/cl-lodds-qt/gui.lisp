@@ -81,7 +81,7 @@
 (define-signal (main-window fix-menubar-order) ())
 (define-signal (main-window change-title) (string))
 (define-signal (main-window received-send-permission) (string))
-(define-signal (main-window directory-error) (string))
+(define-signal (main-window folder-download-error) (string))
 
 (define-slot (main-window received-send-permission) ((task-id string))
   (declare (connected main-window (received-send-permission string)))
@@ -89,8 +89,8 @@
     (when task
       (open-send-permission-dialog task))))
 
-(define-slot (main-window directory-error) ((task-id string))
-  (declare (connected main-window (directory-error string)))
+(define-slot (main-window folder-download-error) ((task-id string))
+  (declare (connected main-window (folder-download-error string)))
   (let ((task (lodds.task:get-task-by-id task-id)))
     (with-slots ((items lodds.task::items)
                  (items-done lodds.task::items-done)
@@ -145,15 +145,15 @@
                             :send-permission)
   (lodds.event:add-callback :qt-main
                             (lambda (event)
-                              (signal! main-window (directory-error
+                              (signal! main-window (folder-download-error
                                                     string)
                                        (second event)))
-                            :directory-error))
+                            :folder-download-error))
 
 (define-finalizer (main-window cleanup-callbacks)
   (lodds.event:remove-callback :qt-main :name-changed)
   (lodds.event:remove-callback :qt-main :send-permission)
-  (lodds.event:remove-callback :qt-main :directory-error))
+  (lodds.event:remove-callback :qt-main :folder-download-error))
 
 (define-slot (main-window fix-menubar-order) ()
   (declare (connected main-window (fix-menubar-order)))
