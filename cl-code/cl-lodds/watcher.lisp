@@ -115,7 +115,6 @@
     (setf (slot-value w 'root-dir-name) name
           (slot-value w 'root-dir-path) path)))
 
-
 (defmethod add-initial-files ((dir-watcher dir-watcher))
   ;; wait until dir-watcher is alive and added all initial handles
   (loop :while (not (cl-fs-watcher:alive-p dir-watcher))
@@ -186,7 +185,7 @@
   (let ((dir (car (directory folder-path))))
     (cond
       ((null dir)
-       (values nil "could not determine directory (does it exist?)"))
+       (values nil "could not determine directory (does it exist? read access?)"))
       ((uiop:file-exists-p folder-path)
        (values nil "Not able to share a File (only Folders possible)"))
       ((not (uiop:directory-exists-p folder-path))

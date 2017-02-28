@@ -336,7 +336,7 @@
                (tries 0)
                (tries-max 8))
            (loop :while tasks-running
-                 :do (let ((msg (format nil "shutting down remaining tasks... (~a/~a)"
+                 :do (let ((msg (format nil "shutting down remaining tasks... (try ~a/~a)"
                                         tries tries-max)))
                        (when (eql tries tries-max)
                          (format t "forcing tasker shutdown~%")
