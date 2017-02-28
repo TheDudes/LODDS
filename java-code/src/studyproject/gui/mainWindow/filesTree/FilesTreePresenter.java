@@ -42,6 +42,8 @@ public class FilesTreePresenter implements Initializable {
 	TasksListModel tasksListModel;
 	@FXML
 	Button downloadButton;
+	@FXML
+	Button filesTreeRefresh;
 
 	private final TreeItem<FileCoreInfo> root = new TreeItem<FileCoreInfo>();
 	private FilteredList<TreeItem<FileCoreInfo>> filteredFileList;
@@ -59,6 +61,7 @@ public class FilesTreePresenter implements Initializable {
 			}
 		});
 		reloadTreeCM.setOnAction(e -> createTree(userListModel.getSelectedUser().get()));
+		filesTreeRefresh.setOnAction(e -> createTree(userListModel.getSelectedUser().get()));
 		filesTreeSearch.textProperty().addListener(e -> {
 			filesTreeSearchChanged();
 		});

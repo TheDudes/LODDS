@@ -10,6 +10,7 @@ import javafx.collections.ListChangeListener;
 import javafx.collections.transformation.FilteredList;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
+import javafx.scene.control.Button;
 import javafx.scene.control.ListView;
 import javafx.scene.control.TextField;
 import studyproject.API.Lvl.Mid.Core.UserInfo;
@@ -19,6 +20,8 @@ public class UsersListPresenter implements Initializable {
 
 	@FXML
 	TextField usersSearch;
+	@FXML
+	Button refreshUsers;
 	@FXML
 	ListView<UserInfo> usersListV;
 	@Inject
@@ -35,6 +38,7 @@ public class UsersListPresenter implements Initializable {
 		filteredUserList = new FilteredList<UserInfo>(userListModel.getUsers(), s -> true);
 		usersListV.setItems(filteredUserList);
 		addUsersSearchListener();
+		refreshUsers.setOnAction(e -> refreshUsers());
 	}
 
 	private void addUserListMouseClickSelection() {
@@ -86,6 +90,10 @@ public class UsersListPresenter implements Initializable {
 				filteredUserList.setPredicate(s -> s.getUserName().contains(usersSearch.textProperty().get()));
 			}
 		});
+	}
+	
+	private void refreshUsers() {
+		mainWindowModel.getLodds().getLoddsModel().getClientList().clear();
 	}
 
 }

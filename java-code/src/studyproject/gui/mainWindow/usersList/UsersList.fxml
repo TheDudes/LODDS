@@ -1,15 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import java.lang.*?>
-<?import javafx.scene.control.*?>
-<?import javafx.scene.layout.*?>
+<?import javafx.scene.control.Button?>
 <?import javafx.scene.control.ListView?>
 <?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
 
-<VBox xmlns="http://javafx.com/javafx/8.0.76-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="studyproject.gui.mainWindow.usersList.UsersListPresenter">
+<VBox xmlns="http://javafx.com/javafx/8.0.111" xmlns:fx="http://javafx.com/fxml/1" fx:controller="studyproject.gui.mainWindow.usersList.UsersListPresenter">
    <children>
-      <TextField fx:id="usersSearch" promptText="Search..." VBox.vgrow="NEVER" />
+      <HBox VBox.vgrow="NEVER">
+         <children>
+            <TextField fx:id="usersSearch" promptText="Search..." HBox.hgrow="ALWAYS" />
+            <Button fx:id="refreshUsers" mnemonicParsing="false" text="Refresh" />
+         </children>
+      </HBox>
       <ListView fx:id="usersListV" VBox.vgrow="ALWAYS" />
    </children>
 </VBox>

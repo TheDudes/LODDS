@@ -33,5 +33,4 @@ public class UsersListModel {
 	public void setSelectedUser(ObjectProperty<UserInfo> selectedUser) {
 		this.selectedUser = selectedUser;
 	}
-
 }
