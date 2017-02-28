@@ -404,7 +404,7 @@
 (defmethod initialize-instance :after ((task task-request-send-permission) &rest initargs)
   (declare (ignorable initargs))
   (with-slots (info filename id) task
-    (setf info (format nil "[Request] (Incomming Request): <~a> ~a" id filename))))
+    (setf info (format nil "[Request] (Incomming Request): ~a" filename))))
 
 (defun load-chunk (stream-from stream-to size &optional check-input-fn (chunk-size (ash 1 21)))
   "Transfers bytes from STREAM-FROM to STREAM-TO. It will never
@@ -511,7 +511,7 @@
                        (setf part-size (- size
                                           (* current-part part-size)))
                        size)))))
-        (setf info (concatenate 'string "[Download] (" user "):" local-file-path))))
+        (setf info (format nil "[Download] (~a):" user local-file-path))))
     (let ((written (load-chunk (usocket:socket-stream socket)
                                local-file-stream
                                (- part-size read-bytes-part))))
