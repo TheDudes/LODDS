@@ -82,6 +82,7 @@
 (define-signal (main-window change-title) (string))
 (define-signal (main-window received-send-permission) (string))
 (define-signal (main-window folder-download-error) (string))
+(define-signal (main-window directory-error) (string))
 
 (define-slot (main-window received-send-permission) ((task-id string))
   (declare (connected main-window (received-send-permission string)))
@@ -128,6 +129,13 @@
                            :on-success-fn #'on-close
                            :on-cancel-fn #'on-close)))))))
 
+(define-slot (main-window directory-error) ((error-message string))
+  (declare (connected main-window (directory-error string)))
+  (make-instance
+   'dialog
+   :title "Error - Directory Watcher threw uncaught error"
+   :text error-message))
+
 (define-initializer (main-window setup-callbacks)
   (lodds.event:add-callback :qt-main
                             (lambda (event)
@@ -148,12 +156,19 @@
                               (signal! main-window (folder-download-error
                                                     string)
                                        (second event)))
-                            :folder-download-error))
+                            :folder-download-error)
+  (lodds.event:add-callback :qt-main
+                            (lambda (event)
+                              (signal! main-window (directory-error
+                                                    string)
+                                       (second event)))
+                            :directory-error))
 
 (define-finalizer (main-window cleanup-callbacks)
   (lodds.event:remove-callback :qt-main :name-changed)
   (lodds.event:remove-callback :qt-main :send-permission)
-  (lodds.event:remove-callback :qt-main :folder-download-error))
+  (lodds.event:remove-callback :qt-main :folder-download-error)
+  (lodds.event:remove-callback :qt-main :directory-error))
 
 (define-slot (main-window fix-menubar-order) ()
   (declare (connected main-window (fix-menubar-order)))
