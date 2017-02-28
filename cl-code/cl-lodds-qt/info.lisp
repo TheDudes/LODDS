@@ -32,6 +32,11 @@
 
 (define-subwidget (info timer) (q+:make-qtimer info))
 
+(defun normalized-value (max done)
+  (if (= 0 max)
+      0
+      (round (/ (* 100 done) max))))
+
 (defmethod add-info ((info info) id max done info-text)
   (with-slots-bound (info info)
     (let* ((new-entry (q+:make-qtreewidgetitem info))
@@ -39,7 +44,7 @@
            (cancel (q+:make-qpushbutton "Cancel" info)))
       (qdoto progress
              (q+:set-maximum 100)
-             (q+:set-value (round (/ (* 100 done) max))))
+             (q+:set-value (normalized-value max done)))
       (q+:set-item-widget info
                           new-entry
                           +info-progress+
@@ -62,7 +67,7 @@
   (with-slots-bound (info info)
     (destructuring-bind (widget progress max) (gethash id tracked-tasks)
       (q+:set-value progress
-                    (round (/ (* 100 done) max)))
+                    (normalized-value max done))
       (qdoto widget
              (q+:set-text +info-info+ info-text)
              (q+:set-tool-tip +info-info+
