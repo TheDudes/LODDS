@@ -209,6 +209,18 @@
                           :change-hook hook
                           :dir folder-path
                           :recursive-p t)))
+    (setf (slot-value new-dir-watcher 'cl-fs-watcher:error-cb)
+          (lambda (ev)
+            (lodds.event:push-event :directory-error
+                                    (list (format nil "Directory error on ~a~%~a"
+                                                  folder-path
+                                                  ev)))
+            (format t "ERROR: cl-fs-watcher error on ~a:~a"
+                    new-dir-watcher
+                    ev)
+            (stop-dir-watcher new-dir-watcher)))
+    (cl-fs-watcher:start-watcher new-dir-watcher
+                                 (list (cons 'lodds:*server* lodds:*server*)))
     (when (eql 0 (started-tracking watcher))
       (setf (started-tracking watcher)
             (lodds.core:get-timestamp)))
