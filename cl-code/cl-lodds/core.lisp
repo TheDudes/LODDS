@@ -24,38 +24,40 @@
 
 (defun copy-stream (stream-from stream-to size &optional check-input-fn)
   "will read from stream-from and write to stream-to size bytes"
-  (loop :with written = 0
-        :with buffer-size = (if (< size 4096)
-                                size
-                                4096)
-        :with buffer = (make-array (list buffer-size)
-                                   :element-type '(unsigned-byte 8))
-        :for read = (if (or (not check-input-fn)
-                            (funcall check-input-fn))
-                        (read-sequence buffer stream-from)
-                        (return-from copy-stream written))
-        :if (zerop read)
-        :do (error "Peer closed Socket")
-        :else
-        :do (progn
-              (if (>= (+ read written)
-                      size)
-                  (progn
-                    (write-sequence buffer stream-to :end (- size written))
-                    ;; TODO: error handling
-                    (return-from copy-stream written))
-                  (progn
-                    (write-sequence buffer stream-to :end read)
-                    (incf written read)
-                    ;; in case the next read would be bigger then size
-                    (when (> buffer-size (- size written))
-                      ;; resize buffer to be fitting
-                      (setf buffer-size (- size written))
-                      (setf buffer (make-array (list buffer-size)
-                                               :element-type '(unsigned-byte 8))))))
-              ;; TODO: error handling
-              (when (< read buffer-size)
-                (return-from copy-stream written)))))
+  (let* ((written 0)
+         (buffer-size (if (< size 4096)
+                          size
+                          4096))
+         (buffer (make-array (list buffer-size)
+                             :element-type '(unsigned-byte 8))))
+    (loop :for read = (if (or (not check-input-fn)
+                              (funcall check-input-fn))
+                          (read-sequence buffer stream-from)
+                          (return-from copy-stream written))
+          :do
+          (progn
+            (incf written read)
+            (cond
+              ((= read 0)
+               (error "Peer closed Socket"))
+              ((< read buffer-size)
+               (return-from copy-stream written))
+              ((> written size)
+               (error "Read more than size on COPY-STREAM (should not be possible)"))
+              ((= written size)
+               (progn
+                 (write-sequence buffer stream-to :end read)
+                 (return-from copy-stream written)))
+              ((< written size)
+               (let ((remaining (- size written)))
+                 ;; in case the next read would be bigger then size
+                 (write-sequence buffer stream-to :end read)
+                 (when (> buffer-size remaining)
+                   ;; resize buffer to be fitting
+                   (setf buffer-size remaining)
+                   (setf buffer
+                         (make-array (list buffer-size)
+                                     :element-type '(unsigned-byte 8)))))))))))
 
 ;; got code from lisptips http://lisptips.com/page/4 modified it to my needs :)
 
