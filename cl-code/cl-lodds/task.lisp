@@ -830,8 +830,10 @@
                (incf time-waited)
                (if (>= time-waited timeout)
                    (error "Timeout. No Response from user, aborting Send File.")
-                   (setf info (format nil "[Send File] (Waiting for accept (~a/~a seconds)):~a"
-                                      time-waited timeout filepath)))))
+                   (setf info (format nil "[Send File] (Waiting for accept ~a/~a):~a"
+                                      (lodds.core:format-seconds time-waited)
+                                      (lodds.core:format-seconds timeout)
+                                      filepath)))))
           (t (error "handle-send-permission returned error")))
         ;; transfer the file
         (let ((transfered

@@ -13,7 +13,8 @@
            #:split-path
            #:add-missing-slash
            #:remove-newline
-           #:get-folder))
+           #:get-folder
+           #:format-seconds))
 
 (defpackage #:lodds.low-level-api
   (:use #:cl

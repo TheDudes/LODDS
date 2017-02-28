@@ -177,3 +177,8 @@
     (if (> (length folders) 1)
         (lodds.core:add-missing-slash folder)
         "")))
+
+(defun format-seconds (seconds)
+  (format nil "~2,'0d:~2,'0d"
+          (floor seconds 60)
+          (mod seconds 60)))
