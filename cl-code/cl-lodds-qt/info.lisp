@@ -63,7 +63,12 @@
     (destructuring-bind (widget progress max) (gethash id tracked-tasks)
       (q+:set-value progress
                     (round (/ (* 100 done) max)))
-      (q+:set-text widget +info-info+ info-text))))
+      (qdoto widget
+             (q+:set-text +info-info+ info-text)
+             (q+:set-tool-tip +info-info+
+                              (format nil "Total: ~a (~:d)~%Transfered: ~a (~:d)"
+                                      (lodds.core:format-size max) max
+                                      (lodds.core:format-size done) done))))))
 
 (defmethod remove-info ((info info) id)
   (with-slots-bound (info info)
