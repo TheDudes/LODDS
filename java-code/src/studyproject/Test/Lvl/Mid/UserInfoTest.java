@@ -16,6 +16,15 @@ public class UserInfoTest {
 	}
 	
 	@Test
+	public void testValidUsernames() {
+		assert(UserInfo.validateUserName("k"));
+		assert(UserInfo.validateUserName("k123"));
+		assert(UserInfo.validateUserName("abcdefghijklmnopqrstuvwxyz12345"));
+		assertFalse(UserInfo.validateUserName("@ invalid"));
+
+	}
+	
+	@Test
 	public void testStripTooLongUsername() {
 		String invalid = "111111111111111111111111111111112222";
 		String stripped = UserInfo.stripInvalidUsernameChars(invalid);
