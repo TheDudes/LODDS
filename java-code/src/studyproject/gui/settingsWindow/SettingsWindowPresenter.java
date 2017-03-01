@@ -19,6 +19,7 @@ import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
+import javafx.scene.layout.Background;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Priority;
 import studyproject.API.Errors.ErrorFactory;
@@ -77,6 +78,17 @@ public class SettingsWindowPresenter implements Initializable {
 				dd.setValue(value);
 				newNode = dd;
 
+			} else if (key.equals("userName")) {
+				// Live username validation
+				TextField userNameTf = new TextField(value);
+				userNameTf.textProperty().addListener((observable, oldValue, newValue) -> {
+					if (UserInfo.validateUserName(newValue)) {
+						userNameTf.setStyle("-fx-control-inner-background: #FFFFFF;");
+					} else {
+						userNameTf.setStyle("-fx-control-inner-background: #FA9D9D;");
+					}
+				});
+				newNode = userNameTf;
 			} else {
 				newNode = new TextField(value);
 			}
@@ -84,7 +96,9 @@ public class SettingsWindowPresenter implements Initializable {
 			settingsGrid.addRow(numberOfRows++, new Label(key), newNode);
 
 		}
-		for (Node node : settingsGrid.getChildren()) {
+		for (
+
+		Node node : settingsGrid.getChildren()) {
 			GridPane.setVgrow(node, Priority.ALWAYS);
 		}
 	}
@@ -119,8 +133,8 @@ public class SettingsWindowPresenter implements Initializable {
 				if (GridPane.getRowIndex(tf) == GridPane.getRowIndex(l)
 						&& GridPane.getColumnIndex(tf) == GridPane.getColumnIndex(l) + 1) {
 
-					String propertyValue = "";;
-					
+					String propertyValue = "";
+
 					if (tf instanceof TextField) {
 						textField = (TextField) tf;
 						propertyValue = textField.getText();
@@ -133,7 +147,7 @@ public class SettingsWindowPresenter implements Initializable {
 							return false;
 						}
 
-					} else if (tf instanceof ComboBox<?>){
+					} else if (tf instanceof ComboBox<?>) {
 						@SuppressWarnings("unchecked")
 						ComboBox<String> cBox = (ComboBox<String>) tf;
 						propertyValue = cBox.getValue();
