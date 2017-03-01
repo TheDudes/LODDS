@@ -115,18 +115,6 @@
     (setf (slot-value w 'root-dir-name) name
           (slot-value w 'root-dir-path) path)))
 
-(defmethod add-initial-files ((dir-watcher dir-watcher))
-  ;; wait until dir-watcher is alive and added all initial handles
-  (loop :while (not (cl-fs-watcher:alive-p dir-watcher))
-        :do (sleep 0.01))
-
-  ;; now add all initialy tracked files
-  (loop :for file :in (cl-fs-watcher:get-all-tracked-files dir-watcher)
-        :do (add-file dir-watcher file))
-
-  (setf (cl-fs-watcher:hook dir-watcher)
-        #'hook))
-
 (defun get-all-tracked-file-infos (dir-watcher)
   "returns info about all tracked files."
   (loop :for filename :being :the :hash-keys :of (file-table-name dir-watcher)
@@ -208,7 +196,8 @@
            (make-instance 'dir-watcher
                           :change-hook hook
                           :dir folder-path
-                          :recursive-p t)))
+                          :recursive-p t
+                          :hook #'hook)))
     (setf (slot-value new-dir-watcher 'cl-fs-watcher:error-cb)
           (lambda (ev)
             (lodds.event:push-event :directory-error
@@ -227,7 +216,6 @@
     (bt:with-recursive-lock-held (*add-lock*)
       (push new-dir-watcher
             (dir-watchers watcher)))
-    (add-initial-files new-dir-watcher)
     (setf (lodds.subsystem:alive-p watcher) t)
     (lodds.event:push-event :shared-directory
                             (list folder-path))))
