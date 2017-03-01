@@ -97,6 +97,7 @@
         :do (let ((child (q+:top-level-item directories i)))
               (when (string= path (q+:text child +shared-path+))
                 (q+:take-top-level-item directories i)
+                (remhash path dirs)
                 (return)))))
 
 (define-override (directories drag-enter-event) (ev)
