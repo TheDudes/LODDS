@@ -23,13 +23,9 @@
       <Separator prefWidth="200.0" VBox.vgrow="NEVER" id='seperator' />
       <HBox alignment="CENTER_RIGHT" spacing="5.0" VBox.vgrow="NEVER">
          <children>
-            <Button fx:id="applyButton" mnemonicParsing="false" text="Apply" />
-            <Button fx:id="okButton" mnemonicParsing="false" text="OK" />
-            <Button fx:id="cancelButton" mnemonicParsing="false" text="Cancel">
-               <HBox.margin>
-                  <Insets left="10.0" />
-               </HBox.margin>
-            </Button>
+           <Button fx:id="okButton" mnemonicParsing="false" text="OK" />
+           <Button fx:id="cancelButton" mnemonicParsing="false" text="Cancel" />
+           <Button fx:id="applyButton" mnemonicParsing="false" text="Apply" />
          </children>
          <padding>
             <Insets bottom="2.0" left="2.0" right="2.0" top="2.0" />
