@@ -16,6 +16,7 @@
                :lparallel)
   :components ((:file "package")
                (:file "core")
+               (:file "config")
                (:file "low-level-api")
                (:file "classes")
                (:file "subsystem")

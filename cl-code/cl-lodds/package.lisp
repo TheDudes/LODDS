@@ -41,6 +41,21 @@
            #:handle-file
            #:handle-send-permission))
 
+(defpackage #:lodds.config
+  (:use #:cl)
+  (:export #:*load-path*
+           #:generate-default-config
+           #:save-to-file
+           #:validate-config
+           #:update-entry
+           #:load-from-file
+           #:load-default-config-files
+           #:get-all-keys
+           #:get-value
+           #:get-description
+           #:get-type
+           #:get-selection-options))
+
 (defpackage #:lodds.subsystem
   (:use #:cl)
   (:export #:shutdown-condition
