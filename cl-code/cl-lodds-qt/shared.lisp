@@ -56,20 +56,24 @@
                  (set-button directories widget)))
            dirs))
 
+(defmethod add-new-dir-widget ((directories directories) dir)
+  (let ((new-entry (q+:make-qtreewidgetitem directories)))
+    (q+:set-text new-entry +shared-path+ dir)
+    (setf (gethash dir (slot-value directories 'dirs)) new-entry)
+    (set-spinner directories new-entry)))
+
 (defmethod share-directories ((directories directories) dirs)
   (let ((dirs-with-slash (mapcar #'lodds.core:add-missing-slash
                                  dirs))
         (failed-dirs (list)))
     (loop :for dir :in dirs-with-slash
           :do
-          (multiple-value-bind (shareable-p error) (lodds.watcher:folder-shareable-p dir)
+          (multiple-value-bind (shareable-p error)
+              (lodds.watcher:folder-shareable-p dir)
             (if shareable-p
                 (with-slots-bound (directories directories)
-                  (let ((new-entry (q+:make-qtreewidgetitem directories)))
-                    (q+:set-text new-entry +shared-path+ dir)
-                    (setf (gethash dir dirs) new-entry)
-                    (set-spinner directories new-entry))
-                  (lodds.watcher:share-folder dir))
+                  (lodds.watcher:share-folder dir)
+                  (add-new-dir-widget directories dir))
                 (push (list dir error) failed-dirs))))
     (when (> (length failed-dirs) 0)
       (make-instance 'dialog
@@ -81,15 +85,10 @@
 (define-signal (directories add-directory) (string))
 (define-signal (directories remove-directory) (string))
 
-(define-slot (directories add-directory) ((path string))
+(define-slot (directories add-directory) ((dir string))
   (declare (connected directories (add-directory string)))
-  (let ((widget (gethash path dirs)))
-    (unless widget
-      (let ((new-entry (q+:make-qtreewidgetitem directories)))
-        (q+:set-text new-entry +shared-path+ path)
-        (setf widget new-entry
-              (gethash path dirs) new-entry)))
-    (set-button directories widget)))
+  (unless (gethash dir dirs)
+    (add-new-dir-widget directories dir)))
 
 (define-slot (directories remove-directory) ((path string))
   (declare (connected directories (remove-directory string)))
@@ -141,7 +140,7 @@
 
 (define-initializer (directories setup-add-directories)
   (loop :for dir :in (lodds.watcher:get-shared-folders)
-        :do (signal! directories (add-directory string) dir)))
+        :do (add-new-dir-widget directories dir)))
 
 (define-initializer (directories setup-callbacks)
   (lodds.event:add-callback :qt-directories
