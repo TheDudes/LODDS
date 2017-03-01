@@ -7,6 +7,8 @@
 - [ ] About menu entry and dialog with license information
 - [ ] Download whole folder (gitmalong)
 - [x] Validate user name (gitmalong)
+- [x] Replace settings interface textfield with dropdown (gitmalong)
+
 
 ## Doc
 
