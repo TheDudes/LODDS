@@ -63,12 +63,11 @@ public class SettingsWindowPresenter implements Initializable {
 		for (Entry<Object, Object> entry : App.properties.entrySet()) {
 			String key = (String) entry.getKey();
 			String value = (String) entry.getValue();
-			
+
 			if (key == "pathToUserProperties") {
 				continue;
 			}
-			
-			
+
 			Node newNode;
 			if (key.equals("defaultInterface")) {
 				// Get available network addresses
@@ -77,13 +76,13 @@ public class SettingsWindowPresenter implements Initializable {
 				ComboBox<String> dd = new ComboBox<String>(FXCollections.observableArrayList(na));
 				dd.setValue(value);
 				newNode = dd;
-				
+
 			} else {
 				newNode = new TextField(value);
 			}
 
 			settingsGrid.addRow(numberOfRows++, new Label(key), newNode);
-			
+
 		}
 		for (Node node : settingsGrid.getChildren()) {
 			GridPane.setVgrow(node, Priority.ALWAYS);
@@ -101,8 +100,8 @@ public class SettingsWindowPresenter implements Initializable {
 
 	/**
 	 * Action that happens when pressing the 'Apply' button. Saves the Key-Value
-	 * pairs to the properties file
-	 * Returns true if input is valid and data was saved successfully, otherwise false
+	 * pairs to the properties file Returns true if input is valid and data was
+	 * saved successfully, otherwise false
 	 */
 	private Boolean applySettings() {
 		ObservableList<Node> observList = settingsGrid.getChildren();
@@ -119,15 +118,28 @@ public class SettingsWindowPresenter implements Initializable {
 			for (Node tf : observList) {
 				if (GridPane.getRowIndex(tf) == GridPane.getRowIndex(l)
 						&& GridPane.getColumnIndex(tf) == GridPane.getColumnIndex(l) + 1) {
-					textField = (TextField) tf;
 
-					// Show error message if username is invalid
-					if (label.getText().equals("userName") && UserInfo.validateUserName(textField.getText()) == false) {
-						showInputError("Please make sure to choose a valid username. '" + textField.getText() + "' is not a valid username.");
-						return false;
+					String propertyValue = "";;
+					
+					if (tf instanceof TextField) {
+						textField = (TextField) tf;
+						propertyValue = textField.getText();
+
+						// Show error message if username is invalid
+						if (label.getText().equals("userName")
+								&& UserInfo.validateUserName(textField.getText()) == false) {
+							showInputError("Please make sure to choose a valid username. '" + textField.getText()
+									+ "' is not a valid username.");
+							return false;
+						}
+
+					} else if (tf instanceof ComboBox<?>){
+						@SuppressWarnings("unchecked")
+						ComboBox<String> cBox = (ComboBox<String>) tf;
+						propertyValue = cBox.getValue();
 					}
 
-					App.properties.setProperty(label.getText(), textField.getText());
+					App.properties.setProperty(label.getText(), propertyValue);
 					break;
 
 				}
