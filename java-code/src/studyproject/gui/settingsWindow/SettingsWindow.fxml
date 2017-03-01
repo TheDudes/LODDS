@@ -9,7 +9,7 @@
 <?import javafx.scene.layout.RowConstraints?>
 <?import javafx.scene.layout.VBox?>
 
-<VBox maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" xmlns="http://javafx.com/javafx/8.0.76-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="studyproject.gui.settingsWindow.SettingsWindowPresenter">
+<VBox id='settingsWindow' maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" xmlns="http://javafx.com/javafx/8.0.76-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="studyproject.gui.settingsWindow.SettingsWindowPresenter">
    <children>
       <GridPane fx:id="settingsGrid" VBox.vgrow="ALWAYS">
         <columnConstraints>
