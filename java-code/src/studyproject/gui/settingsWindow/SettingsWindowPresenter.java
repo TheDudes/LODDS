@@ -2,11 +2,13 @@ package studyproject.gui.settingsWindow;
 
 import java.io.*;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.Map.Entry;
 import java.util.ResourceBundle;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
@@ -14,11 +16,13 @@ import javafx.scene.Node;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Button;
+import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Priority;
 import studyproject.API.Errors.ErrorFactory;
+import studyproject.API.Lvl.Low.Broadcast;
 import studyproject.API.Lvl.Mid.Core.UserInfo;
 import studyproject.App;
 import studyproject.logging.LogKey;
@@ -57,11 +61,29 @@ public class SettingsWindowPresenter implements Initializable {
 	private void loadSettings() {
 		int numberOfRows = 0;
 		for (Entry<Object, Object> entry : App.properties.entrySet()) {
-			if ((String) entry.getKey() == "pathToUserProperties") {
+			String key = (String) entry.getKey();
+			String value = (String) entry.getValue();
+			
+			if (key == "pathToUserProperties") {
 				continue;
 			}
-			settingsGrid.addRow(numberOfRows++, new Label((String) entry.getKey()),
-					new TextField((String) entry.getValue()));
+			
+			
+			Node newNode;
+			if (key.equals("defaultInterface")) {
+				// Get available network addresses
+				ArrayList<String> na = new ArrayList<>();
+				Broadcast.getNetworkAddresses(na);
+				ComboBox<String> dd = new ComboBox<String>(FXCollections.observableArrayList(na));
+				dd.setValue(value);
+				newNode = dd;
+				
+			} else {
+				newNode = new TextField(value);
+			}
+
+			settingsGrid.addRow(numberOfRows++, new Label(key), newNode);
+			
 		}
 		for (Node node : settingsGrid.getChildren()) {
 			GridPane.setVgrow(node, Priority.ALWAYS);
@@ -101,7 +123,7 @@ public class SettingsWindowPresenter implements Initializable {
 
 					// Show error message if username is invalid
 					if (label.getText().equals("userName") && UserInfo.validateUserName(textField.getText()) == false) {
-						showInputError("Please make sure to choose a valid username.");
+						showInputError("Please make sure to choose a valid username. '" + textField.getText() + "' is not a valid username.");
 						return false;
 					}
 
