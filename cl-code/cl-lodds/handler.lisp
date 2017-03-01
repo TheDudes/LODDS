@@ -5,7 +5,7 @@
     (unwind-protect
          (progn
            (setf socket (usocket:socket-listen
-                         (lodds:get-ip-address (lodds:interface lodds:*server*))
+                         (lodds.core:get-ip-address (lodds:interface lodds:*server*))
                          (lodds:handler-port lodds:*server*)
                          :reuse-address t
                          :element-type '(unsigned-byte 8)))

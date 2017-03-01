@@ -21,7 +21,7 @@
         (q+:set-current-index selector -1))))
 
 (define-subwidget (interface selector) (q+:make-qcombobox interface)
-  (q+:add-items selector (lodds:get-interfaces))
+  (q+:add-items selector (lodds.core:get-interfaces))
   (setf (q+:size-policy selector) (values (q+:qsizepolicy.expanding)
                                           (q+:qsizepolicy.fixed)))
   (set-current-interface selector))
@@ -52,7 +52,7 @@
 (defmethod refresh-list ((interface interface))
   (with-slots-bound (interface interface)
     (q+:clear selector)
-    (q+:add-items selector (lodds:get-interfaces))
+    (q+:add-items selector (lodds.core:get-interfaces))
     (q+:set-current-index selector -1)))
 
 (define-slot (interface refresh) ()

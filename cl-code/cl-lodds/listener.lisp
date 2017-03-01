@@ -93,7 +93,7 @@
     (labels ((get-socket ()
                (usocket:socket-connect
                 nil nil
-                :local-host (lodds:get-broadcast-address
+                :local-host (lodds.core:get-broadcast-address
                              (lodds:interface lodds:*server*))
                 :local-port (lodds:broadcast-port lodds:*server*)
                 :protocol :datagram)))

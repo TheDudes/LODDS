@@ -14,7 +14,11 @@
            #:add-missing-slash
            #:remove-newline
            #:get-folder
-           #:format-seconds))
+           #:format-seconds
+           #:get-interfaces
+           #:get-interface-info
+           #:get-broadcast-address
+           #:get-ip-address))
 
 (defpackage #:lodds.low-level-api
   (:use #:cl
@@ -129,11 +133,6 @@
            #:*server*
            #:*event-queue*
            #:with-server
-           ;; general functions
-           #:get-interfaces
-           #:get-interface-info
-           #:get-broadcast-address
-           #:get-ip-address
            ;; client-info reader/accessor
            #:client-info
            #:c-name

@@ -9,13 +9,13 @@
              (let ((interface (lodds:interface lodds:*server*)))
                (unless interface
                  (return-from send 8))
-               (let ((broadcast-address (lodds:get-broadcast-address interface)))
+               (let ((broadcast-address (lodds.core:get-broadcast-address interface)))
                  (unless broadcast-address
                    (return-from send 7))
                  (lodds.low-level-api:send-advertise
                   broadcast-address
                   (lodds:broadcast-port lodds:*server*)
-                  (list (lodds:get-ip-address interface)
+                  (list (lodds.core:get-ip-address interface)
                         (lodds:handler-port lodds:*server*)
                         (lodds:get-timestamp-last-change)
                         (lodds:get-load)
