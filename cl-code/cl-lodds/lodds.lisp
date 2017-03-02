@@ -41,34 +41,34 @@
            (make-instance 'lodds.event:event-queue
                           :name :event-queue
                           :init-fn #'lodds.event:run)
-           ;; LISTENER subsystem listens on broadcast address of
-           ;; the set INTERFACE and BROADCAST-PORT member of
-           ;; server for advertisements from other clients
-           (make-instance 'lodds.subsystem:subsystem
-                          :name :listener
-                          :init-fn #'lodds.listener:run)
-           ;; ADVERTISER subystem, broadcasts information to
-           ;; other clients on broadcast address of INTERFACE and
-           ;; BROADCAST-PORT.
-           (make-instance 'lodds.subsystem:subsystem
-                          :name :advertiser
-                          :init-fn #'lodds.advertiser:run)
-           ;; HANDLER subsystem, listens for incomming
-           ;; connections and handles those (starts threads etc).
-           (make-instance 'lodds.subsystem:subsystem
-                          :name :handler
-                          :init-fn #'lodds.handler:run)
-           ;; WATCHER subsystem, handles filesystem changes,
-           ;; updates/handles local list of shared files
-           (make-instance 'lodds.watcher:watcher
-                          :name :watcher
-                          :init-fn nil)
            ;; TASKER subsystem, handles and schedules several
            ;; tasks on a lparrallel:kernel. Waits on
            ;; event-queue for :task events and then executes
            ;; those.
            (make-instance 'lodds.task:tasker
                           :name :tasker
+                          :init-fn nil)
+           ;; LISTENER subsystem listens on broadcast address of
+           ;; the set INTERFACE and BROADCAST-PORT member of
+           ;; server for advertisements from other clients
+           (make-instance 'lodds.subsystem:subsystem
+                          :name :listener
+                          :init-fn #'lodds.listener:run)
+           ;; HANDLER subsystem, listens for incomming
+           ;; connections and handles those (starts threads etc).
+           (make-instance 'lodds.subsystem:subsystem
+                          :name :handler
+                          :init-fn #'lodds.handler:run)
+           ;; ADVERTISER subystem, broadcasts information to
+           ;; other clients on broadcast address of INTERFACE and
+           ;; BROADCAST-PORT.
+           (make-instance 'lodds.subsystem:subsystem
+                          :name :advertiser
+                          :init-fn #'lodds.advertiser:run)
+           ;; WATCHER subsystem, handles filesystem changes,
+           ;; updates/handles local list of shared files
+           (make-instance 'lodds.watcher:watcher
+                          :name :watcher
                           :init-fn nil)))))
 
 (defun get-subsystem (name)

@@ -9,8 +9,8 @@
                           (lodds.subsystem:start (lodds:get-subsystem :event-queue))
                           (lodds.subsystem:start (lodds:get-subsystem :tasker))
                           (lodds.subsystem:start (lodds:get-subsystem :listener))
-                          (lodds.subsystem:start (lodds:get-subsystem :advertiser))
-                          (lodds.subsystem:start (lodds:get-subsystem :handler)))))
+                          (lodds.subsystem:start (lodds:get-subsystem :handler))
+                          (lodds.subsystem:start (lodds:get-subsystem :advertiser)))))
            (if (lodds:interface lodds:*server*)
                (run)
                (make-instance 'dialog
