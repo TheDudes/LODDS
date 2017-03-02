@@ -746,18 +746,21 @@
             (when (or (not (eql old-load user-load))
                       (<= old-last-change last-change))
               (setf event :client-updated)))
-          (setf client-info
-                (make-instance 'lodds:client-info
-                               :c-name user
-                               :c-last-message timestamp
-                               :c-ip ip
-                               :c-port port
-                               :c-last-change 0
-                               :c-load user-load)
-                (gethash user (lodds:clients lodds:*server*))
-                client-info
-                event
-                :client-added))
+          (progn
+            (setf client-info
+                  (make-instance 'lodds:client-info
+                                 :c-name user
+                                 :c-last-message timestamp
+                                 :c-ip ip
+                                 :c-port port
+                                 :c-last-change 0
+                                 :c-load user-load)
+                  (gethash user (lodds:clients lodds:*server*))
+                  client-info)
+            (lodds.event:push-event :client-added
+                                    (list user
+                                          user-load
+                                          last-change))))
       (let ((locked (bt:acquire-lock (lodds:c-lock client-info) nil)))
         (if locked
             ;; only go on if we locked, if not, just drop the update, we
