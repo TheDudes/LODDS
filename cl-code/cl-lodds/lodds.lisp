@@ -235,7 +235,8 @@
             :do (lodds.subsystem:stop subsystem))
     ;; stop event-queue after the others, so i can see stopped messages
     (when event-queue
-      (lodds.subsystem:stop event-queue))))
+      (lodds.subsystem:stop event-queue)
+      (lodds.event:push-event :done nil))))
 
 (defun generate-info-response (timestamp)
   (let* ((started-tracking (lodds.watcher:started-tracking (get-subsystem :watcher)))
