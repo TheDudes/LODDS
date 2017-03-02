@@ -5,6 +5,7 @@ import java.util.List;
 
 import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
+import javafx.stage.Modality;
 import javafx.stage.Stage;
 import studyproject.App;
 
@@ -16,8 +17,12 @@ import studyproject.App;
 public class Utils {
 
 	/**
+	 * Open a FileChooser to select one single directory
 	 * 
-	 * @return choosen directorypath
+	 * @param title
+	 *            The title of the FileChooser window
+	 * @return String representing the path of the chosen directory or null if
+	 *         no directory has been selected
 	 */
 	public static String getChoosenDirPath(String title) {
 		DirectoryChooser directoryChooser = new DirectoryChooser();
@@ -27,7 +32,9 @@ public class Utils {
 			directoryChooser.setInitialDirectory(savePathFile);
 		}
 		directoryChooser.setTitle(title);
-		File chosenFolder = directoryChooser.showDialog(new Stage());
+		Stage stage = new Stage();
+		stage.initModality(Modality.APPLICATION_MODAL);
+		File chosenFolder = directoryChooser.showDialog(stage);
 
 		if (chosenFolder == null) {
 			return null;
@@ -35,16 +42,34 @@ public class Utils {
 		return chosenFolder.getPath();
 	}
 
+	/**
+	 * Open a FileChooser to select multiple files from one directory
+	 * 
+	 * @param title
+	 *            The title of the FileChooser window
+	 * @return List of selected files or null if no files were selected
+	 */
 	public static List<File> getChoosenMultipleFiles(String title) {
 		FileChooser fileChooser = new FileChooser();
 		fileChooser.setTitle(title);
-		return fileChooser.showOpenMultipleDialog(new Stage());
+		Stage stage = new Stage();
+		stage.initModality(Modality.APPLICATION_MODAL);
+		return fileChooser.showOpenMultipleDialog(stage);
 	}
 
+	/**
+	 * Open a FileChooser to select one single file
+	 * 
+	 * @param title
+	 *            The title of the FileChooser window
+	 * @return The selected File or null if no file has been selected
+	 */
 	public static File getChoosenFile(String title) {
 		FileChooser fileChooser = new FileChooser();
 		fileChooser.setTitle(title);
-		return fileChooser.showOpenDialog(new Stage());
+		Stage stage = new Stage();
+		stage.initModality(Modality.APPLICATION_MODAL);
+		return fileChooser.showOpenDialog(stage);
 	}
 
 }
