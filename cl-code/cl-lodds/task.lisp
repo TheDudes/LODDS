@@ -511,7 +511,7 @@
                        (setf part-size (- size
                                           (* current-part part-size)))
                        size)))))
-        (setf info (format nil "[Download] (~a):" user local-file-path))))
+        (setf info (format nil "[Download] (~a): ~a" user local-file-path))))
     (let ((written (load-chunk (usocket:socket-stream socket)
                                local-file-stream
                                (- part-size read-bytes-part))))
