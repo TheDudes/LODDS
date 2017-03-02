@@ -1,9 +1,6 @@
 (in-package #:lodds-qt)
 (in-readtable :qtools)
 
-;; TODO: settings
-(defparameter +log-message-maximum+ 1000)
-
 (defparameter *ignored-log-events*
   (list :listener
         :advertiser
@@ -15,7 +12,8 @@
 (defvar +log-message+ 2)
 (defvar +log-count+ 3)
 
-(define-widget info-log (QSplitter) ())
+(define-widget info-log (QSplitter)
+  ((log-message-max :initform (lodds.config:get-value :log-message-max))))
 
 (define-subwidget (info-log info-log-list) (q+:make-qtreewidget info-log)
   (qdoto info-log-list
@@ -115,7 +113,7 @@
                                 (q+:set-text-alignment +log-count+ (q+:qt.align-right)))))
           (let* ((scrollbar (q+:vertical-scroll-bar info-log-list))
                  (position (q+:value scrollbar)))
-            (loop :while (> (q+:top-level-item-count info-log-list) +log-message-maximum+)
+            (loop :while (> (q+:top-level-item-count info-log-list) log-message-max)
                   :do (progn
                         (finalize (q+:take-top-level-item info-log-list 0))
                         (q+:set-value scrollbar (- position 1)))))

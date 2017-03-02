@@ -108,7 +108,10 @@
   (set-refresh-timeout (slot-value info-dock 'widget)
                        (lodds.config:get-value :info-update-interval))
   (set-directory-busy-check-timeout (slot-value shared-dock 'widget)
-                                    (lodds.config:get-value :directory-busy-check)))
+                                    (lodds.config:get-value :directory-busy-check))
+  (setf (slot-value (slot-value log-dock 'widget)
+                    'log-message-max)
+        (lodds.config:get-value :log-message-max)))
 
 (define-slot (main-window received-send-permission) ((task-id string))
   (declare (connected main-window (received-send-permission string)))

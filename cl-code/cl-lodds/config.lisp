@@ -133,7 +133,16 @@
                  busy). Value between 50 and 100.000")
          :integer
          50
-         100000)))
+         100000)
+   (list :log-message-max
+         500
+         (format nil
+                 "Maximum of displayed Log Messages. If a new entry~%~
+                 is logged, the oldest (top) will be removed. Value between~%~
+                 10 and 10000.")
+         :integer
+         10
+         10000)))
 
 (defun split-key-value (line)
   (let* ((equal-pos (position #\= line))
