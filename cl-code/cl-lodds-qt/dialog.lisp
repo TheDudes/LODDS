@@ -35,7 +35,11 @@
    (finalize-widget-p :initform t
                       :initarg :finalize-widget-p
                       :documentation "If t the given widget will be
-                      finalized when the dialog closes")))
+                      finalized when the dialog closes")
+   (width :initform nil
+          :initarg :width)
+   (height :initform nil
+           :initarg :height)))
 
 (define-subwidget (dialog message) (q+:make-qlabel dialog))
 
@@ -90,6 +94,12 @@
 
 (define-initializer (dialog setup-widget)
   (q+:set-attribute dialog (q+:qt.wa_delete-on-close))
+  (when (or width height)
+    (q+:resize dialog
+               (or width
+                   (q+:width dialog))
+               (or height
+                   (q+:height dialog))))
   (q+:show dialog))
 
 (define-finalizer (dialog cleanup-widget)
