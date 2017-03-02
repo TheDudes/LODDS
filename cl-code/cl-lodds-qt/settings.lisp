@@ -3,12 +3,13 @@
 
 (defgeneric get-value (widget))
 
-(defclass setting ()
-  ((key :initarg :key
-        :documentation "Settings key to look up value, description
-        etc. see lodds.config")
-   (widget :documentation "The widget itself, will be set on widget
-           init. is used to set tooltip on initialize-instance")))
+(eval-when (:compile-toplevel :load-toplevel :execute)
+  (defclass setting ()
+    ((key :initarg :key
+          :documentation "Settings key to look up value, description
+          etc. see lodds.config")
+     (widget :documentation "The widget itself, will be set on widget
+           init. is used to set tooltip on initialize-instance"))))
 
 (defmethod initialize-instance :after ((setting setting) &rest initargs)
   (declare (ignorable initargs))
