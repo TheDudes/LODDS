@@ -102,7 +102,11 @@
 
 (define-slot (main-window config-changed) ()
   (declare (connected main-window (config-changed)))
-  (q+:set-window-title main-window (format nil "LODDS - ~a" (lodds.config:get-value :name))))
+  (q+:set-window-title main-window
+                       (format nil "LODDS - ~a"
+                               (lodds.config:get-value :name)))
+  (set-refresh-timeout (slot-value info-dock 'widget)
+                       (lodds.config:get-value :info-update-interval)))
 
 (define-slot (main-window received-send-permission) ((task-id string))
   (declare (connected main-window (received-send-permission string)))

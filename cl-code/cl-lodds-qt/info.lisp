@@ -160,8 +160,11 @@
          (q+:set-resize-mode +info-cancel+ (q+:qheaderview.resize-to-contents))))
 
 (define-initializer (info setup-timer)
-  ;; TODO: get/set timeout from settings
-  (q+:start timer 100))
+  (q+:start timer (lodds.config:get-value :info-update-interval)))
+
+(defmethod set-refresh-timeout ((info info) new-timeout)
+  (with-slots-bound (info info)
+    (q+:set-interval timer new-timeout)))
 
 (define-initializer (info setup-callbacks)
   (lodds.event:add-callback :qt-info

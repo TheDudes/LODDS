@@ -117,7 +117,7 @@
          1
          3600)
    (list :info-update-interval
-         200
+         100
          (format nil
                  "Timeout (in milliseconds) between updates~%~
                  on 'info' widget. Value between 50 and 100.000")
