@@ -5,8 +5,8 @@
     (unwind-protect
          (progn
            (setf socket (usocket:socket-listen
-                         (lodds.core:get-ip-address (lodds:interface lodds:*server*))
-                         (lodds:handler-port lodds:*server*)
+                         (lodds.core:get-ip-address (lodds.config:get-value :interface))
+                         (lodds.config:get-value :port)
                          :reuse-address t
                          :element-type '(unsigned-byte 8)))
            (loop :while (lodds.subsystem:alive-p (lodds:get-subsystem :handler))

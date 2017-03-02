@@ -57,7 +57,7 @@
       ;; remove all clients older then :client-timeout
       (maphash (lambda (key client)
                  (when (> (- current-time (lodds:c-last-message client))
-                          (lodds:client-timeout lodds:*server*))
+                          (lodds.config:get-value :client-timeout))
                    (remhash key clients)
                    (lodds.event:push-event :client-removed
                                            key)))
@@ -94,8 +94,8 @@
                (usocket:socket-connect
                 nil nil
                 :local-host (lodds.core:get-broadcast-address
-                             (lodds:interface lodds:*server*))
-                :local-port (lodds:broadcast-port lodds:*server*)
+                             (lodds.config:get-value :interface))
+                :local-port (lodds.config:get-value :broadcast-port)
                 :protocol :datagram)))
       (handler-case
           (progn

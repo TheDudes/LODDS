@@ -196,7 +196,7 @@
           (when on-error-hook
             (funcall on-error-hook task))
           (lodds.event:push-event :task-failed
-                                  (list id err))
+                                  (list id task err))
           (return-from run-task)))
       (setf aktive-p nil)
       (if finished-p
@@ -449,7 +449,8 @@
     (unless local-file-stream
       (setf local-file-stream (open-file local-file-path))
       (setf info (format nil "[Download] (~a):~a "
-                         user local-file-path)))
+                         user
+                         local-file-path)))
     (let ((transfered (load-chunk (usocket:socket-stream socket)
                                   local-file-stream
                                   (- size read-bytes))))

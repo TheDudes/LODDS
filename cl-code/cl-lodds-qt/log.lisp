@@ -76,6 +76,12 @@
                             name
                             (lodds.core:format-size load)
                             last-change)))
+                 (:config-changed
+                  (if (not event-msg)
+                      "replaced settings"
+                      (destructuring-bind (key old-val new-val) event-msg
+                        (format nil "~a: ~a -> ~a"
+                                key old-val new-val))))
                  (t (format nil "~{~a~^ ~}" event-msg)))))))
 
 (define-signal (info-log add-log-msg) (string string))

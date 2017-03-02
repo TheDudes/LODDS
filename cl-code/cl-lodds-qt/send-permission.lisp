@@ -3,8 +3,7 @@
 
 (define-widget send-permission (QWidget)
   ((default-folder :initarg :default-folder
-     ;; TODO: get default folder from settings
-                   :initform "/tmp/"
+                   :initform (lodds.config:get-value :upload-folder)
                    :type string)
    (default-filename :initarg :default-filename
                      :type string)

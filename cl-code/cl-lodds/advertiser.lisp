@@ -6,7 +6,7 @@
   run inside seperate Thread (spawned by START-ADVERTISING)."
   ;; TODO: this could fail
   (labels ((send ()
-             (let ((interface (lodds:interface lodds:*server*)))
+             (let ((interface (lodds.config:get-value :interface)))
                (unless interface
                  (return-from send 8))
                (let ((broadcast-address (lodds.core:get-broadcast-address interface)))
@@ -14,12 +14,12 @@
                    (return-from send 7))
                  (lodds.low-level-api:send-advertise
                   broadcast-address
-                  (lodds:broadcast-port lodds:*server*)
+                  (lodds.config:get-value :broadcast-port)
                   (list (lodds.core:get-ip-address interface)
-                        (lodds:handler-port lodds:*server*)
+                        (lodds.config:get-value :port)
                         (lodds:get-timestamp-last-change)
                         (lodds:get-load)
-                        (lodds:name lodds:*server*)))))))
+                        (lodds.config:get-value :name)))))))
     (let ((result (send)))
       (restart-case
           (case result
@@ -42,4 +42,4 @@
   (loop :while (lodds.subsystem:alive-p (lodds:get-subsystem :advertiser))
         :do (progn
               (try-send) ;; repull timeout to get changes
-              (sleep (lodds:advertise-timeout lodds:*server*)))))
+              (sleep (lodds.config:get-value :advertise-timeout)))))

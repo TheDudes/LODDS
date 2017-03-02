@@ -11,17 +11,30 @@
                           (lodds.subsystem:start (lodds:get-subsystem :listener))
                           (lodds.subsystem:start (lodds:get-subsystem :handler))
                           (lodds.subsystem:start (lodds:get-subsystem :advertiser)))))
-           (if (lodds:interface lodds:*server*)
+           (if (lodds.config:get-value :interface)
                (run)
                (make-instance 'dialog
                               :title "Error - Interface not set!"
                               :text "Please select a Interface first."
-                              :widget (make-instance 'interface)
-                              :on-success-fn (lambda (widget)
-                                               (declare (ignore widget))
-                                               (when (lodds:interface lodds:*server*)
-                                                 (run))
-                                               t)))))
+                              :widget (make-setting :interface)
+                              :on-success-fn
+                              (lambda (widget)
+                                (let ((selection (get-value widget)))
+                                  (if selection
+                                      (let ((err
+                                              (lodds.config:update-entry :interface
+                                                                         selection)))
+                                        (if err
+                                            (progn
+                                              (make-instance 'dialog
+                                                             :title "Error - Could not set interface"
+                                                             :text (format nil "Could not set interface: ~a"
+                                                                           err))
+                                              nil)
+                                            (when (lodds.config:get-value :interface)
+                                              (run)
+                                              t)))
+                                      t)))))))
   (:item ("Stop" (ctrl s))
          (progn
            (lodds.subsystem:stop (lodds:get-subsystem :tasker))
@@ -32,6 +45,9 @@
   (:separator)
   (:item "Reload Stylesheet"
          (q+:set-style-sheet main-window *style-sheet*))
+  (:separator)
+  (:item ("Settings" (ctrl c))
+         (make-setting-dialog))
   (:separator)
   (:item ("Quit" (ctrl q))
          (q+:close main-window)))
@@ -71,7 +87,7 @@
 
 (define-initializer (main-window setup-widget)
   (qdoto main-window
-         (q+:set-window-title (format nil "LODDS - ~a" (lodds:name lodds:*server*)))
+         (q+:set-window-title (format nil "LODDS - ~a" (lodds.config:get-value :name)))
          (q+:set-window-icon (q+:make-qicon "./res/lodds.png"))
          (q+:resize 800 450)
          (q+:set-style-sheet *style-sheet*)
@@ -79,10 +95,14 @@
 
 (define-signal (main-window reload-stylesheet) ())
 (define-signal (main-window fix-menubar-order) ())
-(define-signal (main-window change-title) (string))
+(define-signal (main-window config-changed) ())
 (define-signal (main-window received-send-permission) (string))
 (define-signal (main-window folder-download-error) (string))
 (define-signal (main-window directory-error) (string))
+
+(define-slot (main-window config-changed) ()
+  (declare (connected main-window (config-changed)))
+  (q+:set-window-title main-window (format nil "LODDS - ~a" (lodds.config:get-value :name))))
 
 (define-slot (main-window received-send-permission) ((task-id string))
   (declare (connected main-window (received-send-permission string)))
@@ -140,11 +160,8 @@
   (lodds.event:add-callback :qt-main
                             (lambda (event)
                               (declare (ignore event))
-                              (signal! main-window
-                                       (change-title string)
-                                       (format nil "LODDS - ~a"
-                                               (lodds:name lodds:*server*))))
-                            :name-changed)
+                              (signal! main-window (config-changed)))
+                            :config-changed)
   (lodds.event:add-callback :qt-main
                             (lambda (event)
                               (signal! main-window (received-send-permission
@@ -165,7 +182,7 @@
                             :directory-error))
 
 (define-finalizer (main-window cleanup-callbacks)
-  (lodds.event:remove-callback :qt-main :name-changed)
+  (lodds.event:remove-callback :qt-main :config-changed)
   (lodds.event:remove-callback :qt-main :send-permission)
   (lodds.event:remove-callback :qt-main :folder-download-error)
   (lodds.event:remove-callback :qt-main :directory-error))
@@ -189,11 +206,6 @@
 (define-slot (main-window reload-stylesheet) ()
   (declare (connected main-window (reload-stylesheet)))
   (q+:set-style-sheet main-window *style-sheet*))
-
-(define-slot (main-window change-title) ((new-title string))
-  (declare (connected main-window (change-title string)))
-  (q+:set-window-title main-window
-                       new-title))
 
 (defun on-error (&rest args)
   (format t "ERROR:---------------------------------------~%")

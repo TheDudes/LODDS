@@ -475,53 +475,25 @@
            :documentation "Look to access member variables.")))
 
 (defclass lodds-server ()
-  ((name :accessor name
-         :initarg :name
-         :initform (machine-instance)
-         :type string
-         :documentation "Advertised name. Will be displayed by other
-         Clients as client name.")
-   (broadcast-port :accessor broadcast-port
-                   :initarg :broadcast-port
-                   :initform 9002
-                   :documentation "Port the LODDS-SERVER advertises
-                   to. Broadcasting (subsystem :advertiser) has to be
-                   restarted for changes to take effect.")
-   (subsystems :accessor subsystems
+  ((subsystems :accessor subsystems
                :initform nil
                :type list
                :documentation "list of subsystems known to lodds, will
                be set after init, see INITIALIZE-INSTANCE for more
                details.")
-   (handler-port :accessor handler-port
-                 :initarg :handler-port
-                 :initform 4567
-                 :documentation "Port the LODDS-SERVER listens on. The
-                 :handler subsystem has to be restarted for changes to
-                 take effect.")
-   (client-timeout :accessor client-timeout
-                   :initarg :client-timeout
-                   :initform 5
-                   :type integer
-                   :documentation "Timeout till client gets deleted
-                   from local list. Each advertise from other Clients
-                   is saved with a timestamp, if timestamp is older
-                   than CLIENT-TIMEOUT, the client will be deleted.")
-   (interface :accessor interface
-              :initform nil
-              :type string
-              :documentation "Currently selected interface. To get a
-              list of available interfaces use GET-INTERFACES. Use
-              SWITCH-INTERFACE to change, or set, the interface.")
    (clients :accessor clients
             :initform (make-hash-table :test #'equal)
             :type hashtable
             :documentation "Hashtable containing all clients which
             their broadcast information. This table is updated by
             LISTENER. TODO: implement something to retrieve a copy.")
-   (advertise-timeout :accessor advertise-timeout
-                      :initform 1
-                      :documentation "Timeout between
-                      advertisements. Specified in seconds. Restarting
-                      the :advertiser subsystem is not necessary,
-                      since it rereads the value.")))
+   (settings :initform (multiple-value-bind (config error)
+                           (lodds.config:load-default-config-files)
+                         (or config
+                             (progn
+                               (format t "Configuration Error: ~a" error)
+                               (lodds.config:generate-default-config))))
+             :initarg :settings
+             :type hashtable
+             :documentation "Settings hashtable which contains all
+             server settings. See config.lisp for more info.")))

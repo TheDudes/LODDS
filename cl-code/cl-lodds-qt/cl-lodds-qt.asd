@@ -18,7 +18,6 @@
                (:file "user-list")
                (:file "shared")
                (:file "shares")
-               (:file "interface")
                (:file "dialog")
                (:file "dock")
                (:file "send-permission")
@@ -28,4 +27,5 @@
                (:file "download-file")
                (:file "download-folder")
                (:file "download-multiple")
+               (:file "settings")
                (:file "gui")))

@@ -71,55 +71,19 @@
                           :name :watcher
                           :init-fn nil)))))
 
+(defun switch-config (new-config)
+  ;; on fail of validate-config just return the error string
+  (or (lodds.config:validate-config new-config)
+      (progn
+        (setf (slot-value *server* 'settings) new-config)
+        (lodds.event:push-event :config-changed nil))))
+
 (defun get-subsystem (name)
   "returns the requested subsystem, if not found nil will returned"
   (find name (subsystems *server*) :key #'lodds.subsystem:name))
 
 (defun get-load ()
   (lodds.task:get-load (lodds:get-subsystem :tasker)))
-
-(defun switch-interface (interface)
-  "Switch interface the server acts on.  Interface is a string, to
-  retrieve a list of available interfaces use GET-INTERFACES. Ports
-  wont be set. SWITCH-INTEFFACE will check if a subsystem is running
-  and restart it. For example, (SWITCH-INTERFACE \"enp0s25\") will
-  stop the advertiser (if running), switch the interface, and start
-  the advertiser again. Wont start any subsystems"
-  (if (null (lodds.core:get-interface-info interface))
-      ;; TODO: interface selection?
-      (error "Given interface could not be found. Available interfaces: ~a"
-             (lodds.core:get-interfaces))
-      ;; collect all running subsystems
-      (let ((was-running
-              (loop :for key :in (list :handler
-                                       :advertiser
-                                       :listener)
-                    :for subsystem = (get-subsystem key)
-                    :when (lodds.subsystem:alive-p subsystem)
-                    :collect subsystem)))
-
-        ;; stop all subsystem which are running atm
-        ;; TODO: fix waiting until all subsystems are closed
-        (loop :for subsystem :in was-running
-              :do (lodds.subsystem:stop subsystem))
-
-        (setf (interface *server*) interface)
-
-        ;; start all subsystem which where running before
-        (loop :for subsystem :in was-running
-              :do (lodds.subsystem:start subsystem))
-
-        interface)))
-
-(defun switch-name (new-name)
-  "Switches servername which is advertised by the server. Also emits a
-  :name-changed event with the new name"
-  ;;TODO: check if name is accepted
-  (let ((old-name (name *server*)))
-    (setf (name *server*) new-name)
-    (lodds.event:push-event :name-changed
-                            (list "Name changed from" old-name
-                                  "to" new-name))))
 
 (defun get-timestamp-last-change ()
   "returns the timestamp of the last change, who would have thought?

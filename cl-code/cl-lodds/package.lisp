@@ -54,7 +54,9 @@
            #:get-value
            #:get-description
            #:get-type
-           #:get-selection-options))
+           #:get-selection-options
+           #:get-integer-max
+           #:get-integer-min))
 
 (defpackage #:lodds.subsystem
   (:use #:cl)
@@ -173,8 +175,6 @@
            ;; functions using bound *server*
            #:get-subsystem
            #:get-load
-           #:switch-interface
-           #:switch-name
            #:remove-clients
            #:get-timestamp-last-change
            #:get-user-list
@@ -189,4 +189,6 @@
            #:get-file
            #:get-folder
            #:send-file
-           #:send-file-user))
+           #:send-file-user
+           #:settings
+           #:switch-config))

@@ -10,6 +10,7 @@
 
 (define-subwidget (download-folder folder)
     (q+:make-qlineedit download-folder)
+  (q+:set-text folder (lodds.config:get-value :download-folder))
   (let* ((completer (q+:make-qcompleter download-folder))
          (dir-model (q+:make-qdirmodel completer)))
     (q+:set-filter dir-model (q+:qdir.dirs))

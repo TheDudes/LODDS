@@ -58,7 +58,8 @@
                              name
                              (lodds.core:format-size size)
                              size))
-    (q+:set-text filename name)))
+    (q+:set-text filename name)
+    (q+:set-text folder (lodds.config:get-value :download-folder))))
 
 (defmethod download ((download-file download-file))
   (with-slots-bound (download-file download-file)
