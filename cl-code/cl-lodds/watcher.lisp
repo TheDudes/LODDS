@@ -185,7 +185,7 @@
        (values nil "Cannot share anymore Directories"))
       (t (values t nil)))))
 
-(defparameter *add-lock* (bt:make-lock "Dir Watchers Push Lock"))
+(defparameter *add-lock* (bt:make-recursive-lock "Dir Watchers Push Lock"))
 (defun start-dir-watcher (folder-path)
   (let* ((watcher (lodds:get-subsystem :watcher))
          (hook (lambda (change)
