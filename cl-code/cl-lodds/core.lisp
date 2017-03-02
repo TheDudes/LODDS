@@ -24,6 +24,8 @@
 
 (defun copy-stream (stream-from stream-to size &optional check-input-fn)
   "will read from stream-from and write to stream-to size bytes"
+  (when (= size 0)
+    (return-from copy-stream 0))
   (let* ((written 0)
          (buffer-size (if (< size 4096)
                           size
