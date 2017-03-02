@@ -11,6 +11,10 @@
                        :documentation "Text which will be displayed on
                        the left\"Cancel\" Button which closes the
                        dialog without confirming it")
+   (message-text :initform nil
+                 :initarg :text
+                 :documentation "Displayed Detail text. Can be
+                 missing, in that case no label will be added")
    (on-success :initform nil
                :initarg :on-success-fn
                :documentation "function which gets called when 'Ok' was
@@ -67,14 +71,14 @@
            (q+:add-widget ok))))
 
 (define-subwidget (dialog layout) (q+:make-qvboxlayout dialog)
-  (q+:add-widget layout message))
+  (when message-text
+      (q+:set-text message message-text)
+      (q+:add-widget layout message)))
 
 (defmethod initialize-instance :after ((dialog dialog) &key
-                                                         (title "Dialog")
-                                                         (text "Text"))
+                                                         (title "Dialog"))
   (with-slots-bound (dialog dialog)
     (q+:set-window-title dialog title)
-    (q+:set-text message text)
     (q+:set-text ok ok-button-text)
     (q+:set-text cancel cancel-button-text)
     (when widget
