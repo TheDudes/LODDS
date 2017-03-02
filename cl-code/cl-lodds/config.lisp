@@ -123,6 +123,16 @@
                  on 'info' widget. Value between 50 and 100.000")
          :integer
          50
+         100000)
+   (list :directory-busy-check
+         1000
+         (format nil
+                 "Timeout (in milliseconds) between checks~%~
+                 if a directory is busy (This is used to~%~
+                 display the Spinner when a directory is~%~
+                 busy). Value between 50 and 100.000")
+         :integer
+         50
          100000)))
 
 (defun split-key-value (line)

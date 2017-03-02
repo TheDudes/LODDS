@@ -175,8 +175,12 @@
                  (share-directories shared-directories (list dir)))))))
 
 (define-initializer (directories setup-timer)
-  ;; TODO: get/set timeout from settings
-  (q+:start timer 1000))
+  (q+:start timer (lodds.config:get-value :directory-busy-check)))
+
+(defmethod set-directory-busy-check-timeout ((shared shared) new-timeout)
+  (with-slots-bound (shared shared)
+    (q+:set-interval (slot-value shared-directories 'timer)
+                     new-timeout)))
 
 (define-initializer (shared setup-widget)
   (let ((layout (q+:make-qvboxlayout shared)))

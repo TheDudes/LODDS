@@ -106,7 +106,9 @@
                        (format nil "LODDS - ~a"
                                (lodds.config:get-value :name)))
   (set-refresh-timeout (slot-value info-dock 'widget)
-                       (lodds.config:get-value :info-update-interval)))
+                       (lodds.config:get-value :info-update-interval))
+  (set-directory-busy-check-timeout (slot-value shared-dock 'widget)
+                                    (lodds.config:get-value :directory-busy-check)))
 
 (define-slot (main-window received-send-permission) ((task-id string))
   (declare (connected main-window (received-send-permission string)))
