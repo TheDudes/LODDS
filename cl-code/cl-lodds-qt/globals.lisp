@@ -36,7 +36,10 @@
     :list-update
     :shared-directory
     :unshared-directory
-    :name-changed)
+    :directory-error
+    :folder-download-error
+    :send-permission
+    :config-changed)
   "For every event there will also be checkbox to show/hide the
   corresponding log message, see info-log.lisp info-log-settings
 
