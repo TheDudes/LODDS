@@ -176,11 +176,14 @@
               key))))
 
 (defun make-setting-dialog ()
-  (let* ((widget (q+:make-qwidget))
+  (let* ((scroll (q+:make-qscrollarea))
+         (widget (q+:make-qwidget))
          (layout (q+:make-qformlayout widget))
          (settings (list)))
     (loop :for key :in (lodds.config:get-all-keys)
-          :do (let ((label (q+:make-qlabel (string-downcase (string key))))
+          :do (let ((label (q+:make-qlabel
+                            (format nil "~a:"
+                                    (string-downcase (string key)))))
                     (setting (make-setting key)))
                 (q+:set-tool-tip label
                                  (lodds.config:get-description key))
@@ -188,9 +191,14 @@
                             label
                             setting)
                 (push setting settings)))
+    (qdoto scroll
+           (q+:set-widget widget)
+           (q+:set-widget-resizable t))
     (make-instance 'dialog
                    :title "Settings"
-                   :widget widget
+                   :widget scroll
+                   :width 500
+                   :height 400
                    :on-success-fn
                    (lambda (widget)
                      (declare (ignore widget))
