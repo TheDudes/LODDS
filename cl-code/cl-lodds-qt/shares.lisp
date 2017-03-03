@@ -145,6 +145,30 @@
              :type string
              :documentation "File entries checksum")))
 
+(defgeneric update-entry-display (shares-entry)
+  (:documentation "Updates entries displayed size and tooltip")
+  (:method ((entry shares-entry))
+    (with-slots (widget size) entry
+      (qdoto widget
+             (q+:set-text +shares-size+
+                          (lodds.core:format-size size))
+             (q+:set-tool-tip +shares-size+
+                              (format nil "~:d bytes" size)))))
+  (:method ((entry shares-entry-dir))
+    (call-next-method)
+    (with-slots (items widget path user size) entry
+      (if (string= "/" path)
+          (lodds.core:split-user-identifier (name ip port) user
+            (q+:set-tool-tip widget +shares-name+
+                             (format nil "Ip: ~a~%Port: ~a~%Folder Shared: ~a"
+                                     ip port items)))
+          (q+:set-tool-tip widget +shares-name+ (format nil "Items: ~a" items)))))
+  (:method ((entry shares-entry-file))
+    (call-next-method)
+    (with-slots (widget checksum) entry
+      (q+:set-tool-tip widget +shares-name+
+                       (format nil "Checksum: ~a" checksum)))))
+
 (defmethod initialize-instance :after ((entry shares-entry) &rest initargs)
   (declare (ignorable initargs))
   (with-accessors ((name shares-entry-name)
@@ -158,7 +182,6 @@
       (qdoto widget
              (q+:set-flags (qt:enum-or (q+:qt.item-is-selectable)
                                        (q+:qt.item-is-enabled)))
-             (q+:set-tool-tip +shares-size+ (format nil "~:d bytes" size))
              (q+:set-font +shares-name+ font)
              (q+:set-font +shares-size+ font)
              (q+:set-text-alignment +shares-size+ (q+:qt.align-right))
@@ -168,15 +191,17 @@
 
 (defmethod initialize-instance :after ((entry shares-entry-dir) &rest initargs)
   (declare (ignorable initargs))
-  (with-accessors ((items shares-entry-items)
-                   (widget shares-entry-widget)) entry
-    (q+:set-tool-tip widget +shares-name+ (format nil "Items: ~a" items))))
+  (with-slots (items widget path name) entry
+    (when (string= "/" path)
+      (lodds.core:split-user-identifier (user ip port) name
+        (q+:set-text widget +shares-name+ user)))
+    (update-entry-display entry)))
 
 (defmethod initialize-instance :after ((entry shares-entry-file) &rest initargs)
   (declare (ignorable initargs))
   (with-accessors ((checksum shares-entry-checksum)
                    (widget shares-entry-widget)) entry
-    (q+:set-tool-tip widget +shares-name+ (format nil "Checksum: ~a" checksum))))
+    (update-entry-display entry)))
 
 (define-signal (shares update-entries) (string))
 (define-signal (shares remove-entry) (string))
@@ -187,45 +212,47 @@
 (defparameter *new-user* nil)
 (defmethod add-node ((shares shares) path path-left parent)
   "Loops over all childs of parent and checks if (car path) is already
-  present. If so add-node is recursivly called on that element. If not
-  a new child will be added and add-node will be recursivly called on
-  that. When the last element of path is reached a new element is
-  added and its size is returned."
+  present. If so add-node is recursivly called on that element with
+  the (cdr) of path. If not a new child will be added and add-node
+  will be recursivly called on that (with (cdr path)). When the last
+  element of path is reached a new element is added and t is returned,
+  else nil is returned (when the node already exists)"
   (do-childs (element i parent)
-    ;; check if node matches, if it does not continue
-    (when (string= (car path-left)
-                   (q+:text element +shares-name+))
-      (unless (cdr path-left)
-        ;; if there is no path left but we have a
-        ;; matching node, it means that the node
-        ;; we tried to add already exists -> we
-        ;; return nil to indicate an error
-        (return-from add-node nil))
-      ;; if add-node was successfull, update size and
-      ;; item count, then return t
-      (when (add-node shares
+    (let ((entry (gethash (q+:text element +shares-id+) (entries shares))))
+      ;; check if node matches, if it does not continue
+      (when (string= (car path-left)
+                     (shares-entry-name entry))
+        (unless (cdr path-left)
+          ;; if there is no path left but we have a
+          ;; matching node, it means that the node
+          ;; we tried to add already exists -> we
+          ;; return nil to indicate an error
+          (return-from add-node nil))
+        ;; but if there is path left, add the node on the matching
+        ;; child node.
+        (if (add-node shares
                       (concatenate 'string path (car path-left))
                       (cdr path-left)
                       element)
-        (with-accessors ((old-size shares-entry-size))
-            (gethash (q+:text element +shares-id+) (entries shares))
-          (incf old-size *new-size*)
-          (qdoto element
-                 (q+:set-text +shares-size+
-                              (lodds.core:format-size
-                               old-size))
-                 (q+:set-tool-tip +shares-size+
-                                  (format nil "~:d bytes" old-size))))
-        (return-from add-node t))
-      ;; if add-child-node was not successfull, just return
-      ;; nil
-      (return-from add-node nil)))
-  ;; when we get down here it means there was no matching
-  ;; node, so lets add a new one.
+            ;; if add-node was successfull, update size and return. We
+            ;; dont have to update items, since if the item was added
+            ;; directly below the current node, items was already
+            ;; updated (see below /incf (shares-entry-items ...))
+            (progn
+              (incf (shares-entry-size entry) *new-size*)
+              (update-entry-display entry)
+              (return-from add-node t))
+            ;; if add-child-node was not successfull, just go up the
+            ;; stack and return nil
+            (return-from add-node nil)))))
+  ;; when we get down here (after the do-childs) it means there was no
+  ;; matching node found with the current path, so lets add a new
+  ;; node.
   (let ((new-entry (q+:make-qtreewidgetitem parent))
         (current-path (concatenate 'string
                                    path
                                    (car path-left))))
+    ;; if we got path left -> dir, if not -> leaf -> file
     (if (cdr path-left)
         ;; only add items on directories
         (make-instance 'shares-entry-dir
@@ -246,18 +273,21 @@
                        :size *new-size*
                        :user *new-user*
                        :widget new-entry))
-    (q+:set-tool-tip parent
-                     +shares-name+
-                     (format nil "Items: ~a"
-                             (incf (shares-entry-items
-                                    (gethash
-                                     (q+:text parent +shares-id+)
-                                     (entries shares))))))
+    ;; The new node is set, now update the currents parent item count
+    ;; (increase it by 1 since we added exactly 1 element)
+    (let ((entry (gethash (q+:text parent +shares-id+)
+                          (entries shares))))
+      (incf (shares-entry-items entry))
+      (update-entry-display entry))
+    ;; Now add the new node to the tree
     (q+:add-child parent new-entry)
     ;; if there is path left, add those under the new node. If there
-    ;; is no path left it means we reached the last node, so return t
-    ;; as we successfully added it. We dont have to update size here,
-    ;; since its a new node and it will match the elements size.
+    ;; is no path left it means we reached the last node (leaf), so
+    ;; we can return t as we successfully added it. We dont have to
+    ;; update size here, since its a new node and it will match the
+    ;; elements size which is known up the stack (add-node returns
+    ;; there with t and they will update the node they are standing
+    ;; on)
     (if (cdr path-left)
         (add-node shares
                   (concatenate 'string path (car path-left))
@@ -273,63 +303,66 @@
   (finalize node))
 
 (defmethod remove-node ((shares shares) path parent)
-  "loops over children with get-child-fn, and if path matches
-  remove-node is recursivly called on the matching node. Remove node
-  will return a Size if a node was successfull removed. This is used to
-  updated sizes on parents."
+  "loops over children, and if path matches remove-node is recursivly
+  called on the matching node. Remove node will return a size if a
+  node was successfull removed. This is used to updated sizes when
+  unwinding the recursion and the lower calls return."
   ;; return nil (failed) if loop went through and we did not
-  ;; find the specified node (loop returns nil)
+  ;; find the specified node (do-childs returns nil)
   (do-childs (element i parent)
-    ;; check if node matches, if it does not continue
-    (flet ((update-parent-items ()
-             (q+:set-tool-tip parent
-                              +shares-name+
-                              (format nil "Items: ~a"
-                                      (decf (shares-entry-items
-                                             (gethash
-                                              (q+:text parent +shares-id+)
-                                              (entries shares))))))))
+    (let ((entry (gethash (q+:text element +shares-id+)
+                          (entries shares)))
+          (parent-entry (gethash (q+:text parent +shares-id+)
+                                 (entries shares))))
+      ;; check if node matches, if it doesn't continue
       (when (string= (car path)
-                     (q+:text element +shares-name+))
+                     (shares-entry-name entry))
         ;; check if we have a path left and need to call
         ;; remove-node recursivly, if not just remove the
         ;; child and return
         (if (not (cdr path))
-            ;; return size (will be returned by
-            ;; remove-child-fn) here, since remove was
-            ;; successfull
-            (let ((size (shares-entry-size
-                         (gethash (q+:text element +shares-id+)
-                                  (entries shares)))))
-              (update-parent-items)
+            ;; no path left, which means we reached the searched leaf
+            ;; we want to return. Decrement the parents items by 1 and
+            ;; return the removed elements size so the parents can
+            ;; update theirs.
+            (let ((size (shares-entry-size entry)))
+              (decf (shares-entry-items parent-entry))
+              (update-entry-display parent-entry)
               (cleanup-node shares (q+:take-child parent i))
               (return-from remove-node size))
+            ;; path left, which means we did not reach the end
+            ;; yet. Just recursivly call remove-node on the matching
+            ;; element and check if it was successfull (returned a
+            ;; size)
             (let ((size (remove-node shares
                                      (cdr path)
                                      element)))
-              ;; remove-node will return the size of the
-              ;; removed element, if successfull.
-              (when size
-                ;; If element has no childs left (if the
-                ;; recursive call removed the last child)
-                ;; remove element too. If there are childs
-                ;; left, just update the size and item count
-                (if (eql 0 (q+:child-count element))
-                    (progn
-                      (update-parent-items)
-                      (cleanup-node shares (q+:take-child parent i)))
-                    (with-accessors ((old-size shares-entry-size))
-                        (gethash (q+:text element +shares-id+) (entries shares))
-                      (decf old-size size)
-                      (qdoto element
-                             (q+:set-text +shares-size+
-                                          (lodds.core:format-size
-                                           old-size))
-                             (q+:set-tool-tip +shares-size+
-                                              (format nil "~:d bytes" old-size)))))
-                ;; return size here, since recursive remove
-                ;; was successfull
-                (return-from remove-node size))))))))
+              (if (not size)
+                  ;; In case there is no size returned, just return
+                  ;; nil up the recursion.
+                  (return-from remove-node nil)
+                  (progn
+                    ;; But if we got a size check if remove-node on the
+                    ;; current element removed the last remaining
+                    ;; child. Because if so, we also have to remove the
+                    ;; current node.
+                    (if (eql 0 (q+:child-count element))
+                        (progn
+                          ;; decrement the parents item count by 1,
+                          ;; and remove the current node from the
+                          ;; parent
+                          (decf (shares-entry-items parent-entry))
+                          (update-entry-display parent-entry)
+                          (cleanup-node shares (q+:take-child parent i)))
+                        (progn
+                          ;; If there are childs left, just update the
+                          ;; size (decrement it by the size of the
+                          ;; removed child)
+                          (decf (shares-entry-size entry) size)
+                          (update-entry-display entry)))
+                    ;; after doing all work on the current node,
+                    ;; return size and go up the recursion stack
+                    (return-from remove-node size)))))))))
 
 (define-slot (shares update-entries) ((name string))
   (declare (connected shares (update-entries string)))
