@@ -169,7 +169,12 @@
               :documentation "Requested info timestamp.")))
 
 (defclass task-request-send-permission (task-request)
-  ((size :initarg :size
+  ((user :initarg :user
+         :initform nil
+         :type string
+         :documentation "The User who sent the request, or nil if the
+         user is unknown")
+   (size :initarg :size
          :initform nil
          :type rational
          :documentation "Size of the File requested to send.")

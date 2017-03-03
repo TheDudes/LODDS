@@ -82,10 +82,9 @@
   (with-slots ((size lodds.task::size)
                (timeout lodds.task::timeout)
                (filename lodds.task::filename)
-               (socket lodds.task::socket)) task
-    (let* ((user (lodds:get-user-by-ip
-                  (usocket:get-peer-address socket)))
-           (widget (make-instance 'send-permission
+               (socket lodds.task::socket)
+               (user lodds.task::user)) task
+    (let* ((widget (make-instance 'send-permission
                                   :timeout timeout
                                   :default-filename filename
                                   :task task)))

@@ -595,10 +595,84 @@
                               :on-cancel-hook on-error-hook))
                 (funcall on-error-hook nil)))))))
 
+(defun handle-incomming-send-permission (task request)
+  (with-slots (socket) task
+    (let* ((users (lodds:get-user-by-ip
+                   (usocket:get-peer-address socket)))
+           ;; get type of action
+           (action (cond
+                     ((null users)
+                      (if (lodds.config:get-value :allow-unkown-user-send)
+                          :ask
+                          :unknown))
+                     ((subsetp users (lodds.config:get-value :blocked-users)
+                               :test #'equal)
+                      :deny)
+                     ((subsetp users (lodds.config:get-value :trusted-users)
+                               :test #'equal)
+                      :accept)
+                     (t :ask))))
+      ;; check if there is no callback if action is :ask
+      (when (and (eql action :ask)
+                 (not (lodds.event:callback-exists-p :send-permission)))
+        (setf action :no-callback))
+      (destructuring-bind (size timeout filename) (cdr request)
+        (case action
+          (:accept
+           (progn
+             (lodds.task:submit-task
+              (make-instance 'task-request-send-permission
+                             :user users
+                             :name "request-send-permission"
+                             :socket socket
+                             :size size
+                             :timeout timeout
+                             :filename (format nil "~a~a"
+                                               (lodds.core:add-missing-slash
+                                                (lodds.config:get-value :upload-folder))
+                                               filename)))
+             (lodds.event:push-event
+              :send-permission
+              (list (format nil "accepted (user ~{~a~^and~} trusted)"
+                            users)))
+             ;; set socket nil, so it does not get closed by finishing
+             ;; task-request
+             (setf socket nil)))
+          (:ask
+           (progn
+             (lodds.event:push-event :send-permission
+                                     (list (put-task-on-hold
+                                            (make-instance
+                                             'task-request-send-permission
+                                             :user (or users (list "unknown"))
+                                             :name "request-send-permission"
+                                             :socket socket
+                                             :size size
+                                             :timeout timeout
+                                             :filename filename))))
+             ;; set socket nil, so it does not get closed by finishing
+             ;; task-request
+             (setf socket nil)))
+          (:deny
+           (lodds.event:push-event
+            :send-permission
+            (list (format nil "received and denied (user ~{~a~^and~} blocked)"
+                          users))))
+          (:no-callback
+           (lodds.event:push-event
+            :send-permission
+            (list "received and denied (blocking send-permissions)")))
+          (:unknown
+           (lodds.event:push-event
+            :send-permission
+            (list "received and denied (blocking receiving files from unkown users)")))
+          (t (lodds.event:push-event
+              :send-permission
+              (list "unexpected" action))))))))
+
 (defmethod run-task ((task task-request))
   (with-slots (socket
-               finished-p
-               resubmit-p) task
+               finished-p) task
     (setf finished-p t)
     (multiple-value-bind (error request)
         (lodds.low-level-api:parse-request socket)
@@ -624,21 +698,7 @@
                                :timestamp (cadr request)))
                (setf socket nil)))
             (:send-permission
-             (if (lodds.event:callback-exists-p :send-permission)
-                 (destructuring-bind (size timeout filename)
-                     (cdr request)
-                   (lodds.event:push-event :send-permission
-                                           (list (put-task-on-hold
-                                                  (make-instance
-                                                   'task-request-send-permission
-                                                   :name "request-send-permission"
-                                                   :socket socket
-                                                   :size size
-                                                   :timeout timeout
-                                                   :filename filename))))
-                   (setf socket nil))
-                 (lodds.event:push-event :send-permission
-                                         (list "received and denied (no callback added)")))))))))
+             (handle-incomming-send-permission task request)))))))
 
 (defmethod run-task ((task task-request-file))
   (with-slots (socket
