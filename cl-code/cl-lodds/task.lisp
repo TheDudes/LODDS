@@ -44,6 +44,7 @@
       (when task
         (cancel-task task)))))
 
+(defparameter *id-counter* 0)
 (defmethod initialize-instance :after ((task task) &rest initargs)
   (declare (ignorable initargs))
   (with-slots (tasks lock (alive-p lodds.subsystem:alive-p))
@@ -51,9 +52,7 @@
     (when alive-p
       (with-slots (id) task
         (bt:with-lock-held (lock)
-          (setf id (copy-seq (string (gensym "id"))))
-          (loop :while (gethash id tasks)
-                :do (setf id (copy-seq (string (gensym "id")))))
+          (setf id (format nil "id-~a" (incf *id-counter*)))
           (setf (gethash id tasks) task)
           id)))))
 
