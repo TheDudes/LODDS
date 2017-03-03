@@ -69,8 +69,13 @@
                  "Comma seperated list of users which are trused.~%~
                  This means that if users added to this list send~%~
                  you a file you automatically accept it and save~%~
-                 it to the default upload folder.")
-         :list)
+                 it to the default upload folder. Each user needs~%~
+                 to be specified with ip and port in the following~%~
+                 notation: username@ip:port~%~
+                 for example: pete@192.168.2.100:1234~%~
+                 To get the ip and port of a user hover over the User~%~
+                 on the Userlist.")
+         :list
          (lambda ()
            (lodds:get-user-list)))
    (list :blocked-users
@@ -78,8 +83,13 @@
          (format nil
                  "Comma seperated list of users which are not~%~
                  trused. If a User on this list tries to send~%~
-                 you a file, he will automatically be blocked.")
-         :list)
+                 you a file, he will automatically be blocked.~%~
+                 Each user needs to be specified with ip and port~%~
+                 in the following notation: username@ip:port~%~
+                 for example: pete@192.168.2.100:1234~%~
+                 To get the ip and port of a user hover over the~%~
+                 User on the Userlist.")
+         :list
          (lambda ()
            (lodds:get-user-list)))
    (list :client-timeout
