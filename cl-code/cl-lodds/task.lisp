@@ -188,7 +188,7 @@
         (when on-cancel-hook
           (funcall on-cancel-hook task))
         (lodds.event:push-event :task-canceled
-                                (list id))
+                                (list id task))
         (return-from run-task))
       (setf aktive-p t)
       (handler-case
@@ -209,7 +209,7 @@
             (when on-finish-hook
               (funcall on-finish-hook task))
             (lodds.event:push-event :task-finished
-                                    (list id)))
+                                    (list id task)))
           (when resubmit-p
             (submit-task task)))))
 
