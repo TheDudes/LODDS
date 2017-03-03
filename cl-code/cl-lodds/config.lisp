@@ -52,6 +52,17 @@
          (format nil
                  "Displayed/broadcasted name of Lodds Client.")
          :string)
+   (list :allow-unkown-user-send
+         t
+         (format nil
+                 "If a Send Request is received Lodds tries to~%~
+                 Figure out which user sent the request (via the~%~
+                 Ip). If the User does not Advertise himself~%~
+                 Lodds cannot determine the User who send the request~%~
+                 Since the user is unkown. If allow-unknown-user-send~%~
+                 is false, users which are unknown to Lodds wont~%~
+                 be able to send files.")
+         :boolean)
    (list :trusted-users
          nil
          (format nil
