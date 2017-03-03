@@ -69,13 +69,21 @@
               name
               user))))
 
+(defmethod print-object ((object task-info) stream)
+  (print-unreadable-object (object stream :type t)
+    (with-slots (name
+                 user) object
+      (format stream "~a :user ~a"
+              name
+              user))))
+
 (defmethod print-object ((object task-request-file) stream)
   (print-unreadable-object (object stream :type t)
     (with-slots (name
                  checksum
                  start
                  end) object
-      (format stream "~a :checksum ~a :start ~a :end ~a"
+      (format stream "~a :checksum ~a :start ~:d :end ~:d"
               name
               (concatenate 'string (subseq checksum 0 7) "...")
               start
