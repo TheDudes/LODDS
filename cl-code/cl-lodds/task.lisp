@@ -57,12 +57,12 @@
           id)))))
 
 (defmethod print-object ((object task) stream)
-  (print-unreadable-object (object stream :type t :identity t)
+  (print-unreadable-object (object stream :type t)
     (format stream "~a"
             (slot-value object 'name))))
 
 (defmethod print-object ((object task-user) stream)
-  (print-unreadable-object (object stream :type t :identity t)
+  (print-unreadable-object (object stream :type t)
     (with-slots (name
                  user) object
       (format stream "~a :user ~a"
@@ -70,7 +70,7 @@
               user))))
 
 (defmethod print-object ((object task-request-file) stream)
-  (print-unreadable-object (object stream :type t :identity t)
+  (print-unreadable-object (object stream :type t)
     (with-slots (name
                  checksum
                  start
@@ -82,7 +82,7 @@
               end))))
 
 (defmethod print-object ((object task-request-info) stream)
-  (print-unreadable-object (object stream :type t :identity t)
+  (print-unreadable-object (object stream :type t)
     (with-slots (name
                  timestamp) object
       (format stream "~a :timestamp ~a"
@@ -90,7 +90,7 @@
               timestamp))))
 
 (defmethod print-object ((object task-request-send-permission) stream)
-  (print-unreadable-object (object stream :type t :identity t)
+  (print-unreadable-object (object stream :type t)
     (with-slots (name
                  size
                  timeout
@@ -102,7 +102,7 @@
               filename))))
 
 (defmethod print-object ((object task-get-file-from-user) stream)
-  (print-unreadable-object (object stream :type t :identity t)
+  (print-unreadable-object (object stream :type t)
     (with-slots (name
                  local-file-path
                  size
@@ -116,7 +116,7 @@
               checksum))))
 
 (defmethod print-object ((object task-get-file-from-users) stream)
-  (print-unreadable-object (object stream :type t :identity t)
+  (print-unreadable-object (object stream :type t)
     (with-slots (name
                  local-file-path
                  part-size
@@ -130,7 +130,7 @@
               checksum))))
 
 (defmethod print-object ((object task-send-file) stream)
-  (print-unreadable-object (object stream :type t :identity t)
+  (print-unreadable-object (object stream :type t)
     (with-slots (name
                  ip
                  port
@@ -148,7 +148,7 @@
               (lodds.core:format-size written)))))
 
 (defmethod print-object ((object task-get-folder) stream)
-  (print-unreadable-object (object stream :type t :identity t)
+  (print-unreadable-object (object stream :type t)
     (with-slots (name
                  items
                  items-done
