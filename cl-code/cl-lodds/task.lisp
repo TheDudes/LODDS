@@ -21,14 +21,11 @@
   Each of the inner lists describe a task, with its id, its maximum
   load, already processed load, type and info."
   (with-slots (tasks tasks-on-hold lock) tasker
-    (let ((result nil))
-      (bt:with-recursive-lock-held (lock)
-        (setf result
-              (loop :for task :being :the :hash-value :of tasks
-                    :unless (gethash (slot-value task 'id) tasks-on-hold)
-                    :collect (with-slots (id max-load load type info) task
-                               (list id max-load (- max-load load) type info)))))
-      result)))
+    (bt:with-recursive-lock-held (lock)
+      (loop :for task :being :the :hash-value :of tasks
+            :unless (gethash (slot-value task 'id) tasks-on-hold)
+            :collect (with-slots (id max-load load info) task
+                       (list id max-load (- max-load load) (type-of task) info))))))
 
 (defmethod get-task-by-id (task-id)
   "Returns task with given id, nil if task is not found"

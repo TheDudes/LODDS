@@ -94,7 +94,7 @@
     (loop :for (id max done type info-text) :in tasks
           :do (if (gethash id tracked-tasks)
                   (update-info info id done info-text)
-                  (unless (eql type :task)
+                  (when info-text
                     (add-info info id max done info-text))))
     ;; remove all old tasks
     (dolist (id old-tasks)
