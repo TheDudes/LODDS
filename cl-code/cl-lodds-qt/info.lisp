@@ -112,6 +112,11 @@
         (setf finished-tasks (list)
               failed-tasks (list)
               canceled-tasks (list)))
+      (loop :for task :being :the :hash-key :of tracked-tasks
+            :do (when (not (find task tasks
+                                 :test #'string=
+                                 :key #'car))
+                  (push task finished)))
       (flet ((update-color (id color status)
                (let ((entry (gethash id tracked-tasks)))
                  (when entry
@@ -176,17 +181,11 @@
                             (lambda (event)
                               (bt:with-recursive-lock-held ((slot-value info 'lock))
                                 (push (second event) failed-tasks)))
-                            :task-failed)
-  (lodds.event:add-callback :qt-info
-                            (lambda (event)
-                              (bt:with-recursive-lock-held ((slot-value info 'lock))
-                                (push (second event) finished-tasks)))
-                            :task-finished))
+                            :task-failed))
 
 (define-finalizer (info cleanup-widget)
   (q+:clear info))
 
 (define-finalizer (info cleanup-callbacks)
   (lodds.event:remove-callback :qt-info :task-canceled)
-  (lodds.event:remove-callback :qt-info :task-failed)
-  (lodds.event:remove-callback :qt-info :task-finished))
+  (lodds.event:remove-callback :qt-info :task-failed))
