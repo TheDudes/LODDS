@@ -146,11 +146,9 @@
                  timeout
                  size
                  written) object
-      (format stream "~a filepath: ~a address: ~a:~a timeout: ~a size: ~a written: ~a"
+      (format stream "~a filepath: ~a timeout: ~a size: ~a written: ~a"
               name
               filepath
-              ip
-              port
               timeout
               (lodds.core:format-size size)
               (lodds.core:format-size written)))))
