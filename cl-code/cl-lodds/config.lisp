@@ -60,6 +60,8 @@
                  you a file you automatically accept it and save~%~
                  it to the default upload folder.")
          :list)
+         (lambda ()
+           (lodds:get-user-list)))
    (list :blocked-users
          nil
          (format nil
@@ -67,6 +69,8 @@
                  trused. If a User on this list tries to send~%~
                  you a file, he will automatically be blocked.")
          :list)
+         (lambda ()
+           (lodds:get-user-list)))
    (list :client-timeout
          5
          (format nil
@@ -354,3 +358,8 @@
 
 (defun get-integer-max (key &optional (config (slot-value lodds:*server* 'lodds:settings)))
   (fifth (gethash key config)))
+
+(defun get-suggestions (key &optional (config (slot-value lodds:*server* 'lodds:settings)))
+  (let ((fn (fourth (gethash key config))))
+    (when fn
+      (funcall fn))))

@@ -109,7 +109,27 @@
   (with-slots (key widget) list-setting
     (setf widget list-setting)
     (q+:set-text list-setting (format nil "~{~a~^,~}"
-                                       (lodds.config:get-value key)))))
+                                      (lodds.config:get-value key)))))
+
+(define-override (list-setting key-press-event) (ev)
+  (if (enum-equal (q+:key ev) (q+:qt.key_tab))
+      (let* ((text (q+:text list-setting))
+             (already-inserted (mapcar (lambda (str)
+                                         (string-trim '(#\Space) str))
+                                       (cl-strings:split text #\,)))
+             (name-substring (car (last already-inserted)))
+             (user (find name-substring
+                         (lodds.config:get-suggestions
+                          (slot-value list-setting 'key))
+                         :test (lambda (swap me)
+                                 (cl-strings:starts-with me swap)))))
+        (when user
+          (setf (car (last already-inserted))
+                user)
+          (q+:set-text list-setting
+                       (format nil "~{~a~^,~}"
+                               already-inserted))))
+      (stop-overriding)))
 
 (defmethod get-value ((list-setting list-setting))
   (let ((line (q+:text list-setting)))

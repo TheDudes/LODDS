@@ -56,7 +56,8 @@
            #:get-type
            #:get-selection-options
            #:get-integer-max
-           #:get-integer-min))
+           #:get-integer-min
+           #:get-suggestions))
 
 (defpackage #:lodds.subsystem
   (:use #:cl)
