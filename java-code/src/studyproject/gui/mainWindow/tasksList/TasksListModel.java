@@ -2,9 +2,7 @@ package studyproject.gui.mainWindow.tasksList;
 
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import javafx.scene.Parent;
 import studyproject.API.Lvl.Mid.ThreadMonitoring.MonitoredThread;
-import studyproject.gui.mainWindow.tasksList.singleTask.SingleTaskView;
 
 import javax.annotation.PostConstruct;
 

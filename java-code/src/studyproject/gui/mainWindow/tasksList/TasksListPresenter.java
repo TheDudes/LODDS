@@ -2,26 +2,18 @@ package studyproject.gui.mainWindow.tasksList;
 
 import java.net.URL;
 import java.util.ResourceBundle;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import javax.inject.Inject;
 
 import javafx.application.Platform;
 import javafx.collections.ListChangeListener;
-import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
 
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
-import javafx.util.Callback;
-import studyproject.API.Errors.ErrorFactory;
 import studyproject.API.Lvl.Mid.ThreadMonitoring.MonitoredThread;
 import studyproject.gui.mainWindow.MainWindowModel;
 import studyproject.gui.mainWindow.tasksList.singleTask.SingleTaskListCell;
-import studyproject.gui.mainWindow.tasksList.singleTask.SingleTaskPresenter;
-import studyproject.gui.mainWindow.tasksList.singleTask.SingleTaskView;
-import studyproject.logging.LogKey;
 
 public class TasksListPresenter implements Initializable {
 

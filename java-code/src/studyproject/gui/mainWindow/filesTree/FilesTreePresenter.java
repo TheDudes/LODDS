@@ -22,7 +22,6 @@ import javafx.scene.control.*;
 import studyproject.API.Errors.ErrorFactory;
 import studyproject.API.Lvl.Mid.Core.FileCoreInfo;
 import studyproject.API.Lvl.Mid.Core.UserInfo;
-import studyproject.API.Lvl.Mid.ThreadMonitoring.MultipleDownloadHelper;
 import studyproject.gui.Core.Utils;
 import studyproject.gui.mainWindow.MainWindowModel;
 import studyproject.gui.mainWindow.tasksList.TasksListModel;

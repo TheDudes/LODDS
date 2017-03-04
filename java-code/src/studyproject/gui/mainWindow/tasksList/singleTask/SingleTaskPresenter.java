@@ -34,7 +34,7 @@ public class SingleTaskPresenter implements Initializable {
 		progressBar.progressProperty().bindBidirectional(monitoredThread.getProgress());
 		currentFileLabel.textProperty().bindBidirectional(monitoredThread.getCurrentFileName());
 		folderFileNameLabel.setText(monitoredThread.getNameToDisplay());
-		monitoredThread.getDoneSize().addListener((observable, oldValue, newValue) -> {
+		this.monitoredThread.getDoneSize().addListener((observable, oldValue, newValue) -> {
 			progressLabel.textProperty().setValue(newValue + "/" + monitoredThread.getWholeSize());
 		});
 	}
