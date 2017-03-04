@@ -100,6 +100,7 @@ public class App extends Application {
 		if (mainStage.isMaximized()) {
 			properties.put("windowMaximized", "true");
 		} else {
+			properties.put("windowMaximized", "false");
 			properties.setProperty("windowHeight", String.valueOf(mainStage.getHeight()));
 			properties.setProperty("windowWidth", String.valueOf(mainStage.getWidth()));
 		}
