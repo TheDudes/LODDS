@@ -219,7 +219,7 @@ public class FileWatcherControllerTest {
 		assertEquals(expectedResponse,actualResponse);
 	}
 	
-	@Test(timeout=20000)
+	@Test(timeout=25000)
 	public void shouldDetectFolderWithSubDirsDeletedDuringRuntime() throws Exception {
 		cleanupTempFolder();
 		
@@ -236,16 +236,16 @@ public class FileWatcherControllerTest {
 		// Wait short till fileController was initialized
 		Thread.sleep(1000);
 		
-		// List should contain two files
+		// List should contain three entries
 		assertEquals(3,c.fileInfoHistory.size());
 		
 		// Delete file
 		cleanupTempFolder();
 				
-		// List should contain four files, 3 add + 3 del
+		// List should contain six files, 3 add + 3 del
 		while (c.fileInfoHistory.size() != 6) {
 			// Test will time out if list will not contain zero files
-			//System.out.println(c.fileInfoHistory.size());
+			System.out.println(c.fileInfoHistory.size());
 		}
 		
 		String actualResponse = c.getInfo(0);
@@ -303,7 +303,8 @@ public class FileWatcherControllerTest {
 	
 	private void cleanupTempFolder() {
 		File dir = new File(testDirectory+"temp/");
-		purgeDirectory(dir);
+		if (dir.exists())
+			purgeDirectory(dir);
 	}
 	
 	void purgeDirectory(File dir) {
