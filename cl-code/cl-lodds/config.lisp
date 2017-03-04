@@ -20,20 +20,23 @@
          (car (lodds.core:get-interfaces))
          (format nil
                  "Interface Lodds uses to get his own Ip and Broadcast~%~
-                 Address.")
+                 Address.~%~
+                 Default: The first interface with an ip (excluding loopback)")
          :selection
          (lambda ()
            (lodds.core:get-interfaces)))
    (list :remember-shares
          nil
          (format nil
-                 "If true: shared directories will be rememberd on restart")
+                 "If true: shared directories will be rememberd on restart~%~
+                  Default: false")
          :boolean)
    (list :port
          4567
          (format nil
                  "The Port where Lodds is listning on for incomming~%~
-                 requests. Value between 1024 and 65535.")
+                 requests. Value between 1024 and 65535.~%~
+                 Default: 4567")
          :integer
          1024
          65535)
@@ -43,14 +46,16 @@
                  "The Port where Lodds will listen for Broadcast~%~
                  Messages from other clients. This Port is also~%~
                  used for advertisements of the Client (as expected,~%~
-                 i guess). Value between 1024 and 65535.")
+                 i guess). Value between 1024 and 65535.~%~
+                 Default: 9002")
          :integer
          1024
          65535)
    (list :name
          (machine-instance)
          (format nil
-                 "Displayed/broadcasted name of Lodds Client.")
+                 "Displayed/broadcasted name of Lodds Client.~%~
+                  Default: User Name of System")
          :string)
    (list :allow-unkown-user-send
          t
@@ -61,7 +66,8 @@
                  Lodds cannot determine the User who send the request~%~
                  Since the user is unkown. If allow-unknown-user-send~%~
                  is false, users which are unknown to Lodds wont~%~
-                 be able to send files.")
+                 be able to send files.~%~
+                 Default: true")
          :boolean)
    (list :trusted-users
          nil
@@ -74,7 +80,8 @@
                  notation: username@ip:port~%~
                  for example: pete@192.168.2.100:1234~%~
                  To get the ip and port of a user hover over the User~%~
-                 on the Userlist.")
+                 on the Userlist.~%~
+                 Default: empty")
          :list
          (lambda ()
            (lodds:get-user-list)))
@@ -88,7 +95,8 @@
                  in the following notation: username@ip:port~%~
                  for example: pete@192.168.2.100:1234~%~
                  To get the ip and port of a user hover over the~%~
-                 User on the Userlist.")
+                 User on the Userlist.~%~
+                 Default: empty")
          :list
          (lambda ()
            (lodds:get-user-list)))
@@ -97,7 +105,8 @@
          (format nil
                  "If a client does not send a advertise message~%~
                  after the given timeout (seconds), he will be~%~
-                 removed. Value between 1 and 3600.")
+                 removed. Value between 1 and 3600.~%~
+                 Default: 5")
          :integer
          1
          3600)
@@ -105,7 +114,8 @@
          1
          (format nil
                  "Timeout between advertisements. Specified~%~
-                 in seconds. Value between 1 and 10")
+                 in seconds. Value between 1 and 10.~%~
+                 Default: 1")
          :integer
          1
          10)
@@ -117,7 +127,8 @@
          (format nil "~adownload"
                  (user-homedir-pathname))
          (format nil
-                 "Default Download folder, where files get saved.")
+                 "Default Download folder, where files get saved.~%~
+                 Default: download folder inside home directory.")
          :folder)
    (list :upload-folder
          (format nil "~aupload"
@@ -125,19 +136,22 @@
          (format nil
                  "Default Upload folder, incomming files will~%~
                  be saved there. If a 'trused-user' is sending~%~
-                 a file, its saved there too.")
+                 a file, its saved there too.~%~
+                 Default: upload folder inside home directory")
          :folder)
    (list :resources-folder
          "."
          (format nil
                  "Folder which contains resources for Lodds,~%~
-                 like icons, stylesheets, ...")
+                 like icons, stylesheets, ... ~%~
+                 Default: . (the current directory)")
          :folder)
    (list :timeout-send-file
          300
          (format nil
                  "Default Timeout in seconds when sending a~%~
-                 file. Value between 1 and 3600")
+                 file. Value between 1 and 3600~%~
+                 Default: 300")
          :integer
          1
          3600)
@@ -145,7 +159,8 @@
          100
          (format nil
                  "Timeout (in milliseconds) between updates~%~
-                 on 'info' widget. Value between 50 and 100.000")
+                 on 'info' widget. Value between 50 and 100.000~%~
+                 Default: 100")
          :integer
          50
          100000)
@@ -155,7 +170,8 @@
                  "Timeout (in milliseconds) between checks~%~
                  if a directory is busy (This is used to~%~
                  display the Spinner when a directory is~%~
-                 busy). Value between 50 and 100.000")
+                 busy). Value between 50 and 100.000~%~
+                 Default: 1000")
          :integer
          50
          100000)
@@ -164,7 +180,8 @@
          (format nil
                  "Maximum of displayed Log Messages. If a new entry~%~
                  is logged, the oldest (top) will be removed. Value between~%~
-                 10 and 10000.")
+                 10 and 10000.~%~
+                 Default: 500")
          :integer
          10
          10000)))
