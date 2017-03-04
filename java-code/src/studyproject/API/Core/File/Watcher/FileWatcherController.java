@@ -138,7 +138,6 @@ public class FileWatcherController {
 		String body = "";
 
 		Long currentTimestampSec = System.currentTimeMillis() / 1000L;
-		Long currentTimestampMinusOneSec = currentTimestampSec - 1;
 
 		Boolean shareAllFiles = false;
 
@@ -154,12 +153,12 @@ public class FileWatcherController {
 
 			// Check if file was added after given timestamp but not during last
 			// sec
-			Boolean timestampCheck = fileLastTimestamp >= timestamp && fileLastTimestamp < currentTimestampMinusOneSec;
+			Boolean timestampCheck = fileLastTimestamp >= timestamp && (fileLastTimestamp-timestamp) > 1 ;
 
 			if (timestamp == 0 || timestampCheck || shareAllFiles) {
 				body = this.convertFileInfoToString(file) + body;
 				filesMatched++;
-			} else {
+			}/* else {
 				
 				Logger.getGlobal().log(ErrorFactory.build(Level.INFO, LogKey.sharedFiles,
 						"getInfo('" + timestamp + "'): skipped because nothing is true: " + file.fileName));
@@ -169,12 +168,15 @@ public class FileWatcherController {
 				if (!timestampCheck) {
 					Logger.getGlobal().log(ErrorFactory.build(Level.INFO, LogKey.sharedFiles,
 							"getInfo('" + timestamp + "'): ..timestampCheck is false" + file.fileName));
+					Logger.getGlobal().log(ErrorFactory.build(Level.INFO, LogKey.sharedFiles,
+							"file last timestamp:" + fileLastTimestamp + " >= " + timestamp));
+	
 				}
 				if (!shareAllFiles) {
 					Logger.getGlobal().log(ErrorFactory.build(Level.INFO, LogKey.sharedFiles,
 							"getInfo('" + timestamp + "'): ..shareAllFiles is false" + file.fileName));
 				}
-			}
+			}*/
 		}
 
 		// Header
