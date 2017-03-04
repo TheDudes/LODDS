@@ -355,7 +355,13 @@
                                     (setf tasks-running t)))
                                 tasks)
                        (incf tries)
-                       (sleep 0.5))))
+                       (sleep 0.5))
+                 :finally
+                 (progn
+                   (let ((msg "Tasker terminated."))
+                     (format t "~a~%" msg)
+                     (lodds.event:push-event (lodds.subsystem:name subsys)
+                                             (list msg))))))
          (let ((lparallel:*kernel* kernel))
            (lparallel:end-kernel :wait t)
            (setf tasks (make-hash-table :test #'equal)
