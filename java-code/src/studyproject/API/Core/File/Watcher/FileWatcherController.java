@@ -230,7 +230,8 @@ public class FileWatcherController {
 		watchDirectoryRecursively(absoluteFileName, absoluteFileName);
 	}
 
-	private Boolean isBeingWatched(String path) {
+	
+	/*private Boolean isBeingWatched(String path) {
 		if (watchedInternalDirectories.contains(path))
 			return true;
 
@@ -249,7 +250,7 @@ public class FileWatcherController {
 	private Boolean isChild(Path child, String parentText) {
 		Path parent = Paths.get(parentText).toAbsolutePath();
 		return child.startsWith(parent);
-	}
+	}*/
 
 	/**
 	 * Watches all files and folders from a directory recursively
@@ -264,7 +265,7 @@ public class FileWatcherController {
 		
 		System.out.println("watchDirectoryRecursively: " + absoluteFileName);
 
-		if (isBeingWatched(absoluteFileName)) {
+		if (this.watchedInternalDirectories.contains(absoluteFileName)) {
 			System.out.println("New directory will NOT be watched: " + absoluteFileName);
 		} else {
 			
