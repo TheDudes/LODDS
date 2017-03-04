@@ -2,6 +2,8 @@ package studyproject.API.Core.File.Watcher;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Vector;
@@ -224,6 +226,27 @@ public class FileWatcherController {
 	public void watchDirectoryRecursively(String absoluteFileName) throws Exception {
 		watchDirectoryRecursively(absoluteFileName, absoluteFileName);
 	}
+	
+	private Boolean isBeingWatched(String path) {
+		if (watchedInternalDirectories.contains(path)) 
+			return true;
+		
+		for (String dir:watchedInternalDirectories) {
+		    Path watched = Paths.get(dir).toAbsolutePath();
+
+			if (isChild(watched, path)) {
+				return true;
+			}
+		}
+		
+		return false;
+		
+	}
+	
+	private Boolean isChild(Path child, String parentText) {
+	    Path parent = Paths.get(parentText).toAbsolutePath();
+	    return child.startsWith(parent);
+	}
 
 	/**
 	 * Watches all files and folders from a directory recursively
@@ -237,10 +260,9 @@ public class FileWatcherController {
 	public void watchDirectoryRecursively(String absoluteFileName, String virtualRoot) throws Exception {
 
 		// Start to watch directory
-		// System.out.println("watchDirRec**: "+absoluteFileName);
 		watchDirectory(absoluteFileName, true, virtualRoot);
 
-		if (!watchedInternalDirectories.contains(absoluteFileName)) {
+		if (!isBeingWatched(absoluteFileName)) {
 			System.out.println("New directory will be watched: " + absoluteFileName);
 			watchedInternalDirectories.add(absoluteFileName);
 		}

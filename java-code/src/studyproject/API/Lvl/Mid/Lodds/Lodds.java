@@ -318,7 +318,7 @@ public class Lodds {
 				&& !sharedFolders.contains(absolutePath)) {
 			sharedFolders.add(absolutePath);
 			try {
-				watchService.watchDirectoryRecursively(absolutePath, absolutePath);
+				watchService.watchDirectoryRecursively(absolutePath);
 				setLastChange(System.currentTimeMillis() / 1000);
 			} catch (NoSuchAlgorithmException e) {
 				logger.log(ErrorFactory.build(Level.SEVERE, LogKey.error, "NoSuchAlgorithmException thrown: ", e));

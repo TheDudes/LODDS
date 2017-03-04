@@ -18,6 +18,15 @@ public class FileWatcherControllerTest {
 	
 	private String testDirectory = "java-code/testData/FileWatcherController/";
 	private String virtualRoot = "FileWatcherController/";
+	
+	@Test
+	public void shouldNotAddChildOfAlreadyWatchedDirToList() throws Exception {
+		FileWatcherController controller = new FileWatcherController();
+		controller.watchDirectoryRecursively(testDirectory);
+		assertEquals(4,controller.watchedInternalDirectories.size());
+		controller.watchDirectoryRecursively(testDirectory+"oneFile");
+		assertEquals(4,controller.watchedInternalDirectories.size());	
+	}
 
 	@Test
 	public void listShouldContainOneFile() throws Exception {
