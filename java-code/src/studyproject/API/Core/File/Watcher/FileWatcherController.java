@@ -387,9 +387,10 @@ public class FileWatcherController {
 
 			// Add to FileInfoList
 			fileInfoHistory.add(deletedFile);
+			updateLastChange();
 		}
 		
-		updateLastChange();
+		
 
 	}
 
@@ -418,6 +419,7 @@ public class FileWatcherController {
 
 			// Add to file info list
 			fileInfoHistory.add(newFile);
+			updateLastChange();
 
 			// Add to currentFilesListHashListAsKey
 			if (currentFilesListHashListAsKey.containsKey(newFile.checksum)) {
@@ -430,7 +432,7 @@ public class FileWatcherController {
 				currentFilesListHashListAsKey.put(newFile.checksum, fileList);
 			}
 			
-			updateLastChange();
+			
 
 			return newFile;
 
