@@ -33,25 +33,13 @@ public class FileWatcher extends Thread {
 	public FileWatcher(String path, Boolean watchForNewFiles, FileWatcherController controller, String virtualRoot) {
 		super();
 
-		this.directoryPath = addSlashToFileNameIfNecessary(path);
+		this.directoryPath = controller.addSlashToFileNameIfNecessary(path);
 		this.watchForNewFiles = watchForNewFiles;
 		this.controller = controller;
 		this.virtualRoot = virtualRoot;
 	}
 
-	/**
-	 * Folders may not have '/' at the end, so fix that
-	 * 
-	 * @param fileName
-	 * @return
-	 */
-	private String addSlashToFileNameIfNecessary(String fileName) {
-		if (fileName.charAt(fileName.length() - 1) != File.separatorChar) {
-			return fileName + File.separatorChar;
-		} else {
-			return fileName;
-		}
-	}
+
 	
 	public void stopWatching() {
 		if (watcher != null) {
@@ -124,7 +112,7 @@ public class FileWatcher extends Thread {
 
 						// New directory was created
 						if (newFile.isDirectory()) {
-							controller.watchDirectoryRecursively(addSlashToFileNameIfNecessary(newFile.getPath()), virtualRoot);
+							controller.watchDirectoryRecursively(controller.addSlashToFileNameIfNecessary(newFile.getPath()), virtualRoot);
 						}
 						
 						// New file was created
@@ -150,10 +138,10 @@ public class FileWatcher extends Thread {
 							// File is a folder
 							else {
 								if (node.hasChildren()) {
-									folderWasDeleted(addSlashToFileNameIfNecessary(fullPath));
+									folderWasDeleted(controller.addSlashToFileNameIfNecessary(fullPath));
 								} else {
 									System.out.println("Folder has no subfolders - Only remove from internal dir list");
-									controller.watchedInternalDirectories.remove(addSlashToFileNameIfNecessary(fullPath));
+									controller.watchedInternalDirectories.remove(controller.addSlashToFileNameIfNecessary(fullPath));
 								}
 							}
 						}

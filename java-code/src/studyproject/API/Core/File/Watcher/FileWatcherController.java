@@ -180,6 +180,20 @@ public class FileWatcherController {
 
 		return header + body;
 	}
+	
+	/**
+	 * Folders may not have '/' at the end, so fix that
+	 * 
+	 * @param fileName
+	 * @return
+	 */
+	public String addSlashToFileNameIfNecessary(String fileName) {
+		if (fileName.charAt(fileName.length() - 1) != File.separatorChar) {
+			return fileName + File.separatorChar;
+		} else {
+			return fileName;
+		}
+	}
 
 	public String convertFileInfoToString(FileInfo file) {
 		return file.fileAction.name() + " " + file.checksum + " " + file.size + " " + file.relativeFileName + "\n";
@@ -199,7 +213,7 @@ public class FileWatcherController {
 
 		// Add parent directory of file to watchedDirectories if its not already
 		// inside
-		String parentDirectory = newFile.parentDirectory + "/";
+		String parentDirectory = this.addSlashToFileNameIfNecessary(newFile.parentDirectory);
 
 		if (!watchedInternalDirectories.contains(parentDirectory)) {
 			watchedInternalDirectories.add(parentDirectory);
