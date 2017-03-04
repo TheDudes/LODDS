@@ -2,7 +2,9 @@ package studyproject.gui.mainWindow.filesTree;
 
 import java.io.File;
 import java.net.URL;
+import java.util.List;
 import java.util.ResourceBundle;
+import java.util.Vector;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -122,16 +124,52 @@ public class FilesTreePresenter implements Initializable {
 		if (absolutePath.endsWith("/")) {
 			absolutePath.substring(0, absolutePath.length() - 1);
 		}
+
 		for (TreeItem<FileCoreInfo> treeItem : itemsList) {
 			FileCoreInfo fileCoreInfo = treeItem.getValue();
+			// check if the item is a folder
 			if (fileCoreInfo.getChecksum() == null) {
-				// continue because this item is a folder. it has no checksum.
-				continue;
+				// If children of this folder are selected as well, ignore this
+				// item
+				boolean continueForEach = false;
+				List<TreeItem<FileCoreInfo>> subList = itemsList.subList(itemsList.indexOf(treeItem) + 1,
+						itemsList.size());
+				for (TreeItem<FileCoreInfo> subListItem : subList) {
+					if (// subListItem.getValue().getChecksum() != null &&
+					subListItem.getValue().getFilePath().contains(fileCoreInfo.getFilePath())) {
+						continueForEach = true;
+						break;
+					}
+				}
+				if (continueForEach) {
+					continue;
+				}
+
+				// If none of the folder children is selected, download it
+				Vector<FileCoreInfo> fileCoreInfoVector = new Vector<FileCoreInfo>();
+				fileCoreInfoVector = findChildrenItems(treeItem, fileCoreInfoVector);				
+				/**
+				 *  NINTI FUNCTION CALL HERE!!!
+				 */
+				
+			} else {
+				// item is a file, not a folder
+				mainWindowModel.getLodds().getFile(userListModel.getSelectedUser().get(), fileCoreInfo.getChecksum(),
+						absolutePath + fileCoreInfo.getFilePath());
 			}
-			mainWindowModel.getLodds().getFile(userListModel.getSelectedUser().get(), fileCoreInfo.getChecksum(),
-					absolutePath + fileCoreInfo.getFilePath());
 		}
 		return;
+	}
+
+	private Vector<FileCoreInfo> findChildrenItems(TreeItem<FileCoreInfo> treeItem, Vector<FileCoreInfo> vector) {
+		for (TreeItem<FileCoreInfo> childrenItem : treeItem.getChildren()) {
+			if (childrenItem.getValue().getChecksum() == null) {
+				vector = findChildrenItems(childrenItem, vector);
+			} else {
+				vector.add(childrenItem.getValue());
+			}
+		}
+		return vector;
 	}
 
 	private void filesTreeSearchChanged() {
@@ -166,7 +204,7 @@ public class FilesTreePresenter implements Initializable {
 				if (subPaths[0].isEmpty())
 					index = 1;
 				addTreeItem(fileCoreInfo, subPaths, index, root);
-				
+
 			}
 		}
 	}
