@@ -336,25 +336,30 @@
                           (not (position #\= line)))
                 (multiple-value-bind (key value)
                     (split-key-value line)
+                  (if (not (gethash key config))
+                      (format t "Config file warning (~a:~a): ~
+                                 Unrecognized key: ~a~%"
+                              filename
+                              line-number
+                              (string-downcase (string key)))
+                      (multiple-value-bind (converted-value error)
+                          (string-to-type value
+                                          (get-type key config))
 
-                  (multiple-value-bind (converted-value error)
-                      (string-to-type value
-                                      (get-type key config))
-
-                    (when error
-                      (return-from load-from-file
-                        (values nil
-                                (format nil "Config file error (~a:~a): ~a"
-                                        filename
-                                        line-number
-                                        error))))
-                    (let ((err (update-entry key converted-value nil config)))
-                      (when err
-                        (return-from load-from-file
-                          (values nil (format nil "Config file error (~a:~a): ~a"
-                                              filename
-                                              line-number
-                                              err)))))))))
+                        (when error
+                          (return-from load-from-file
+                            (values nil
+                                    (format nil "Config file error (~a:~a): ~a"
+                                            filename
+                                            line-number
+                                            error))))
+                        (let ((err (update-entry key converted-value nil config)))
+                          (when err
+                            (return-from load-from-file
+                              (values nil (format nil "Config file error (~a:~a): ~a"
+                                                  filename
+                                                  line-number
+                                                  err))))))))))
             :finally (return (values config nil))))))
 
 (defun load-default-config-files ()
