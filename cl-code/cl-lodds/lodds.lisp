@@ -82,9 +82,8 @@
   "updates the current config with the new-config. Goes over every key
   on new-config and updates the current one if found and different"
   (maphash (lambda (key value)
-             (format t "calling update-entry ~a~%"
-                     (lodds.config:update-entry key
-                                                (car value))))
+             (lodds.config:update-entry key
+                                        (car value)))
            new-config))
 
 (defun get-subsystem (name)
