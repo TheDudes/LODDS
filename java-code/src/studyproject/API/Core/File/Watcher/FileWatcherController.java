@@ -9,10 +9,14 @@ import java.util.List;
 import java.util.Vector;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import studyproject.API.Core.File.FileAction;
 import studyproject.API.Core.File.FileInfo;
 import studyproject.API.Core.File.InfoList.FileInfoListEntry;
+import studyproject.API.Errors.ErrorFactory;
+import studyproject.logging.LogKey;
 
 /**
  * TODO: - Bug: When a folder is deleted WatchService does not notify about the
@@ -179,7 +183,6 @@ public class FileWatcherController {
 	 * @throws Exception
 	 */
 	public void watchFile(String path, Boolean watchParentFolderForNewFiles, String virtualRoot) throws Exception {
-		// System.out.println("watchFile: "+path);
 
 		// Create new FileInfo object and add it to vector list
 		FileInfoListEntry newFile = addFileToLists(path, virtualRoot);
@@ -310,11 +313,11 @@ public class FileWatcherController {
 	}
 
 	/**
-	 * Deletes folder including all subdirectories and files from list
+	 * Deletes folder including all sub directories and files from list
 	 * 
 	 * @param node
 	 */
-	public void deleteFolderFromLists(String fileName) {
+	public synchronized void deleteFolderFromLists(String fileName) {
 
 		System.out.println("Delete folder from lists: " + fileName);
 
@@ -333,7 +336,7 @@ public class FileWatcherController {
 		}
 	}
 
-	public void deleteFileFromLists(FileInfo file) {
+	public synchronized void deleteFileFromLists(FileInfo file) {
 		System.out.println("\ndeleteFileFromLists(): " + file.fileName);
 
 		String virtualRoot = "";
@@ -363,7 +366,7 @@ public class FileWatcherController {
 		}
 
 		if (foundInList) {
-			// Create DEL entry for FileInfoList:
+			Logger.getGlobal().log(ErrorFactory.build(Level.INFO, LogKey.sharedFiles, "Remove shared file: " + file.fileName));
 
 			// Create FileInfoListEntry object
 			Long timestamp = System.currentTimeMillis() / 1000L;
@@ -381,7 +384,8 @@ public class FileWatcherController {
 		this.firstShareTimestamp = System.currentTimeMillis() / 1000L;
 	}
 
-	public FileInfoListEntry addFileToLists(String fileName, String virtualRoot) throws Exception {
+	public synchronized FileInfoListEntry addFileToLists(String fileName, String virtualRoot) throws Exception {
+
 		// System.out.println("Add new file: "+fileName);
 		if (this.firstShareTimestamp == null) {
 			this.setFirstShareTimestamp();
@@ -392,6 +396,9 @@ public class FileWatcherController {
 		if (existingFile == null) {
 
 			FileInfoListEntry newFile = new FileInfoListEntry(fileName, virtualRoot);
+			
+			// Log msg
+			Logger.getGlobal().log(ErrorFactory.build(Level.INFO, LogKey.sharedFiles, "Share new file: " + fileName));
 
 			// Add to tree
 			currentFiles.addFileInfoEntry(newFile.fileName, newFile);
