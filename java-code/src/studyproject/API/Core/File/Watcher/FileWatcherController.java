@@ -51,6 +51,9 @@ public class FileWatcherController {
 
 	// Timestamp of first share
 	private Long firstShareTimestamp;
+	
+	// Timestamp of last change
+	private Long lastChange = System.currentTimeMillis() / 1000;
 
 	public ConcurrentHashMap<String, FileWatcher> fileWatcherThreads = new ConcurrentHashMap<>();
 
@@ -90,6 +93,15 @@ public class FileWatcherController {
 	public void unwatchDirectory(String fullPath) {
 		watchedInternalDirectories.remove(fullPath);
 		stopWatchThread(fullPath);
+		updateLastChange();
+	}
+	
+	private void updateLastChange() {
+		lastChange = System.currentTimeMillis() / 1000;
+	}
+	
+	public Long getLastChange() {
+		return lastChange;
 	}
 
 	public void stopWatchThread(String relativePath) {
@@ -377,6 +389,8 @@ public class FileWatcherController {
 			// Add to FileInfoList
 			fileInfoHistory.add(deletedFile);
 		}
+		
+		updateLastChange();
 
 	}
 
@@ -385,7 +399,7 @@ public class FileWatcherController {
 	}
 
 	public synchronized FileInfoListEntry addFileToLists(String fileName, String virtualRoot) throws Exception {
-
+		
 		// System.out.println("Add new file: "+fileName);
 		if (this.firstShareTimestamp == null) {
 			this.setFirstShareTimestamp();
@@ -394,7 +408,7 @@ public class FileWatcherController {
 		FileInfoListEntry existingFile = currentFiles.getFileInfoListEntryByFileName(fileName);
 
 		if (existingFile == null) {
-
+						
 			FileInfoListEntry newFile = new FileInfoListEntry(fileName, virtualRoot);
 			
 			// Log msg
@@ -416,7 +430,10 @@ public class FileWatcherController {
 				fileList.add(newFile);
 				currentFilesListHashListAsKey.put(newFile.checksum, fileList);
 			}
+			
+			updateLastChange();
 
+			
 			return newFile;
 
 		} else {

@@ -319,7 +319,6 @@ public class Lodds {
 			sharedFolders.add(absolutePath);
 			try {
 				watchService.watchDirectoryRecursively(absolutePath);
-				setLastChange(System.currentTimeMillis() / 1000);
 			} catch (NoSuchAlgorithmException e) {
 				logger.log(ErrorFactory.build(Level.SEVERE, LogKey.error, "NoSuchAlgorithmException thrown: ", e));
 			} catch (IOException e) {
@@ -342,7 +341,6 @@ public class Lodds {
 	public int unshareFolder(String path) {
 		if (sharedFolders.contains(path)) {
 			sharedFolders.remove(path);
-			setLastChange(System.currentTimeMillis() / 1000);
 			watchService.unwatchDirectory(path);
 			return 0;
 		}
@@ -432,16 +430,7 @@ public class Lodds {
 	 *         client
 	 */
 	public synchronized long getLastChange() {
-		return lastChange;
-	}
-
-	/**
-	 * @param lastChange
-	 *            the time stamp of the last change in the file system of this
-	 *            client
-	 */
-	public synchronized void setLastChange(long lastChange) {
-		this.lastChange = lastChange;
+		return watchService.getLastChange();
 	}
 
 	/**
