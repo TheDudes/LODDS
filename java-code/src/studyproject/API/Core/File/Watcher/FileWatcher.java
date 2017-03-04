@@ -57,7 +57,8 @@ public class FileWatcher extends Thread {
 		if (watcher != null) {
 			try {
 				System.out.println("Watcher stop called");
-				key.cancel();
+				if (key != null)
+					key.cancel();
 				watcher.close();
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
@@ -96,7 +97,7 @@ public class FileWatcher extends Thread {
 				}
 
 				// Lock semaphore
-				controller.lock.lock();
+				//controller.lock.lock();
 
 				for (WatchEvent<?> event : key.pollEvents()) {
 
@@ -171,7 +172,7 @@ public class FileWatcher extends Thread {
 					break;
 				}
 
-				controller.lock.unlock();
+				//controller.lock.unlock();
 
 			}
 
@@ -199,8 +200,7 @@ public class FileWatcher extends Thread {
 			System.out.println("FileWatcher: Check if folder does still exist");
 			
 			if (!probablyDeletedFolder.exists()) {
-				controller.watchedInternalDirectories.remove(fullPath);
-				controller.stopWatchThread(fullPath);
+				controller.unwatchDirectory(fullPath);
 
 				// Delete all sub folders from watchtedInternalDirectories
 				System.out.println("Delete all sub folders from watchedInternalDirectories");
@@ -215,7 +215,6 @@ public class FileWatcher extends Thread {
 				
 				controller.watchedInternalDirectories.removeAll(removeList);
 				controller.deleteFolderFromLists(fullPath);
-				
 				
 			}
 												

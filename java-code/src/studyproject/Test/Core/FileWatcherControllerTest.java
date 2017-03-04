@@ -257,7 +257,6 @@ public class FileWatcherControllerTest {
 				+ "add da39a3ee5e6b4b0d3255bfef95601890afd80709 0 /"+virtualRoot+"temp/temp.txt\n"
 				+ "add da39a3ee5e6b4b0d3255bfef95601890afd80709 0 /"+virtualRoot+"temp/subfolder/temp.txt\n"
 				+ "add da39a3ee5e6b4b0d3255bfef95601890afd80709 0 /"+virtualRoot+"temp/subfolder/subfolder2/temp.txt\n";
-
 		
 		assertEquals(expectedResponse,actualResponse);
 		
@@ -267,7 +266,6 @@ public class FileWatcherControllerTest {
 		
 		
 		// Should only have one thread left that is alive
-		
 		System.out.println(c.fileWatcherThreads);
 		c.fileWatcherThreads.forEach((k,v) -> {
 			System.out.println("Checking if thread is alive: " + k);

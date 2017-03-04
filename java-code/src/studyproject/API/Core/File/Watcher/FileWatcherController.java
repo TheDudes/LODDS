@@ -44,10 +44,10 @@ public class FileWatcherController {
 	// Helps to prevent that files are added multiple times
 	// static Semaphore semaphore = new Semaphore(0);
 	public ReentrantLock lock = new ReentrantLock();
-	
+
 	// Timestamp of first share
 	private Long firstShareTimestamp;
-	
+
 	public ConcurrentHashMap<String, FileWatcher> fileWatcherThreads = new ConcurrentHashMap<>();
 
 	/**
@@ -65,12 +65,14 @@ public class FileWatcherController {
 			c.watchDirectoryRecursively("/Users/robinhood/Desktop/testData/", virtualRoot);
 
 			while (true) {
-				System.out.println("");
+				//System.out.println("");
 				System.out.println(c.getInfo(0));
 				System.out.println("Watched directories:");
 				System.out.println(c.watchedInternalDirectories);
-				Thread.sleep(5 * 1000);
+				System.out.println("\nCurrent files:");
 				c.currentFiles.printTree();
+				Thread.sleep(5 * 1000);
+
 				c.printThreadsInfo();
 			}
 
@@ -81,30 +83,30 @@ public class FileWatcherController {
 
 	}
 
-	public void unwatchDirectory(String directory) {
-		watchedInternalDirectories.remove(directory);
+	public void unwatchDirectory(String fullPath) {
+		watchedInternalDirectories.remove(fullPath);
+		stopWatchThread(fullPath);
 	}
-	
-	@SuppressWarnings("deprecation")
+
 	public void stopWatchThread(String relativePath) {
 		System.out.println("Stop watch thread: " + relativePath);
-		
-		fileWatcherThreads.forEach((k,v) -> {
+
+		fileWatcherThreads.forEach((k, v) -> {
 			if (v.isAlive() && k == relativePath) {
 				System.out.println("Interrupting watch thread: " + relativePath);
 				v.interrupt();
 				try {
-					v.key.cancel();
+					if (v.key != null)
+						v.key.cancel();
 					v.watcher.close();
-					
+
 				} catch (IOException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
-				
-				
-				v.stop();
-				
+
+				// v.stop();
+
 			} else {
 				System.out.println("Already not alive anymore: " + relativePath);
 			}
@@ -112,7 +114,7 @@ public class FileWatcherController {
 	}
 
 	/**
-	 * 'get info timestamp\n' 
+	 * 'get info timestamp\n'
 	 * 
 	 * Returns file history since given timestamp-1sec
 	 * 
@@ -128,7 +130,7 @@ public class FileWatcherController {
 		Long currentTimestampMinusOneSec = currentTimestampSec - 1;
 
 		Boolean shareAllFiles = false;
-		
+
 		if (this.firstShareTimestamp != null && timestamp < this.firstShareTimestamp) {
 			shareAllFiles = true;
 		}
@@ -139,11 +141,12 @@ public class FileWatcherController {
 
 			Long fileLastModifiedSec = file.file.lastModified() / 1000L;
 
-			// Check if file was added after given timestamp but not during last sec
-			Boolean addedCheck = file.timestampAdded >= timestamp
-					&& file.timestampAdded < currentTimestampMinusOneSec;
+			// Check if file was added after given timestamp but not during last
+			// sec
+			Boolean addedCheck = file.timestampAdded >= timestamp && file.timestampAdded < currentTimestampMinusOneSec;
 
-			// Check if file was last modified after given timestamp but not during last sec
+			// Check if file was last modified after given timestamp but not
+			// during last sec
 			Boolean lastModifiedCheck = fileLastModifiedSec >= timestamp
 					&& fileLastModifiedSec < currentTimestampMinusOneSec;
 
@@ -204,9 +207,9 @@ public class FileWatcherController {
 		t.start();
 		fileWatcherThreads.put(path, t);
 	}
-	
+
 	public void printThreadsInfo() {
-		fileWatcherThreads.forEach((k,v) -> {
+		fileWatcherThreads.forEach((k, v) -> {
 			if (v.isAlive()) {
 				System.out.println("Thread is alive: " + k);
 			} else {
@@ -226,26 +229,26 @@ public class FileWatcherController {
 	public void watchDirectoryRecursively(String absoluteFileName) throws Exception {
 		watchDirectoryRecursively(absoluteFileName, absoluteFileName);
 	}
-	
+
 	private Boolean isBeingWatched(String path) {
-		if (watchedInternalDirectories.contains(path)) 
+		if (watchedInternalDirectories.contains(path))
 			return true;
-		
-		for (String dir:watchedInternalDirectories) {
-		    Path watched = Paths.get(dir).toAbsolutePath();
+
+		for (String dir : watchedInternalDirectories) {
+			Path watched = Paths.get(dir).toAbsolutePath();
 
 			if (isChild(watched, path)) {
 				return true;
 			}
 		}
-		
+
 		return false;
-		
+
 	}
-	
+
 	private Boolean isChild(Path child, String parentText) {
-	    Path parent = Paths.get(parentText).toAbsolutePath();
-	    return child.startsWith(parent);
+		Path parent = Paths.get(parentText).toAbsolutePath();
+		return child.startsWith(parent);
 	}
 
 	/**
@@ -258,26 +261,32 @@ public class FileWatcherController {
 	 * @throws Exception
 	 */
 	public void watchDirectoryRecursively(String absoluteFileName, String virtualRoot) throws Exception {
+		
+		System.out.println("watchDirectoryRecursively: " + absoluteFileName);
 
-		// Start to watch directory
-		watchDirectory(absoluteFileName, true, virtualRoot);
-
-		if (!isBeingWatched(absoluteFileName)) {
+		if (isBeingWatched(absoluteFileName)) {
+			System.out.println("New directory will NOT be watched: " + absoluteFileName);
+		} else {
+			
 			System.out.println("New directory will be watched: " + absoluteFileName);
+
+			// Start to watch directory
+			watchDirectory(absoluteFileName, true, virtualRoot);
 			watchedInternalDirectories.add(absoluteFileName);
-		}
 
-		File[] files = new File(absoluteFileName).listFiles();
+			File[] files = new File(absoluteFileName).listFiles();
 
-		if (files != null) {
-			for (File file : files) {
-				if (file.isDirectory()) {
-					watchDirectoryRecursively(file.getPath().toString() + File.separator, virtualRoot);
-				} else {
-					watchFile(file.getPath().toString(), true, virtualRoot);
+			if (files != null) {
+				for (File file : files) {
+					if (file.isDirectory()) {
+						watchDirectoryRecursively(file.getPath().toString() + File.separator, virtualRoot);
+					} else {
+						watchFile(file.getPath().toString(), true, virtualRoot);
+					}
 				}
 			}
 		}
+
 	}
 
 	/**
@@ -298,30 +307,33 @@ public class FileWatcherController {
 	public FileInfo getWatchedFileFromListByFileName(String fileName) {
 		return (FileInfo) currentFiles.getFileInfoListEntryByFileName(fileName);
 	}
-	
+
 	/**
 	 * Deletes folder including all subdirectories and files from list
+	 * 
 	 * @param node
 	 */
-	public void deleteFolderFromLists(String fileName) {	
-		
+	public void deleteFolderFromLists(String fileName) {
+
 		System.out.println("Delete folder from lists: " + fileName);
-		
+
 		// Get all fileInfoList entries
-		ArrayList<FileInfoListEntry> entries = FileWatcherTreeNode.removeFileNameAndGetRemovedFileInfoListEntries(currentFiles, fileName);
-		
+		ArrayList<FileInfoListEntry> entries = FileWatcherTreeNode
+				.removeFileNameAndGetRemovedFileInfoListEntries(currentFiles, fileName);
+
 		if (entries.size() > 0) {
 			System.out.println("Deleted folder seems to have children");
-			// Call deleteFileFromLists for all fileInfoListEntries inside that dir but not the parent one cause it's a dir
-			for (FileInfoListEntry entry:entries) {
-					System.out.println("Recursive delete call: "+entry.fileName);
-					deleteFileFromLists(entry);
+			// Call deleteFileFromLists for all fileInfoListEntries inside that
+			// dir but not the parent one cause it's a dir
+			for (FileInfoListEntry entry : entries) {
+				System.out.println("Recursive delete call: " + entry.fileName);
+				deleteFileFromLists(entry);
 			}
 		}
 	}
 
 	public void deleteFileFromLists(FileInfo file) {
-		System.out.println("\ndeleteFileFromLists(): "+file.fileName);
+		System.out.println("\ndeleteFileFromLists(): " + file.fileName);
 
 		String virtualRoot = "";
 		Boolean foundInList = false;
@@ -341,29 +353,29 @@ public class FileWatcherController {
 		for (FileInfoListEntry fileToDelete : filesToDelete) {
 			currentFilesListHashListAsKey.get(file.checksum).remove(fileToDelete);
 		}
-		
+
 		// Remove from currentFiles tree
 		FileWatcherTreeNode.removeFileNameAndGetRemovedFileInfoListEntries(currentFiles, file.fileName);
-		
+
 		if (currentFilesListHashListAsKey.size() == 0) {
 			this.firstShareTimestamp = null;
 		}
-		
+
 		if (foundInList) {
 			// Create DEL entry for FileInfoList:
-			
+
 			// Create FileInfoListEntry object
 			Long timestamp = System.currentTimeMillis() / 1000L;
-			System.out.println("Create deleted file for "+file.fileName+" VR: "+virtualRoot);
-			FileInfoListEntry deletedFile = new FileInfoListEntry(file.checksum, file.size, file.fileName, FileAction.del,
-					timestamp, virtualRoot);
+			System.out.println("Create deleted file for " + file.fileName + " VR: " + virtualRoot);
+			FileInfoListEntry deletedFile = new FileInfoListEntry(file.checksum, file.size, file.fileName,
+					FileAction.del, timestamp, virtualRoot);
 
 			// Add to FileInfoList
-			fileInfoHistory.add(deletedFile);	
+			fileInfoHistory.add(deletedFile);
 		}
 
 	}
-	
+
 	private void setFirstShareTimestamp() {
 		this.firstShareTimestamp = System.currentTimeMillis() / 1000L;
 	}
@@ -373,11 +385,11 @@ public class FileWatcherController {
 		if (this.firstShareTimestamp == null) {
 			this.setFirstShareTimestamp();
 		}
-		
+
 		FileInfoListEntry existingFile = currentFiles.getFileInfoListEntryByFileName(fileName);
 
 		if (existingFile == null) {
-			
+
 			FileInfoListEntry newFile = new FileInfoListEntry(fileName, virtualRoot);
 
 			// Add to tree
@@ -396,7 +408,7 @@ public class FileWatcherController {
 				fileList.add(newFile);
 				currentFilesListHashListAsKey.put(newFile.checksum, fileList);
 			}
-			
+
 			return newFile;
 
 		} else {

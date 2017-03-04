@@ -65,7 +65,7 @@ public class FileWatcherTreeNode {
 	 * @return returns null if no node was found, otherwise the found FileWatcherTreeNode object
 	 */
 	public FileWatcherTreeNode getNodeByFileName(String fullFileName) {
-		System.out.println("getNodeByFileName: "+fullFileName);
+		//System.out.println("getNodeByFileName: "+fullFileName);
 		return getNodeBySubDirs(convertFileNameToStringList(fullFileName));
 	}
 	
@@ -75,14 +75,14 @@ public class FileWatcherTreeNode {
 	 * @return can be null if file is a folder
 	 */
 	public FileInfoListEntry getFileInfoListEntryByFileName(String fullFileName) {
-		System.out.println("Searching for file: "+fullFileName);
+		//System.out.println("Searching for file: "+fullFileName);
 		FileWatcherTreeNode foundNode = getNodeByFileName(fullFileName);
 		
 		if (foundNode == null) {
-			System.out.println("File not found: "+fullFileName);
+			//System.out.println("File not found: "+fullFileName);
 			return null;
 		} else {
-			System.out.println("File found: "+foundNode.fileInfo.fileName);
+			//System.out.println("File found: "+foundNode.fileInfo.fileName);
 			return foundNode.fileInfo;		
 		}
 
@@ -108,9 +108,9 @@ public class FileWatcherTreeNode {
 	 */
 	private FileWatcherTreeNode getNodeBySubDirs(List<String> subDirsList) {
 		
-		System.out.println("TreeNode: getNodeBySubDirs()");
-		System.out.println("TreeNode: SubDirList: "+subDirsList);
-		System.out.println("TreeNode: Current node: "+this.fileName);
+		//System.out.println("TreeNode: getNodeBySubDirs()");
+		//System.out.println("TreeNode: SubDirList: "+subDirsList);
+		//System.out.println("TreeNode: Current node: "+this.fileName);
 
 		// Check if child contains first folder
 		if (children.containsKey(subDirsList.get(0))) {
@@ -133,7 +133,7 @@ public class FileWatcherTreeNode {
 			}
 
 		} else {
-			System.out.println("Node '"+subDirsList.get(0)+"' not found in "+this.fileName);
+			//System.out.println("Node '"+subDirsList.get(0)+"' not found in "+this.fileName);
 		}
 		
 		return null;
