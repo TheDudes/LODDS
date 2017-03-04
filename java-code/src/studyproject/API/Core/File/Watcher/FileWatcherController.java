@@ -161,6 +161,8 @@ public class FileWatcherController {
 			if (timestamp == 0 || timestampCheck || shareAllFiles) {
 				body = this.convertFileInfoToString(file) + body;
 				filesMatched++;
+			} else {
+				Logger.getGlobal().log(ErrorFactory.build(Level.INFO, LogKey.sharedFiles, "getInfo('"+timestamp+"'): skipping " + file.fileName));
 			}
 
 		}
