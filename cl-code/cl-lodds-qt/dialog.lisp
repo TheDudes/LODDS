@@ -76,8 +76,18 @@
 
 (define-subwidget (dialog layout) (q+:make-qvboxlayout dialog)
   (when message-text
-      (q+:set-text message message-text)
-      (q+:add-widget layout message)))
+    (q+:set-text message message-text)
+    (q+:add-widget layout message)))
+
+(defmethod add-text ((dialog dialog) text)
+  (with-slots (message-text layout message) dialog
+    (unless message-text
+      (q+:add-widget layout message))
+    (setf message-text
+          (format nil "~a~%~a"
+                  (or message-text "")
+                  text))
+    (q+:set-text message message-text)))
 
 (defmethod initialize-instance :after ((dialog dialog) &key
                                                          (title "Dialog"))

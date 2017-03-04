@@ -1,7 +1,12 @@
 (in-package #:lodds-qt)
 (in-readtable :qtools)
 
-(define-widget main-window (QMainWindow) ())
+(define-widget main-window (QMainWindow)
+  ((directory-error-dialog :initform nil
+                           :documentation "If a directory-error-dialog
+                            is displayed this slot is set to it. This
+                            way messages can be added to the dialog,
+                            instead of opening multiple dialogs")))
 
 (define-menu (main-window Lodds)
   (:item ("Run" (ctrl r))
@@ -160,10 +165,19 @@
 
 (define-slot (main-window directory-error) ((error-message string))
   (declare (connected main-window (directory-error string)))
-  (make-instance
-   'dialog
-   :title "Error - Directory Watcher threw uncaught error"
-   :text error-message))
+  (flet ((remove-dialog (widget)
+           (declare (ignore widget))
+           (setf directory-error-dialog nil)
+           t))
+    (if directory-error-dialog
+        (add-text directory-error-dialog error-message)
+        (setf directory-error-dialog
+              (make-instance
+               'dialog
+               :title "Error - Directory Watcher threw uncaught error"
+               :text error-message
+               :on-cancel-fn #'remove-dialog
+               :on-success-fn #'remove-dialog)))))
 
 (define-initializer (main-window setup-callbacks)
   (lodds.event:add-callback :qt-main
