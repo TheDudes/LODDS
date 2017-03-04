@@ -47,6 +47,10 @@
                         +user-list-send-file+
                         send-file-button)
     (lodds.core:split-user-identifier (name ip port) user
+      (q+:set-tool-tip send-file-button
+                       (format nil
+                               "Click to Select and Send a file to User ~a"
+                               name))
       (qdoto new-entry
              (q+:set-text +user-list-name+ name)
              (q+:set-tool-tip +user-list-name+

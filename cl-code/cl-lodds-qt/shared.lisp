@@ -23,7 +23,14 @@
       (qdoto spinner
              (q+:set-maximum 0)
              (q+:set-minimum 0)
-             (q+:set-format "..."))
+             (q+:set-format "...")
+             (q+:set-tool-tip
+              (format nil
+                      "Directory ~a is currently busy~%~
+                      This means some files where added or removed~%~
+                      And the Directory Watcher is currently generating~%~
+                      Checksums for the new files."
+                      (q+:text entry +shared-path+))))
       (q+:set-item-widget directories
                           entry
                           +shared-widget+
@@ -62,6 +69,8 @@
     (q+:set-text new-entry +shared-path+
                  (or (car (last (pathname-directory dir)))
                      ""))
+    (q+:set-tool-tip new-entry +shared-path+
+                     (format nil "~a" dir))
     (q+:set-text new-entry +shared-fullpath+ (format nil "~a" dir))
     (setf (gethash dir (slot-value directories 'dirs)) new-entry)
     (set-spinner directories new-entry)))
