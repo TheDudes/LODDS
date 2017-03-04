@@ -301,15 +301,19 @@
   "updates a single entry, returns nil if successfull, error-string if
   failed"
   (let* ((entry (gethash key config))
-         (old-value (car entry)))
+         (old-value (car entry))
+         (type (get-type key config)))
     (unless entry
       (return-from update-entry
         (format nil "Unrecognized key ~a" (string-downcase (string key)))))
     (let ((err (validate-new-entry key new-value config)))
       (when err
         (return-from update-entry err))
-      (unless (equal old-value
-                     new-value)
+      (unless (if (eql type :list)
+                  (equalp old-value
+                          new-value)
+                  (equal old-value
+                         new-value))
         (setf (car entry) new-value)
         (setf (gethash key config) entry)
         (when push-event-p
