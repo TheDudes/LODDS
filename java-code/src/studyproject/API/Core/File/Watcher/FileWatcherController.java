@@ -2,8 +2,6 @@ package studyproject.API.Core.File.Watcher;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Vector;
@@ -63,13 +61,14 @@ public class FileWatcherController {
 	 * @param args
 	 * @throws Exception
 	 */
+	/*
 	public static void main(String[] args) throws Exception {
 		try {
 
 			FileWatcherController c = new FileWatcherController();
-			String virtualRoot = "/Users/robinhood/Desktop/testData/";
+			String virtualRoot = "~/Desktop/testData/";
 
-			c.watchDirectoryRecursively("/Users/robinhood/Desktop/testData/", virtualRoot);
+			c.watchDirectoryRecursively(virtualRoot, virtualRoot);
 
 			while (true) {
 				//System.out.println("");
@@ -84,11 +83,10 @@ public class FileWatcherController {
 			}
 
 		} catch (Exception e) {
-			System.out.println("PRINT STACK TRACE");
 			e.printStackTrace();
 		}
 
-	}
+	}*/
 
 	public void unwatchDirectory(String fullPath) {
 		watchedInternalDirectories.remove(fullPath);
@@ -105,11 +103,11 @@ public class FileWatcherController {
 	}
 
 	public void stopWatchThread(String relativePath) {
-		System.out.println("Stop watch thread: " + relativePath);
+		//System.out.println("Stop watch thread: " + relativePath);
 
 		fileWatcherThreads.forEach((k, v) -> {
 			if (v.isAlive() && k == relativePath) {
-				System.out.println("Interrupting watch thread: " + relativePath);
+				 //System.out.println("Interrupting watch thread: " + relativePath);
 				v.interrupt();
 				try {
 					if (v.key != null)
@@ -124,7 +122,7 @@ public class FileWatcherController {
 				// v.stop();
 
 			} else {
-				System.out.println("Already not alive anymore: " + relativePath);
+				//System.out.println("Already not alive anymore: " + relativePath);
 			}
 		});
 	}
@@ -278,13 +276,13 @@ public class FileWatcherController {
 	 */
 	public void watchDirectoryRecursively(String absoluteFileName, String virtualRoot) throws Exception {
 		
-		System.out.println("watchDirectoryRecursively: " + absoluteFileName);
+		Logger.getGlobal().log(ErrorFactory.build(Level.INFO, LogKey.sharedFiles, "New folder should be added:: " + absoluteFileName));
 
 		if (this.watchedInternalDirectories.contains(absoluteFileName)) {
-			System.out.println("New directory will NOT be watched: " + absoluteFileName);
+			Logger.getGlobal().log(ErrorFactory.build(Level.INFO, LogKey.sharedFiles, "New folder already being watched: " + absoluteFileName));
 		} else {
 			
-			System.out.println("New directory will be watched: " + absoluteFileName);
+			Logger.getGlobal().log(ErrorFactory.build(Level.INFO, LogKey.sharedFiles, "Start to watch folder: " + absoluteFileName));
 
 			// Start to watch directory
 			watchDirectory(absoluteFileName, true, virtualRoot);
@@ -303,6 +301,7 @@ public class FileWatcherController {
 			}
 		}
 
+		this.updateLastChange();
 	}
 
 	/**
@@ -404,7 +403,7 @@ public class FileWatcherController {
 		if (this.firstShareTimestamp == null) {
 			this.setFirstShareTimestamp();
 		}
-
+		
 		FileInfoListEntry existingFile = currentFiles.getFileInfoListEntryByFileName(fileName);
 
 		if (existingFile == null) {
@@ -433,10 +432,11 @@ public class FileWatcherController {
 			
 			updateLastChange();
 
-			
 			return newFile;
 
 		} else {
+			updateLastChange();
+
 			return existingFile;
 		}
 
