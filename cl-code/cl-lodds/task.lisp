@@ -605,8 +605,8 @@
                       (if (lodds.config:get-value :allow-unkown-user-send)
                           :ask
                           :unknown))
-                     ((subsetp users (lodds.config:get-value :blocked-users)
-                               :test #'equal)
+                     ((intersection users (lodds.config:get-value :blocked-users)
+                                    :test #'equal)
                       :deny)
                      ((subsetp users (lodds.config:get-value :trusted-users)
                                :test #'equal)
