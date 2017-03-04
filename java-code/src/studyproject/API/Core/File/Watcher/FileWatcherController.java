@@ -153,18 +153,12 @@ public class FileWatcherController {
 		int filesMatched = 0;
 		for (FileInfoListEntry file : fileInfoHistory) {
 
-			Long fileLastModifiedSec = file.file.lastModified() / 1000L;
+			Long fileLastTimestamp = Math.max(file.file.lastModified() / 1000L, file.timestampAdded);
 
-			// Check if file was added after given timestamp but not during last
-			// sec
-			Boolean addedCheck = file.timestampAdded >= timestamp && file.timestampAdded < currentTimestampMinusOneSec;
+			// Check if file was added after given timestamp but not during last sec
+			Boolean timestampCheck = fileLastTimestamp >= timestamp && fileLastTimestamp < currentTimestampMinusOneSec;
 
-			// Check if file was last modified after given timestamp but not
-			// during last sec
-			Boolean lastModifiedCheck = fileLastModifiedSec >= timestamp
-					&& fileLastModifiedSec < currentTimestampMinusOneSec;
-
-			if (timestamp == 0 || lastModifiedCheck || addedCheck || shareAllFiles) {
+			if (timestamp == 0 || timestampCheck || shareAllFiles) {
 				body = this.convertFileInfoToString(file) + body;
 				filesMatched++;
 			}
@@ -182,7 +176,7 @@ public class FileWatcherController {
 	}
 	
 	/**
-	 * Folders may not have '/' at the end, so fix that
+	 * Folders may not have separatorChar at the end, so fix that
 	 * 
 	 * @param fileName
 	 * @return
