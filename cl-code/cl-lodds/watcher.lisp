@@ -106,7 +106,8 @@
   (case type
     (:file-added (add-file dir-watcher pathname))
     (:file-removed (remove-file dir-watcher pathname))
-    (:file-changed (update-file dir-watcher pathname))))
+    (:file-changed (update-file dir-watcher pathname))
+    (:on-deleted (stop-dir-watcher dir-watcher))))
 
 (defmethod initialize-instance :after ((w dir-watcher) &rest initargs)
   (declare (ignorable initargs))
