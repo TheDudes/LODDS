@@ -28,8 +28,8 @@
                   "-"
                   (generate-timestamp last-change))
               (format nil "~:d Files (~:d unique)"
-                      all-files
-                      unique-files)))))
+                      (or all-files 0)
+                      (or unique-files 0))))))
 
 (define-slot (user-list add-user) ((user string)
                                    (load string)
