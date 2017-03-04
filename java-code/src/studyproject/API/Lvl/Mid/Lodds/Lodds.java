@@ -14,6 +14,8 @@ import java.util.logging.Logger;
 
 import javafx.collections.ObservableList;
 import studyproject.API.Errors.ErrorFactory;
+import studyproject.API.Lvl.Mid.Core.FileCoreInfo;
+import studyproject.API.Lvl.Mid.ThreadMonitoring.MultipleDownloadHelper;
 import studyproject.App;
 import studyproject.API.Core.File.FileInfo;
 import studyproject.API.Core.File.Watcher.FileWatcherController;
@@ -215,6 +217,11 @@ public class Lodds {
 		FileConnectionThread fileConnectionThread = new FileConnectionThread(user, checksum, getFileSize(checksum),
 				localPath);
 		threadExecutor.execute(fileConnectionThread);
+	}
+
+	public void getMultipleFiles(Vector<FileCoreInfo> assignedDownloads, UserInfo user, String pathToDownloadTo, String topDir) {
+		MultipleDownloadHelper multipleDownloadHelper = new MultipleDownloadHelper(assignedDownloads, user, pathToDownloadTo, topDir);
+		threadExecutor.execute(multipleDownloadHelper);
 	}
 
 	/**

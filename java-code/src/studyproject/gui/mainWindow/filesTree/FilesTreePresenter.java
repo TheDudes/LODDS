@@ -22,6 +22,7 @@ import javafx.scene.control.*;
 import studyproject.API.Errors.ErrorFactory;
 import studyproject.API.Lvl.Mid.Core.FileCoreInfo;
 import studyproject.API.Lvl.Mid.Core.UserInfo;
+import studyproject.API.Lvl.Mid.ThreadMonitoring.MultipleDownloadHelper;
 import studyproject.gui.Core.Utils;
 import studyproject.gui.mainWindow.MainWindowModel;
 import studyproject.gui.mainWindow.tasksList.TasksListModel;
@@ -104,7 +105,16 @@ public class FilesTreePresenter implements Initializable {
 			// return child.size();
 		} else {
 			// ADD new folder and recur with it
-			folderToAdd = new TreeItem<FileCoreInfo>(new FileCoreInfo(subPaths[index]));
+			String folderPath;
+			if (parent.equals(root)) {
+				// if it is the base first folder to add
+				folderPath = subPaths[index];
+			} else {
+				// if the root is already set
+				folderPath = parent.getValue().getFilePath() + subPaths[index];
+			}
+			folderToAdd = new TreeItem<FileCoreInfo>(new FileCoreInfo(subPaths[index], folderPath));
+
 			parent.getChildren().add(folderToAdd);
 			addTreeItem(infoToAdd, subPaths, ++index, folderToAdd);
 		}
@@ -122,7 +132,7 @@ public class FilesTreePresenter implements Initializable {
 		}
 		absolutePath = chosenFolder.getAbsolutePath().replace("\\", "/");
 		if (absolutePath.endsWith("/")) {
-			absolutePath.substring(0, absolutePath.length() - 1);
+			absolutePath = absolutePath.substring(0, absolutePath.length() - 1);
 		}
 
 		for (TreeItem<FileCoreInfo> treeItem : itemsList) {
@@ -131,6 +141,7 @@ public class FilesTreePresenter implements Initializable {
 			if (fileCoreInfo.getChecksum() == null) {
 				// If children of this folder are selected as well, ignore this
 				// item
+				String topDir = fileCoreInfo.getFileName();
 				boolean continueForEach = false;
 				List<TreeItem<FileCoreInfo>> subList = itemsList.subList(itemsList.indexOf(treeItem) + 1,
 						itemsList.size());
@@ -147,11 +158,10 @@ public class FilesTreePresenter implements Initializable {
 
 				// If none of the folder children is selected, download it
 				Vector<FileCoreInfo> fileCoreInfoVector = new Vector<FileCoreInfo>();
-				fileCoreInfoVector = findChildrenItems(treeItem, fileCoreInfoVector);				
-				/**
-				 *  NINTI FUNCTION CALL HERE!!!
-				 */
-				
+				fileCoreInfoVector = findChildrenItems(treeItem, fileCoreInfoVector);
+				mainWindowModel.getLodds().getMultipleFiles(fileCoreInfoVector, userListModel.getSelectedUser().get(),
+						absolutePath, topDir);
+
 			} else {
 				// item is a file, not a folder
 				mainWindowModel.getLodds().getFile(userListModel.getSelectedUser().get(), fileCoreInfo.getChecksum(),

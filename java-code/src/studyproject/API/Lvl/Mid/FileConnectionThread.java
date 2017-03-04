@@ -5,6 +5,9 @@ import java.net.Socket;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import javafx.beans.property.SimpleDoubleProperty;
+import javafx.beans.property.SimpleLongProperty;
+import javafx.beans.property.SimpleStringProperty;
 import studyproject.API.Errors.ErrorFactory;
 import studyproject.API.Loadbalancer.ProgressInfo;
 import studyproject.API.Lvl.Low.Handles;
@@ -28,12 +31,16 @@ public class FileConnectionThread extends Thread implements MonitoredThread {
 	private String localPath;
 	private Logger logger = Logger.getGlobal();
 	private long size;
-	private long startIndex = 0;
 	private long endIndex = 0;
 	private boolean supportLoadbalancing = false;
 	private FileOutputStream fileOutStream;
 	private boolean submitted;
 	ProgressInfo progressInfo;
+	private final long chunksize = 1 << 21;
+	private SimpleLongProperty startIndex = new SimpleLongProperty(0L);
+	private SimpleStringProperty currentFile = new SimpleStringProperty("");
+	private SimpleDoubleProperty progress = new SimpleDoubleProperty(0.0);
+	private boolean oneOfMultiple = false;
 
 	/**
 	 * Use this constructor if you want to pull the whole file, if you only want
@@ -56,6 +63,8 @@ public class FileConnectionThread extends Thread implements MonitoredThread {
 		this.checksum = checksum;
 		this.localPath = localPath;
 		this.size = size;
+		this.endIndex = size;
+		currentFile.setValue(localPath.substring(localPath.lastIndexOf("/") + 1));
 	}
 
 	/**
@@ -86,9 +95,11 @@ public class FileConnectionThread extends Thread implements MonitoredThread {
 		this.user = user;
 		this.checksum = checksum;
 		this.localPath = localPath;
-		this.startIndex = startIndex;
+		this.startIndex = new SimpleLongProperty(startIndex);
 		this.endIndex = endIndex;
 		this.size = size;
+		currentFile.setValue(localPath.substring(localPath.lastIndexOf("/") + 1));
+
 	}
 
 	/**
@@ -124,11 +135,13 @@ public class FileConnectionThread extends Thread implements MonitoredThread {
 		this.user = user;
 		this.checksum = checksum;
 		this.localPath = localPath;
-		this.startIndex = startIndex;
+		this.startIndex = new SimpleLongProperty(startIndex);
 		this.endIndex = endIndex;
 		this.size = size;
 		supportLoadbalancing = true;
 		this.progressInfo = progressInfo;
+		currentFile.setValue(localPath.substring(localPath.lastIndexOf("/") + 1));
+
 	}
 
 	@Override
@@ -147,38 +160,37 @@ public class FileConnectionThread extends Thread implements MonitoredThread {
 				file.getParentFile().mkdirs();
 			}
 			fileOutStream = new FileOutputStream(file);
-			// whole file?
-			if (endIndex == 0) {
-				returnValue = Requests.getFile(outStream, checksum, startIndex, size);
-			} else {
-				returnValue = Requests.getFile(outStream, checksum, startIndex, endIndex);
-			}
-			if (returnValue != 0) {
+
+			if ((returnValue = Requests.getFile(outStream, checksum, startIndex.get(), endIndex)) != 0) {
 				logger.log(ErrorFactory.build(Level.SEVERE, LogKey.error, returnValue));
+				return;
 			}
 			logger.log(ErrorFactory.build(Level.INFO, LogKey.getFile,
 					"Sent getFile to user '" + user.toString() + "' for file '" + checksum + "'"));
-			// whole file?
-			if (endIndex == 0) {
-				returnValue = Handles.handleFile(inStream, fileOutStream, size);
-			} else {
-				returnValue = Handles.handleFile(inStream, fileOutStream, endIndex - startIndex);
-			}
-			if (returnValue != 0) {
-				logger.log(ErrorFactory.build(Level.SEVERE, LogKey.error, returnValue));
-			} else {
-				if (supportLoadbalancing) {
-					progressInfo.setFinishedSuccessfully(true);
+			while (startIndex.get() != endIndex) {
+				if (startIndex.get() + chunksize < endIndex) {
+					returnValue = Handles.handleFile(inStream, fileOutStream, chunksize);
+					startIndex.setValue(startIndex.get() + chunksize);
+				} else {
+					returnValue = Handles.handleFile(inStream, fileOutStream, endIndex - startIndex.get());
+					startIndex.setValue(endIndex);
+				}
+				progress.setValue((double) (startIndex.get()) / (double) size);
+				if (returnValue != 0) {
+					logger.log(ErrorFactory.build(Level.SEVERE, LogKey.error, returnValue));
+				} else {
+					if (supportLoadbalancing) {
+						progressInfo.setFinishedSuccessfully(true);
+					}
 				}
 			}
 			fileOutStream.close();
 		} catch (IOException e) {
-			logger.log(ErrorFactory.build(Level.SEVERE, LogKey.error,
-					"IOException thrown: " , e));
+			logger.log(ErrorFactory.build(Level.SEVERE, LogKey.error, "IOException thrown: ", e));
 		}
 
 		logger.log(ErrorFactory.build(Level.INFO, LogKey.filetransferComplete,
-				"Download of '" + checksum + "' from user '" + user.toString() + "'finished"));
+				"Download of '" + checksum + "' from user '" + user.toString() + " 'finished"));
 	}
 
 	@Override
@@ -192,15 +204,42 @@ public class FileConnectionThread extends Thread implements MonitoredThread {
 	}
 
 	@Override
-	public long getProgress() {
-		try {
-			if (fileOutStream != null) {
-				return fileOutStream.getChannel().position();
-			}
-		} catch (IOException e) {
-			logger.log(ErrorFactory.build(Level.SEVERE, LogKey.error, "IOException thrown: ", e));
-		}
-		return 0;
+	public synchronized void setProgress(SimpleDoubleProperty toSet) {
+		this.progress = toSet;
 	}
 
+	@Override
+	public synchronized SimpleDoubleProperty getProgress() {
+		return progress;
+	}
+
+	@Override
+	public synchronized SimpleLongProperty getDoneSize() {
+		return startIndex;
+	}
+
+	@Override
+	public long getWholeSize() {
+		return size;
+	}
+
+	@Override
+	public synchronized SimpleStringProperty getCurrentFileName() {
+		return currentFile;
+	}
+
+	@Override
+	public synchronized boolean isOneOfMultiple() {
+		return oneOfMultiple;
+	}
+
+	@Override
+	public void setOneOfMultiple(boolean oneOfMultiple) {
+		this.oneOfMultiple = oneOfMultiple;
+	}
+
+	@Override
+	public String getNameToDisplay() {
+		return localPath.substring(localPath.lastIndexOf("/") + 1);
+	}
 }

@@ -3,6 +3,8 @@ package studyproject.gui.Core;
 import java.io.File;
 import java.util.List;
 
+import javafx.scene.Node;
+import javafx.scene.layout.AnchorPane;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import javafx.stage.Modality;
@@ -70,6 +72,13 @@ public class Utils {
 		Stage stage = new Stage();
 		stage.initModality(Modality.APPLICATION_MODAL);
 		return fileChooser.showOpenDialog(stage);
+	}
+
+	public static void setAllAnchorPoints(Node child, double value) {
+		AnchorPane.setBottomAnchor(child, value);
+		AnchorPane.setTopAnchor(child, value);
+		AnchorPane.setLeftAnchor(child, value);
+		AnchorPane.setRightAnchor(child, value);
 	}
 
 }

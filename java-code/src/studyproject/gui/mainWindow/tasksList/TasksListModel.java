@@ -1,18 +1,31 @@
 package studyproject.gui.mainWindow.tasksList;
 
+import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import javafx.concurrent.Task;
+import javafx.scene.Parent;
+import studyproject.API.Lvl.Mid.ThreadMonitoring.MonitoredThread;
+import studyproject.gui.mainWindow.tasksList.singleTask.SingleTaskView;
+
+import javax.annotation.PostConstruct;
 
 public class TasksListModel {
-	private ObservableList<Task<Void>> tasks;
+	private ObservableList<MonitoredThread> tasks;
 
-	public ObservableList<Task<Void>> getTasks() {
+	@PostConstruct
+	private void init(){
+		tasks = FXCollections.observableArrayList();
+		}
+
+	public ObservableList<MonitoredThread> getTasks() {
 		return tasks;
 	}
 
-	public void setTasks(ObservableList<Task<Void>> observableList) {
-		this.tasks = observableList;
+	public void setTasks(ObservableList<MonitoredThread> tasks) {
+		this.tasks = tasks;
 	}
-	
-	
+
+
 }
+
+	
+

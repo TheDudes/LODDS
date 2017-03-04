@@ -14,8 +14,9 @@ public class FileCoreInfo {
 		this.fileName = filePath.split("/")[(filePath.split("/")).length - 1];
 	}
 
-	public FileCoreInfo(String fileName) {
+	public FileCoreInfo(String fileName, String filePath) {
 		this.fileName = fileName;
+		this.filePath = filePath;
 	}
 
 	public String getChecksum() {

@@ -34,7 +34,7 @@ public enum ThreadType {
 			return ThreadType.fixed;
 
 		if (runnable instanceof FileConnectionThread || runnable instanceof GetFileWPThread
-				|| runnable instanceof LoadbalancerMainThread)
+				|| runnable instanceof LoadbalancerMainThread || runnable instanceof MultipleDownloadHelper)
 			return ThreadType.getFile;
 
 		if (runnable instanceof FileSenderThread || runnable instanceof SendFileWPThread)
