@@ -162,7 +162,12 @@
   (mapcar #'cl-fs-watcher:dir (dir-watchers (lodds:get-subsystem :watcher))))
 
 (defun folder-already-shared-p (folder-path)
-  (if (find folder-path (get-shared-folders))
+  (if (or (find folder-path (get-shared-folders))
+          (find (car (last (pathname-directory folder-path)))
+                (get-shared-folders)
+                :test #'string=
+                :key (lambda (dir)
+                       (car (last (pathname-directory dir))))))
       t
       (loop :for watcher :in (dir-watchers (lodds:get-subsystem :watcher))
             :do (loop :for dir
@@ -179,8 +184,9 @@
        (values nil "Not able to share a File (only Folders possible)"))
       ((not (uiop:directory-exists-p folder-path))
        (values nil "Folder does not exist"))
-      ((folder-already-shared-p folder-path)
-       (values nil (format nil "Folder ~a already shared" folder-path)))
+      ((folder-already-shared-p dir)
+       (values nil (format nil "Folder with name ~a already shared"
+                           (car (last (pathname-directory dir))))))
       ((> (length (dir-watchers (lodds:get-subsystem :watcher)))
           42)
        (values nil "Cannot share anymore Directories"))
