@@ -78,6 +78,15 @@
         (setf (slot-value *server* 'settings) new-config)
         (lodds.event:push-event :config-changed nil))))
 
+(defun update-config (new-config)
+  "updates the current config with the new-config. Goes over every key
+  on new-config and updates the current one if found and different"
+  (maphash (lambda (key value)
+             (format t "calling update-entry ~a~%"
+                     (lodds.config:update-entry key
+                                                (car value))))
+           new-config))
+
 (defun get-subsystem (name)
   "returns the requested subsystem, if not found nil will returned"
   (find name (subsystems *server*) :key #'lodds.subsystem:name))

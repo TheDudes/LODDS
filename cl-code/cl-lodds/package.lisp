@@ -192,4 +192,5 @@
            #:send-file
            #:send-file-user
            #:settings
-           #:switch-config))
+           #:switch-config
+           #:update-config))
