@@ -41,7 +41,6 @@ public class Lodds {
 
 	private long loadBalancingMinimum = 4096;
 
-	private long lastChange;
 	private Loadbalancer loadbalancer;
 	private Vector<String> sharedFolders;
 	private String interfaceName;
