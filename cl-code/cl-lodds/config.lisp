@@ -231,11 +231,10 @@
             (:selection (stringp value))
             (t nil))
     (return-from validate-new-entry
-      (format nil "~a is not of expected key (~a) type ~a"
+      (format nil "~a is not of expected key type ~a (key: ~a)"
               value
-              key
-              (get-type key config))))
-
+              (get-type key config)
+              key)))
   (case (get-type key config)
     (:integer (progn
                 (when (< value (get-integer-min key))
