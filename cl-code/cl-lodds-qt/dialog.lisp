@@ -60,6 +60,10 @@
                  (finalize dialog)))
       (t nil))))
 
+(define-override (dialog close-event) (ev)
+  (declare (ignore ev))
+  (finish-dialog dialog :cancel))
+
 (define-slot (dialog ok-pressed) ()
   (declare (connected ok (pressed)))
   (finish-dialog dialog :success))
