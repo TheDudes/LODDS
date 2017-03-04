@@ -58,7 +58,7 @@ public class App extends Application {
 				Files.createDirectories(Paths.get(propertiesFile.getParent()));
 				propertiesFile.getParentFile().mkdirs();
 				propertiesFile.createNewFile();
-				
+
 				properties.put("userName", UserInfo.stripInvalidUsernameChars(System.getProperty("user.name")));
 				properties.store(new FileOutputStream(propertiesFile), null);
 				logger.log(ErrorFactory.build(Level.INFO, LogKey.info,
@@ -79,14 +79,36 @@ public class App extends Application {
 	@Override
 	public void start(Stage mainStage) throws Exception {
 		mainStage.setTitle("Local Open Distributed Data Sharing");
-		mainStage.setMinHeight(400);
-		mainStage.setMinWidth(600);
+		if (properties.getProperty("windowMaximized").equals("true")) {
+			mainStage.setMaximized(true);
+		} else {
+			mainStage.setHeight(Double.valueOf(properties.getProperty("windowHeight")));
+			mainStage.setWidth(Double.valueOf(properties.getProperty("windowWidth")));
+		}
+		mainStage.setMinHeight(400.0);
+		mainStage.setMinWidth(600.0);
 		mainView = new MainWindowView();
 		Scene mainScene = new Scene(mainView.getView());
 		mainStage.setScene(mainScene);
 		mainStage.show();
 		MainWindowPresenter mainWindowPresenter = (MainWindowPresenter) mainView.getPresenter();
 		mainWindowPresenter.loadInterface();
+		mainStage.setOnCloseRequest(e -> onCloseRequest(mainStage));
+	}
+
+	public void onCloseRequest(Stage mainStage) {
+		if (mainStage.isMaximized()) {
+			properties.put("windowMaximized", "true");
+		} else {
+			properties.setProperty("windowHeight", String.valueOf(mainStage.getHeight()));
+			properties.setProperty("windowWidth", String.valueOf(mainStage.getWidth()));
+		}
+		try {
+			properties.store(new FileOutputStream(pathToProperties), null);
+			logger.log(ErrorFactory.build(Level.INFO, LogKey.info, "Saved properties to " + App.pathToProperties));
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
 
 	public static void main(String... args) {
