@@ -57,7 +57,27 @@
          (make-setting-dialog))
   (:separator)
   (:item ("Quit" (ctrl q))
-         (q+:close main-window)))
+         (progn
+           (q+:close main-window)
+           (q+:qcoreapplication-quit))))
+
+(define-subwidget (main-window tray-icon)
+    (q+:make-qsystemtrayicon main-window)
+  (q+:set-tool-tip tray-icon
+                   (format nil "LODDS - ~a"
+                           (lodds.config:get-value :name))))
+
+(define-slot (main-window tray-activated) ((reason "QSystemTrayIcon::ActivationReason"))
+  (declare (connected tray-icon (activated "QSystemTrayIcon::ActivationReason")))
+  (when (or (qt:enum-equal reason (q+:qsystemtrayicon.trigger))
+            (qt:enum-equal reason (q+:qsystemtrayicon.double-click)))
+    (if (q+:is-visible main-window)
+        (q+:hide main-window)
+        (q+:show main-window))))
+
+(define-override (main-window close-event) (ev)
+  (q+:hide main-window)
+  (q+:ignore ev))
 
 (define-subwidget (main-window view-menu) (q+:add-menu (q+:menu-bar main-window)
                                                        "View"))
@@ -108,9 +128,10 @@
 
 (define-slot (main-window config-changed) ()
   (declare (connected main-window (config-changed)))
-  (q+:set-window-title main-window
-                       (format nil "LODDS - ~a"
-                               (lodds.config:get-value :name)))
+  (let ((title (format nil "LODDS - ~a"
+                       (lodds.config:get-value :name))))
+    (q+:set-window-title main-window title)
+    (q+:set-tool-tip tray-icon title))
   (set-refresh-timeout (slot-value info-dock 'widget)
                        (lodds.config:get-value :info-update-interval))
   (set-directory-busy-check-timeout (slot-value shared-dock 'widget)
@@ -227,6 +248,19 @@
           (loop :for (childname . child) :in order
                 :do (q+:add-menu menu-bar child)))))))
 
+(defmethod setup-tray-icon ((main-window main-window))
+  (with-slots-bound (main-window main-window)
+    (q+:set-icon tray-icon (q+:window-icon main-window))
+    (with-finalizing ((menu (q+:make-qmenu)))
+      (q+:set-context-menu
+       tray-icon
+       (loop :for menu
+             :in (find-children (q+:menu-bar main-window)
+                                menu)
+             :if (string= (q+:title menu) "Lodds")
+             :do (return menu))))
+    (q+:show tray-icon)))
+
 (define-slot (main-window reload-stylesheet) ()
   (declare (connected main-window (reload-stylesheet)))
   (q+:set-style-sheet main-window *style-sheet*))
@@ -250,7 +284,9 @@
       (with-main-window (window (make-instance 'main-window)
                          :main-thread nil
                          :on-error #'on-error)
+        (q+:qapplication-set-quit-on-last-window-closed nil)
         (setf *main-window* window)
         (fix-menubar-order window)
+        (setup-tray-icon window))
       (unless server-given-p
         (lodds:shutdown)))))
