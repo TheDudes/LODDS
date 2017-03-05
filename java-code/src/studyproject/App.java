@@ -4,14 +4,18 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.inject.Inject;
+import javax.swing.ImageIcon;
+
 import javafx.application.Application;
 import javafx.scene.Scene;
+import javafx.scene.image.Image;
 import javafx.stage.Stage;
 import studyproject.API.Errors.ErrorFactory;
 import studyproject.API.Lvl.Mid.Core.UserInfo;
@@ -21,6 +25,7 @@ import studyproject.gui.selectedInterface.SelectedInterfaceModel;
 import studyproject.logging.FileLogHandler;
 import studyproject.logging.LogConsoleHandler;
 import studyproject.logging.LogKey;
+import sun.applet.Main;
 
 public class App extends Application {
 
@@ -94,6 +99,24 @@ public class App extends Application {
 		MainWindowPresenter mainWindowPresenter = (MainWindowPresenter) mainView.getPresenter();
 		mainWindowPresenter.loadInterface();
 		mainStage.setOnCloseRequest(e -> onCloseRequest(mainStage));
+		
+		addIcons(mainStage);
+	}
+
+	private void addIcons(Stage mainStage) {
+		mainStage.getIcons().add(new Image("/studyproject/resources/lodds_icon16x16.png"));
+		mainStage.getIcons().add(new Image("/studyproject/resources/lodds_icon32x32.png"));
+		mainStage.getIcons().add(new Image("/studyproject/resources/lodds_icon64x64.png"));
+		
+		if (System.getProperty("os.name").toLowerCase().indexOf("mac") >= 0) {
+			try {
+				URL iconURL = Main.class.getResource("/studyproject/resources/lodds_icon64x64.png");
+				java.awt.Image image = new ImageIcon(iconURL).getImage();
+				com.apple.eawt.Application.getApplication().setDockIconImage(image);
+			} catch (Exception e) {
+				// Won't work on Windows or Linux.
+			}
+		}
 	}
 
 	public void onCloseRequest(Stage mainStage) {
