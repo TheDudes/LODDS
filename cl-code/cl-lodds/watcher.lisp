@@ -82,7 +82,7 @@
                              size
                              (subseq pathname (length (root-dir-path dir-watcher))))))
             (let ((new-val (remove pathname (gethash checksum ft-hash)
-                                   :test #'string=)))
+                                   :test #'equal)))
               (if new-val
                   (setf (gethash checksum ft-hash)
                         new-val)
@@ -94,8 +94,8 @@
    different to the current), and if so calls REMOVE-FILE and ADD-FILE"
   (multiple-value-bind (new-checksum new-size)
       (get-file-stats pathname)
-    (unless (string= new-checksum
-                     (car (gethash pathname (file-table-name dir-watcher))))
+    (unless (equal new-checksum
+                   (car (gethash pathname (file-table-name dir-watcher))))
       ;; in case checksum changed, we need to update
       (remove-file dir-watcher pathname)
       (add-file dir-watcher pathname new-checksum new-size))))
@@ -165,14 +165,14 @@
   (if (or (find folder-path (get-shared-folders))
           (find (car (last (pathname-directory folder-path)))
                 (get-shared-folders)
-                :test #'string=
+                :test #'equal
                 :key (lambda (dir)
                        (car (last (pathname-directory dir))))))
       t
       (loop :for watcher :in (dir-watchers (lodds:get-subsystem :watcher))
             :do (loop :for dir
                       :being :the :hash-key :of (cl-fs-watcher:directory-handles watcher)
-                      :do (when (string= dir folder-path)
+                      :do (when (equal dir folder-path)
                             (return-from folder-already-shared-p t))))))
 
 (defun folder-shareable-p (folder-path)
@@ -243,7 +243,7 @@
       (let ((rem-watcher (find (format nil "~a" (car (directory folder-path)))
                                (dir-watchers watcher )
                                :key #'cl-fs-watcher:dir
-                               :test #'string=)))
+                               :test #'equal)))
         (if rem-watcher
             (stop-dir-watcher rem-watcher)
             (error "TODO: could not find watcher to unshare with given ~
@@ -252,6 +252,6 @@
 (defun folder-busy-p (folder)
   (let ((watcher (find folder (dir-watchers (lodds:get-subsystem :watcher))
                        :key #'cl-fs-watcher:dir
-                       :test #'string=)))
+                       :test #'equal)))
     (when watcher
       (cl-fs-watcher:busy-p watcher))))
