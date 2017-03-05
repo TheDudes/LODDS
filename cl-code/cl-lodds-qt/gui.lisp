@@ -51,6 +51,39 @@
                        t)))
                t))))))
 
+;; Copied system-about and About Menu Entry from Lionchat.
+;; modified it to my needs, but all the credit goes to Shinmera
+;; see: https://github.com/shirakumo/lionchat
+(defun system-about ()
+  (let ((system (asdf:find-system :cl-lodds-qt)))
+    (format nil "~a<br />~
+                License: ~a<br />~
+                <br />~
+                Homepage: <a href=\"~a~:*\">~a</a><br />~
+                Author: ~a<br />~
+                Version: ~a<br />
+                <br />
+                LODDS (Local Open Distributed Data Sharing) is a
+                protocol for Filesharing and the base for this
+                Program. This Program is a Qt Gui Client which
+                implements the LODDS Protocol and can be used to
+                share and exchange files with others inside a local
+                network."
+            (asdf:system-description system)
+            (asdf:system-license system)
+            (asdf:system-homepage system)
+            (asdf:system-author system)
+            (asdf:component-version system))))
+
+(define-menu (main-window Help)
+  (:item "&About"
+         (with-finalizing ((about (q+:make-qmessagebox)))
+           (qdoto about
+                  (q+:set-window-title "About Lodds")
+                  (q+:set-icon-pixmap (q+:pixmap (q+:window-icon main-window) 64 64))
+                  (q+:set-text (system-about)))
+           (q+:exec about))))
+
 (define-menu (main-window Lodds)
   (:item ("&Run" (ctrl r))
          (run))
@@ -244,7 +277,8 @@
     (let* ((menu-bar (q+:menu-bar main-window)))
       (with-finalizing ((menu (q+:make-qmenu)))
         (let ((order (list (cons "Lodds" nil)
-                           (cons "View" nil))))
+                           (cons "View" nil)
+                           (cons "Help" nil))))
           (loop :for child :in (find-children menu-bar menu)
                 :collect (let ((entry (find (q+:title child) order
                                             :test (lambda (a b)
