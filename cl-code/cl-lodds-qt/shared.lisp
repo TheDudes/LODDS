@@ -44,7 +44,7 @@
       (q+:remove-item-widget directories entry +shared-widget+)
       (finalize old-widget))
     (let ((button (q+:make-qpushbutton "Unshare" directories))
-          (path (q+:text entry +shared-path+)))
+          (path (q+:text entry +shared-fullpath+)))
       (connect button "pressed()"
                (lambda ()
                  (when (lodds.watcher:folder-already-shared-p path)
