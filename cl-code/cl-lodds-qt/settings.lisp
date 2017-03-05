@@ -237,13 +237,13 @@
   (with-slots-bound (settings-widget settings-widget)
     (let* ((widget (q+:make-qwidget))
            (layout (q+:make-qformlayout widget)))
-      (loop :for key :in (lodds.config:get-all-keys)
+      (loop :for key :in (lodds.config:get-all-keys config)
             :do (let ((label (q+:make-qlabel
                               (format nil "~a:"
                                       (string-downcase (string key)))))
                       (setting (make-setting key config)))
                   (q+:set-tool-tip label
-                                   (lodds.config:get-description key))
+                                   (lodds.config:get-description key config))
                   (q+:add-row layout
                               label
                               setting)
@@ -282,7 +282,7 @@
     (when (> (length file-choosen)
              0)
       (multiple-value-bind (new-config error)
-          (lodds.config:load-from-file file-choosen)
+          (lodds.config:load-from-file file-choosen config)
         (if error
             (make-instance 'dialog
                            :title "Error Reading Config File"
