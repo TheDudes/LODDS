@@ -21,7 +21,9 @@
                (make-instance 'dialog
                               :title "Error - Interface not set!"
                               :text "Please select a Interface first."
-                              :widget (make-setting :interface)
+                              :widget (make-setting :interface
+                                                    (slot-value lodds:*server*
+                                                                'lodds:settings))
                               :on-success-fn
                               (lambda (widget)
                                 (let ((selection (get-value widget)))
