@@ -163,13 +163,19 @@ public class FileWatcherController {
 				Logger.getGlobal().log(ErrorFactory.build(Level.INFO, LogKey.sharedFiles,
 						"getInfo('" + timestamp + "'): skipped because nothing is true: " + file.fileName));
 				if (timestamp != 0)
+					
 					Logger.getGlobal().log(ErrorFactory.build(Level.INFO, LogKey.sharedFiles,
-							"getInfo('" + timestamp + "'): ..timestamp == 1 is false " + file.fileName));
+							"getInfo('" + timestamp + "'): ..timestamp == 0 is false " + file.fileName));
+				
 				if (!timestampCheck) {
 					Logger.getGlobal().log(ErrorFactory.build(Level.INFO, LogKey.sharedFiles,
 							"getInfo('" + timestamp + "'): ..timestampCheck is false" + file.fileName));
+					
 					Logger.getGlobal().log(ErrorFactory.build(Level.INFO, LogKey.sharedFiles,
 							"file last timestamp:" + fileLastTimestamp + " >= " + timestamp));
+					
+					Logger.getGlobal().log(ErrorFactory.build(Level.INFO, LogKey.sharedFiles,
+							"Current timestamp sec:" + currentTimestampSec));
 	
 				}
 				if (!shareAllFiles) {
@@ -185,6 +191,9 @@ public class FileWatcherController {
 		} else {
 			header = "upd " + currentTimestampSec + " " + filesMatched + "\n";
 		}
+		
+		Logger.getGlobal().log(ErrorFactory.build(Level.INFO, LogKey.sharedFiles,
+				"getInfo(): " + header + body));
 
 		return header + body;
 	}
