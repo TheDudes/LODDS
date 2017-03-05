@@ -607,6 +607,8 @@
                    (usocket:get-peer-address socket)))
            ;; get type of action
            (action (cond
+                     ((lodds.config:get-value :deny-requests)
+                      :blocked)
                      ((null users)
                       (if (lodds.config:get-value :allow-unkown-user-send)
                           :ask
@@ -624,6 +626,10 @@
         (setf action :no-callback))
       (destructuring-bind (size timeout filename) (cdr request)
         (case action
+          (:blocked
+           (lodds.event:push-event
+            :send-permission
+            (list (format nil "received and denied (deny requests true)"))))
           (:accept
            (progn
              (lodds.task:submit-task

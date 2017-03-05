@@ -57,6 +57,13 @@
                  "Displayed/broadcasted name of Lodds Client.~%~
                   Default: User Name of System")
          :string)
+   (list :deny-requests
+         nil
+         (format nil
+                 "If set to true all incomming send requests will~%~
+                 denied.~%~
+                 Default: false")
+         :boolean)
    (list :allow-unkown-user-send
          t
          (format nil
