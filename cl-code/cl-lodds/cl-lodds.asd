@@ -1,9 +1,12 @@
 ;;;; cl-lodds.asd
 
 (asdf:defsystem #:cl-lodds
+  :version "0.1.0"
   :description "Common lisp Implementation of LODDS-Protocol"
   :author "d4ryus <d4ryus@openmailbox.org>"
-  :license "none yet"
+  :license "GPLv2"
+  :maintainer "d4ryus <d4ryus@openmailbox.org>"
+  :homepage "https://github.com/TheDudes/Lodds"
   :serial t
   :depends-on (:ironclad
                :usocket
