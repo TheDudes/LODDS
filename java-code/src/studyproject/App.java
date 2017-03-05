@@ -10,6 +10,7 @@ import java.nio.file.Paths;
 import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
 import javax.inject.Inject;
 import javax.swing.ImageIcon;
 
@@ -19,6 +20,7 @@ import javafx.scene.image.Image;
 import javafx.stage.Stage;
 import studyproject.API.Errors.ErrorFactory;
 import studyproject.API.Lvl.Mid.Core.UserInfo;
+import studyproject.gui.macDockMenu.MacDockMenuPresenter;
 import studyproject.gui.mainWindow.MainWindowPresenter;
 import studyproject.gui.mainWindow.MainWindowView;
 import studyproject.gui.selectedInterface.SelectedInterfaceModel;
@@ -99,16 +101,22 @@ public class App extends Application {
 		MainWindowPresenter mainWindowPresenter = (MainWindowPresenter) mainView.getPresenter();
 		mainWindowPresenter.loadInterface();
 		mainStage.setOnCloseRequest(e -> onCloseRequest(mainStage));
-		
+
 		addIcons(mainStage);
+		
+		if (osIsMac()) {
+			MacDockMenuPresenter dockMenu = new MacDockMenuPresenter();
+			dockMenu.createMenus();
+		}
+			
 	}
 
 	private void addIcons(Stage mainStage) {
 		mainStage.getIcons().add(new Image("/studyproject/resources/lodds_icon16x16.png"));
 		mainStage.getIcons().add(new Image("/studyproject/resources/lodds_icon32x32.png"));
 		mainStage.getIcons().add(new Image("/studyproject/resources/lodds_icon64x64.png"));
-		
-		if (System.getProperty("os.name").toLowerCase().indexOf("mac") >= 0) {
+
+		if (osIsMac()) {
 			try {
 				URL iconURL = Main.class.getResource("/studyproject/resources/lodds_icon64x64.png");
 				java.awt.Image image = new ImageIcon(iconURL).getImage();
@@ -117,6 +125,10 @@ public class App extends Application {
 				// Won't work on Windows or Linux.
 			}
 		}
+	}
+	
+	public Boolean osIsMac() {
+		return System.getProperty("os.name").toLowerCase().indexOf("mac") >= 0;
 	}
 
 	public void onCloseRequest(Stage mainStage) {

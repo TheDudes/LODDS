@@ -3,6 +3,7 @@ package studyproject.gui.Core;
 import java.io.File;
 import java.util.List;
 
+import javafx.concurrent.Task;
 import javafx.scene.Node;
 import javafx.scene.layout.AnchorPane;
 import javafx.stage.DirectoryChooser;
@@ -10,6 +11,7 @@ import javafx.stage.FileChooser;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import studyproject.App;
+import studyproject.API.Lvl.Mid.Lodds.Lodds;
 
 /**
  * Multiple used functions for GUI Lvl
@@ -17,6 +19,16 @@ import studyproject.App;
  * @author Chris
  */
 public class Utils {
+
+	private static Lodds lodds;
+
+	public static Lodds getLodds() {
+		return Utils.lodds;
+	}
+
+	public static void setLodds(Lodds lodds) {
+		Utils.lodds = lodds;
+	}
 
 	/**
 	 * Open a FileChooser to select one single directory
@@ -79,6 +91,28 @@ public class Utils {
 		AnchorPane.setTopAnchor(child, value);
 		AnchorPane.setLeftAnchor(child, value);
 		AnchorPane.setRightAnchor(child, value);
+	}
+
+
+	public static void shareFolderPressed() {
+		Stage stage = new Stage();
+		DirectoryChooser directoryChooser = new DirectoryChooser();
+		File chosenFolder = directoryChooser.showDialog(stage);
+		if (chosenFolder == null)
+			return;
+
+		Task<Void> shareFolderTask = new Task<Void>() {
+			@Override
+			protected Void call() throws Exception {
+				lodds.shareFolder(chosenFolder.getAbsolutePath());
+				return null;
+			}
+		};
+		stage.hide();
+
+		Thread thread = new Thread(shareFolderTask);
+		thread.setDaemon(true);
+		thread.start();
 	}
 
 }

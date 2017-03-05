@@ -10,18 +10,16 @@ import java.util.logging.Logger;
 
 import javax.inject.Inject;
 
-import javafx.concurrent.Task;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.Scene;
 import javafx.scene.control.Menu;
 import javafx.scene.control.MenuItem;
-import javafx.stage.DirectoryChooser;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
-import studyproject.API.Errors.ErrorFactory;
 import studyproject.App;
 import studyproject.API.Core.File.FileInfo;
+import studyproject.API.Errors.ErrorFactory;
 import studyproject.gui.Core.Utils;
 import studyproject.gui.aboutWindow.AboutWindowView;
 import studyproject.gui.mainWindow.MainWindowModel;
@@ -68,24 +66,7 @@ public class TopMenuPresenter implements Initializable {
 	}
 
 	private void shareFolderPressed() {
-		Stage stage = new Stage();
-		DirectoryChooser directoryChooser = new DirectoryChooser();
-		File chosenFolder = directoryChooser.showDialog(stage);
-		if (chosenFolder == null)
-			return;
-
-		Task<Void> shareFolderTask = new Task<Void>() {
-			@Override
-			protected Void call() throws Exception {
-				mainWindowModel.getLodds().shareFolder(chosenFolder.getAbsolutePath());
-				return null;
-			}
-		};
-		stage.hide();
-
-		Thread thread = new Thread(shareFolderTask);
-		thread.setDaemon(true);
-		thread.start();
+		Utils.shareFolderPressed();
 	}
 
 	private void settingsItemPressed() {
