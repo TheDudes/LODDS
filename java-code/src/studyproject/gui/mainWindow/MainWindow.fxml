@@ -20,6 +20,6 @@
       </SplitPane>
    </center>
    <top>
-      <AnchorPane fx:id="topMenuAnchor" prefHeight="25.0" BorderPane.alignment="CENTER" />
+      <AnchorPane fx:id="topMenuAnchor" BorderPane.alignment="CENTER" />
    </top>
 </BorderPane>

@@ -44,4 +44,5 @@ public class MacDockMenuPresenter {
 		com.apple.eawt.Application app = com.apple.eawt.Application.getApplication();
 		app.setDockMenu(menu);
 	}
+
 }

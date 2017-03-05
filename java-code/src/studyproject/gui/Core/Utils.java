@@ -115,4 +115,7 @@ public class Utils {
 		thread.start();
 	}
 
+	public static Boolean osIsMac() {
+		return System.getProperty("os.name").toLowerCase().indexOf("mac") >= 0;
+	}
 }

@@ -20,6 +20,7 @@ import javafx.scene.image.Image;
 import javafx.stage.Stage;
 import studyproject.API.Errors.ErrorFactory;
 import studyproject.API.Lvl.Mid.Core.UserInfo;
+import studyproject.gui.Core.Utils;
 import studyproject.gui.macDockMenu.MacDockMenuPresenter;
 import studyproject.gui.mainWindow.MainWindowPresenter;
 import studyproject.gui.mainWindow.MainWindowView;
@@ -102,21 +103,21 @@ public class App extends Application {
 		mainWindowPresenter.loadInterface();
 		mainStage.setOnCloseRequest(e -> onCloseRequest(mainStage));
 
-		addIcons(mainStage);
+		setIcons(mainStage);
 		
-		if (osIsMac()) {
+		if (Utils.osIsMac()) {
 			MacDockMenuPresenter dockMenu = new MacDockMenuPresenter();
 			dockMenu.createMenus();
 		}
 			
 	}
 
-	private void addIcons(Stage mainStage) {
+	private void setIcons(Stage mainStage) {
 		mainStage.getIcons().add(new Image("/studyproject/resources/lodds_icon16x16.png"));
 		mainStage.getIcons().add(new Image("/studyproject/resources/lodds_icon32x32.png"));
 		mainStage.getIcons().add(new Image("/studyproject/resources/lodds_icon64x64.png"));
 
-		if (osIsMac()) {
+		if (Utils.osIsMac()) {
 			try {
 				URL iconURL = Main.class.getResource("/studyproject/resources/lodds_icon64x64.png");
 				java.awt.Image image = new ImageIcon(iconURL).getImage();
@@ -126,10 +127,7 @@ public class App extends Application {
 			}
 		}
 	}
-	
-	public Boolean osIsMac() {
-		return System.getProperty("os.name").toLowerCase().indexOf("mac") >= 0;
-	}
+
 
 	public void onCloseRequest(Stage mainStage) {
 		if (mainStage.isMaximized()) {

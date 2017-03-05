@@ -14,6 +14,7 @@ import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.Scene;
 import javafx.scene.control.Menu;
+import javafx.scene.control.MenuBar;
 import javafx.scene.control.MenuItem;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
@@ -28,7 +29,8 @@ import studyproject.gui.settingsWindow.SettingsWindowView;
 import studyproject.logging.LogKey;
 
 public class TopMenuPresenter implements Initializable {
-
+    @FXML
+    MenuBar menuBar;
 	@FXML
 	Menu fileMenu;
 	@FXML
@@ -55,6 +57,10 @@ public class TopMenuPresenter implements Initializable {
 		shareFolder.setOnAction(e -> shareFolderPressed());
 		sendFileToUser.setOnAction(e -> sendFileToUser());
 		aboutItem.setOnAction(e -> aboutItemPressed());
+		
+		if (Utils.osIsMac()) {
+			menuBar.setUseSystemMenuBar(true);
+		}
 	}
 
 	private void fileMenuPressed() {
