@@ -651,17 +651,15 @@
              ;; task-request
              (setf socket nil)))
           (:ask
-           (progn
+           (let ((task (make-instance 'task-request-send-permission
+                                      :user (or users (list "unknown"))
+                                      :name "request-send-permission"
+                                      :socket socket
+                                      :size size
+                                      :timeout timeout
+                                      :filename filename)))
              (lodds.event:push-event :send-permission
-                                     (list (put-task-on-hold
-                                            (make-instance
-                                             'task-request-send-permission
-                                             :user (or users (list "unknown"))
-                                             :name "request-send-permission"
-                                             :socket socket
-                                             :size size
-                                             :timeout timeout
-                                             :filename filename))))
+                                     (list (put-task-on-hold task) task))
              ;; set socket nil, so it does not get closed by finishing
              ;; task-request
              (setf socket nil)))
