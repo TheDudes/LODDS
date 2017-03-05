@@ -78,47 +78,73 @@
   (q+:start timer 1000)
   (q+:set-value time-left timeout))
 
-(defun open-send-permission-dialog (task)
+(defun make-sp-dialog (task widget)
   (with-slots ((size lodds.task::size)
                (timeout lodds.task::timeout)
                (filename lodds.task::filename)
                (socket lodds.task::socket)
                (user lodds.task::user)) task
-    (let* ((widget (make-instance 'send-permission
-                                  :timeout timeout
-                                  :default-filename filename
-                                  :task task)))
-      (let ((dialog (make-instance
-                     'dialog
+    (flet ((success-fn (widget)
+             (let ((full-filename (get-full-filename widget)))
+               (if full-filename
+                   (progn
+                     (setf filename full-filename)
+                     (lodds.task:submit-task task)
+                     t)
+                   (progn
+                     (make-instance 'dialog
+                                    :title "Error - Invalid Input"
+                                    :text "The given input was invalid")
+                     nil))))
+           (cancel-fn (widget)
+             (declare (ignore widget))
+             (lodds.task:cancel-task task)
+             (lodds.task:submit-task task)))
+      (make-instance 'dialog
                      :title
-                     (format nil "User ~{~a~^or~} wants to send you a File (Size: ~a)"
+                     (format nil
+                             "User ~{~a~^or~} wants to send you a File (Size: ~a)"
                              user
                              (lodds.core:format-size size))
                      :text
-                     (concatenate 'string
-                                  "If you want to accept the File, "
-                                  "select a folder and a filename and click OK")
+                     (format nil
+                             "If you want to accept the File, ~
+                             select a folder and a filename and ~
+                             click OK")
                      :widget widget
                      :ok-text "Accept"
                      :cancel-text "Deny"
-                     :on-success-fn
-                     (lambda (widget)
-                       (let ((full-filename (get-full-filename widget)))
-                         (if full-filename
-                             (progn
-                               (setf filename full-filename)
-                               (lodds.task:submit-task task)
-                               t)
-                             (progn
-                               (make-instance 'dialog
-                                              :title "Error - Invalid Input"
-                                              :text "The given input was invalid")
-                               nil))))
-                     :on-cancel-fn
-                     (lambda (widget)
-                       (declare (ignore widget))
-                       (lodds.task:cancel-task task)
-                       (lodds.task:submit-task task)))))
+                     :on-success-fn #'success-fn
+                     :on-cancel-fn #'cancel-fn))))
+
+(defun open-send-permission-dialog (task main-window)
+  (with-slots ((filename lodds.task::filename)
+               (timeout lodds.task::timeout)
+               (user lodds.task::user)) task
+    (with-slots (send-permission-dialogs
+                 last-tray-message
+                 tray-icon) main-window
+      (let* ((widget (make-instance 'send-permission
+                                    :timeout timeout
+                                    :default-filename filename
+                                    :task task))
+             (dialog (make-sp-dialog task widget))
+             (list-entry (cons filename dialog)))
+        (when (and (q+:is-hidden main-window)
+                   (q+:qsystemtrayicon-supports-messages))
+          (q+:hide dialog)
+          (push list-entry send-permission-dialogs)
+          (setf last-tray-message :send-permission)
+          (q+:show-message tray-icon
+                           "Incomming File Request"
+                           (format nil
+                                   "User ~{~a~^or~} wants to send you a File.~%~
+                                   Click Message (or System Tray Icon) to Open up~%~
+                                   Pending Send Permission Dialogs.~%~
+                                   Time to accept: ~a seconds"
+                                   user
+                                   timeout)))
         (setf (slot-value widget 'on-timeout)
               (lambda ()
+                (setf (cdr list-entry) nil)
                 (cancel dialog)))))))

@@ -6,7 +6,29 @@
                            :documentation "If a directory-error-dialog
                             is displayed this slot is set to it. This
                             way messages can be added to the dialog,
-                            instead of opening multiple dialogs")))
+                            instead of opening multiple dialogs")
+   (tray-info-blocked :initform nil
+                      :documentation "Flag to disable the
+                      tray-info. If the User Clicks the info message
+                      this slot will be set to t.")
+   (send-permission-dialogs :initform (list)
+                            :documentation "alist of Send Permissions
+                            which have been received. If the Main
+                            Window is hidden only a Tray Message will
+                            be displayed and the dialog will be hidden
+                            added to this slot. If the User clicks the
+                            message all dialogs will be shown.")
+   (folder-error-dialogs :initform (list)
+                         :documentation "alist of Folder Error Dialogs
+                         which occured. If the Main Window is hidden
+                         only a Tray Message will be displayed and the
+                         dialog will be hidden and added to this
+                         slot. If the User clicks the message all
+                         dialogs will be shown.")
+   (last-tray-message :initform nil
+                      :documentation "Keyword describing the last
+                      displayed tray message. Can be one of :info,
+                      :send-permission or :folder-error")))
 
 (defun start-lodds ()
   (lodds.subsystem:start (lodds:get-subsystem :event-queue))
@@ -107,20 +129,55 @@
                    (format nil "LODDS - ~a"
                            (lodds.config:get-value :name))))
 
+(defmethod show-pending-send-requests ((main-window main-window))
+  (with-slots-bound (main-window main-window)
+    (loop :for (path . dialog)
+          :in send-permission-dialogs
+          :do (when dialog
+                (q+:show dialog)))
+    (setf send-permission-dialogs (list))))
+
+(defmethod show-pending-folder-errors ((main-window main-window))
+  (with-slots-bound (main-window main-window)
+    (loop :for (task-id . dialog)
+          :in folder-error-dialogs
+          :do (q+:show dialog))
+    (setf folder-error-dialogs (list))))
+
 (define-slot (main-window tray-activated) ((reason "QSystemTrayIcon::ActivationReason"))
   (declare (connected tray-icon (activated "QSystemTrayIcon::ActivationReason")))
   (when (or (qt:enum-equal reason (q+:qsystemtrayicon.trigger))
             (qt:enum-equal reason (q+:qsystemtrayicon.double-click)))
     (if (q+:is-visible main-window)
         (q+:hide main-window)
-        (q+:show main-window))))
+        (progn
+          (q+:show main-window)
+          (show-pending-send-requests main-window)
+          (show-pending-folder-errors main-window)))))
 
 (define-override (main-window close-event) (ev)
   (if (lodds.config:get-value :minimize-to-tray)
       (progn
         (q+:hide main-window)
-        (q+:ignore ev))
+        (q+:ignore ev)
+        (unless tray-info-blocked
+          (setf last-tray-message :info)
+          (when (q+:qsystemtrayicon-supports-messages)
+            (q+:show-message tray-icon
+                             "Lodds Minimized"
+                             (format nil
+                                     "Lodds is still running in the~%~
+                                     Background. This Behaviour can~%~
+                                     be changed in the settings. Click~%~
+                                     to not Show this Message again.")))))
       (q+:qcoreapplication-quit)))
+
+(define-slot (main-window tray-message-clicked) ()
+  (declare (connected tray-icon (message-clicked)))
+  (case last-tray-message
+    (:send-permission (show-pending-send-requests main-window))
+    (:folder-error (show-pending-folder-errors main-window))
+    (:info (setf tray-info-blocked t))))
 
 (define-subwidget (main-window view-menu) (q+:add-menu (q+:menu-bar main-window)
                                                        "View"))
@@ -187,7 +244,7 @@
   (declare (connected main-window (received-send-permission string)))
   (let ((task (lodds.task:remove-task-from-hold task-id)))
     (when task
-      (open-send-permission-dialog task))))
+      (open-send-permission-dialog task main-window))))
 
 (define-slot (main-window folder-download-error) ((task-id string))
   (declare (connected main-window (folder-download-error string)))
@@ -216,17 +273,35 @@
                                              items))
                                (lodds.task:submit-task task))))
                    t))
-            (make-instance 'dialog
-                           :title "Error - File from Directory Download failed"
-                           :text (format nil "File ~a (~a) which is part of directory download (~a) failed"
+            (let* ((dialog (make-instance
+                            'dialog
+                            :title "Error - File from Directory Download failed"
+                            :text (format nil
+                                          "File ~a (~a) which is part of directory download (~a) failed"
+                                          file
+                                          (lodds.core:format-size size)
+                                          remote-path)
+                            :widget (make-instance 'selection
+                                                   :title "Solutions:"
+                                                   :solutions options)
+                            :on-success-fn #'on-close
+                            :on-cancel-fn #'on-close))
+                   (list-entry (cons task-id dialog)))
+              (when (and (q+:is-hidden main-window)
+                         (q+:qsystemtrayicon-supports-messages))
+                (q+:hide dialog)
+                (push list-entry folder-error-dialogs)
+                (setf last-tray-message :folder-error)
+                (q+:show-message tray-icon
+                                 "Error Downloading Folder"
+                                 (format nil
+                                         "There was a error downloading file~%~
+                                         ~a~%~
+                                         of Folder~%~
+                                         ~a~%~
+                                         Click Message or Tray Icon to fix."
                                          file
-                                         (lodds.core:format-size size)
-                                         remote-path)
-                           :widget (make-instance 'selection
-                                                  :title "Solutions:"
-                                                  :solutions options)
-                           :on-success-fn #'on-close
-                           :on-cancel-fn #'on-close)))))))
+                                         remote-path))))))))))
 
 (define-slot (main-window directory-error) ((error-message string))
   (declare (connected main-window (directory-error string)))
