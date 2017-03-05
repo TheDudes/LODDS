@@ -130,6 +130,15 @@
    ;; lodds-qt package and then be hooked somehow, but i couldn't
    ;; think of any good way to achieve it. Thats why i will just leave
    ;; them here for now.
+   (list :minimize-to-tray
+         nil
+         (format nil
+                 "If true Lodds will not Quit when being closed~%~
+                 and rather minimize to Tray. Lodds will always~%~
+                 quit when 'Quit' on the system tray or Menubar~%~
+                 is clicked.~%~
+                 Default: false")
+         :boolean)
    (list :download-folder
          (format nil "~adownload"
                  (user-homedir-pathname))

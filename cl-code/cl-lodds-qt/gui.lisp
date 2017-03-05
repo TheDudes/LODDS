@@ -116,8 +116,11 @@
         (q+:show main-window))))
 
 (define-override (main-window close-event) (ev)
-  (q+:hide main-window)
-  (q+:ignore ev))
+  (if (lodds.config:get-value :minimize-to-tray)
+      (progn
+        (q+:hide main-window)
+        (q+:ignore ev))
+      (q+:qcoreapplication-quit)))
 
 (define-subwidget (main-window view-menu) (q+:add-menu (q+:menu-bar main-window)
                                                        "View"))
