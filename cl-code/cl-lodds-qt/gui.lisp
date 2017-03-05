@@ -101,7 +101,6 @@
          (q+:set-central-widget shares-widget)))
 
 (define-signal (main-window reload-stylesheet) ())
-(define-signal (main-window fix-menubar-order) ())
 (define-signal (main-window config-changed) ())
 (define-signal (main-window received-send-permission) (string))
 (define-signal (main-window folder-download-error) (string))
@@ -212,21 +211,21 @@
   (lodds.event:remove-callback :qt-main :folder-download-error)
   (lodds.event:remove-callback :qt-main :directory-error))
 
-(define-slot (main-window fix-menubar-order) ()
-  (declare (connected main-window (fix-menubar-order)))
-  (let* ((menu-bar (q+:menu-bar main-window)))
-    (with-finalizing ((menu (q+:make-qmenu)))
-      (let ((order (list (cons "Lodds" nil)
-                         (cons "View" nil))))
-        (loop :for child :in (find-children menu-bar menu)
-              :collect (let ((entry (find (q+:title child) order
-                                          :test (lambda (a b)
-                                                  (string= a (car b))))))
-                         (when entry
-                           (setf (cdr entry) child))))
-        (q+:clear menu-bar)
-        (loop :for (childname . child) :in order
-              :do (q+:add-menu menu-bar child))))))
+(defmethod fix-menubar-order ((main-window main-window))
+  (with-slots-bound (main-window main-window)
+    (let* ((menu-bar (q+:menu-bar main-window)))
+      (with-finalizing ((menu (q+:make-qmenu)))
+        (let ((order (list (cons "Lodds" nil)
+                           (cons "View" nil))))
+          (loop :for child :in (find-children menu-bar menu)
+                :collect (let ((entry (find (q+:title child) order
+                                            :test (lambda (a b)
+                                                    (string= a (car b))))))
+                           (when entry
+                             (setf (cdr entry) child))))
+          (q+:clear menu-bar)
+          (loop :for (childname . child) :in order
+                :do (q+:add-menu menu-bar child)))))))
 
 (define-slot (main-window reload-stylesheet) ()
   (declare (connected main-window (reload-stylesheet)))
@@ -252,6 +251,6 @@
                          :main-thread nil
                          :on-error #'on-error)
         (setf *main-window* window)
-        (signal! window (fix-menubar-order)))
+        (fix-menubar-order window)
       (unless server-given-p
         (lodds:shutdown)))))
