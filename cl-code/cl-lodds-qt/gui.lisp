@@ -8,55 +8,62 @@
                             way messages can be added to the dialog,
                             instead of opening multiple dialogs")))
 
+(defun start-lodds ()
+  (lodds.subsystem:start (lodds:get-subsystem :event-queue))
+  (lodds.subsystem:start (lodds:get-subsystem :tasker))
+  (lodds.subsystem:start (lodds:get-subsystem :listener))
+  (lodds.subsystem:start (lodds:get-subsystem :handler))
+  (lodds.subsystem:start (lodds:get-subsystem :advertiser)))
+
+(defun stop-lodds ()
+  (lodds.subsystem:stop (lodds:get-subsystem :tasker))
+  (lodds.subsystem:stop (lodds:get-subsystem :listener))
+  (lodds.subsystem:stop (lodds:get-subsystem :advertiser))
+  (lodds.subsystem:stop (lodds:get-subsystem :handler))
+  (lodds.subsystem:stop (lodds:get-subsystem :watcher)))
+
+(defun run ()
+  (if (lodds.config:get-value :interface)
+      (start-lodds)
+      (make-instance
+       'dialog
+       :title "Error - Interface not set!"
+       :text "Please select a Interface first."
+       :widget (make-setting :interface
+                             (slot-value lodds:*server*
+                                         'lodds:settings))
+       :on-success-fn
+       (lambda (widget)
+         (let ((selection (get-value widget)))
+           (if selection
+               (let ((err
+                       (lodds.config:update-entry :interface
+                                                  selection)))
+                 (if err
+                     (progn
+                       (make-instance 'dialog
+                                      :title "Error - Could not set interface"
+                                      :text (format nil "Could not set interface: ~a"
+                                                    err))
+                       nil)
+                     (when (lodds.config:get-value :interface)
+                       (start-lodds)
+                       t)))
+               t))))))
+
 (define-menu (main-window Lodds)
-  (:item ("Run" (ctrl r))
-         (flet ((run () (progn
-                          (lodds.subsystem:start (lodds:get-subsystem :event-queue))
-                          (lodds.subsystem:start (lodds:get-subsystem :tasker))
-                          (lodds.subsystem:start (lodds:get-subsystem :listener))
-                          (lodds.subsystem:start (lodds:get-subsystem :handler))
-                          (lodds.subsystem:start (lodds:get-subsystem :advertiser)))))
-           (if (lodds.config:get-value :interface)
-               (run)
-               (make-instance 'dialog
-                              :title "Error - Interface not set!"
-                              :text "Please select a Interface first."
-                              :widget (make-setting :interface
-                                                    (slot-value lodds:*server*
-                                                                'lodds:settings))
-                              :on-success-fn
-                              (lambda (widget)
-                                (let ((selection (get-value widget)))
-                                  (if selection
-                                      (let ((err
-                                              (lodds.config:update-entry :interface
-                                                                         selection)))
-                                        (if err
-                                            (progn
-                                              (make-instance 'dialog
-                                                             :title "Error - Could not set interface"
-                                                             :text (format nil "Could not set interface: ~a"
-                                                                           err))
-                                              nil)
-                                            (when (lodds.config:get-value :interface)
-                                              (run)
-                                              t)))
-                                      t)))))))
-  (:item ("Stop" (ctrl s))
-         (progn
-           (lodds.subsystem:stop (lodds:get-subsystem :tasker))
-           (lodds.subsystem:stop (lodds:get-subsystem :listener))
-           (lodds.subsystem:stop (lodds:get-subsystem :advertiser))
-           (lodds.subsystem:stop (lodds:get-subsystem :handler))
-           (lodds.subsystem:stop (lodds:get-subsystem :watcher))))
+  (:item ("&Run" (ctrl r))
+         (run))
+  (:item ("&Stop" (ctrl s))
+         (stop-lodds))
   (:separator)
-  (:item "Reload Stylesheet"
+  (:item "&Reload Stylesheet"
          (q+:set-style-sheet main-window *style-sheet*))
   (:separator)
-  (:item ("Settings" (ctrl c))
+  (:item ("&Settings" (ctrl c))
          (make-setting-dialog))
   (:separator)
-  (:item ("Quit" (ctrl q))
+  (:item ("&Quit" (ctrl q))
          (progn
            (q+:close main-window)
            (q+:qcoreapplication-quit))))
