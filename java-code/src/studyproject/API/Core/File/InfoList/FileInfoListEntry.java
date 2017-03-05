@@ -16,7 +16,7 @@ public class FileInfoListEntry extends FileInfo {
 	public FileInfoListEntry(String fileName, String virtualRoot) throws NoSuchAlgorithmException, IOException {
 		super(fileName, virtualRoot);
 		file = new File(fileName);
-		timestampAdded = file.lastModified() / 1000L;
+		timestampAdded = System.currentTimeMillis() / 1000L;
 	}
 	
 	public FileInfoListEntry(String checksum, long size, String fileName, FileAction fileAction, long timestamp, String virtualRoot) {
