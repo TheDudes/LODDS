@@ -41,5 +41,11 @@
 (defun run ()
   (loop :while (lodds.subsystem:alive-p (lodds:get-subsystem :advertiser))
         :do (progn
-              (try-send) ;; repull timeout to get changes
+              (handler-case
+                  (try-send)
+                (error (e)
+                  (lodds.event:push-event :error
+                                          (list (format nil
+                                                        "Could not advertise (~a)"
+                                                        e)))))
               (sleep (lodds.config:get-value :advertise-timeout)))))
