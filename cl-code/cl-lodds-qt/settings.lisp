@@ -240,7 +240,8 @@
       (loop :for key :in (lodds.config:get-all-keys config)
             :do (let ((label (q+:make-qlabel
                               (format nil "~a:"
-                                      (string-downcase (string key)))))
+                                      (cl-strings:title-case
+                                       (string-downcase (string key))))))
                       (setting (make-setting key config)))
                   (q+:set-tool-tip label
                                    (lodds.config:get-description key config))
