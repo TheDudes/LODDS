@@ -25,7 +25,7 @@
 (defun get-file-stats (pathname)
   (values
    (lodds.core:generate-checksum pathname)
-   (with-open-file (stream pathname
+   (with-open-file (stream (cl-fs-watcher:escape-wildcards pathname)
                            :direction :input
                            :if-does-not-exist nil)
      (if stream
@@ -163,11 +163,10 @@
 
 (defun folder-already-shared-p (folder-path)
   (if (or (find folder-path (get-shared-folders))
-          (find (car (last (pathname-directory folder-path)))
+          (find (lodds.core:escaped-get-folder-name folder-path)
                 (get-shared-folders)
                 :test #'equal
-                :key (lambda (dir)
-                       (car (last (pathname-directory dir))))))
+                :key #'lodds.core:escaped-get-folder-name))
       t
       (loop :for watcher :in (dir-watchers (lodds:get-subsystem :watcher))
             :do (loop :for dir
@@ -176,17 +175,15 @@
                             (return-from folder-already-shared-p t))))))
 
 (defun folder-shareable-p (folder-path)
-  (let ((dir (car (directory folder-path))))
+  (let ((folder (lodds.core:get-absolute-path folder-path)))
     (cond
-      ((null dir)
-       (values nil "could not determine directory (does it exist? read access?)"))
-      ((uiop:file-exists-p folder-path)
+      ((cl-fs-watcher:escaped-file-exists-p folder)
        (values nil "Not able to share a File (only Folders possible)"))
-      ((not (uiop:directory-exists-p folder-path))
+      ((not (cl-fs-watcher:escaped-directory-exists-p folder))
        (values nil "Folder does not exist"))
-      ((folder-already-shared-p dir)
+      ((folder-already-shared-p folder)
        (values nil (format nil "Folder with name ~a already shared"
-                           (car (last (pathname-directory dir))))))
+                           (lodds.core:escaped-get-folder-name folder))))
       ((> (length (dir-watchers (lodds:get-subsystem :watcher)))
           42)
        (values nil "Cannot share anymore Directories"))
@@ -231,26 +228,29 @@
   "share a given folder, adds a watcher to handle updates.
   Check with FOLDER-SHAREABLE-P if folder can be shared first."
   ;; check if a folder like the given one exists already
-  (bt:make-thread
-   (lambda ()
-     (start-dir-watcher folder-path))
-   :name (format nil "Sharing Directory ~a" folder-path)))
+  (when (folder-shareable-p folder-path)
+    (let ((folder (lodds.core:get-absolute-path folder-path)))
+      (bt:make-thread
+       (lambda ()
+         (start-dir-watcher folder))
+       :name (format nil "Sharing Directory ~a"
+                     folder)))))
 
 (defun unshare-folder (folder-path)
   "unshare the given folder"
   (let ((watcher (lodds:get-subsystem :watcher)))
-    (when folder-path
-      (let ((rem-watcher (find (format nil "~a" (car (directory folder-path)))
-                               (dir-watchers watcher )
-                               :key #'cl-fs-watcher:dir
-                               :test #'equal)))
-        (if rem-watcher
-            (stop-dir-watcher rem-watcher)
-            (error "TODO: could not find watcher to unshare with given ~
-                   folder-path"))))))
+    (let ((rem-watcher (find (lodds.core:get-absolute-path folder-path)
+                             (dir-watchers watcher)
+                             :key #'cl-fs-watcher:dir
+                             :test #'equal)))
+      (if rem-watcher
+          (stop-dir-watcher rem-watcher)
+          (error "TODO: could not find watcher to unshare with given ~
+                 folder-path")))))
 
 (defun folder-busy-p (folder)
-  (let ((watcher (find folder (dir-watchers (lodds:get-subsystem :watcher))
+  (let ((watcher (find (lodds.core:get-absolute-path folder)
+                       (dir-watchers (lodds:get-subsystem :watcher))
                        :key #'cl-fs-watcher:dir
                        :test #'equal)))
     (when watcher

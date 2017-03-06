@@ -63,7 +63,7 @@
     (let ((directory (q+:text folder))
           (filename-choosen (q+:text filename)))
       (if (and (> (length directory) 0)
-               (uiop:directory-exists-p directory)
+               (cl-fs-watcher:escaped-directory-exists-p directory)
                (> (length filename-choosen) 0))
           (concatenate 'string
                        (if (char= #\/ (char directory (- (length directory) 1)))

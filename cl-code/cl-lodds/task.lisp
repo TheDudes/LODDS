@@ -426,11 +426,12 @@
                           check-input-fn))
 
 (defun open-file (file-path)
-  (open file-path :direction :output
-                  :if-does-not-exist :create
-                  :element-type '(unsigned-byte 8)
-                  ;; TODO: here we could ask the user, overwrite?
-                  :if-exists :supersede))
+  (open (cl-fs-watcher:escape-wildcards file-path)
+        :direction :output
+        :if-does-not-exist :create
+        :element-type '(unsigned-byte 8)
+        ;; TODO: here we could ask the user, overwrite?
+        :if-exists :supersede))
 
 (defun request-file (ip port checksum start end)
   (let ((socket (usocket:socket-connect ip port
@@ -584,21 +585,23 @@
                         ;; just skip the file
                         (submit-task task)))))
             (if checksum
-                (submit-task (make-instance
-                              'task-get-file-from-users
-                              :name "get-file-from-users (folder)"
-                              :checksum checksum
-                              :local-file-path (ensure-directories-exist
-                                                (concatenate 'string
-                                                             local-path
-                                                             (subseq file (length remote-root))))
-                              ;; resubmit current task-get-folder when file
-                              ;; download is complete
-                              :on-finish-hook (lambda (file-task)
-                                                (declare (ignore file-task))
-                                                (submit-task task))
-                              :on-error-hook on-error-hook
-                              :on-cancel-hook on-error-hook))
+                (let ((local-file-path (concatenate 'string
+                                                    local-path
+                                                    (subseq file (length remote-root)))))
+                  (lodds.core:escaped-ensure-directories-exist
+                   local-file-path)
+                  (submit-task (make-instance
+                                'task-get-file-from-users
+                                :name "get-file-from-users (folder)"
+                                :checksum checksum
+                                :local-file-path local-file-path
+                                ;; resubmit current task-get-folder when file
+                                ;; download is complete
+                                :on-finish-hook (lambda (file-task)
+                                                  (declare (ignore file-task))
+                                                  (submit-task task))
+                                :on-error-hook on-error-hook
+                                :on-cancel-hook on-error-hook)))
                 (funcall on-error-hook nil)))))))
 
 (defun handle-incomming-send-permission (task request)
@@ -729,7 +732,7 @@
                                 (list "requested file could not be found"))
         (setf finished-p t)
         (return-from run-task))
-      (setf file-stream (open filename
+      (setf file-stream (open (cl-fs-watcher:escape-wildcards filename)
                               :direction :input
                               :element-type '(unsigned-byte 8)))
       (let ((size (- end start)))
@@ -775,7 +778,7 @@
                info) task
     ;; open up file-stream if not open yet
     (unless file-stream
-      (setf file-stream (open filename
+      (setf file-stream (open (cl-fs-watcher:escape-wildcards filename)
                               :direction :output
                               :if-exists :supersede
                               :element-type '(unsigned-byte 8)))
@@ -870,7 +873,7 @@
                time-waited) task
     ;; open up file-stream if not open yet
     (unless file-stream
-      (setf file-stream (open filepath
+      (setf file-stream (open (cl-fs-watcher:escape-wildcards filepath)
                               :element-type '(unsigned-byte 8)))
       (setf size (file-length file-stream)))
     ;; open up socket

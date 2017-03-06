@@ -13,12 +13,14 @@
            #:split-path
            #:add-missing-slash
            #:remove-newline
-           #:get-folder
            #:format-seconds
            #:get-interfaces
            #:get-interface-info
            #:get-broadcast-address
-           #:get-ip-address))
+           #:get-ip-address
+           #:escaped-ensure-directories-exist
+           #:escaped-get-folder-name
+           #:get-absolute-path))
 
 (defpackage #:lodds.low-level-api
   (:use #:cl

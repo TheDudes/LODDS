@@ -124,7 +124,7 @@
                    (with-slots-bound (widget send-file)
                      (let ((file-choosen (q+:text file))
                            (users (slot-value widget 'users-selected)))
-                       (if (uiop:file-exists-p file-choosen)
+                       (if (cl-fs-watcher:escaped-file-exists-p file-choosen)
                            (if users
                                (loop :for selected-user :in (slot-value widget 'users-selected)
                                      :do (lodds:send-file-user file-choosen

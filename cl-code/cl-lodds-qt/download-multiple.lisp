@@ -84,7 +84,7 @@
                           :title "Error - No Directory selected"
                           :text "Please select a Directory")
            nil))
-        ((not (uiop:directory-exists-p directory))
+        ((not (cl-fs-watcher:escaped-directory-exists-p directory))
          (progn
            (make-instance 'dialog
                           :title "Error - Directory does not exists"

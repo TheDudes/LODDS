@@ -8,7 +8,7 @@
   "generates sha1 sum out of given pathname, will return a string"
   (handler-case
       (ironclad:byte-array-to-hex-string
-       (ironclad:digest-file :sha1 pathname))
+       (ironclad:digest-file :sha1 (cl-fs-watcher:escape-wildcards pathname)))
     (error (e)
       (declare (ignore e))
       "0000000000000000000000000000000000000000")))
@@ -165,21 +165,6 @@
      ;; just return it
      string)))
 
-(defun get-folder (fullpath)
-  "Returns the folder describted by fullpath. If given fullpath is
-  root (/) a empty string (\"\") is returned. Given fullpath _must_
-  end with a slash (/).
-  CL-USER> (get-folder \"/home/someone/somehwere/\")
-  => \"somewhere/\"
-
-  CL-USER> (get-folder \"/\")
-  => \"\""
-  (let* ((folders (pathname-directory fullpath))
-         (folder (car (last folders))))
-    (if (> (length folders) 1)
-        (lodds.core:add-missing-slash folder)
-        "")))
-
 (defun format-seconds (seconds)
   (format nil "~2,'0d:~2,'0d"
           (floor seconds 60)
@@ -215,3 +200,44 @@
   (let ((info (get-interface-info interface)))
     (when info
       (ip-interfaces:ip-interface-address info))))
+
+(defun escaped-ensure-directories-exist (pathspec &rest args)
+  "Calls ensure-directories-exists but pathspec is wrapped in a
+escape-wildcards to make sure wildcards are escaped."
+  (apply #'ensure-directories-exist
+         (cl-fs-watcher:escape-wildcards pathspec)
+         args))
+
+;; (defun escaped-directory-exists-p (directory)
+;;   (uiop:directory-exists-p
+;;    (escape-wildcards directory)))
+
+;; (defun escaped-file-exists-p (file)
+;;   (uiop:file-exists-p
+;;    (escape-wildcards file)))
+
+(defun escaped-get-folder-name (directory)
+  "Returns the folder describted by directory. If given directory is
+  root (/) a empty string (\"\") is returned. Given directory _must_
+  end with a slash (/), or the last entry will be interpreted as a
+  file.
+
+  CL-USER> (get-folder \"/home/someone/somehwere/folder\")
+  => \"somewhere/\" ;; 'folder' will be seen as file, since / is
+                    ;; missing
+
+  CL-USER> (get-folder \"/home/someone/somehwere/\")
+  => \"somewhere/\"
+
+  CL-USER> (get-folder \"/\")
+  => \"\""
+  (let* ((folders (pathname-directory
+                   (cl-fs-watcher:escape-wildcards directory)))
+         (folder (car (last folders))))
+    (if (> (length folders) 1)
+        (lodds.core:add-missing-slash folder)
+        "")))
+
+(defun get-absolute-path (directory)
+  (uiop:native-namestring
+   (car (directory (cl-fs-watcher:escape-wildcards directory)))))

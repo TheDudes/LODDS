@@ -67,7 +67,7 @@
 (defmethod add-new-dir-widget ((directories directories) dir)
   (let ((new-entry (q+:make-qtreewidgetitem directories)))
     (q+:set-text new-entry +shared-path+
-                 (or (car (last (pathname-directory dir)))
+                 (or (lodds.core:escaped-get-folder-name dir)
                      ""))
     (q+:set-tool-tip new-entry +shared-path+
                      (format nil "~a" dir))

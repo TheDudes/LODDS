@@ -118,13 +118,13 @@
           (when (cl-strings:starts-with link "file://")
             (let ((filepath (subseq link 7)))
               (cond
-                ((uiop:directory-exists-p filepath)
+                ((cl-fs-watcher:escaped-directory-exists-p filepath)
                  (make-instance
                   'dialog
                   :title (format nil "Error - Cannot send Directory (~a)"
                                  filepath)
                   :text "Its not possible to send a directory, select a file please."))
-                ((uiop:file-exists-p filepath)
+                ((cl-fs-watcher:escaped-file-exists-p filepath)
                  (let ((item (q+:item-at user-list (q+:pos ev))))
                    (open-send-file-dialog
                     (when (qobject-alive-p item)

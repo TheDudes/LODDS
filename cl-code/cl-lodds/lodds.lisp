@@ -279,7 +279,7 @@
   "gets given folder and saves it to local-path"
   (setf full-folder-path
         (lodds.core:add-missing-slash full-folder-path))
-  (let ((folder (lodds.core:get-folder full-folder-path)))
+  (let ((folder (lodds.core:escaped-get-folder-name full-folder-path)))
     (lodds.task:submit-task
      (make-instance 'lodds.task:task-get-folder
                     :name "get-folder"
