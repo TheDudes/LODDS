@@ -3,19 +3,19 @@
    - [ ] File Header with Description
 
 * GUI
-** TODO missing [14/21]
+** TODO missing [17/26]
    - [ ] Close Gui on shutdown
    - [ ] Infobar (Statusbar) with Current Transfers, Load, Connections, ...
-   - [ ] Tooltips
-   - [ ] Settings
    - [ ] Label & more Info on Interface ComboBox
    - [ ] colorize logmessage count
    - [ ] Download Button with Icon
    - [ ] Icons for Up/Download
    - [ ] Stylesheet into res/ folder
    - [ ] Send File Dialog while waiting/sending
-   - [ ] "About" Dialog
    - [ ] Incognito Mode
+   - [X] Tooltips
+   - [X] Settings
+   - [X] "About" Dialog
    - [X] Share Directory Functionality
    - [X] Display of Shared Directories
    - [X] Info about found Users
@@ -32,10 +32,10 @@
    - [X] SendPermission
 
 * Lodds Lib
-** TODO missing [4/7]
+** TODO missing [5/7]
    - [ ] logging
-   - [ ] Error Handling
    - [ ] initargs (interface -> overwrite initialize-instance)
+   - [X] Error Handling
    - [X] Share File on Extra Thread(pool) with Queue
    - [X] directory watcher (cl-async)
    - [X] Get file with load balancing
@@ -50,10 +50,10 @@
    - [X] Use [[https://github.com/cosmos72/stmx][STMX]] instead of Locks
    - [X] replace all 'bt:destroy-thread'
 
-** TODO Bugs [1/1]
-   - [ ] Timeout on Sockets (copy-stream)
-   - [ ] Watcher errors on pathes with wildname
-   - [ ] Watcher errors when there are no read rights on folder
+** TODO Bugs [4/4]
+   - [X] Timeout on Sockets (copy-stream)
+   - [X] Watcher errors on pathes with wildname
+   - [X] Watcher errors when there are no read rights on folder
    - [X] Blocks on Sharing Directory -> Async Hashing
 
 * Low Level API
