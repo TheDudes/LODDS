@@ -134,13 +134,7 @@
                                            label)))
                    (push id old-tasks)))))
         (dolist (id finished)
-          (let ((entry (gethash id tracked-tasks)))
-            (when entry
-              (destructuring-bind (widget progress max) entry
-                (declare (ignore widget max))
-                (setf (q+:value progress)
-                      (q+:maximum progress)))
-              (push id old-tasks))))
+          (update-color id "#1ED760" "FINISHED"))
         (dolist (id failed)
           (update-color id "#FF0000" "FAILED"))
         (dolist (id canceled)
