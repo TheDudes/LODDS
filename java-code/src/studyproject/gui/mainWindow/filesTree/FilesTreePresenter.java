@@ -201,11 +201,9 @@ public class FilesTreePresenter implements Initializable {
 			FilteredList<String> filteredPathList = fileCoreInfoList
 					.filtered(p -> p.toLowerCase().contains(filesTreeSearch.textProperty().get().toLowerCase()));
 
-			System.out.println("Files in new filteredFileList (size: " + filteredFileList.size() + "):");
 			root.getChildren().clear();
 			for (String path : filteredPathList) {
 				fileCoreInfo = userFileMap.get(path);
-				System.out.println(fileCoreInfo.getFileName());
 				index = 0;
 				subPaths = path.split("/");
 				if (subPaths[0].isEmpty())
