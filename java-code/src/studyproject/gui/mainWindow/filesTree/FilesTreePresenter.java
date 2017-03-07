@@ -136,7 +136,7 @@ public class FilesTreePresenter implements Initializable {
 		for (TreeItem<FileCoreInfo> treeItem : itemsList) {
 			FileCoreInfo fileCoreInfo = treeItem.getValue();
 			// check if the item is a folder
-			if (fileCoreInfo.getChecksum() == null) {
+			if (fileCoreInfo.isFolder()) {
 				// If children of this folder are selected as well, ignore this
 				// item
 				String topDir = fileCoreInfo.getFileName();
@@ -169,7 +169,7 @@ public class FilesTreePresenter implements Initializable {
 
 	private Vector<FileCoreInfo> findChildrenItems(TreeItem<FileCoreInfo> treeItem, Vector<FileCoreInfo> vector) {
 		for (TreeItem<FileCoreInfo> childrenItem : treeItem.getChildren()) {
-			if (childrenItem.getValue().getChecksum() == null) {
+			if (childrenItem.getValue().isFolder()) {
 				vector = findChildrenItems(childrenItem, vector);
 			} else {
 				vector.add(childrenItem.getValue());
