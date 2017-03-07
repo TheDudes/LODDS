@@ -267,11 +267,7 @@
                      (:abort (progn
                                (setf canceled-p t)
                                (lodds.task:submit-task task)))
-                     (:retry (progn
-                               (setf items
-                                     (append (list (pop items-done))
-                                             items))
-                               (lodds.task:submit-task task))))
+                     (:retry (lodds.task:retry-task task)))
                    t))
             (let* ((dialog (make-instance
                             'dialog

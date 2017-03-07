@@ -542,6 +542,19 @@
             (setf socket nil))
           (setf resubmit-p t)))))
 
+(defgeneric retry-task (task)
+  (:method ((task task))
+    (error "not implemented"))
+  (:method ((task task-get-folder))
+    (with-slots (items-done items) task
+      (let ((failed-file (pop items-done)))
+        (destructuring-bind (nil nil size) failed-file
+          (setf items
+                (append (list failed-file)
+                        items))
+          (decf-load task (- size)))))
+    (lodds.task:submit-task task)))
+
 (defmethod run-task ((task task-get-folder))
   (with-slots (local-path
                remote-path

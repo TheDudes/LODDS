@@ -104,7 +104,8 @@
            #:task-get-file-from-user
            #:task-get-file-from-users
            #:task-get-folder
-           #:task-send-file))
+           #:task-send-file
+           #:retry-task))
 
 (defpackage #:lodds.watcher
   (:use #:cl)
