@@ -2,7 +2,6 @@ package studyproject.gui.mainWindow.filesTree;
 
 import java.io.File;
 import java.net.URL;
-import java.util.List;
 import java.util.ResourceBundle;
 import java.util.Vector;
 import java.util.concurrent.ConcurrentHashMap;
@@ -107,10 +106,10 @@ public class FilesTreePresenter implements Initializable {
 			String folderPath;
 			if (parent.equals(root)) {
 				// if it is the base first folder to add
-				folderPath = subPaths[index];
+				folderPath = "/" + subPaths[index];
 			} else {
 				// if the root is already set
-				folderPath = parent.getValue().getFilePath() + subPaths[index];
+				folderPath = parent.getValue().getFilePath() + "/" + subPaths[index];
 			}
 			folderToAdd = new TreeItem<FileCoreInfo>(new FileCoreInfo(subPaths[index], folderPath));
 
@@ -141,17 +140,15 @@ public class FilesTreePresenter implements Initializable {
 				// If children of this folder are selected as well, ignore this
 				// item
 				String topDir = fileCoreInfo.getFileName();
-				boolean continueForEach = false;
-				List<TreeItem<FileCoreInfo>> subList = itemsList.subList(itemsList.indexOf(treeItem) + 1,
-						itemsList.size());
-				for (TreeItem<FileCoreInfo> subListItem : subList) {
-					if (// subListItem.getValue().getChecksum() != null &&
-					subListItem.getValue().getFilePath().contains(fileCoreInfo.getFilePath())) {
-						continueForEach = true;
+				boolean continueForEachLoop = false;
+				for (TreeItem<FileCoreInfo> listItem : itemsList) {
+					if (listItem.getValue().getFilePath().contains(fileCoreInfo.getFilePath())
+							&& !(fileCoreInfo.equals(listItem.getValue()))) {
+						continueForEachLoop = true;
 						break;
 					}
 				}
-				if (continueForEach) {
+				if (continueForEachLoop) {
 					continue;
 				}
 
