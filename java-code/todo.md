@@ -2,12 +2,20 @@
 
 ## Core
 - [x] Validate user name and strip invalid chars from system user name (gitmalong)
+- [ ] Load broken on Error, increase by upload
+- [ ] Properties
 
 ## GUI
 - [ ] About menu entry and dialog with license information
-- [ ] Download whole folder (gitmalong)
+- [X] Download whole folder
 - [x] Validate user name (gitmalong)
 - [x] Replace settings interface textfield with dropdown (gitmalong)
+
+- [ ] Pop-Up to unshare folder
+- [ ] Pop-Up to introduce at first start up 
+- [ ] Icons
+	+ Fancynate the Refresh Button
+- [ ] About-Window
 
 
 ## Doc
