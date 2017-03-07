@@ -434,9 +434,12 @@
         :if-exists :supersede))
 
 (defun request-file (ip port checksum start end)
-  (let ((socket (usocket:socket-connect ip port
-                                        :element-type '(unsigned-byte 8)
-                                        :timeout 1)))
+  (let* ((timeout (lodds.config:get-value :socket-timeout))
+         (socket (usocket:socket-connect ip port
+                                         :element-type '(unsigned-byte 8)
+                                         :timeout timeout)))
+    (lodds.core:set-socket-timeout socket
+                                   timeout)
     (lodds.low-level-api:get-file (usocket:socket-stream socket) checksum start end)
     socket))
 

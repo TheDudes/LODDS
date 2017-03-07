@@ -30,7 +30,9 @@
                                              (usocket:socket-accept socket
                                                                     :element-type '(unsigned-byte 8))))
                                        ;; TODO: move specified timeout to settings
-                                       (setf (usocket:socket-option client-socket :receive-timeout) 1)
+                                       (lodds.core:set-socket-timeout
+                                        client-socket
+                                        (lodds.config:get-value :socket-timeout))
                                        client-socket)))))
       (when socket
         (usocket:socket-close socket)))))

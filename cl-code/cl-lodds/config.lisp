@@ -126,6 +126,18 @@
          :integer
          1
          10)
+   (list :socket-timeout
+         1
+         (format nil
+                 "Timeout which will be set on sockets, if any~%~
+                 socket does not respond after the given timeout~%~
+                 it will be closed and the connection aborted.~%~
+                 The timeout is specified in seconds.~%~
+                 Value between 1 and 30.~%~
+                 Default: 1")
+         :integer
+         1
+         30)
    ;; TODO: QT gui related settings, these should be splitted out to
    ;; lodds-qt package and then be hooked somehow, but i couldn't
    ;; think of any good way to achieve it. Thats why i will just leave
