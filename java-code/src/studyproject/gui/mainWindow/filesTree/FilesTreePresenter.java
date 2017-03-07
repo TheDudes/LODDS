@@ -178,9 +178,11 @@ public class FilesTreePresenter implements Initializable {
 	}
 
 	private void filesTreeSearchChanged() {
-		if (filesTreeSearch.textProperty().get() == null || filesTreeSearch.textProperty().get().isEmpty()) {
+		if (userListModel.getSelectedUser().getValue() == null) {
+			return;
+		}
+		if (filesTreeSearch.textProperty().get().isEmpty()) {
 			// No searchString. Show full files tree
-			System.out.println("filesTreeSearch is null or empty");
 			filteredFileList.setPredicate(p -> true);
 			createTree(userListModel.getSelectedUser().get());
 		} else {
@@ -197,7 +199,7 @@ public class FilesTreePresenter implements Initializable {
 			fileCoreInfoList.addAll(userFileMap.keySet());
 
 			FilteredList<String> filteredPathList = fileCoreInfoList
-					.filtered(p -> p.contains(filesTreeSearch.textProperty().get()));
+					.filtered(p -> p.toLowerCase().contains(filesTreeSearch.textProperty().get().toLowerCase()));
 
 			System.out.println("Files in new filteredFileList (size: " + filteredFileList.size() + "):");
 			root.getChildren().clear();
