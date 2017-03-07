@@ -16,20 +16,21 @@
 (define-signal (user-list update-user) (string string int))
 
 (defun gen-tool-tip (user)
-  (let* ((client-info (lodds:get-user-info user))
-         (all-files (hash-table-count (lodds:c-file-table-name client-info)))
-         (unique-files (hash-table-count (lodds:c-file-table-hash client-info)))
-         (last-change (lodds:c-last-change client-info)))
-    (lodds.core:split-user-identifier (name ip port) user
-      (format nil "Ip: ~a~%Port: ~a~%Last Change: ~a~%Shared: ~a"
-              ip
-              port
-              (if (eql 0 last-change)
-                  "-"
-                  (generate-timestamp last-change))
-              (format nil "~:d Files (~:d unique)"
-                      (or all-files 0)
-                      (or unique-files 0))))))
+  (let ((client-info (lodds:get-user-info user)))
+    (when client-info
+      (let ((all-files (hash-table-count (lodds:c-file-table-name client-info)))
+            (unique-files (hash-table-count (lodds:c-file-table-hash client-info)))
+            (last-change (lodds:c-last-change client-info)))
+        (lodds.core:split-user-identifier (name ip port) user
+          (format nil "Ip: ~a~%Port: ~a~%Last Change: ~a~%Shared: ~a"
+                  ip
+                  port
+                  (if (eql 0 last-change)
+                      "-"
+                      (generate-timestamp last-change))
+                  (format nil "~:d Files (~:d unique)"
+                          (or all-files 0)
+                          (or unique-files 0))))))))
 
 (define-slot (user-list add-user) ((user string)
                                    (load string)
