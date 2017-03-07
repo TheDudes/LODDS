@@ -86,24 +86,6 @@ public class Utils {
 		AnchorPane.setRightAnchor(child, value);
 	}
 
-
-//	public void shareFolder() {
-//		String choosenPath = getChoosenDirPath("Choose a save directory");
-//		if (choosenPath == null)
-//			return;
-//
-//		Task<Void> shareFolderTask = new Task<Void>() {
-//			@Override
-//			protected Void call() throws Exception {
-//				mainWindowModel.getLodds().shareFolder(choosenPath);
-//				return null;
-//			}
-//		};
-//
-//		Thread thread = new Thread(shareFolderTask);
-//		mainWindowModel.getLodds().executeThread(thread);
-//	}
-
 	public static Boolean osIsMac() {
 		return System.getProperty("os.name").toLowerCase().indexOf("mac") >= 0;
 	}
