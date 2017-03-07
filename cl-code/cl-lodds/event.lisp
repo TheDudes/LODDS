@@ -81,7 +81,7 @@
                (ignore-callback ()
                  nil)
                (remove-callback ()
-                 (remove-callback name :event-type event-type)))))
+                 (remove-callback name event-type)))))
     (loop :for (name . fn) :in (callbacks event-queue)
           :do (save-call name fn))
     (loop :for (name . fn) :in  (gethash (car event)
