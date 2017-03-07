@@ -43,9 +43,7 @@
                          (remhash name table-name)))
              (setf last-change timestamp)
              (lodds.event:push-event :list-update
-                                     (list name type timestamp changes))
-             (lodds.event:push-event :client-updated
-                                     (list name load last-change))))
+                                     (list name type timestamp changes))))
       (when socket
         (usocket:socket-close socket)))))
 

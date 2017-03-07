@@ -831,12 +831,17 @@
             ;;will update on the next advertise. unwind-protect to be sure
             ;;we unlock that lock.
             (unwind-protect
-                 (progn
+                 (let ((old-load (lodds:c-load client-info))
+                       (user-has-new-changes-p (<= (lodds:c-last-change client-info)
+                                                   last-change)))
                    (setf (lodds:c-last-message client-info) timestamp
                          (lodds:c-load client-info) user-load)
-                   (when (<= (lodds:c-last-change client-info)
-                             last-change)
-                     (lodds.listener:update-client-list client-info)))
+                   (when user-has-new-changes-p
+                     (lodds.listener:update-client-list client-info))
+                   (when (or user-has-new-changes-p
+                             (not (eql old-load user-load)))
+                     (lodds.event:push-event :client-updated
+                                             (list user user-load last-change))))
               (bt:release-lock (lodds:c-lock client-info)))
             (lodds.event:push-event :info (list :dropped task)))))))
 
