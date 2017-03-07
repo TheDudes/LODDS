@@ -263,21 +263,7 @@ public class FileWatcherControllerTest {
 		// Watched internal directories should only have one entry (root)
 		System.out.println(c.watchedInternalDirectories);
 		assert(c.watchedInternalDirectories.size()==1);
-		
-		
-		// Should only have one thread left that is alive
-		System.out.println(c.fileWatcherThreads);
-		c.fileWatcherThreads.forEach((k,v) -> {
-			System.out.println("Checking if thread is alive: " + k);
 
-			if (v.isAlive()) {
-				System.out.println(".. yes");
-
-				assertEquals(path, k);
-			} else {
-				System.out.println(".. no");
-			}
-		});
 	}
 
 	private void createDummyFile(String path) throws IOException {

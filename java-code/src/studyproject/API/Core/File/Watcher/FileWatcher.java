@@ -15,6 +15,9 @@ import java.nio.file.WatchKey;
 import java.nio.file.WatchService;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Map.Entry;
 
 /**
  * Watches a specific folder for changes and executes handlers for updating the
@@ -23,36 +26,46 @@ import java.util.ArrayList;
  */
 public class FileWatcher extends Thread {
 
-	private String directoryPath;
-	private String virtualRoot;
-	private Boolean watchForNewFiles;
+	Map<String, WatchedFolder> directoryKeys = new HashMap<String, WatchedFolder>();
 	private FileWatcherController controller;
 	public WatchService watcher;
-	public WatchKey key;
 
-	public FileWatcher(String path, Boolean watchForNewFiles, FileWatcherController controller, String virtualRoot) {
+	public FileWatcher(FileWatcherController controller) throws IOException {
 		super();
-
-		this.directoryPath = controller.addSlashToFileNameIfNecessary(path);
-		this.watchForNewFiles = watchForNewFiles;
 		this.controller = controller;
-		this.virtualRoot = virtualRoot;
+		this.watcher = FileSystems.getDefault().newWatchService();
 	}
 
+	public void stopWatching(String directory) {
+		WatchedFolder wf = this.directoryKeys.get(directory);
+		this.directoryKeys.remove(directory);
+		wf.key.cancel();
+	}
 
-	
-	public void stopWatching() {
-		if (watcher != null) {
-			try {
-				System.out.println("Watcher stop called");
-				if (key != null)
-					key.cancel();
-				watcher.close();
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
+	public void registerDir(String path, String virtualRoot, Boolean watchForNewFiles) {
+		path = controller.addSlashToFileNameIfNecessary(path);
+		Path dir = Paths.get(path);
+		try {
+			WatchKey watchKey = dir.register(watcher, ENTRY_CREATE, ENTRY_DELETE, ENTRY_MODIFY);
+			WatchedFolder wf = new WatchedFolder(path, virtualRoot, watchKey, watchForNewFiles);
+			directoryKeys.put(path, wf);
+			System.out.println("Registered new dir: " + path);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
+	}
+
+	private String getDirectoryByWatchKey(WatchKey watchKey) throws Exception {
+		return getWatchedFolderByWatchKey(watchKey).fullPath;
+	}
+
+	private WatchedFolder getWatchedFolderByWatchKey(WatchKey wkey) {
+		for (Entry<String, WatchedFolder> entry : this.directoryKeys.entrySet()) {
+			if (entry.getValue().key == wkey)
+				return entry.getValue();
+		}
+		return null;
 	}
 
 	/**
@@ -64,28 +77,19 @@ public class FileWatcher extends Thread {
 	 */
 	public void run() {
 		try {
-			watcher = FileSystems.getDefault().newWatchService();
-
-			// Register
-			Path dir = Paths.get(directoryPath);
-			dir.register(watcher, ENTRY_CREATE, ENTRY_DELETE, ENTRY_MODIFY);
 
 			while (!Thread.currentThread().isInterrupted()) {
-				
-				System.out.println("Start new wait round: " + directoryPath);
-				
+				WatchKey key;
+
 				try {
 					// wait for a key to be available
 					key = watcher.take();
+
 				} catch (InterruptedException ex) {
-					stopWatching();
+					// stopWatching();
 					Thread.currentThread().interrupt();
-					System.out.println("INTERRUPTED");
 					break;
 				}
-
-				// Lock semaphore
-				//controller.lock.lock();
 
 				for (WatchEvent<?> event : key.pollEvents()) {
 
@@ -97,36 +101,38 @@ public class FileWatcher extends Thread {
 					WatchEvent<Path> ev = (WatchEvent<Path>) event;
 					Path fileName = ev.context();
 
-					String fullPath = directoryPath + fileName.toString();
+					String fullPath = getDirectoryByWatchKey(key) + fileName.toString();
 
 					File newFile = new File(fullPath);
 
-					System.out.println("FileWatcher detected event for: "+fullPath);
-					System.out.println("FileWatcher instance: " + directoryPath);
-					System.out.println(eventType.name() + ": " + fullPath);
+					System.out.println("FileWatcher detected event for:" + fullPath);
+					// System.out.println(eventType.name() + ": " + fullPath);
 
 					// New file or directory was created -> Add to list
-					if (watchForNewFiles && eventType == ENTRY_CREATE) {
+					if (getWatchedFolderByWatchKey(key).watchForNewFiles && eventType == ENTRY_CREATE) {
 
-						System.out.println("..New file was created -> Add to list: " + newFile.getPath());
+						// System.out.println("..New file was created -> Add to
+						// list: " + newFile.getPath());
 
 						// New directory was created
 						if (newFile.isDirectory()) {
-							controller.watchDirectoryRecursively(controller.addSlashToFileNameIfNecessary(newFile.getPath()), virtualRoot);
+							controller.watchDirectoryRecursively(
+									controller.addSlashToFileNameIfNecessary(newFile.getPath()),
+									getWatchedFolderByWatchKey(key).virtualRoot);
 						}
-						
+
 						// New file was created
 						else {
-							controller.addFileToLists(fullPath, virtualRoot);
+							controller.addFileToLists(fullPath, getWatchedFolderByWatchKey(key).virtualRoot);
 						}
-						
+
 					} else {
-						
+
 						FileWatcherTreeNode node = controller.currentFiles.getNodeByFileName(fullPath);
 
 						// File or folder was deleted and in our list
 						if (node != null && (eventType == OVERFLOW || eventType == ENTRY_DELETE)) {
-							
+
 							System.out.println("FileWatcher: Detected DEL event for: "+fullPath);
 
 							// DEL
@@ -134,33 +140,31 @@ public class FileWatcher extends Thread {
 							if (node.fileInfo != null) {
 								fileWasDeleted(node);
 							}
-							
+
 							// File is a folder
 							else {
 								if (node.hasChildren()) {
 									folderWasDeleted(controller.addSlashToFileNameIfNecessary(fullPath));
 								} else {
-									System.out.println("Folder has no subfolders - Only remove from internal dir list");
-									controller.watchedInternalDirectories.remove(controller.addSlashToFileNameIfNecessary(fullPath));
+									// System.out.println("Folder has no
+									// subfolders - Only remove from internal
+									// dir list");
+									controller.watchedInternalDirectories
+											.remove(controller.addSlashToFileNameIfNecessary(fullPath));
 								}
 							}
 						}
-						
+
 						// File was modified
 						// We are only interested in modified files, not folders
 						if (node != null && node.fileInfo != null && eventType == ENTRY_MODIFY) {
-							fileWasModified(fullPath, node);
+							fileWasModified(fullPath, node, key);
 						}
 					}
 				}
 
 				// Reset key
-				boolean valid = key.reset();
-				if (!valid) {
-					break;
-				}
-
-				//controller.lock.unlock();
+				key.reset();
 
 			}
 
@@ -176,41 +180,46 @@ public class FileWatcher extends Thread {
 	}
 
 	private void folderWasDeleted(String fullPath) {
-		System.out.println("FileWatcher: Deleted file seems to be a folder");
-		
+		System.out.println("FileWatcher: Deleted file seems to be a folder: " + fullPath);
+
 		// Check if folder is in our list
-		System.out.println("Check if folder is in our list: " + fullPath);
+		// System.out.println("Check if folder is in our list: " + fullPath);
 		if (controller.watchedInternalDirectories.contains(fullPath)) {
 
 			File probablyDeletedFolder = new File(fullPath);
 
 			// Check if folder does still exist
-			System.out.println("FileWatcher: Check if folder does still exist");
-			
+			// System.out.println("FileWatcher: Check if folder does still
+			// exist");
+
 			if (!probablyDeletedFolder.exists()) {
 				controller.unwatchDirectory(fullPath);
 
 				// Delete all sub folders from watchtedInternalDirectories
-				System.out.println("Delete all sub folders from watchedInternalDirectories");
+				// System.out.println("Delete all sub folders from
+				// watchedInternalDirectories");
 				ArrayList<String> removeList = new ArrayList<String>();
 				for (String subfolder : controller.watchedInternalDirectories) {
 					if (subfolder.contains(fullPath)) {
 						removeList.add(subfolder);
-						controller.stopWatchThread(subfolder);
-						System.out.println("Subfolder added to delete list: " + subfolder);
 					}
 				}
-				
+
+				for (String removeFolder : removeList) {
+					controller.unwatchDirectory(removeFolder);
+				}
+
 				controller.watchedInternalDirectories.removeAll(removeList);
 				controller.deleteFolderFromLists(fullPath);
-				
+
 			}
-												
+
 		}
 	}
 
 	private void fileWasDeleted(FileWatcherTreeNode node) {
-		System.out.println("FileWatcher: Deleted file is not a folder ("+node.fileInfo.fileName+")");
+		// System.out.println("FileWatcher: Deleted file is not a folder
+		// ("+node.fileInfo.fileName+")");
 
 		// Check if that file was really deleted
 		File probablyDeletedFile = new File(node.fileInfo.fileName);
@@ -218,29 +227,17 @@ public class FileWatcher extends Thread {
 		// File does not exist anymore -> It was deleted
 		if (!probablyDeletedFile.exists()) {
 			controller.deleteFileFromLists(node.fileInfo);
-
-			System.out.println("File was deleted: " + node.fileInfo.fileName);
-
-			// Unwatch Directory if directory does not
-			// exist anymore
-			/*
-			 * File parentDir = new
-			 * File(fileFromList.parentDirectory); if
-			 * (!parentDir.exists())
-			 * controller.unwatchDirectory(directoryPath
-			 * );
-			 */
 		}
 	}
 
-	private void fileWasModified(String fullPath, FileWatcherTreeNode node) throws Exception {
-		System.out.println("FileWatcher: Detected MODIFY event");
+	private void fileWasModified(String fullPath, FileWatcherTreeNode node, WatchKey key) throws Exception {
+		// System.out.println("FileWatcher: Detected MODIFY event");
 
 		// DEL
 		controller.deleteFileFromLists(node.fileInfo);
 
 		// ADD
-		controller.addFileToLists(fullPath, virtualRoot);
+		controller.addFileToLists(fullPath, getWatchedFolderByWatchKey(key).virtualRoot);
 	}
 
 }
