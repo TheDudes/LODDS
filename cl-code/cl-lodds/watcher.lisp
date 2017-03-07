@@ -27,7 +27,8 @@
    (lodds.core:generate-checksum pathname)
    (with-open-file (stream (cl-fs-watcher:escape-wildcards pathname)
                            :direction :input
-                           :if-does-not-exist nil)
+                           :if-does-not-exist nil
+                           :element-type '(unsigned-byte 8))
      (if stream
          (file-length stream)
          0))))
