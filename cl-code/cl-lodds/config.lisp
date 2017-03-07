@@ -253,16 +253,16 @@
               key)))
   (case (get-type key config)
     (:integer (progn
-                (when (< value (get-integer-min key))
+                (when (< value (get-integer-min key config))
                   (return-from validate-new-entry
                     (format nil "~a is lower then allowed min (~a)"
                             value
-                            (get-integer-min key))))
-                (when (> value (get-integer-max key))
+                            (get-integer-min key config))))
+                (when (> value (get-integer-max key config))
                   (return-from validate-new-entry
                     (format nil "~a is higher then allowed max (~a)"
                             value
-                            (get-integer-max key))))))
+                            (get-integer-max key config))))))
     (:selection (let ((valid (get-selection-options key)))
                   (unless (find value valid :test #'equal)
                     (return-from validate-new-entry
