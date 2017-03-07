@@ -20,7 +20,8 @@
            #:get-ip-address
            #:escaped-ensure-directories-exist
            #:escaped-get-folder-name
-           #:get-absolute-path))
+           #:get-absolute-path
+           #:set-socket-timeout))
 
 (defpackage #:lodds.low-level-api
   (:use #:cl
