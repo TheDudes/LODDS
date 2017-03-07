@@ -4,13 +4,17 @@
   (let ((socket nil))
     (unwind-protect
          (with-accessors ((name lodds:c-name)
+                          (load lodds:c-load)
                           (ip lodds:c-ip)
                           (port lodds:c-port)
                           (last-change lodds:c-last-change)
                           (table-hash lodds:c-file-table-hash)
                           (table-name lodds:c-file-table-name)) client
-           (setf socket (usocket:socket-connect ip port :timeout 1 :element-type '(unsigned-byte 8)))
-           (let ((error (lodds.low-level-api:get-info (usocket:socket-stream socket) last-change)))
+           (setf socket (usocket:socket-connect ip port
+                                                :timeout 1
+                                                :element-type '(unsigned-byte 8)))
+           (let ((error (lodds.low-level-api:get-info
+                         (usocket:socket-stream socket) last-change)))
              (unless (eql 0 error)
                (error "low level api threw error ~a in get-info" error)))
            (multiple-value-bind (error type timestamp changes)
@@ -39,7 +43,9 @@
                          (remhash name table-name)))
              (setf last-change timestamp)
              (lodds.event:push-event :list-update
-                                     (list name type timestamp changes))))
+                                     (list name type timestamp changes))
+             (lodds.event:push-event :client-updated
+                                     (list name load last-change))))
       (when socket
         (usocket:socket-close socket)))))
 
