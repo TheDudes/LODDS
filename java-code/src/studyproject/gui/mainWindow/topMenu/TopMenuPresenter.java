@@ -29,8 +29,8 @@ import studyproject.gui.settingsWindow.SettingsWindowView;
 import studyproject.logging.LogKey;
 
 public class TopMenuPresenter implements Initializable {
-    @FXML
-    MenuBar menuBar;
+	@FXML
+	MenuBar menuBar;
 	@FXML
 	Menu fileMenu;
 	@FXML
@@ -57,7 +57,7 @@ public class TopMenuPresenter implements Initializable {
 		shareFolder.setOnAction(e -> shareFolderPressed());
 		sendFileToUser.setOnAction(e -> sendFileToUser());
 		aboutItem.setOnAction(e -> aboutItemPressed());
-		
+
 		if (Utils.osIsMac()) {
 			menuBar.setUseSystemMenuBar(true);
 		}
@@ -71,8 +71,11 @@ public class TopMenuPresenter implements Initializable {
 		}
 	}
 
-	private void shareFolderPressed() {
-		Utils.shareFolderPressed();
+	public void shareFolderPressed() {
+		String chosenPath = Utils.getChoosenDirPath("Choose a save directory");
+		if (chosenPath == null)
+			return;
+		mainWindowModel.getLodds().shareFolder(chosenPath);
 	}
 
 	private void settingsItemPressed() {
@@ -99,7 +102,7 @@ public class TopMenuPresenter implements Initializable {
 			logger.log(ErrorFactory.build(Level.SEVERE, LogKey.error, "IOException thrown: ", e));
 		}
 	}
-	
+
 	private void aboutItemPressed() {
 		Stage stage = new Stage();
 		stage.setScene(new Scene(new AboutWindowView().getView()));

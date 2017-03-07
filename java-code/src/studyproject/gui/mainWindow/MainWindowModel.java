@@ -3,26 +3,21 @@ package studyproject.gui.mainWindow;
 import javax.annotation.PostConstruct;
 
 import studyproject.API.Lvl.Mid.Lodds.Lodds;
-import studyproject.gui.Core.Utils;
-import javafx.stage.Stage;
 
 public class MainWindowModel {
 
+	private Lodds lodds;
+
 	@PostConstruct
-	public void init(){
-		Utils.setLodds(new Lodds());
+	public void init() {
+		lodds = new Lodds();
 	}
-	
+
 	public Lodds getLodds() {
-		return Utils.getLodds();
+		return lodds;
 	}
 
 	public void setLodds(Lodds lodds) {
-		Utils.setLodds(lodds);
+		this.lodds = lodds;
 	}
-	
-	public Stage getNewStage() {
-		return new Stage();
-	}
-	
 }

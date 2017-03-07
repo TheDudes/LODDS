@@ -3,7 +3,8 @@ package studyproject.gui.Core;
 import java.io.File;
 import java.util.List;
 
-import javafx.concurrent.Task;
+import javax.inject.Inject;
+
 import javafx.scene.Node;
 import javafx.scene.layout.AnchorPane;
 import javafx.stage.DirectoryChooser;
@@ -11,7 +12,7 @@ import javafx.stage.FileChooser;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import studyproject.App;
-import studyproject.API.Lvl.Mid.Lodds.Lodds;
+import studyproject.gui.mainWindow.MainWindowModel;
 
 /**
  * Multiple used functions for GUI Lvl
@@ -19,16 +20,8 @@ import studyproject.API.Lvl.Mid.Lodds.Lodds;
  * @author Chris
  */
 public class Utils {
-
-	private static Lodds lodds;
-
-	public static Lodds getLodds() {
-		return Utils.lodds;
-	}
-
-	public static void setLodds(Lodds lodds) {
-		Utils.lodds = lodds;
-	}
+	@Inject
+	MainWindowModel mainWindowModel;
 
 	/**
 	 * Open a FileChooser to select one single directory
@@ -94,26 +87,22 @@ public class Utils {
 	}
 
 
-	public static void shareFolderPressed() {
-		Stage stage = new Stage();
-		DirectoryChooser directoryChooser = new DirectoryChooser();
-		File chosenFolder = directoryChooser.showDialog(stage);
-		if (chosenFolder == null)
-			return;
-
-		Task<Void> shareFolderTask = new Task<Void>() {
-			@Override
-			protected Void call() throws Exception {
-				lodds.shareFolder(chosenFolder.getAbsolutePath());
-				return null;
-			}
-		};
-		stage.hide();
-
-		Thread thread = new Thread(shareFolderTask);
-		thread.setDaemon(true);
-		thread.start();
-	}
+//	public void shareFolder() {
+//		String choosenPath = getChoosenDirPath("Choose a save directory");
+//		if (choosenPath == null)
+//			return;
+//
+//		Task<Void> shareFolderTask = new Task<Void>() {
+//			@Override
+//			protected Void call() throws Exception {
+//				mainWindowModel.getLodds().shareFolder(choosenPath);
+//				return null;
+//			}
+//		};
+//
+//		Thread thread = new Thread(shareFolderTask);
+//		mainWindowModel.getLodds().executeThread(thread);
+//	}
 
 	public static Boolean osIsMac() {
 		return System.getProperty("os.name").toLowerCase().indexOf("mac") >= 0;

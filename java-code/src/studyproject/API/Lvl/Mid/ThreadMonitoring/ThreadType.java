@@ -9,6 +9,7 @@ import studyproject.API.Lvl.Mid.GetFileWPThread;
 import studyproject.API.Lvl.Mid.InfoSenderThread;
 import studyproject.API.Lvl.Mid.RequestHandlerThread;
 import studyproject.API.Lvl.Mid.SendFileWPThread;
+import studyproject.API.Lvl.Mid.ShareFolderThread;
 import studyproject.API.Lvl.Mid.UpdateFileInfoThread;
 
 /**
@@ -19,7 +20,7 @@ import studyproject.API.Lvl.Mid.UpdateFileInfoThread;
  *
  */
 public enum ThreadType {
-	none, fixed, getFile, sendFile, info;
+	none, fixed, getFile, sendFile, info, shareFolder;
 
 	/**
 	 * Determines the thread type of the overgiven runnable.
@@ -42,7 +43,10 @@ public enum ThreadType {
 
 		if (runnable instanceof UpdateFileInfoThread || runnable instanceof InfoSenderThread)
 			return ThreadType.info;
+
+		if (runnable instanceof ShareFolderThread)
+			return ThreadType.shareFolder;
+
 		return ThreadType.none;
 	}
-
 }

@@ -18,11 +18,13 @@ import studyproject.API.Lvl.Mid.Lodds.LoddsModel;
 public class ThreadExecutor implements Executor {
 	private final int DEFAULT_AT_A_TIME_UPLOADS = 20;
 	private final int DEFAULT_AT_A_TIME_DOWNLOADS = 20;
+	private final int DEFAULT_AT_A_TIME_SHARES = 10;
 	private final int NR_OF_FIXED_THREADS = 5;
 	private ExecutorService infoExecutor;
 	private ExecutorService sendFileExecutor;
 	private ExecutorService getFileExecutor;
 	private ExecutorService fixedThreadExecutor;
+	private ExecutorService shareFolderExecutor;
 	private ThreadFactoryBuilder threadFactoryBuilder;
 	private Vector<ExecutorService> allExecutors = new Vector<ExecutorService>();
 	private LoddsModel loddsModel;
@@ -41,6 +43,8 @@ public class ThreadExecutor implements Executor {
 		sendFileExecutor = Executors.newFixedThreadPool(DEFAULT_AT_A_TIME_UPLOADS, threadFactoryBuilder.build());
 		threadFactoryBuilder.setNamePrefix("fileGetter");
 		getFileExecutor = Executors.newFixedThreadPool(DEFAULT_AT_A_TIME_DOWNLOADS, threadFactoryBuilder.build());
+		threadFactoryBuilder.setNamePrefix("shareFolder");
+		shareFolderExecutor = Executors.newFixedThreadPool(DEFAULT_AT_A_TIME_SHARES, threadFactoryBuilder.build());
 		addExecutorsToVector();
 		this.loddsModel = loddsModel;
 	}
@@ -50,6 +54,7 @@ public class ThreadExecutor implements Executor {
 		allExecutors.addElement(infoExecutor);
 		allExecutors.addElement(getFileExecutor);
 		allExecutors.addElement(fixedThreadExecutor);
+		allExecutors.addElement(shareFolderExecutor);
 	}
 
 	@Override
@@ -71,6 +76,8 @@ public class ThreadExecutor implements Executor {
 		case sendFile:
 			sendFileExecutor.submit(runnable);
 			break;
+		case shareFolder:
+			shareFolderExecutor.submit(runnable);
 		default:
 			break;
 		}

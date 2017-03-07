@@ -6,7 +6,8 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
 import javafx.application.Platform;
-import studyproject.gui.Core.Utils;
+import studyproject.gui.mainWindow.topMenu.TopMenuPresenter;
+import studyproject.gui.mainWindow.topMenu.TopMenuView;
 
 /**
  * GUI for Mac OS specific dock menu
@@ -30,7 +31,7 @@ public class MacDockMenuPresenter {
 
 					@Override
 					public void run() {
-						Utils.shareFolderPressed();
+						((TopMenuPresenter) new TopMenuView().getPresenter()).shareFolderPressed();
 					}
 				});
 

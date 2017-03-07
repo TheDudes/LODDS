@@ -5,9 +5,6 @@ import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.UnknownHostException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.security.NoSuchAlgorithmException;
 import java.util.Vector;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -219,8 +216,10 @@ public class Lodds {
 		threadExecutor.execute(fileConnectionThread);
 	}
 
-	public void getMultipleFiles(Vector<FileCoreInfo> assignedDownloads, UserInfo user, String pathToDownloadTo, String topDir) {
-		MultipleDownloadHelper multipleDownloadHelper = new MultipleDownloadHelper(assignedDownloads, user, pathToDownloadTo, topDir);
+	public void getMultipleFiles(Vector<FileCoreInfo> assignedDownloads, UserInfo user, String pathToDownloadTo,
+			String topDir) {
+		MultipleDownloadHelper multipleDownloadHelper = new MultipleDownloadHelper(assignedDownloads, user,
+				pathToDownloadTo, topDir);
 		threadExecutor.execute(multipleDownloadHelper);
 	}
 
@@ -314,25 +313,10 @@ public class Lodds {
 	 * 
 	 * @param absolutePath
 	 *            the absolute path to the folder
-	 * 
-	 * 
-	 * @return 0 or error codes
-	 * @throws Exception
 	 */
-	public int shareFolder(String absolutePath) throws Exception {
-		if (Files.exists(Paths.get(absolutePath)) && Files.isDirectory(Paths.get(absolutePath))
-				&& !sharedFolders.contains(absolutePath)) {
-			sharedFolders.add(absolutePath);
-			try {
-				watchService.watchDirectoryRecursively(absolutePath);
-			} catch (NoSuchAlgorithmException e) {
-				logger.log(ErrorFactory.build(Level.SEVERE, LogKey.error, "NoSuchAlgorithmException thrown: ", e));
-			} catch (IOException e) {
-				logger.log(ErrorFactory.build(Level.SEVERE, LogKey.error, "IOException thrown: " + e));
-				return 4;
-			}
-		}
-		return 4;
+	public void shareFolder(String absolutePath) {
+		ShareFolderThread shareFolderThread = new ShareFolderThread(absolutePath, watchService, sharedFolders);
+		threadExecutor.execute(shareFolderThread);
 	}
 
 	/**
