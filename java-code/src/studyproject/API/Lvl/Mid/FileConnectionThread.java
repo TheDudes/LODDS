@@ -16,7 +16,6 @@ import studyproject.API.Lvl.Low.Requests;
 import studyproject.API.Lvl.Mid.Core.UserInfo;
 import studyproject.API.Lvl.Mid.ThreadMonitoring.MonitoredThread;
 import studyproject.logging.LogKey;
-import sun.java2d.pipe.SpanShapeRenderer;
 
 /**
  * Thread to get a file from another client After creating a new instance of

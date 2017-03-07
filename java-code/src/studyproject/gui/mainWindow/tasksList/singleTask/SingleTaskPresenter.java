@@ -1,14 +1,11 @@
 package studyproject.gui.mainWindow.tasksList.singleTask;
 
 import javafx.application.Platform;
-import javafx.beans.InvalidationListener;
-import javafx.beans.Observable;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ProgressBar;
-import studyproject.API.Lvl.Mid.Lodds.LoddsModel;
 import studyproject.API.Lvl.Mid.ThreadMonitoring.MonitoredThread;
 import studyproject.gui.mainWindow.MainWindowModel;
 
