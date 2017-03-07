@@ -51,6 +51,18 @@ public class FileCoreInfo {
 		this.filePath = filePath;
 	}
 
+	/**
+	 * If the checksum is null, this object is a folder
+	 * 
+	 * @return true if the objects checksum is null, otherwise false
+	 */
+	public boolean isFolder() {
+		if (this.checksum == null) {
+			return true;
+		}
+		return false;
+	}
+
 	@Override
 	public String toString() {
 		return fileName;
