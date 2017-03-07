@@ -1,10 +1,30 @@
 package studyproject.API.Lvl.Mid.ThreadMonitoring;
 
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleLongProperty;
 import javafx.beans.property.StringProperty;
 
 public interface MonitoredThread {
+
+	/**
+	 * Shall return true if the thread is running and false if not
+	 * 
+	 * @return
+	 */
+	SimpleBooleanProperty isRunning();
+
+	/**
+	 * Sets the running boolean of the MonitoredThread
+	 */
+	void setRunning(boolean toSet);
+
+	/**
+	 * Shall return true if the MonitoredThread is finsihed or false if not
+	 * 
+	 * @return
+	 */
+	SimpleBooleanProperty isFinished();
 
 	/**
 	 * Returns true if the MonitoredThread is in a queue of a

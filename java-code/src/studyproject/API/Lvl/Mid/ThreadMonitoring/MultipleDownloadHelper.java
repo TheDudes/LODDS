@@ -1,5 +1,7 @@
 package studyproject.API.Lvl.Mid.ThreadMonitoring;
 
+import javafx.application.Platform;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleLongProperty;
 import javafx.beans.property.SimpleStringProperty;
@@ -28,6 +30,9 @@ public class MultipleDownloadHelper extends Thread implements MonitoredThread {
 	boolean oneOfMultiple = false;
 	String baseDir = "";
 	Logger logger = Logger.getGlobal();
+	SimpleBooleanProperty finished = new SimpleBooleanProperty(false);
+	SimpleBooleanProperty running = new SimpleBooleanProperty(true);
+	FileConnectionThread currentFileConnectionThread = null;
 
 	public MultipleDownloadHelper(Vector<FileCoreInfo> assignedDownloads, UserInfo user, String pathToDownloadTo,
 			String baseDir) {
@@ -46,56 +51,62 @@ public class MultipleDownloadHelper extends Thread implements MonitoredThread {
 
 	@Override
 	public void run() {
-		for (FileCoreInfo currentFile : assignedDownloads) {
-			currentDownloadedFile.set(currentFile.getFileName());
-			FileConnectionThread fileConnectionThread = new FileConnectionThread(user, currentFile.getChecksum(),
+		int i = 0;
+		while (running.get() == true && i < assignedDownloads.size()) {
+			FileCoreInfo currentFile = assignedDownloads.get(i);
+			Platform.runLater(() -> currentDownloadedFile.set(currentFile.getFileName()));
+			currentFileConnectionThread = new FileConnectionThread(user, currentFile.getChecksum(),
 					currentFile.getFilesize(), pathToDownloadTo + currentFile.getFilePath());
-			fileConnectionThread.setOneOfMultiple(true);
-			fileConnectionThread.getDoneSize().addListener((observable, oldValue, newValue) -> {
-				doneSize.setValue(doneSize.get() + (newValue.longValue() - oldValue.longValue()));
-				progress.set((double) doneSize.get() / (double) wholeSize);
+			currentFileConnectionThread.setOneOfMultiple(true);
+			currentFileConnectionThread.getDoneSize().addListener((observable, oldValue, newValue) -> {
+				Platform.runLater(() -> {
+					doneSize.setValue(doneSize.get() + (newValue.longValue() - oldValue.longValue()));
+					progress.set((double) doneSize.get() / (double) wholeSize);
+				});
 			});
-			fileConnectionThread.start();
+			currentFileConnectionThread.start();
 			try {
-				fileConnectionThread.join();
+				currentFileConnectionThread.join();
+				i++;
 			} catch (InterruptedException e) {
 				logger.log(ErrorFactory.build(Level.SEVERE, LogKey.error, e));
 			}
 		}
+		finished.setValue(true);
 	}
 
 	@Override
-	public SimpleStringProperty getCurrentFileName() {
+	public synchronized SimpleStringProperty getCurrentFileName() {
 		return currentDownloadedFile;
 	}
 
 	@Override
-	public SimpleLongProperty getDoneSize() {
+	public synchronized SimpleLongProperty getDoneSize() {
 		return doneSize;
 	}
 
 	@Override
-	public long getWholeSize() {
+	public synchronized long getWholeSize() {
 		return wholeSize;
 	}
 
 	@Override
-	public boolean isSubmitted() {
+	public synchronized boolean isSubmitted() {
 		return submitted;
 	}
 
 	@Override
-	public void setSubmitted(boolean toSet) {
+	public synchronized void setSubmitted(boolean toSet) {
 		this.submitted = toSet;
 	}
 
 	@Override
-	public void setProgress(SimpleDoubleProperty toSet) {
+	public synchronized void setProgress(SimpleDoubleProperty toSet) {
 		this.progress = toSet;
 	}
 
 	@Override
-	public SimpleDoubleProperty getProgress() {
+	public synchronized SimpleDoubleProperty getProgress() {
 		return progress;
 	}
 
@@ -107,6 +118,23 @@ public class MultipleDownloadHelper extends Thread implements MonitoredThread {
 	@Override
 	public void setOneOfMultiple(boolean oneOfMultiple) {
 		this.oneOfMultiple = oneOfMultiple;
+	}
+
+	@Override
+	public SimpleBooleanProperty isRunning() {
+		return running;
+	}
+
+	@Override
+	public void setRunning(boolean toSet) {
+		if (currentFileConnectionThread != null)
+			currentFileConnectionThread.setRunning(false);
+		running.setValue(toSet);
+	}
+
+	@Override
+	public synchronized SimpleBooleanProperty isFinished() {
+		return finished;
 	}
 
 	@Override

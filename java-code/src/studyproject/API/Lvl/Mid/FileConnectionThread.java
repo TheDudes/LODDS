@@ -5,6 +5,7 @@ import java.net.Socket;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleLongProperty;
 import javafx.beans.property.SimpleStringProperty;
@@ -15,6 +16,7 @@ import studyproject.API.Lvl.Low.Requests;
 import studyproject.API.Lvl.Mid.Core.UserInfo;
 import studyproject.API.Lvl.Mid.ThreadMonitoring.MonitoredThread;
 import studyproject.logging.LogKey;
+import sun.java2d.pipe.SpanShapeRenderer;
 
 /**
  * Thread to get a file from another client After creating a new instance of
@@ -41,6 +43,8 @@ public class FileConnectionThread extends Thread implements MonitoredThread {
 	private SimpleStringProperty currentFile = new SimpleStringProperty("");
 	private SimpleDoubleProperty progress = new SimpleDoubleProperty(0.0);
 	private boolean oneOfMultiple = false;
+	private SimpleBooleanProperty finished = new SimpleBooleanProperty(false);
+	private SimpleBooleanProperty running = new SimpleBooleanProperty(true);
 
 	/**
 	 * Use this constructor if you want to pull the whole file, if you only want
@@ -167,7 +171,7 @@ public class FileConnectionThread extends Thread implements MonitoredThread {
 			}
 			logger.log(ErrorFactory.build(Level.INFO, LogKey.getFile,
 					"Sent getFile to user '" + user.toString() + "' for file '" + checksum + "'"));
-			while (startIndex.get() != endIndex) {
+			while (running.get() == true && startIndex.get() != endIndex) {
 				if (startIndex.get() + chunksize < endIndex) {
 					returnValue = Handles.handleFile(inStream, fileOutStream, chunksize);
 					startIndex.setValue(startIndex.get() + chunksize);
@@ -185,12 +189,20 @@ public class FileConnectionThread extends Thread implements MonitoredThread {
 				}
 			}
 			fileOutStream.close();
+			if (startIndex.get() == endIndex)
+				finished.setValue(true);
 		} catch (IOException e) {
 			logger.log(ErrorFactory.build(Level.SEVERE, LogKey.error, "IOException thrown: ", e));
 		}
-
-		logger.log(ErrorFactory.build(Level.INFO, LogKey.filetransferComplete,
-				"Download of '" + checksum + "' from user '" + user.toString() + " 'finished"));
+		if (finished.get()) {
+			logger.log(ErrorFactory.build(Level.INFO, LogKey.filetransferComplete,
+					"Download of '" + checksum + "' from user '" + user.toString() + "' finished"));
+		} else {
+			logger.log(ErrorFactory.build(Level.INFO, LogKey.info,
+					"Filetransfer of '" + checksum + "' from user '" + user.toString() + "' was interrupted."));
+		}
+		if (running.get() == false && finished.get() == false)
+			finished.setValue(true);
 	}
 
 	@Override
@@ -239,7 +251,21 @@ public class FileConnectionThread extends Thread implements MonitoredThread {
 	}
 
 	@Override
-	public String getNameToDisplay() {
+	public synchronized String getNameToDisplay() {
 		return localPath.substring(localPath.lastIndexOf("/") + 1);
+	}
+
+	@Override
+	public SimpleBooleanProperty isRunning() {
+		return running;
+	}
+
+	@Override
+	public void setRunning(boolean toSet) {
+		running.set(toSet);
+	}
+
+	public synchronized SimpleBooleanProperty isFinished() {
+		return finished;
 	}
 }
