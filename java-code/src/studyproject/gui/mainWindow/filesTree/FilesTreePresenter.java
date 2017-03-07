@@ -1,6 +1,5 @@
 package studyproject.gui.mainWindow.filesTree;
 
-import java.io.File;
 import java.net.URL;
 import java.util.ResourceBundle;
 import java.util.Vector;
@@ -118,28 +117,28 @@ public class FilesTreePresenter implements Initializable {
 		}
 	}
 
+	/**
+	 * Download the selected files and folder from the filesTree. When a folder
+	 * is selected, download all children. If there are some of the children
+	 * selected as well, only download the selected children and none of the
+	 * other, unselected children
+	 */
 	private void downloadPressed() {
 		ObservableList<TreeItem<FileCoreInfo>> itemsList = filesTreeView.getSelectionModel().getSelectedItems();
-		String absolutePath;
-		File chosenFolder;
-		try {
-			chosenFolder = new File(Utils.getChoosenDirPath("Choose folder to save files in"));
-		} catch (NullPointerException e) {
+		String absolutePath = Utils.getChoosenDirPath("Choose folder to save files in");
+		absolutePath = absolutePath.replace("\\", "/");
+		if (absolutePath.equals(null)) {
 			Logger.getGlobal().log(ErrorFactory.build(Level.INFO, LogKey.info, "No folder chosen. Download aborted."));
 			return;
-		}
-		absolutePath = chosenFolder.getAbsolutePath().replace("\\", "/");
-		if (absolutePath.endsWith("/")) {
+		} else if (absolutePath.endsWith("/")) {
 			absolutePath = absolutePath.substring(0, absolutePath.length() - 1);
 		}
 
 		for (TreeItem<FileCoreInfo> treeItem : itemsList) {
 			FileCoreInfo fileCoreInfo = treeItem.getValue();
-			// check if the item is a folder
 			if (fileCoreInfo.isFolder()) {
 				// If children of this folder are selected as well, ignore this
 				// item
-				String topDir = fileCoreInfo.getFileName();
 				boolean continueForEachLoop = false;
 				for (TreeItem<FileCoreInfo> listItem : itemsList) {
 					if (listItem.getValue().getFilePath().contains(fileCoreInfo.getFilePath())
@@ -156,10 +155,10 @@ public class FilesTreePresenter implements Initializable {
 				Vector<FileCoreInfo> fileCoreInfoVector = new Vector<FileCoreInfo>();
 				fileCoreInfoVector = findChildrenItems(treeItem, fileCoreInfoVector);
 				mainWindowModel.getLodds().getMultipleFiles(fileCoreInfoVector, userListModel.getSelectedUser().get(),
-						absolutePath, topDir);
+						absolutePath, fileCoreInfo.getFileName());
 
 			} else {
-				// item is a file, not a folder
+				// item is a file, download it
 				mainWindowModel.getLodds().getFile(userListModel.getSelectedUser().get(), fileCoreInfo.getChecksum(),
 						absolutePath + fileCoreInfo.getFilePath());
 			}
