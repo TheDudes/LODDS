@@ -14,7 +14,6 @@ import java.nio.file.WatchEvent;
 import java.nio.file.WatchKey;
 import java.nio.file.WatchService;
 import java.security.NoSuchAlgorithmException;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -37,13 +36,18 @@ public class FileWatcher extends Thread {
 	}
 
 	public void stopWatching(String directory) {
+		System.out.println("stopWatching: " + directory);
+		System.out.println(this.directoryKeys.keySet());
 		WatchedFolder wf = this.directoryKeys.get(directory);
+		if (wf != null)
+			wf.key.cancel();
 		this.directoryKeys.remove(directory);
-		wf.key.cancel();
 	}
 
 	public void registerDir(String path, String virtualRoot, Boolean watchForNewFiles) {
 		path = controller.addSlashToFileNameIfNecessary(path);
+		virtualRoot = controller.addSlashToFileNameIfNecessary(virtualRoot);
+
 		Path dir = Paths.get(path);
 		try {
 			WatchKey watchKey = dir.register(watcher, ENTRY_CREATE, ENTRY_DELETE, ENTRY_MODIFY);
@@ -130,10 +134,13 @@ public class FileWatcher extends Thread {
 
 						FileWatcherTreeNode node = controller.currentFiles.getNodeByFileName(fullPath);
 
+						// System.out.println("#1.1 FileWatcher: Detected DEL
+						// event for: "+fullPath);
+
 						// File or folder was deleted and in our list
 						if (node != null && (eventType == OVERFLOW || eventType == ENTRY_DELETE)) {
 
-							System.out.println("FileWatcher: Detected DEL event for: "+fullPath);
+							System.out.println("FileWatcher: Detected DEL event for: " + fullPath);
 
 							// DEL
 							// File is not a folder
@@ -194,24 +201,6 @@ public class FileWatcher extends Thread {
 
 			if (!probablyDeletedFolder.exists()) {
 				controller.unwatchDirectory(fullPath);
-
-				// Delete all sub folders from watchtedInternalDirectories
-				// System.out.println("Delete all sub folders from
-				// watchedInternalDirectories");
-				ArrayList<String> removeList = new ArrayList<String>();
-				for (String subfolder : controller.watchedInternalDirectories) {
-					if (subfolder.contains(fullPath)) {
-						removeList.add(subfolder);
-					}
-				}
-
-				for (String removeFolder : removeList) {
-					controller.unwatchDirectory(removeFolder);
-				}
-
-				controller.watchedInternalDirectories.removeAll(removeList);
-				controller.deleteFolderFromLists(fullPath);
-
 			}
 
 		}

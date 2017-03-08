@@ -245,14 +245,17 @@ public class FileWatcherControllerTest {
 		// List should contain six files, 3 add + 3 del
 		while (c.fileInfoHistory.size() != 6) {
 			// Test will time out if list will not contain zero files
-			System.out.println(c.fileInfoHistory.size());
+			//System.out.println(c.fileInfoHistory.size());
 		}
+		
+		Thread.sleep(2000);
+
 		
 		String actualResponse = c.getInfo(0);
 		String expectedResponse = 
 				"all "+System.currentTimeMillis() / 1000L+" 6\n"
-				+ "del da39a3ee5e6b4b0d3255bfef95601890afd80709 0 /"+virtualRoot+"temp/subfolder/subfolder2/temp.txt\n"
 				+ "del da39a3ee5e6b4b0d3255bfef95601890afd80709 0 /"+virtualRoot+"temp/subfolder/temp.txt\n"
+				+ "del da39a3ee5e6b4b0d3255bfef95601890afd80709 0 /"+virtualRoot+"temp/subfolder/subfolder2/temp.txt\n"
 				+ "del da39a3ee5e6b4b0d3255bfef95601890afd80709 0 /"+virtualRoot+"temp/temp.txt\n"
 				+ "add da39a3ee5e6b4b0d3255bfef95601890afd80709 0 /"+virtualRoot+"temp/temp.txt\n"
 				+ "add da39a3ee5e6b4b0d3255bfef95601890afd80709 0 /"+virtualRoot+"temp/subfolder/temp.txt\n"

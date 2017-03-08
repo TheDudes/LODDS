@@ -20,6 +20,10 @@ import studyproject.logging.LogKey;
  * TODO: - Bug: When a folder is deleted WatchService does not notify about the
  * deleted files that were inside that folder
  */
+/**
+ * @author robinhood
+ *
+ */
 public class FileWatcherController {
 
 	// Hash map that contains all files that are actively being watched, files
@@ -101,9 +105,39 @@ public class FileWatcherController {
 		}
 	}
 
+	/**
+	 * Removes directory including all sub directories and files from being
+	 * watched and adds add entries to the fileInfoList for the removed files
+	 * 
+	 * @param fullPath
+	 * @param includeSubDirs
+	 *            If true it will unwatch all subdirectories of full path.
+	 *            Normally you set it to true if you want to unwatch a folder
+	 *            manually. On automatic unwatch in the case of deletion it is
+	 *            not necessary cause every subfolder is already covered by a
+	 *            watchkey
+	 */
 	public void unwatchDirectory(String fullPath) {
+		fullPath = this.addSlashToFileNameIfNecessary(fullPath);
 		watchedInternalDirectories.remove(fullPath);
 		watcher.stopWatching(fullPath);
+
+		// Prepare recursive call to delete all sub folders
+		ArrayList<String> removeList = new ArrayList<String>();
+		for (String subfolder : watchedInternalDirectories) {
+			// TODO: Rework to make folder check more precise
+			if (subfolder.contains(fullPath)) {
+				removeList.add(subfolder);
+			}
+		}
+
+		for (String removeFolder : removeList) {
+			unwatchDirectory(removeFolder);
+		}
+
+		// watchedInternalDirectories.removeAll(removeList);
+		deleteFolderFromLists(fullPath);
+
 		updateLastChange();
 	}
 
@@ -248,7 +282,7 @@ public class FileWatcherController {
 	 * @throws Exception
 	 */
 	public void watchDirectoryRecursively(String absoluteFileName, String virtualRoot) throws Exception {
-		
+
 		absoluteFileName = this.addSlashToFileNameIfNecessary(absoluteFileName);
 		virtualRoot = this.addSlashToFileNameIfNecessary(virtualRoot);
 
@@ -311,8 +345,6 @@ public class FileWatcherController {
 	 * @param node
 	 */
 	public synchronized void deleteFolderFromLists(String fileName) {
-
-		// System.out.println("Delete folder from lists: " + fileName);
 
 		// Get all fileInfoList entries
 		ArrayList<FileInfoListEntry> entries = FileWatcherTreeNode
