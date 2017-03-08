@@ -212,7 +212,18 @@
                  Default: 500")
          :integer
          10
-         10000)))
+         10000)
+   (list :show-background-color-on-size
+         t
+         (format nil
+                 "Show a background color on sizes depending on the given~%~
+                 size. For example bigger files/folders will be colored red,~%~
+                 while smaller will be colored in a greenish color.~%~
+                 Changing this setting will not have a direct effect,~%~
+                 Restarting Lodds (Stop & Start) to build a new tree is~%~
+                 needed.~%~
+                 Default: true")
+         :boolean)))
 
 (defun split-key-value (line)
   (let* ((equal-pos (position #\= line))

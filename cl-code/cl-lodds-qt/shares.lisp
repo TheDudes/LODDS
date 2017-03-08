@@ -145,10 +145,18 @@
              :type string
              :documentation "File entries checksum")))
 
+(defun set-column-background (entry column color)
+  (with-finalizing* ((qcolor (q+:make-qcolor color))
+                     (qbrush (q+:make-qbrush qcolor)))
+    (q+:set-background entry column qbrush)))
+
 (defgeneric update-entry-display (shares-entry)
   (:documentation "Updates entries displayed size and tooltip")
   (:method ((entry shares-entry))
     (with-slots (widget size) entry
+      (when (lodds.config:get-value :show-background-color-on-size)
+        (set-column-background widget +shares-size+
+                               (lodds.core:get-size-color size)))
       (qdoto widget
              (q+:set-text +shares-size+
                           (lodds.core:format-size size))
@@ -179,6 +187,9 @@
     (setf (gethash id (entries shares)) entry)
     (let ((font (q+:make-qfont "Consolas, Inconsolata, Monospace" 10)))
       (setf (q+:style-hint font) (q+:qfont.type-writer))
+      (when (lodds.config:get-value :show-background-color-on-size)
+        (set-column-background widget +shares-size+
+                               (lodds.core:get-size-color size)))
       (qdoto widget
              (q+:set-flags (qt:enum-or (q+:qt.item-is-selectable)
                                        (q+:qt.item-is-enabled)))

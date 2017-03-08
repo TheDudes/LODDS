@@ -9,6 +9,7 @@
            #:str-case
            #:split-directory
            #:format-size
+           #:get-size-color
            #:split-user-identifier
            #:split-path
            #:add-missing-slash

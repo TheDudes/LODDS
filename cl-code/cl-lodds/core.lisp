@@ -118,6 +118,30 @@
       ((> size kb) (format nil "~akb" (ash size -10)))
       (t           (format nil "~ab " size)))))
 
+(let ((tb    (ash 1 40))  ;; 1 tb
+      (gb8   (ash 1 33))  ;; 8 gb
+      (gb    (ash 1 30))  ;; 1 gb
+      (mb512 (ash 1 29))  ;; 512 mb
+      (mb256 (ash 1 28))  ;; 256 mb
+      (mb128 (ash 1 27))  ;; 128 mb
+      (mb64  (ash 1 26))  ;; 36 mb
+      (mb32  (ash 1 25))  ;; 32 mb
+      (mb    (ash 1 20))  ;; 1 mb
+      (kb    (ash 1 10))) ;; 1 kb
+  (defun get-size-color (size)
+    (cond
+      ((> size tb)    "#FF0000")
+      ((> size gb8)   "#FF3300")
+      ((> size gb)    "#ff6600")
+      ((> size mb512) "#ff9900")
+      ((> size mb256) "#FFCC00")
+      ((> size mb128) "#FFFF00")
+      ((> size mb64)  "#ccff00")
+      ((> size mb32)  "#99ff00")
+      ((> size mb)    "#66ff00")
+      ((> size kb)    "#33ff00")
+      (t              "#00FF00"))))
+
 (defmacro split-user-identifier ((name ip port &optional (convert-types nil)) user &body body)
   (let ((ip+port (gensym "ip+port")))
     `(destructuring-bind (,name ,ip+port) (cl-strings:split ,user #\@)
