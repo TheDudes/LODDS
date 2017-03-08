@@ -110,12 +110,6 @@ public class FileWatcherController {
 	 * watched and adds add entries to the fileInfoList for the removed files
 	 * 
 	 * @param fullPath
-	 * @param includeSubDirs
-	 *            If true it will unwatch all subdirectories of full path.
-	 *            Normally you set it to true if you want to unwatch a folder
-	 *            manually. On automatic unwatch in the case of deletion it is
-	 *            not necessary cause every subfolder is already covered by a
-	 *            watchkey
 	 */
 	public void unwatchDirectory(String fullPath) {
 		fullPath = this.addSlashToFileNameIfNecessary(fullPath);
