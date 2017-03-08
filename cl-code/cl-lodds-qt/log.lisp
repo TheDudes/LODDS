@@ -97,14 +97,20 @@
                       event)
              (string= (q+:text last-item +log-message+)
                       msg))
-        (qdoto last-item
-               (q+:set-text +log-time+ (generate-timestamp))
-               (q+:set-text +log-count+
-                            (prin1-to-string
-                             (let ((current (q+:text last-item +log-count+)))
-                               (if (string= current "")
-                                   2
-                                   (+ 1 (parse-integer current)))))))
+        (let* ((current (q+:text last-item +log-count+))
+               (next (if (string= current "")
+                         2
+                         (+ 1 (parse-integer current)))))
+          ;; TODO: this might be very unperformant
+          (with-finalizing* ((color (q+:make-qcolor (format nil "#~2,'0X0000"
+                                                            (if (> next 255)
+                                                                255
+                                                                next))))
+                             (brush (q+:make-qbrush color)))
+            (qdoto last-item
+                   (q+:set-text +log-time+ (generate-timestamp))
+                   (q+:set-text +log-count+ (prin1-to-string next))
+                   (q+:set-foreground +log-count+ brush))))
         (let ((new-entry (qdoto (q+:make-qtreewidgetitem info-log-list)
                                 (q+:set-text +log-time+ (generate-timestamp))
                                 (q+:set-text +log-event+ event)
