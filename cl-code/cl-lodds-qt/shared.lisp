@@ -52,7 +52,8 @@
       (q+:set-item-widget directories
                           entry
                           +shared-widget+
-                          button))))
+                          button))
+    (q+:update-geometries directories)))
 
 (define-subwidget (directories timer) (q+:make-qtimer directories))
 

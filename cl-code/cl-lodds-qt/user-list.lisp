@@ -59,7 +59,8 @@
              (q+:set-text +user-list-load+ (lodds.core:format-size (parse-integer load)))
              (q+:set-text-alignment +user-list-load+ (q+:qt.align-right))
              (q+:set-text +user-list-full-name+ user)))
-    (setf (gethash user (users user-list)) new-entry)))
+    (setf (gethash user (users user-list)) new-entry)
+    (q+:update-geometries user-list)))
 
 (define-slot (user-list remove-user) ((user string))
   (declare (connected user-list (remove-user string)))
