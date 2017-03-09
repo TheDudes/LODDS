@@ -118,7 +118,8 @@
                          ((:task-finished
                            :shared-directory
                            :config-changed
-                           :send-permission) "#1ED760")
+                           :send-permission
+                           :info) "#1ED760")
                          ((:task-failed
                            :directory-error
                            :folder-download-error) "#FF0000")
