@@ -38,7 +38,7 @@
                        (q+:make-qlabel dir-name
                                        download-folder))
            (q+:add-row "Size:"
-                       (q+:make-qlabel (format nil "~a (~a)"
+                       (q+:make-qlabel (format nil "~a (~:d bytes)"
                                                (lodds.core:format-size size)
                                                size)
                                        download-folder))

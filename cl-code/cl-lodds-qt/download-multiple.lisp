@@ -39,7 +39,7 @@
                (declare (ignore name user))
                (incf total-size size)
                (incf folders)
-               (push (format nil "Folder: ~a, Files: ~a, Size: ~a (~a bytes)"
+               (push (format nil "Folder: ~a, Files: ~a, Size: ~a (~:d bytes)"
                              fullpath items (lodds.core:format-size size) size)
                      tooltips)))
             (:file
@@ -47,7 +47,7 @@
                  info
                (incf total-size size)
                (incf files)
-               (push (format nil "File: ~a, Checksum: ~a, Size: ~a (~a bytes), Users: ~{~a~^,~}"
+               (push (format nil "File: ~a, Checksum: ~a, Size: ~a (~:d bytes), Users: ~{~a~^,~}"
                              name checksum (lodds.core:format-size size) size users)
                      tooltips)))))
     (q+:set-tool-tip download-multiple
@@ -60,7 +60,7 @@
            (q+:add-widget select-folder-button))
     (qdoto layout
            (q+:add-row "Total Download Size:"
-                       (q+:make-qlabel (format nil "~a (~a bytes)"
+                       (q+:make-qlabel (format nil "~a (~:d bytes)"
                                                (lodds.core:format-size total-size)
                                                total-size)
                                        download-multiple))

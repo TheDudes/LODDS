@@ -53,7 +53,7 @@
       (q+:add-item user usr))
     (setf checksm checksum)
     (q+:set-tool-tip download-file
-                     (format nil "Checksum: ~a~%Filename: ~a~%Size: ~a (~a bytes)"
+                     (format nil "Checksum: ~a~%Filename: ~a~%Size: ~a (~:d bytes)"
                              checksum
                              name
                              (lodds.core:format-size size)
