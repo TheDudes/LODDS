@@ -120,8 +120,8 @@
          (q+:add-widget users)))
 
 (defmethod initialize-instance :after ((send-file send-file) &key selected-file)
-  (when selected-file
-    (with-slots-bound (send-file send-file)
+  (with-slots-bound (send-file send-file)
+    (when selected-file
       (q+:set-text file
                    selected-file))))
 

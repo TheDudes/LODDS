@@ -19,8 +19,24 @@
      image: url(./res/folder-open.png);
    }
 
+   QTreeView#Shares::branch:has-siblings:adjoins-item {
+     border-image: url(./res/file.png) 0;
+   }
+
+   QTreeView#Shares::branch:!has-children:!has-siblings:adjoins-item {
+     border-image: url(./res/file.png) 0;
+   }
+
    QTreeView#Shares::branch {
      background-color: white;
+   }
+
+   QTreeView#UserList::branch {
+     border-image: url(./res/user.png) 0;
+   }
+
+   QTreeView#Shared::branch {
+     border-image: url(./res/folder-shared.png) 0;
    }")
 
 (defvar +events+
