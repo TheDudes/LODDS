@@ -45,18 +45,10 @@
       (finalize old-widget))
     (let ((button (q+:make-qpushbutton directories))
           (path (q+:text entry +shared-fullpath+)))
-      (with-finalizing* ((pixmap (q+:make-qpixmap
-                                  (format nil
-                                          "~a~a"
-                                          (lodds.config:get-value :resources-folder)
-                                          "x.png")))
-                         (icon (q+:make-qicon pixmap)))
-        (qdoto button
-               (q+:set-tool-tip (format nil
-                                        "Click to unshare ~a"
-                                        (q+:text entry +shared-path+)))
-               (q+:set-icon icon)
-               (q+:set-flat t)))
+      (q+:set-tool-tip button (format nil
+                                      "Click to unshare ~a"
+                                      (q+:text entry +shared-path+)))
+      (set-icon button "x.png" "Unshare")
       (connect button "pressed()"
                (lambda ()
                  (when (lodds.watcher:folder-already-shared-p path)

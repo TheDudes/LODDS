@@ -206,9 +206,17 @@
                          :menu view-menu))
 
 (define-initializer (main-window setup-widget)
+  (let ((lodds-icon (format nil "~a~a" (lodds.config:get-value :resources-folder)
+                            "lodds.png")))
+    (if (lodds.core:file-exists lodds-icon)
+        (q+:set-window-icon main-window
+                            (q+:make-qicon lodds-icon))
+        (let ((text (format nil "Could not find lodds icon ~a"
+                            lodds-icon)))
+          (format t "~a~%" text)
+          (lodds.event:push-event :info (list text)))))
   (qdoto main-window
          (q+:set-window-title (format nil "LODDS - ~a" (lodds.config:get-value :name)))
-         (q+:set-window-icon (q+:make-qicon "./res/lodds.png"))
          (q+:resize 800 450)
          (q+:set-central-widget shares-widget))
   (signal! main-window (reload-stylesheet)))

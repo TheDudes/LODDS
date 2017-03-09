@@ -40,15 +40,7 @@
                                           int)))
   (let* ((new-entry (q+:make-qtreewidgetitem user-list))
          (send-file-button (q+:make-qpushbutton user-list)))
-    (with-finalizing* ((pixmap (q+:make-qpixmap
-                                (format nil
-                                        "~a~a"
-                                        (lodds.config:get-value :resources-folder)
-                                        "send-file.png")))
-                       (icon (q+:make-qicon pixmap)))
-      (qdoto send-file-button
-             (q+:set-icon icon)
-             (q+:set-flat t)))
+    (set-icon send-file-button "send-file.png" "Send File")
     (connect send-file-button "pressed()"
              (lambda ()
                (open-send-file-dialog user)))

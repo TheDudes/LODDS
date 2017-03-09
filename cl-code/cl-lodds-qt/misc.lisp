@@ -32,3 +32,28 @@
   `(loop :for ,index :from 0 :below (q+:child-count ,parent)
          :do (let ((,child (q+:child ,parent ,index)))
                ,@body)))
+
+(defun set-icon (widget icon-name fallback-text &optional (set-flat t) (supress-warning nil))
+  "calls q+:set-icon on given widget, when the icon was found inside
+the :resources-folder. If not q+:set-text will be used to set the
+fallback-text. If set-flat is true (q+:set-flat widget t) will be
+called, when the icon is found. Will also print a warning on stdout
+and push a :info event if the icon is not found, set
+supress-warning if you dont want that."
+  (let ((icon-path (format nil
+                           "~a~a"
+                           (lodds.config:get-value :resources-folder)
+                           icon-name)))
+    (if (lodds.core:file-exists icon-path)
+        (with-finalizing* ((pixmap (q+:make-qpixmap icon-path))
+                           (icon (q+:make-qicon pixmap)))
+          (q+:set-icon widget icon)
+          (when set-flat
+            (q+:set-flat widget t)))
+        (progn
+          (unless supress-warning
+            (let ((text (format nil "Could not find icon on ~a, falling back to text"
+                                icon-path)))
+              (lodds.event:push-event :info (list text))
+              (format t "~a~%" text)))
+          (q+:set-text widget fallback-text)))))
