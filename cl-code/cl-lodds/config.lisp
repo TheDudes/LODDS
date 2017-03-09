@@ -180,8 +180,13 @@
          "./res/"
          (format nil
                  "Folder which contains resources for Lodds,~%~
-                 like icons, stylesheets, ... ~%~
-                 Default: . (the current directory)")
+                 like icons, stylesheets, ...~%~
+                 Changing this value will have no direct effect,~%~
+                 Restart (stop/start) lodds, reload the~%~
+                 stylesheet (Lodds -> Reload Stylesheet) and~%~
+                 reshare (unshare/share) all folders for changes~%~
+                 to take effect~%~
+                 Default: ./res/ (res folder inside the current directory)")
          :folder)
    (list :timeout-send-file
          300
