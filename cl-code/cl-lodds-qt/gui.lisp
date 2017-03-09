@@ -105,9 +105,7 @@
          (make-setting-dialog))
   (:separator)
   (:item ("&Quit" (ctrl q))
-         (progn
-           (q+:close main-window)
-           (q+:qcoreapplication-quit))))
+         (signal! main-window (shutdown))))
 
 (define-subwidget (main-window tray-icon)
     (q+:make-qsystemtrayicon main-window)
@@ -211,6 +209,12 @@
 (define-signal (main-window received-send-permission) (string))
 (define-signal (main-window folder-download-error) (string))
 (define-signal (main-window directory-error) (string))
+(define-signal (main-window shutdown) ())
+
+(define-slot (main-window shutdown) ()
+  (declare (connected main-window (shutdown)))
+  (q+:close main-window)
+  (q+:qcoreapplication-quit))
 
 (define-slot (main-window config-changed) ()
   (declare (connected main-window (config-changed)))
@@ -324,13 +328,20 @@
                               (signal! main-window (directory-error
                                                     string)
                                        (second event)))
-                            :directory-error))
+                            :directory-error)
+  (lodds.event:add-callback :qt-main
+                            (lambda (event)
+                              (declare (ignore event))
+                              (signal! main-window
+                                       (shutdown)))
+                            :shutdown))
 
 (define-finalizer (main-window cleanup-callbacks)
   (lodds.event:remove-callback :qt-main :config-changed)
   (lodds.event:remove-callback :qt-main :send-permission)
   (lodds.event:remove-callback :qt-main :folder-download-error)
-  (lodds.event:remove-callback :qt-main :directory-error))
+  (lodds.event:remove-callback :qt-main :directory-error)
+  (lodds.event:remove-callback :qt-main :shutdown))
 
 (defmethod fix-menubar-order ((main-window main-window))
   (with-slots-bound (main-window main-window)

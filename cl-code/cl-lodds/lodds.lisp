@@ -272,6 +272,7 @@
 (defun shutdown ()
   "shuts down the whole server, removes all handles and joins all
   spawned threads."
+  (lodds.event:push-event :shutdown nil)
   (let ((event-queue nil))
     (loop :for subsystem :in (subsystems *server*)
           :if (eql (lodds.subsystem:name subsystem)
