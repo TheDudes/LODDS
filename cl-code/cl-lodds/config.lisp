@@ -222,6 +222,13 @@
          :integer
          10
          10000)
+   (list :show-log-type-color
+         t
+         (format nil
+                 "Set to false to not colorize some log message~%~
+                 event types inside the Log Area.~%~
+                 Default: true")
+         :boolean)
    (list :show-background-color-on-size
          t
          (format nil
