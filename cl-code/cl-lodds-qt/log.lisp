@@ -156,7 +156,11 @@
                                   key old-val new-val))))
                    (t (format nil "~{~a~^ ~}" event-msg)))
                  (if (eql event-type :list-update)
-                     (format nil "~{~{~a~^ ~}~^~%~}" (fourth event-msg))
+                     (let* ((changes (fourth event-msg))
+                            (len (length changes)))
+                       (if (> len 50)
+                           (format nil "...~{~%~{~a~^ ~}~}" (subseq changes (- len 50)))
+                           (format nil "~{~{~a~^ ~}~^~%~}" changes)))
                      (format nil "~{~a~^ ~}" event-msg)))))))
 
 (define-initializer (info-log setup-widget)
