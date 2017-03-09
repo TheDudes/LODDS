@@ -26,6 +26,19 @@
 (defun event-callback (event)
   (format t "log: ~a~%" event))
 
+(defun on-config-change (server  &rest event-args)
+  (declare (ignore event-args))
+  (with-server server
+    (let ((advertiser (lodds:get-subsystem :advertiser))
+          (incognito (lodds.config:get-value :incognito-mode)))
+      (cond
+        ((and incognito
+              (lodds.subsystem:alive-p advertiser))
+         (lodds.subsystem:stop advertiser))
+        ((and (not incognito)
+              (not (lodds.subsystem:alive-p advertiser)))
+         (lodds.subsystem:start advertiser))))))
+
 (defmethod initialize-instance :after ((server lodds-server) &rest initargs)
   (declare (ignorable initargs))
   (with-server server ;; bind *server* for every subsystem of *server*
@@ -69,7 +82,11 @@
            ;; updates/handles local list of shared files
            (make-instance 'lodds.watcher:watcher
                           :name :watcher
-                          :init-fn nil)))))
+                          :init-fn nil)))
+    (lodds.event:add-callback :lodds-config-change
+                              (lambda (&rest args)
+                                (on-config-change server args))
+                              :config-changed)))
 
 (defun switch-config (new-config)
   ;; on fail of validate-config just return the error string

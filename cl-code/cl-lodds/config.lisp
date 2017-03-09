@@ -138,6 +138,15 @@
          :integer
          1
          30)
+   (list :incognito-mode
+         nil
+         (format nil
+                 "When Incognito Mode is on lodds the advertiser~%~
+                 will be stopped, this means other clients can not~%~
+                 Find you anymore and you cannot share your files~%~
+                 them. You are still able to download files from them.~%~
+                 Default: false")
+         :boolean)
    ;; TODO: QT gui related settings, these should be splitted out to
    ;; lodds-qt package and then be hooked somehow, but i couldn't
    ;; think of any good way to achieve it. Thats why i will just leave
