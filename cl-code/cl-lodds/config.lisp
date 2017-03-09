@@ -177,7 +177,7 @@
                  Default: upload folder inside home directory")
          :folder)
    (list :resources-folder
-         "."
+         "./res/"
          (format nil
                  "Folder which contains resources for Lodds,~%~
                  like icons, stylesheets, ... ~%~
