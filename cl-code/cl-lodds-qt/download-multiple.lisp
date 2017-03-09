@@ -9,6 +9,9 @@
   (q+:set-text folder (lodds.config:get-value :download-folder))
   (let* ((completer (q+:make-qcompleter download-multiple))
          (dir-model (q+:make-qdirmodel completer)))
+    (q+:set-tool-tip folder
+                     (format nil "Local Folder where the selected Files~%~
+                                 and Folders will be saved."))
     (q+:set-filter dir-model (q+:qdir.dirs))
     (q+:set-model completer dir-model)
     (q+:set-completer folder completer)

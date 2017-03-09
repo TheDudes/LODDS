@@ -8,15 +8,27 @@
 
 (define-subwidget (download-file user)
     (q+:make-qcombobox download-file)
+  (q+:set-tool-tip user
+                   (format nil "If set to \"Any\" the file will be split~%~
+                               up and each part will be downloaded from~%~
+                               the 'best' (in terms of load) available~%~
+                               user. If a user is selected, the file will~%~
+                               be downloaded directly and only from him."))
   (q+:add-item user "Any"))
 
 (define-subwidget (download-file filename)
-    (q+:make-qlineedit download-file))
+    (q+:make-qlineedit download-file)
+  (q+:set-tool-tip filename
+                   (format nil "Local Filename of the downloaded file.~%~
+                               Can be changed to rename the file.")))
 
 (define-subwidget (download-file folder)
     (q+:make-qlineedit download-file)
   (let* ((completer (q+:make-qcompleter download-file))
          (dir-model (q+:make-qdirmodel completer)))
+    (q+:set-tool-tip folder
+                     (format nil "Local Folder where the file will~%~
+                                 be saved."))
     (q+:set-filter dir-model (q+:qdir.dirs))
     (q+:set-model completer dir-model)
     (q+:set-completer folder completer)
@@ -40,7 +52,7 @@
     (qdoto layout
            (q+:add-row "User:" user)
            (q+:add-row "Filename:" filename)
-           (q+:add-row "Folder:" folder-layout))))
+           (q+:add-row "Download to:" folder-layout))))
 
 (defmethod initialize-instance :after ((download-file download-file)
                                        &key

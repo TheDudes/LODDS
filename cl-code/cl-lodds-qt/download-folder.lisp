@@ -13,6 +13,9 @@
   (q+:set-text folder (lodds.config:get-value :download-folder))
   (let* ((completer (q+:make-qcompleter download-folder))
          (dir-model (q+:make-qdirmodel completer)))
+    (q+:set-tool-tip folder
+                     (format nil "Local Folder where the downloaded~%~
+                                 Folder will be saved."))
     (q+:set-filter dir-model (q+:qdir.dirs))
     (q+:set-model completer dir-model)
     (q+:set-completer folder completer)
@@ -45,7 +48,7 @@
            (q+:add-row "Files:"
                        (q+:make-qlabel (format nil "~a" files)
                                        download-folder))
-           (q+:add-row "Local Folder:"
+           (q+:add-row "Download to:"
                         folder-layout))))
 
 (defmethod download ((download-folder download-folder))
