@@ -190,6 +190,8 @@
            #:get-folder-info
            #:get-file-changes
            #:get-checksum-from-path
+           #:start
+           #:stop
            #:shutdown
            #:generate-info-response
            #:get-file

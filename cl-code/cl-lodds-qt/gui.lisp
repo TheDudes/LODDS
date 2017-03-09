@@ -30,23 +30,9 @@
                       displayed tray message. Can be one of :info,
                       :send-permission or :folder-error")))
 
-(defun start-lodds ()
-  (lodds.subsystem:start (lodds:get-subsystem :event-queue))
-  (lodds.subsystem:start (lodds:get-subsystem :tasker))
-  (lodds.subsystem:start (lodds:get-subsystem :listener))
-  (lodds.subsystem:start (lodds:get-subsystem :handler))
-  (lodds.subsystem:start (lodds:get-subsystem :advertiser)))
-
-(defun stop-lodds ()
-  (lodds.subsystem:stop (lodds:get-subsystem :tasker))
-  (lodds.subsystem:stop (lodds:get-subsystem :listener))
-  (lodds.subsystem:stop (lodds:get-subsystem :advertiser))
-  (lodds.subsystem:stop (lodds:get-subsystem :handler))
-  (lodds.subsystem:stop (lodds:get-subsystem :watcher)))
-
 (defun run ()
   (if (lodds.config:get-value :interface)
-      (start-lodds)
+      (lodds:start)
       (make-instance
        'dialog
        :title "Error - Interface not set!"
@@ -69,7 +55,7 @@
                                                     err))
                        nil)
                      (when (lodds.config:get-value :interface)
-                       (start-lodds)
+                       (lodds:start)
                        t)))
                t))))))
 
@@ -110,7 +96,7 @@
   (:item ("&Run" (ctrl r))
          (run))
   (:item ("&Stop" (ctrl s))
-         (stop-lodds))
+         (lodds:stop))
   (:separator)
   (:item "&Reload Stylesheet"
          (q+:set-style-sheet main-window *style-sheet*))

@@ -231,6 +231,27 @@
                             :collect (cons :add info))))
                   (lodds.watcher:dir-watchers (get-subsystem :watcher))))))))
 
+(defun start ()
+  "Starts up all subsystem of currently bound *server*"
+  (lodds.subsystem:start (lodds:get-subsystem :event-queue))
+  (lodds.subsystem:start (lodds:get-subsystem :tasker))
+  (lodds.subsystem:start (lodds:get-subsystem :listener))
+  (lodds.subsystem:start (lodds:get-subsystem :handler))
+  (unless (lodds.config:get-value :incognito-mode)
+    (lodds.subsystem:start (lodds:get-subsystem :advertiser))))
+
+(defun stop ()
+  "Stops all subsystems besides event-queue and watcher of currently
+  bound *server*. Calling stop will stop the tasker, advertiser,
+  handler and listener. This can be used by a gui to \"stop\" all
+  connections. By not shutting down the Event-loop stuff like changing
+  the settings will still work. To cleanup and end the lodds-server
+  call shutdown"
+  (lodds.subsystem:stop (lodds:get-subsystem :tasker))
+  (lodds.subsystem:stop (lodds:get-subsystem :listener))
+  (lodds.subsystem:stop (lodds:get-subsystem :advertiser))
+  (lodds.subsystem:stop (lodds:get-subsystem :handler)))
+
 (defun shutdown ()
   "shuts down the whole server, removes all handles and joins all
   spawned threads."
