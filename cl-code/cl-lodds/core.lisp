@@ -4,11 +4,15 @@
 
 ;;; "lodds.core" goes here. Hacks and glory await!
 
+(defun escape-wildcards (pathname)
+  "escapes pathname wildcards to avoid wildcard error"
+  (cl-fs-watcher:escape-wildcards pathname))
+
 (defun generate-checksum (pathname)
   "generates sha1 sum out of given pathname, will return a string"
   (handler-case
       (ironclad:byte-array-to-hex-string
-       (ironclad:digest-file :sha1 (cl-fs-watcher:escape-wildcards pathname)))
+       (ironclad:digest-file :sha1 (escape-wildcards pathname)))
     (error (e)
       (declare (ignore e))
       "0000000000000000000000000000000000000000")))
@@ -232,13 +236,15 @@ escape-wildcards to make sure wildcards are escaped."
          (cl-fs-watcher:escape-wildcards pathspec)
          args))
 
-;; (defun escaped-directory-exists-p (directory)
-;;   (uiop:directory-exists-p
-;;    (escape-wildcards directory)))
+(defun directory-exists (directory)
+  "checks if given directory-exists"
+  (cl-fs-watcher:escaped-directory-exists-p
+   directory))
 
-;; (defun escaped-file-exists-p (file)
-;;   (uiop:file-exists-p
-;;    (escape-wildcards file)))
+(defun file-exists (file)
+  "checks if given file exists"
+  (cl-fs-watcher:escaped-file-exists-p
+   file))
 
 (defun escaped-get-folder-name (directory)
   "Returns the folder describted by directory. If given directory is

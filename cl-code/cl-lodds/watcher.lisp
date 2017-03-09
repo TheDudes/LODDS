@@ -25,7 +25,7 @@
 (defun get-file-stats (pathname)
   (values
    (lodds.core:generate-checksum pathname)
-   (with-open-file (stream (cl-fs-watcher:escape-wildcards pathname)
+   (with-open-file (stream (lodds.core:escape-wildcards pathname)
                            :direction :input
                            :if-does-not-exist nil
                            :element-type '(unsigned-byte 8))
@@ -178,9 +178,9 @@
 (defun folder-shareable-p (folder-path)
   (let ((folder (lodds.core:get-absolute-path folder-path)))
     (cond
-      ((cl-fs-watcher:escaped-file-exists-p folder)
+      ((lodds.core:file-exists folder)
        (values nil "Not able to share a File (only Folders possible)"))
-      ((not (cl-fs-watcher:escaped-directory-exists-p folder))
+      ((not (lodds.core:directory-exists folder))
        (values nil "Folder does not exist"))
       ((folder-already-shared-p folder)
        (values nil (format nil "Folder with name ~a already shared"

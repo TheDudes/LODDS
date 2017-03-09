@@ -307,7 +307,7 @@
                     (return-from validate-new-entry
                       (format nil "Invalid selection (~a), valid are only: ~a"
                               value valid)))))
-    (:folder (unless (cl-fs-watcher:escaped-directory-exists-p value)
+    (:folder (unless (lodds.core:directory-exists value)
                (return-from validate-new-entry
                  (format nil "Folder ~a does not exist"
                          value)))))
@@ -321,7 +321,7 @@
     config))
 
 (defun save-to-file (filename &optional (config (generate-default-config)))
-  (with-open-file (stream (cl-fs-watcher:escape-wildcards filename)
+  (with-open-file (stream (lodds.core:escape-wildcards filename)
                           :direction :output
                           :if-exists :supersede
                           :if-does-not-exist :create)
@@ -378,7 +378,7 @@
 (defun load-from-file (filename &optional (config (generate-default-config)))
   "returns the config and nil if config file was parsed without errors
   and nil plus a error string describing the error on failure"
-  (with-open-file (stream (cl-fs-watcher:escape-wildcards filename)
+  (with-open-file (stream (lodds.core:escape-wildcards filename)
                           :direction :input)
     (let ((line-number 0))
       (loop :for line = (read-line stream nil nil)
@@ -422,7 +422,7 @@
   error message on failure"
   (let ((config (generate-default-config)))
     (loop :for element :in *load-path*
-          :do (when (cl-fs-watcher:escaped-file-exists-p element)
+          :do (when (lodds.core:file-exists element)
                 (multiple-value-bind (result error-msg)
                     (load-from-file element config)
                   (unless result

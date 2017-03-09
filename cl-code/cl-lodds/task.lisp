@@ -426,7 +426,7 @@
                           check-input-fn))
 
 (defun open-file (file-path)
-  (open (cl-fs-watcher:escape-wildcards file-path)
+  (open (lodds.core:escape-wildcards file-path)
         :direction :output
         :if-does-not-exist :create
         :element-type '(unsigned-byte 8)
@@ -748,7 +748,7 @@
                                 (list "requested file could not be found"))
         (setf finished-p t)
         (return-from run-task))
-      (setf file-stream (open (cl-fs-watcher:escape-wildcards filename)
+      (setf file-stream (open (lodds.core:escape-wildcards filename)
                               :direction :input
                               :element-type '(unsigned-byte 8)))
       (let ((size (- end start)))
@@ -794,7 +794,7 @@
                info) task
     ;; open up file-stream if not open yet
     (unless file-stream
-      (setf file-stream (open (cl-fs-watcher:escape-wildcards filename)
+      (setf file-stream (open (lodds.core:escape-wildcards filename)
                               :direction :output
                               :if-exists :supersede
                               :element-type '(unsigned-byte 8)))
@@ -878,7 +878,7 @@
                time-waited) task
     ;; open up file-stream if not open yet
     (unless file-stream
-      (setf file-stream (open (cl-fs-watcher:escape-wildcards filepath)
+      (setf file-stream (open (lodds.core:escape-wildcards filepath)
                               :element-type '(unsigned-byte 8)))
       (setf size (file-length file-stream)))
     ;; open up socket

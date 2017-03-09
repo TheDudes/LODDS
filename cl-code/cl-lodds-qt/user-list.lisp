@@ -131,13 +131,13 @@
           (when (cl-strings:starts-with link "file://")
             (let ((filepath (subseq link 7)))
               (cond
-                ((cl-fs-watcher:escaped-directory-exists-p filepath)
+                ((lodds.core:directory-exists filepath)
                  (make-instance
                   'dialog
                   :title (format nil "Error - Cannot send Directory (~a)"
                                  filepath)
                   :text "Its not possible to send a directory, select a file please."))
-                ((cl-fs-watcher:escaped-file-exists-p filepath)
+                ((lodds.core:file-exists filepath)
                  (let ((item (q+:item-at user-list (q+:pos ev))))
                    (open-send-file-dialog
                     (when (qobject-alive-p item)

@@ -21,6 +21,9 @@
            #:get-ip-address
            #:escaped-ensure-directories-exist
            #:escaped-get-folder-name
+           #:directory-exists
+           #:file-exists
+           #:escape-wildcards
            #:get-absolute-path
            #:set-socket-timeout))
 

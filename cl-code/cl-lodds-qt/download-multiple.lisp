@@ -87,7 +87,7 @@
                           :title "Error - No Directory selected"
                           :text "Please select a Directory")
            nil))
-        ((not (cl-fs-watcher:escaped-directory-exists-p directory))
+        ((not (lodds.core:directory-exists directory))
          (progn
            (make-instance 'dialog
                           :title "Error - Directory does not exists"

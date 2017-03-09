@@ -71,7 +71,7 @@
     (let ((directory (q+:text folder))
           (filename-choosen (q+:text filename)))
       (if (and (> (length directory) 0)
-               (cl-fs-watcher:escaped-directory-exists-p directory)
+               (lodds.core:directory-exists directory)
                (> (length filename-choosen) 0))
           (concatenate 'string
                        (if (char= #\/ (char directory (- (length directory) 1)))
