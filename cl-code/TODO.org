@@ -3,16 +3,16 @@
    - [ ] File Header with Description
 
 * GUI
-** TODO missing [17/26]
-   - [ ] Close Gui on shutdown
+** TODO missing [20/26]
    - [ ] Infobar (Statusbar) with Current Transfers, Load, Connections, ...
    - [ ] Label & more Info on Interface ComboBox
-   - [ ] colorize logmessage count
    - [ ] Download Button with Icon
    - [ ] Icons for Up/Download
    - [ ] Stylesheet into res/ folder
    - [ ] Send File Dialog while waiting/sending
-   - [ ] Incognito Mode
+   - [X] Close Gui on shutdown
+   - [X] colorize logmessage count
+   - [X] Incognito Mode
    - [X] Tooltips
    - [X] Settings
    - [X] "About" Dialog
