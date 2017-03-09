@@ -388,6 +388,8 @@
         (q+:qapplication-set-quit-on-last-window-closed nil)
         (setf *main-window* window)
         (fix-menubar-order window)
-        (setup-tray-icon window))
+        (setup-tray-icon window)
+        (unless server-given-p
+          (lodds:start)))
       (unless server-given-p
         (lodds:shutdown)))))
