@@ -62,11 +62,7 @@
   (let ((info (gethash (q+:text selected-item +shares-id+) (entries shares))))
     (if (eql (type-of info)
              'shares-entry-dir)
-        (with-accessors ((user shares-entry-user)
-                         (name shares-entry-name)
-                         (fullpath shares-entry-path)
-                         (size shares-entry-size)
-                         (items shares-entry-items)) info
+        (with-slots (user name fullpath size items) info
           (list :dir
                 (list fullpath
                       name
@@ -74,9 +70,7 @@
                       size
                       items)))
         ;; file was clicked
-        (with-accessors ((name shares-entry-name)
-                         (checksum shares-entry-checksum)
-                         (size shares-entry-size)) info
+        (with-slots (name checksum size) info
           (list :file
                 (list checksum
                       name
@@ -188,13 +182,7 @@
 
 (defmethod initialize-instance :after ((entry shares-entry) &rest initargs)
   (declare (ignorable initargs))
-  (with-accessors ((name shares-entry-name)
-                   (size shares-entry-size)
-                   (widget shares-entry-widget)
-                   (id shares-entry-id)
-                   (shares shares-entry-shares)
-                   (user shares-entry-user)
-                   (is-root shares-entry-is-root)) entry
+  (with-slots (name size widget id shares user is-root) entry
     (setf (gethash id (entries shares)) entry)
     (let ((font (q+:make-qfont "Consolas, Inconsolata, Monospace" 10)))
       (setf (q+:style-hint font) (q+:qfont.type-writer))
@@ -222,8 +210,7 @@
 
 (defmethod initialize-instance :after ((entry shares-entry-file) &rest initargs)
   (declare (ignorable initargs))
-  (with-accessors ((checksum shares-entry-checksum)
-                   (widget shares-entry-widget)) entry
+  (with-slots (checksum widget) entry
     (update-entry-display entry)))
 
 (define-signal (shares update-entries) (string))
