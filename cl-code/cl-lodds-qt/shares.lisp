@@ -62,9 +62,9 @@
   (let ((info (gethash (q+:text selected-item +shares-id+) (entries shares))))
     (if (eql (type-of info)
              'shares-entry-dir)
-        (with-slots (user name fullpath size items) info
+        (with-slots (user name path size items) info
           (list :dir
-                (list fullpath
+                (list path
                       name
                       user
                       size
