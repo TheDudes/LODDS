@@ -313,20 +313,20 @@
                             :config-changed)
   (lodds.event:add-callback :qt-main
                             (lambda (event)
-                              (signal! main-window (received-send-permission
-                                                    string)
+                              (signal! main-window
+                                       (received-send-permission string)
                                        (second event)))
                             :send-permission)
   (lodds.event:add-callback :qt-main
                             (lambda (event)
-                              (signal! main-window (folder-download-error
-                                                    string)
+                              (signal! main-window
+                                       (folder-download-error string)
                                        (second event)))
                             :folder-download-error)
   (lodds.event:add-callback :qt-main
                             (lambda (event)
-                              (signal! main-window (directory-error
-                                                    string)
+                              (signal! main-window
+                                       (directory-error string)
                                        (second event)))
                             :directory-error)
   (lodds.event:add-callback :qt-main
