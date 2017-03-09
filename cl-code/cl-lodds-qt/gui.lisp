@@ -101,6 +101,15 @@
   (:item "&Reload Stylesheet"
          (q+:set-style-sheet main-window *style-sheet*))
   (:separator)
+  (:item ("&Share Directory" (ctrl o))
+         (let ((dir (q+:qfiledialog-get-existing-directory)))
+           (when (> (length dir) 0)
+             (let* ((dock (slot-value main-window 'shared-dock))
+                    (shared (slot-value dock 'widget))
+                    (shared-directories (slot-value shared 'shared-directories)))
+               (share-directories shared-directories
+                                  (list dir))))))
+  (:separator)
   (:item ("&Settings" (ctrl c))
          (make-setting-dialog))
   (:separator)
