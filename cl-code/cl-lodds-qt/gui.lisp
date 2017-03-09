@@ -99,7 +99,7 @@
          (lodds:stop))
   (:separator)
   (:item "&Reload Stylesheet"
-         (q+:set-style-sheet main-window *style-sheet*))
+         (signal! main-window (reload-stylesheet)))
   (:separator)
   (:item ("&Share Directory" (ctrl o))
          (let ((dir (q+:qfiledialog-get-existing-directory)))
@@ -210,8 +210,8 @@
          (q+:set-window-title (format nil "LODDS - ~a" (lodds.config:get-value :name)))
          (q+:set-window-icon (q+:make-qicon "./res/lodds.png"))
          (q+:resize 800 450)
-         (q+:set-style-sheet *style-sheet*)
-         (q+:set-central-widget shares-widget)))
+         (q+:set-central-widget shares-widget))
+  (signal! main-window (reload-stylesheet)))
 
 (define-signal (main-window reload-stylesheet) ())
 (define-signal (main-window config-changed) ())
@@ -384,7 +384,19 @@
 
 (define-slot (main-window reload-stylesheet) ()
   (declare (connected main-window (reload-stylesheet)))
-  (q+:set-style-sheet main-window *style-sheet*))
+  (let ((style-sheet (format nil "~a~a"
+                             (lodds.config:get-value :resources-folder)
+                             "style-sheet.qss")))
+    (if (lodds.core:file-exists style-sheet)
+        (q+:set-style-sheet main-window
+                            (uiop:read-file-string
+                             (lodds.core:escape-wildcards style-sheet)))
+        (let ((text (format nil "Could not find stylesheet ~a"
+                            style-sheet)))
+          (q+:set-style-sheet main-window
+                              "")
+          (lodds.event:push-event :info (list text))
+          (format t "~a~%" text)))))
 
 (defun on-error (&rest args)
   (format t "ERROR:---------------------------------------~%")

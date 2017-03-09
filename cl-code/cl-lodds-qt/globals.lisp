@@ -1,44 +1,6 @@
 (in-package #:lodds-qt)
 (in-readtable :qtools)
 
-(defparameter *style-sheet*
-  "QTreeView#Shares {
-     alternate-background-color: #eeeeef;
-     background-color: #ffffff;
-   }
-
-   QTreeView#Shares::branch:has-children:!has-siblings:closed,
-   QTreeView#Shares::branch:closed:has-children:has-siblings {
-     border-image: none;
-     image: url(./res/folder-closed.png);
-   }
-
-   QTreeView#Shares::branch:open:has-children:!has-siblings,
-   QTreeView#Shares::branch:open:has-children:has-siblings  {
-     border-image: none;
-     image: url(./res/folder-open.png);
-   }
-
-   QTreeView#Shares::branch:has-siblings:adjoins-item {
-     border-image: url(./res/file.png) 0;
-   }
-
-   QTreeView#Shares::branch:!has-children:!has-siblings:adjoins-item {
-     border-image: url(./res/file.png) 0;
-   }
-
-   QTreeView#Shares::branch {
-     background-color: white;
-   }
-
-   QTreeView#UserList::branch {
-     border-image: url(./res/user.png) 0;
-   }
-
-   QTreeView#Shared::branch {
-     border-image: url(./res/folder-shared.png) 0;
-   }")
-
 (defvar +events+
   '(:advertiser
     :listener
