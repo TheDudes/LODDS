@@ -106,6 +106,11 @@
        :documentation "Id which identifies a shares-entry
        object, Use id to retrieve shares-entry objects from
        entries hashtable on shares widget.")
+   (is-root :reader shares-entry-is-root
+            :initform nil
+            :initarg :is-root
+            :documentation "Flag which is t on the invisible root
+            items")
    (widget :reader shares-entry-widget
            :initform (error "Please specify a widget")
            :initarg :widget
@@ -152,10 +157,14 @@
 
 (defgeneric update-entry-display (shares-entry)
   (:documentation "Updates entries displayed size and tooltip")
+  (:method :around ((entry shares-entry))
+    (unless (slot-value entry 'is-root)
+      (call-next-method)))
   (:method ((entry shares-entry))
-    (with-slots (widget size) entry
+    (with-slots (widget size user) entry
       (when (lodds.config:get-value :show-background-color-on-size)
-        (set-column-background widget +shares-size+
+        (set-column-background widget
+                               +shares-size+
                                (lodds.core:get-size-color size)))
       (qdoto widget
              (q+:set-text +shares-size+
@@ -183,11 +192,14 @@
                    (size shares-entry-size)
                    (widget shares-entry-widget)
                    (id shares-entry-id)
-                   (shares shares-entry-shares)) entry
+                   (shares shares-entry-shares)
+                   (user shares-entry-user)
+                   (is-root shares-entry-is-root)) entry
     (setf (gethash id (entries shares)) entry)
     (let ((font (q+:make-qfont "Consolas, Inconsolata, Monospace" 10)))
       (setf (q+:style-hint font) (q+:qfont.type-writer))
-      (when (lodds.config:get-value :show-background-color-on-size)
+      (when (and (lodds.config:get-value :show-background-color-on-size)
+                 (not is-root))
         (set-column-background widget +shares-size+
                                (lodds.core:get-size-color size)))
       (qdoto widget
@@ -446,6 +458,7 @@
              (download-item shares selected-item)))
   (make-instance 'shares-entry-dir
                  :shares shares
+                 :is-root t
                  :name ""
                  :path ""
                  :size 0
