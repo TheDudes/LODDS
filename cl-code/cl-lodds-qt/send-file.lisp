@@ -100,7 +100,11 @@
            (lambda (checked)
              (if checked
                  (q+:show users)
-                 (q+:hide users))))
+                 (progn
+                   (q+:hide users)
+                   (q+:adjust-size send-file)
+                   (when (qobject-alive-p (q+:parent send-file))
+                     (q+:adjust-size (q+:parent send-file)))))))
   (qdoto show-users
          (q+:set-tool-tip (format nil
                                   "Click to select multiple Users."))
