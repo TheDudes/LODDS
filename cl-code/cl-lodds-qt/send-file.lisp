@@ -16,6 +16,10 @@
                                           (q+:qdir.files)))
     (q+:set-model completer file-model)
     (q+:set-completer file completer))
+  (q+:set-tool-tip file
+                   (format nil
+                           "Selected File you want to send~%~
+                           a User."))
   (setf (q+:size-policy file)
         (values (q+:qsizepolicy.expanding)
                 (q+:qsizepolicy.fixed))))
@@ -42,6 +46,12 @@
 (define-subwidget (send-file timeout)
     (q+:make-qspinbox send-file)
   (qdoto timeout
+         (q+:set-tool-tip (format nil
+                                  "Timeout in Seconds the choosen~%~
+                                  User(s) have to accept the File.~%~
+                                  If they do not accept withing the~%~
+                                  the given timeout, the transfer~%~
+                                  will be aborted."))
          (q+:set-suffix " seconds")
          (q+:set-minimum 10)
          (q+:set-maximum 3600)
@@ -92,6 +102,8 @@
                  (q+:show users)
                  (q+:hide users))))
   (qdoto show-users
+         (q+:set-tool-tip (format nil
+                                  "Click to select multiple Users."))
          (q+:set-checkable t)
          (q+:set-minimum-width 400)
          (q+:set-checked nil)))

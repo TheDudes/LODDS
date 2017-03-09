@@ -25,10 +25,18 @@
          (dir-model (q+:make-qdirmodel completer)))
     (q+:set-filter dir-model (q+:qdir.dirs))
     (q+:set-model completer dir-model)
-    (q+:set-completer folder completer)))
+    (qdoto folder
+           (q+:set-tool-tip (format nil
+                                    "Local Folder where the incomming file.~%~
+                                    will be saved."))
+           (q+:set-completer completer))))
 
 (define-subwidget (send-permission filename)
-    (q+:make-qlineedit send-permission))
+    (q+:make-qlineedit send-permission)
+  (q+:set-tool-tip filename
+                   (format nil
+                           "Local Filename of the incomming file.~%~
+                           Can be changed to rename the file.")))
 
 (define-subwidget (send-permission timer)
     (q+:make-qtimer send-permission))
