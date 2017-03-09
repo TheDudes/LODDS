@@ -122,7 +122,8 @@
                          ((:task-failed
                            :directory-error
                            :folder-download-error) "#FF0000")
-                         (:task-canceled "#FF5C14")
+                         ((:task-canceled
+                           :unshared-directory) "#FF5C14")
                          (t "")))))
         (signal! info-log
                  (add-log-msg string string string string)
