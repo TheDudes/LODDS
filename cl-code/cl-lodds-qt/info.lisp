@@ -41,7 +41,8 @@
   (with-slots-bound (info info)
     (let* ((new-entry (q+:make-qtreewidgetitem info))
            (progress (q+:make-qprogressbar info))
-           (cancel (q+:make-qpushbutton "Cancel" info)))
+           (cancel (q+:make-qpushbutton info)))
+      (set-icon cancel "x.png" "Cancel")
       (qdoto progress
              (q+:set-maximum 100)
              (q+:set-value (normalized-value max done)))
