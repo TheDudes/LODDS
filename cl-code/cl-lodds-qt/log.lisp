@@ -52,7 +52,7 @@
 (define-slot (info-log add-log-msg) ((event string)
                                      (color string)
                                      (msg string)
-                                     (long-msg string))
+                                     (tooltip string))
   (declare (connected info-log (add-log-msg string
                                             string
                                             string
@@ -81,8 +81,7 @@
                    (q+:set-text +log-count+ (prin1-to-string next))
                    (q+:set-foreground +log-count+ brush))))
         (let ((new-entry (qdoto (q+:make-qtreewidgetitem info-log-list)
-                                (q+:set-tool-tip +log-message+
-                                                 long-msg)
+                                (q+:set-tool-tip +log-message+ tooltip)
                                 (q+:set-text +log-time+ (generate-timestamp))
                                 (q+:set-text +log-event+ event)
                                 (q+:set-text +log-message+ msg)
@@ -108,6 +107,56 @@
                             (q+:height visual-rect)))
                 (q+:scroll-to-item info-log-list new-entry))))))))
 
+(defun format-log-message (event-type event-msg)
+  (case event-type
+    (:list-update
+     (destructuring-bind (name type ts changes)
+         event-msg
+       (let ((adds 0)
+             (dels 0))
+         (loop :for (type . rest) :in changes
+               :if (eql type :add)
+               :do (incf adds)
+               :else
+               :do (incf dels))
+         (format nil "~a ~a ~a adds: ~a dels: ~a"
+                 name type ts adds dels))))
+
+    (:task-failed
+     (destructuring-bind (task-id task err)
+         event-msg
+       (declare (ignore err))
+       (format nil "~a ~a" task-id task)))
+    (:client-updated
+     (destructuring-bind (name load last-change)
+         event-msg
+       (format nil "~a ~a ~a"
+               name
+               (lodds.core:format-size load)
+               last-change)))
+    (:config-changed
+     (if (not event-msg)
+         "replaced settings"
+         (destructuring-bind (key old-val new-val) event-msg
+           (format nil "~a: ~a -> ~a"
+                   key old-val new-val))))
+    (t (format nil "~{~a~^ ~}" event-msg))))
+
+(defun format-log-tooltip (event-type event-msg)
+  (case event-type
+    (:task-failed
+     (format nil "~a" (third event-msg)))
+    (:list-update
+     (let* ((changes (fourth event-msg))
+            (len (length changes)))
+       (if (> len 20)
+           (format nil "~{~{~a~^ ~}~^~%~}"
+                   (append (subseq changes 0 10)
+                           (list (list "..."))
+                           (subseq changes (- len 10))))
+           (format nil "~{~{~a~^ ~}~^~%~}" changes))))
+    (t (format nil "~{~a~^ ~}" event-msg))))
+
 (defun cb-log-messages (info-log event)
   (let ((event-type (first event))
         (event-msg (cdr event)))
@@ -130,40 +179,8 @@
                  (add-log-msg string string string string)
                  (format nil "~a" event-type)
                  color
-                 (case event-type
-                   (:list-update
-                    (destructuring-bind (name type ts changes)
-                        event-msg
-                      (let ((adds 0)
-                            (dels 0))
-                        (loop :for (type . rest) :in changes
-                              :if (eql type :add)
-                              :do (incf adds)
-                              :else
-                              :do (incf dels))
-                        (format nil "~a ~a ~a adds: ~a dels: ~a"
-                                name type ts adds dels))))
-                   (:client-updated
-                    (destructuring-bind (name load last-change)
-                        event-msg
-                      (format nil "~a ~a ~a"
-                              name
-                              (lodds.core:format-size load)
-                              last-change)))
-                   (:config-changed
-                    (if (not event-msg)
-                        "replaced settings"
-                        (destructuring-bind (key old-val new-val) event-msg
-                          (format nil "~a: ~a -> ~a"
-                                  key old-val new-val))))
-                   (t (format nil "~{~a~^ ~}" event-msg)))
-                 (if (eql event-type :list-update)
-                     (let* ((changes (fourth event-msg))
-                            (len (length changes)))
-                       (if (> len 50)
-                           (format nil "...~{~%~{~a~^ ~}~}" (subseq changes (- len 50)))
-                           (format nil "~{~{~a~^ ~}~^~%~}" changes)))
-                     (format nil "~{~a~^ ~}" event-msg)))))))
+                 (format-log-message event-type event-msg)
+                 (format-log-tooltip event-type event-msg))))))
 
 (define-initializer (info-log setup-widget)
     (qdoto info-log
