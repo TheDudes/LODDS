@@ -64,14 +64,6 @@
     (format stream "~a"
             (slot-value object 'name))))
 
-(defmethod print-object ((object task-user) stream)
-  (print-unreadable-object (object stream :type t)
-    (with-slots (name
-                 user) object
-      (format stream "~a :user ~a"
-              name
-              user))))
-
 (defmethod print-object ((object task-info) stream)
   (print-unreadable-object (object stream :type t)
     (with-slots (name
@@ -171,6 +163,27 @@
 (defmethod decf-load ((task task) amount)
   (decf (slot-value task 'load) amount))
 
+(defun secure-close (socket)
+  (when socket
+    (handler-case
+        (usocket:socket-close socket)
+      (error (e)
+        (declare (ignore e))))))
+
+(defgeneric finish-task (task)
+  (:documentation "Generic Function which will be called if task has
+  finished and will be deleted")
+
+  (:method ((task task))
+    (with-slots (lock tasks)
+        (lodds:get-subsystem :tasker)
+      (bt:with-recursive-lock-held (lock)
+        (remhash (slot-value task 'id) tasks)))
+    (with-slots (socket file-stream) task
+      (secure-close socket)
+      (when file-stream
+        (close file-stream)))))
+
 (defgeneric run-task (task)
   (:documentation "Generic Function which will be called if task was
   added to thread-pool")
@@ -217,62 +230,6 @@
   (:method ((task task))
     (declare (ignorable task))
     (error "overwrite run-task with ur task!")))
-
-(defun secure-close (socket)
-  (when socket
-    (handler-case
-        (usocket:socket-close socket)
-      (error (e)
-        (declare (ignore e))))))
-
-(defgeneric finish-task (task)
-  (:documentation "Generic Function which will be called if task has
-  finished and will be deleted")
-
-  (:method ((task task))
-    nil)
-
-  (:method :before ((task task))
-    (with-slots (lock tasks) (lodds:get-subsystem :tasker)
-      (bt:with-recursive-lock-held (lock)
-        (remhash (slot-value task 'id) tasks))))
-
-  (:method ((task task-get-file-from-user))
-    (with-slots (socket local-file-stream) task
-      (secure-close socket)
-      (when local-file-stream
-        (close local-file-stream))))
-
-  (:method ((task task-get-file-from-users))
-    (with-slots (socket local-file-stream) task
-      (secure-close socket)
-      (when local-file-stream
-        (close local-file-stream))))
-
-  (:method ((task task-request))
-    (with-slots (socket) task
-      (secure-close socket)))
-
-  (:method ((task task-request-file))
-    (with-slots (socket file-stream) task
-      (secure-close socket)
-      (when file-stream
-        (close file-stream))))
-
-  (:method ((task task-request-info))
-    (secure-close (slot-value task 'socket)))
-
-  (:method ((task task-request-send-permission))
-    (with-slots (socket file-stream) task
-      (secure-close socket)
-      (when file-stream
-        (close file-stream))))
-
-  (:method ((task task-send-file))
-    (with-slots (socket file-stream) task
-      (secure-close socket)
-      (when file-stream
-        (close file-stream)))))
 
 (defun submit-task (task)
   "Adds a new task which will be added to the lparallel:channel."
@@ -455,23 +412,23 @@
                size
                read-bytes
                socket
-               local-file-stream
+               file-stream
                resubmit-p
                finished-p
                info) task
     (unless socket
       (setf socket (request-file ip port checksum 0 size)))
-    (unless local-file-stream
-      (setf local-file-stream (open-file local-file-path))
+    (unless file-stream
+      (setf file-stream (open-file local-file-path))
       (setf info (format nil "[Download] (~a):~a "
                          user
                          local-file-path)))
     (let ((transfered (load-chunk (usocket:socket-stream socket)
-                                  local-file-stream
+                                  file-stream
                                   (- size read-bytes))))
       (decf-load task transfered)
       (incf read-bytes transfered))
-    (finish-output local-file-stream)
+    (finish-output file-stream)
     (if (eql size read-bytes)
         (progn
           (setf finished-p t)
@@ -502,15 +459,15 @@
                size
                read-bytes
                socket
-               local-file-stream
+               file-stream
                current-part
                read-bytes-part
                part-size
                resubmit-p
                finished-p
                info) task
-    (unless local-file-stream
-      (setf local-file-stream (open-file local-file-path)))
+    (unless file-stream
+      (setf file-stream (open-file local-file-path)))
     (unless socket
       (multiple-value-bind (user ip port) (find-best-user checksum)
         (setf socket
@@ -529,12 +486,12 @@
                        size)))))
         (setf info (format nil "[Download] (~a): ~a" user local-file-path))))
     (let ((written (load-chunk (usocket:socket-stream socket)
-                               local-file-stream
+                               file-stream
                                (- part-size read-bytes-part))))
       (decf-load task written)
       (incf read-bytes written)
       (incf read-bytes-part written))
-    (finish-output local-file-stream)
+    (finish-output file-stream)
     (if (eql size read-bytes)
         (setf finished-p t)
         (progn

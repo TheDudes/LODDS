@@ -99,24 +99,31 @@
                    :initform nil
                    :type function
                    :documentation "Function which gets called when the
-                   task was canceled.")))
+                   task was canceled.")
+   (socket :initform nil
+           :initarg :socket
+           :type usocket:socket
+           :documentation "Socket with the requesting client on the
+           other end :D")
+   (file-stream :initform nil
+                :type file-stream
+                :documentation "File Stream of local file. either
+                intput or output, depending on task")))
 
-(defclass task-user (task)
-    ((user :initarg :user
-           :initform (error "Specify user")
-           :documentation "name of user, for example:
-           d4yus@192.168.2.1:1234")
-     (ip :initarg :ip
-         :initform (error "Specify ip")
-         :type vector
-         :documentation "Ip of client, for example: #(192 168 2 1)")
-     (port :initarg :port
-           :initform (error "Specify port")
-           :type integer
-           :documentation "Port of client, for exampe: 1234")))
-
-(defclass task-info (task-user)
-  ((timestamp :initarg :timestamp
+(defclass task-info (task)
+  ((user :initarg :user
+         :initform (error "Specify user")
+         :documentation "name of user, for example:
+         d4yus@192.168.2.1:1234")
+   (ip :initarg :ip
+       :initform (error "Specify ip")
+       :type vector
+       :documentation "Ip of client, for example: #(192 168 2 1)")
+   (port :initarg :port
+         :initform (error "Specify port")
+         :type integer
+         :documentation "Port of client, for exampe: 1234")
+   (timestamp :initarg :timestamp
               :initform nil
               :type integer
               :documentation "Timestamp the Broadcast message was
@@ -132,13 +139,9 @@
               :documentation "Advertised load of given Client")))
 
 (defclass task-request (task)
-  ((socket :initform (error "Specify a socket pls.")
-           :initarg :socket
-           :type usocket:socket
-           :documentation "Socket with the requesting client on the
-           other end :D")))
+  ())
 
-(defclass task-request-file (task-request)
+(defclass task-request-file (task)
   ((checksum :initarg :checksum
              :initform nil
              :type string
@@ -154,21 +157,17 @@
    (filename :type string
              :initform nil
              :documentation "Local Filename of Requested File")
-   (file-stream :type stream
-                :initform nil
-                :documentation "Stream pointing to local file
-                request-filename.")
    (written :initform 0
             :type rational
             :documentation "Bytes Written onto socket")))
 
-(defclass task-request-info (task-request)
+(defclass task-request-info (task)
   ((timestamp :initform 0
               :initarg :timestamp
               :type rational
               :documentation "Requested info timestamp.")))
 
-(defclass task-request-send-permission (task-request)
+(defclass task-request-send-permission (task)
   ((user :initarg :user
          :initform nil
          :type string
@@ -187,9 +186,6 @@
              :initform nil
              :type string
              :documentation "Name of the File requested to send")
-   (file-stream :type file-stream
-                :initform nil
-                :documentation "File stream pointing to filename")
    (read-bytes :type bignum
                :initform 0
                :documentation "Amount of bytes already read from the
@@ -213,16 +209,6 @@
          :type bignum
          :documentation "Size of specified File, will be set on
          initialize instance")
-   (socket :initform nil
-           :type usocket:socket
-           :documentation "If connection is established socket is
-           set. It will then be read for information.")
-   (local-file-stream :type file-stream
-                      :initform nil
-                      :documentation "If connection is established and
-                      transfer has started file-stream will point to
-                      local-file-path. Everything read from socket
-                      will be saved to file-stream.")
    (read-bytes :initform 0
                :type bignum
                :documentation "Bignum describing how many bytes have
@@ -307,14 +293,6 @@
             responsse from the receiving client. If there is no
             positive Response within the given timeout, the send-file
             task will be abortet")
-   (socket :initform nil
-           :documentation "Socket of the recieving Client (Socket of
-           given ip and port), will be opened on first call to
-           run-task")
-   (file-stream :initform nil
-                :type file-stream
-                :documentation "File stream pointing to filepath, will
-                be set on first call to run-task")
    (size :initform 0
          :type bignum
          :documentation "Size of file described by file-stream and
