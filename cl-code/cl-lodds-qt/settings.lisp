@@ -29,6 +29,7 @@
   (with-slots (key widget config) selection-setting
     (setf (q+:size-policy selector) (values (q+:qsizepolicy.expanding)
                                             (q+:qsizepolicy.fixed)))
+    (q+:set-focus-policy selector (q+:qt.strong-focus))
     (q+:add-items selector (lodds.config:get-selection-options key config))
     (setf widget selector)
     (let ((value (lodds.config:get-value key config)))
@@ -80,13 +81,18 @@
 (define-widget integer-setting (QSpinBox setting)
   ())
 
+(define-override (integer-setting wheel-event) (ev)
+  (unless (q+:has-focus integer-setting)
+    (q+:ignore ev)))
+
 (define-initializer (integer-setting setup-widget)
   (with-slots (key widget config) integer-setting
-    (q+:set-range integer-setting
-                  (lodds.config:get-integer-min key config)
-                  (lodds.config:get-integer-max key config))
-    (setf widget integer-setting)
-    (q+:set-value integer-setting (lodds.config:get-value key config))))
+    (qdoto integer-setting
+           (q+:set-focus-policy (q+:qt.strong-focus))
+           (q+:set-range (lodds.config:get-integer-min key config)
+                         (lodds.config:get-integer-max key config))
+           (q+:set-value  (lodds.config:get-value key config)))
+    (setf widget integer-setting)))
 
 (defmethod get-value ((integer-setting integer-setting))
   (q+:value integer-setting))
