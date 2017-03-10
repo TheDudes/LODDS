@@ -90,6 +90,7 @@
            #:on-finish-hook
            #:get-load
            #:get-task-progresses
+           #:get-task-count
            #:get-task-by-id
            #:cancel-task
            #:run-task

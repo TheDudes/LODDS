@@ -27,6 +27,9 @@
             :collect (with-slots (id max-load load info) task
                        (list id max-load (- max-load load) (type-of task) info))))))
 
+(defmethod get-task-count ((tasker tasker))
+  (hash-table-count (slot-value tasker 'tasks)))
+
 (defmethod get-task-by-id (task-id)
   "Returns task with given id, nil if task is not found"
   (with-slots (tasks lock) (lodds:get-subsystem :tasker)
