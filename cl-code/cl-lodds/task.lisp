@@ -865,8 +865,7 @@
             (lodds.event:push-event :info (list :dropped task)))))))
 
 (defmethod run-task ((task task-send-file))
-  (with-slots (ip
-               port
+  (with-slots (user
                filepath
                timeout
                socket
@@ -886,10 +885,11 @@
       (setf size (file-length file-stream)))
     ;; open up socket
     (unless socket
-      (setf socket (usocket:socket-connect ip
-                                           port
-                                           :element-type '(unsigned-byte 8)
-                                           :timeout 1))
+      (lodds.core:split-user-identifier (name ip port t) user
+        (setf socket (usocket:socket-connect ip
+                                             port
+                                             :element-type '(unsigned-byte 8)
+                                             :timeout 1)))
       (lodds.event:push-event :debug
                               (list "Asking for send permission"))
       (let ((ret 0))
@@ -907,21 +907,23 @@
         ;; after 1 second we got nothing, just resubmit the task and
         ;; try again later. if time is already equal to timeout, we
         ;; have successfull waited and can start transfer.
-        (case (lodds.low-level-api:handle-send-permission socket 1)
-          (0 (progn ;; success, set time to timeout
-               (setf time-waited timeout)
-               (setf load size
-                     max-load size)
-               (setf info (format nil "[Send File] (Sending):~a" filepath))))
-          (3 (progn ;; on timeout wait another second
-               (incf time-waited)
-               (if (>= time-waited timeout)
-                   (error "Timeout. No Response from user, aborting Send File.")
-                   (setf info (format nil "[Send File] (Waiting for accept ~a/~a):~a"
-                                      (lodds.core:format-seconds time-waited)
-                                      (lodds.core:format-seconds timeout)
-                                      filepath)))))
-          (t (error "handle-send-permission returned error")))
+        (lodds.core:split-user-identifier (name ip port) user
+          (case (lodds.low-level-api:handle-send-permission socket 1)
+            (0 (progn ;; success, set time to timeout
+                 (setf time-waited timeout)
+                 (setf load size
+                       max-load size)
+                 (setf info (format nil "[Send File] (~a) (Sending):~a" name filepath))))
+            (3 (progn ;; on timeout wait another second
+                 (incf time-waited)
+                 (if (>= time-waited timeout)
+                     (error "Timeout. No Response from user, aborting Send File.")
+                     (setf info (format nil "[Send File] (~a) (Waiting for accept ~a/~a):~a"
+                                        name
+                                        (lodds.core:format-seconds time-waited)
+                                        (lodds.core:format-seconds timeout)
+                                        filepath)))))
+            (t (error "handle-send-permission returned error"))))
         ;; transfer the file
         (let ((transfered
                 (load-chunk file-stream

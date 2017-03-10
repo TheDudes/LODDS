@@ -291,11 +291,15 @@
                :documentation "List of files which are already
                downloaded")))
 
-(defclass task-send-file (task-user)
+(defclass task-send-file (task)
   ((filepath :initarg :filepath
              :initform (error "Specify file")
              :documentation "Full path to the local file which will be
              sent")
+   (user :initarg :user
+         :initform (error "Specify user")
+         :documentation "name of user, for example:
+         d4yus@192.168.2.1:1234")
    (timeout :initarg :timeout
             :initform (error "Specify timeout")
             :type integer

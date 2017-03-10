@@ -143,9 +143,9 @@
                        (if (lodds.core:file-exists file-choosen)
                            (if users
                                (loop :for selected-user :in (slot-value widget 'users-selected)
-                                     :do (lodds:send-file-user file-choosen
-                                                               selected-user
-                                                               (q+:value timeout))
+                                     :do (lodds:send-file file-choosen
+                                                          selected-user
+                                                          (q+:value timeout))
                                      :finally (return t))
                                (progn
                                  (make-instance 'dialog
