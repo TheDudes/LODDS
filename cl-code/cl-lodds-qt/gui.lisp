@@ -205,6 +205,29 @@
                          :side :right
                          :menu view-menu))
 
+(define-subwidget (main-window status-timer)
+    (q+:make-qtimer main-window)
+  (q+:start status-timer
+            (lodds.config:get-value :status-update-interval)))
+
+(define-subwidget (main-window status-label)
+    (q+:make-qlabel main-window)
+  (q+:set-tool-tip status-label
+                   (lodds:get-status-doc)))
+
+(define-slot (main-window tick) ()
+  (declare (connected status-timer (timeout)))
+  (let ((status (mapcar
+                 (lambda (status)
+                   (format nil "~a: ~a" (car status) (cdr status)))
+                 (lodds:get-status t))))
+    (q+:set-text status-label
+                 (format nil "~{~a~^ ~}" status))
+    (q+:set-tool-tip tray-icon
+                     (format nil "~a~%~{~a~^~%~}"
+                             (q+:window-title main-window)
+                             status))))
+
 (define-initializer (main-window setup-widget)
   (let ((lodds-icon (format nil "~a~a" (lodds.config:get-value :resources-folder)
                             "lodds.png")))
@@ -215,6 +238,8 @@
                             lodds-icon)))
           (format t "~a~%" text)
           (lodds.event:push-event :info (list text)))))
+  (q+:add-permanent-widget (q+:status-bar main-window)
+                           status-label)
   (qdoto main-window
          (q+:set-window-title (format nil "LODDS - ~a" (lodds.config:get-value :name)))
          (q+:resize 800 450)
@@ -241,6 +266,8 @@
     (q+:set-tool-tip tray-icon title))
   (set-refresh-timeout (slot-value info-dock 'widget)
                        (lodds.config:get-value :info-update-interval))
+  (q+:set-interval status-timer
+                   (lodds.config:get-value :status-update-interval))
   (set-directory-busy-check-timeout (slot-value shared-dock 'widget)
                                     (lodds.config:get-value :directory-busy-check))
   (setf (slot-value (slot-value log-dock 'widget)

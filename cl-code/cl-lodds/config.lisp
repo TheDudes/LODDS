@@ -206,6 +206,16 @@
          :integer
          50
          100000)
+   (list :status-update-interval
+         1000
+         (format nil
+                 "Interval (in milliseconds) the statusbar and tray~%~
+                 tooltip status message refresh.~%~
+                 Value between 50 and 100.000~%~
+                 Default: 1000")
+         :integer
+         50
+         100000)
    (list :directory-busy-check
          1000
          (format nil
