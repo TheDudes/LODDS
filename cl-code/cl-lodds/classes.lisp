@@ -56,6 +56,18 @@
 (defclass task ()
   ((id :initform nil
        :type string)
+   (state :initform :normal
+          :type keyword
+          :documentation "State describing the Task. Either :normal,
+          :failed, :canceled, :normal-no-resubmit or :finished. Each
+          task gets initialized with state :normal. While the task
+          state is :normal it will be resubmitted once 'run-task'
+          method finishes. If tasks state is not :normal (aka
+          :canceled, :failed or :finished) the task will be finished
+          by calling finish-task (which closes the socket and
+          file-stream). This slot can be used to cancel or stop the
+          task. Just set it to :canceled and the task will finish once
+          run-task returns or submit-task is called.")
    (info :initform nil
          :type string
          :documentation "information about the task can be placed in
@@ -73,13 +85,6 @@
          :initform (error "please specify a task name!")
          :type string
          :documentation "Task Name.")
-   (resubmit-p :initform nil
-               :documentation "Flag which is t if the task should get
-               resubmittet")
-   (canceled-p :initform nil
-               :documentation "Flag which is t if task was canceled")
-   (finished-p :initform nil
-               :documentation "Flag which is t if task has finished")
    (aktive-p :initform nil
              :type boolean
              :documentation "Flag which is t if task is currently

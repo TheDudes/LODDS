@@ -61,7 +61,7 @@
   (declare (connected timer (timeout)))
   (incf time-vanished)
   (if (or (>= time-vanished timeout)
-          (slot-value task 'lodds.task::canceled-p))
+          (eql :canceled (slot-value task 'lodds.task::state)))
       (when on-timeout
         (funcall on-timeout))
       (q+:set-value time-left (- timeout time-vanished))))

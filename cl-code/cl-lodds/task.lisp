@@ -41,7 +41,7 @@
 
 (defgeneric cancel-task (task)
   (:method ((task task))
-    (setf (slot-value task 'canceled-p) t))
+    (setf (slot-value task 'state) :canceled))
   (:method ((task-id string))
     (let ((task (get-task-by-id task-id)))
       (when task
@@ -190,42 +190,45 @@
 
   (:method :around ((task task))
     (with-slots (aktive-p
-                 finished-p
-                 resubmit-p
-                 canceled-p
+                 state
                  id
                  on-finish-hook
                  on-cancel-hook
                  on-error-hook) task
-      (when canceled-p
-        (finish-task task)
-        (when on-cancel-hook
-          (funcall on-cancel-hook task))
-        (lodds.event:push-event :task-canceled
-                                (list id task))
-        (return-from run-task))
-      (setf aktive-p t)
-      (handler-case
-          (call-next-method)
-        (error (err)
-          (setf aktive-p nil
-                finished-p t)
-          (finish-task task)
-          (when on-error-hook
-            (funcall on-error-hook task))
-          (lodds.event:push-event :task-failed
-                                  (list id task err))
-          (return-from run-task)))
-      (setf aktive-p nil)
-      (if finished-p
-          (progn
-            (finish-task task)
-            (when on-finish-hook
-              (funcall on-finish-hook task))
-            (lodds.event:push-event :task-finished
-                                    (list id task)))
-          (when resubmit-p
-            (submit-task task)))))
+      (let ((err nil))
+        (when (equal state :normal)
+          (setf aktive-p t)
+          (handler-case
+              (call-next-method)
+            (error (e)
+              (setf err e)
+              (setf state :failed)))
+          (setf aktive-p nil))
+        (case state
+          (:canceled (progn
+                       (finish-task task)
+                       (when on-cancel-hook
+                         (funcall on-cancel-hook task))
+                       (lodds.event:push-event :task-canceled
+                                               (list id task))
+                       (return-from run-task)))
+          (:failed (progn
+                     (finish-task task)
+                     (when on-error-hook
+                       (funcall on-error-hook task))
+                     (lodds.event:push-event :task-failed
+                                             (list id task err))))
+          (:finished (progn
+                       (finish-task task)
+                       (when on-finish-hook
+                         (funcall on-finish-hook task))
+                       (lodds.event:push-event :task-finished
+                                               (list id task))))
+          (:normal (submit-task task))
+          (:normal-no-resubmit nil)
+          (t (error "Task state not recognized: ~a (task: ~a)"
+                    state
+                    task))))))
 
   (:method ((task task))
     (declare (ignorable task))
@@ -413,9 +416,8 @@
                read-bytes
                socket
                file-stream
-               resubmit-p
-               finished-p
-               info) task
+               info
+               state) task
     (unless socket
       (setf socket (request-file ip port checksum 0 size)))
     (unless file-stream
@@ -429,12 +431,10 @@
       (decf-load task transfered)
       (incf read-bytes transfered))
     (finish-output file-stream)
-    (if (eql size read-bytes)
-        (progn
-          (setf finished-p t)
-          (lodds.event:push-event :info (list "downloaded file"
-                                              local-file-path)))
-        (setf resubmit-p t))))
+    (when (eql size read-bytes)
+      (setf state :finished)
+      (lodds.event:push-event :info (list "downloaded file"
+                                          local-file-path)))))
 
 (defun find-best-user (checksum)
   (let ((best-user nil)
@@ -463,8 +463,7 @@
                current-part
                read-bytes-part
                part-size
-               resubmit-p
-               finished-p
+               state
                info) task
     (unless file-stream
       (setf file-stream (open-file local-file-path)))
@@ -493,14 +492,12 @@
       (incf read-bytes-part written))
     (finish-output file-stream)
     (if (eql size read-bytes)
-        (setf finished-p t)
-        (progn
-          (when (eql read-bytes-part part-size)
-            (incf current-part)
-            (setf read-bytes-part 0)
-            (secure-close socket)
-            (setf socket nil))
-          (setf resubmit-p t)))))
+        (setf state :finished)
+        (when (eql read-bytes-part part-size)
+          (incf current-part)
+          (setf read-bytes-part 0)
+          (secure-close socket)
+          (setf socket nil)))))
 
 (defgeneric retry-task (task)
   (:method ((task task))
@@ -522,20 +519,19 @@
                items
                items-done
                user
-               finished-p
-               resubmit-p
-               canceled-p
+               state
                info
                id) task
-    (setf resubmit-p nil)
     (if (not items)
         (progn
-          (setf finished-p t)
-          (lodds.event:push-event :info (list "folder"
-                                              remote-path
-                                              "sucessfully downloaded to"
-                                              local-path)))
+          (setf state :finished)
+          (lodds.event:push-event :info
+                                  (list "folder"
+                                        remote-path
+                                        "sucessfully downloaded to"
+                                        local-path)))
         (destructuring-bind (file checksum size) (pop items)
+          (setf state :normal-no-resubmit)
           (let* ((left (length items))
                  (done (length items-done))
                  (total (+ left done)))
@@ -575,6 +571,7 @@
                                 ;; download is complete
                                 :on-finish-hook (lambda (file-task)
                                                   (declare (ignore file-task))
+                                                  (setf state :normal)
                                                   (submit-task task))
                                 :on-error-hook on-error-hook
                                 :on-cancel-hook on-error-hook)))
@@ -660,9 +657,8 @@
               (list "unexpected" action))))))))
 
 (defmethod run-task ((task task-request))
-  (with-slots (socket
-               finished-p) task
-    (setf finished-p t)
+  (with-slots (socket state) task
+    (setf state :finished)
     (multiple-value-bind (error request)
         (lodds.low-level-api:parse-request socket)
       (if (> error 0)
@@ -697,8 +693,7 @@
                written
                filename
                file-stream
-               finished-p
-               resubmit-p
+               state
                load
                max-load
                info) task
@@ -706,7 +701,7 @@
       (unless (setf filename (lodds.watcher:get-file-info checksum))
         (lodds.event:push-event :error
                                 (list "requested file could not be found"))
-        (setf finished-p t)
+        (setf state :finished)
         (return-from run-task))
       (setf file-stream (open (lodds.core:escape-wildcards filename)
                               :direction :input
@@ -727,16 +722,14 @@
       (incf written transfered)
       (decf-load task transfered))
     (finish-output file-stream)
-    (if (eql (- end start) written)
-        (setf finished-p t)
-        (setf resubmit-p t))))
+    (when (eql (- end start) written)
+        (setf state :finished))))
 
 (defmethod run-task ((task task-request-info))
   (with-slots (socket
                timestamp
-               finished-p
-               resubmit-p) task
-    (setf finished-p t)
+               state) task
+    (setf state :finished)
     (apply #'lodds.low-level-api:respond-info
            (usocket:socket-stream socket)
            (lodds:generate-info-response timestamp))))
@@ -747,8 +740,7 @@
                filename
                file-stream
                read-bytes
-               finished-p
-               resubmit-p
+               state
                load
                max-load
                info) task
@@ -760,7 +752,7 @@
                               :element-type '(unsigned-byte 8)))
       (unless (eql 0 (lodds.low-level-api:respond-send-permission
                       (usocket:socket-stream socket)))
-        (setf finished-p t))
+        (setf state :finished))
       (setf load size
             max-load size))
     ;; transfer the file
@@ -772,9 +764,8 @@
                           (lodds.core:input-rdy-p socket 1)))))
       (incf read-bytes transfered)
       (decf-load task transfered))
-    (if (eql size read-bytes)
-        (setf finished-p t)
-        (setf resubmit-p t))))
+    (when (eql size read-bytes)
+      (setf state :finished))))
 
 (defmethod run-task ((task task-info))
   (with-slots (user
@@ -783,8 +774,8 @@
                timestamp
                user-load
                last-change
-               finished-p) task
-    (setf finished-p t)
+               state) task
+    (setf state :finished)
     (let ((client-info (lodds:get-user-info user)))
       (unless client-info
         (setf client-info
@@ -829,8 +820,7 @@
                file-stream
                size
                written
-               finished-p
-               resubmit-p
+               state
                load
                max-load
                info
@@ -858,7 +848,6 @@
                                                        (file-namestring filepath)))
         (unless (eql 0 ret)
           (error "get-send-permission returned: ~a" ret))))
-    (setf resubmit-p t)
     (if (< time-waited timeout)
         ;; wait timeout seconds for a response from the client, if
         ;; after 1 second we got nothing, just resubmit the task and
@@ -889,6 +878,5 @@
           (incf written transfered)
           (decf-load task transfered)
           (finish-output file-stream)
-          (if (eql size written)
-              (setf finished-p t)
-              (setf resubmit-p t))))))
+          (when (eql size written)
+            (setf state :finished))))))

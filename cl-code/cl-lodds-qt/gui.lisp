@@ -285,8 +285,7 @@
   (let ((task (lodds.task:get-task-by-id task-id)))
     (with-slots ((items lodds.task::items)
                  (items-done lodds.task::items-done)
-                 (remote-path lodds.task::remote-path)
-                 (canceled-p lodds.task::canceled-p)) task
+                 (remote-path lodds.task::remote-path)) task
       (destructuring-bind (file checksum size) (car items-done)
         (declare (ignore checksum))
         (let ((options (list (list :skip
@@ -299,7 +298,7 @@
                    (case (get-selected-solution widget)
                      (:skip (lodds.task:submit-task task))
                      (:abort (progn
-                               (setf canceled-p t)
+                               (lodds.task:cancel-task task)
                                (lodds.task:submit-task task)))
                      (:retry (lodds.task:retry-task task)))
                    t))
