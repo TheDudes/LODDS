@@ -347,3 +347,43 @@
 (defun send-file-user (file user &optional (timeout 300))
   (lodds.core:split-user-identifier (name ip port t) user
     (send-file file ip port timeout)))
+
+
+(defun get-status (&optional (format nil))
+  "Describtes Lodds current status.
+Tasks: How many tasks are currently running
+Load: How much load the client currently has
+Users: Amount of User on the Network
+Shared Folders: Amount of currently shared folders
+Network Files: Amount of Files in the network (non Unique)
+Total Load: Sum of all Loads accross the Network"
+  (let ((tasker (get-subsystem :tasker))
+        (total-load 0)
+        (total-shared 0))
+    (dolist (user (get-user-list))
+      (let ((info (get-user-info user)))
+        (incf total-load (lodds:c-load info))
+        (incf total-shared (hash-table-count
+                            (c-file-table-name info)))))
+    (let ((tasks (lodds.task:get-task-count tasker))
+          (load (lodds.task:get-load tasker))
+          (users (length (lodds:get-user-list)))
+          (shared-folders (length (lodds.watcher:get-shared-folders))))
+      (if format
+          (list (cons "Tasks" (format nil "~:d" tasks))
+                (cons "Load" (lodds.core:format-size load))
+                (cons "Users" (format nil "~:d" users))
+                (cons "Shared Folders" (format nil "~:d" shared-folders))
+                (cons "Network Files" (format nil "~:d" total-shared))
+                (cons "Total Load" (lodds.core:format-size total-load)))
+          (list (cons "Tasks" tasks)
+                (cons "Load" load)
+                (cons "Users" users)
+                (cons "Shared Folders" shared-folders)
+                (cons "Network Files" total-shared)
+                (cons "Total Load" total-load))))))
+
+(defun get-status-doc ()
+  "Calling (documentation 'lodds:get-status 'function) returns nil,
+dunno why. But thats why this wrapper exists."
+  (documentation 'get-status 'function))

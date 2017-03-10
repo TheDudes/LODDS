@@ -204,4 +204,6 @@
            #:send-file-user
            #:settings
            #:switch-config
-           #:update-config))
+           #:update-config
+           #:get-status
+           #:get-status-doc))
