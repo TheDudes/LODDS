@@ -181,7 +181,7 @@
     (make-instance 'dock :title "Log"
                          :widget (make-instance 'info-log)
                          :main-window main-window
-                         :side :bottom
+                         :side nil
                          :menu view-menu))
 
 (define-subwidget (main-window user-dock)
@@ -196,7 +196,7 @@
     (make-instance 'dock :title "Info"
                          :widget (make-instance 'info)
                          :main-window main-window
-                         :side log-dock
+                         :side :bottom
                          :height 150
                          :menu view-menu))
 

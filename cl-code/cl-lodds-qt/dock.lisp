@@ -19,9 +19,11 @@
    (side :initarg :side
          :initform :left
          :documentation "Where the dock should be added. One of :left
-         :right :top :bottom or another dock widget, when another dock
-         widget is given the dock is moved ontop of the given dock
-         widget (using QMainWindow::tabifyDockWidget).")))
+         :right :top :bottom, nil or another dock widget, when another
+         dock widget is given the dock is moved ontop of the given
+         dock widget (using QMainWindow::tabifyDockWidget), if nil is
+         given the dock widget will be floating and hidden
+         (setFloating & hide).")))
 
 (define-signal (dock lift-max-size) ())
 
@@ -37,6 +39,10 @@
   (q+:set-window-title dock title)
   (q+:set-widget dock widget)
   (ctypecase side
+    (null
+     (q+:set-parent dock main-window)
+     (q+:set-floating dock t)
+     (q+:hide dock))
     (keyword
      (q+:add-dock-widget main-window
                          (ccase side
