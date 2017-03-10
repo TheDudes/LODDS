@@ -188,14 +188,14 @@
     (make-instance 'dock :title "User List"
                          :widget (make-instance 'user-list)
                          :main-window main-window
-                         :side :right
+                         :side :left
                          :menu view-menu))
 
 (define-subwidget (main-window info-dock)
     (make-instance 'dock :title "Info"
                          :widget (make-instance 'info)
                          :main-window main-window
-                         :side :right
+                         :side log-dock
                          :menu view-menu))
 
 (define-subwidget (main-window shared-dock)
