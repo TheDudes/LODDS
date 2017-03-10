@@ -13,19 +13,28 @@
    (finalize-widget :initarg :finalize-widget
                     :initform t)
    (side :initarg :side
-         :initform :left)))
+         :initform :left
+         :documentation "Where the dock should be added. One of :left
+         :right :top :bottom or another dock widget, when another dock
+         widget is given the dock is moved ontop of the given dock
+         widget (using QMainWindow::tabifyDockWidget).")))
 
 (define-initializer (dock setup-widget)
   (q+:set-window-title dock title)
   (q+:set-widget dock widget)
-  (q+:add-dock-widget main-window
-                      (case side
-                        (:left (q+:qt.left-dock-widget-area))
-                        (:right (q+:qt.right-dock-widget-area))
-                        (:bottom (q+:qt.bottom-dock-widget-area))
-                        (:top (q+:qt.top-dock-widget-area))
-                        (t (error "~a is not a valid docking side" side)))
-                      dock)
+  (ctypecase side
+    (keyword
+     (q+:add-dock-widget main-window
+                         (ccase side
+                           (:left (q+:qt.left-dock-widget-area))
+                           (:right (q+:qt.right-dock-widget-area))
+                           (:bottom (q+:qt.bottom-dock-widget-area))
+                           (:top (q+:qt.top-dock-widget-area)))
+                         dock))
+    (dock
+     (q+:tabify-dock-widget main-window
+                            side
+                            dock)))
   (when menu
     (q+:add-action menu (q+:toggle-view-action dock))))
 
