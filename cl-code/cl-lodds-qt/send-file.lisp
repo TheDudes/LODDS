@@ -19,7 +19,7 @@
   (q+:set-tool-tip file
                    (format nil
                            "Selected File you want to send~%~
-                           a User."))
+                           to the selected User(s)."))
   (setf (q+:size-policy file)
         (values (q+:qsizepolicy.expanding)
                 (q+:qsizepolicy.fixed))))
