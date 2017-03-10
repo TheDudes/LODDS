@@ -189,6 +189,7 @@
                          :widget (make-instance 'user-list)
                          :main-window main-window
                          :side :left
+                         :width 300
                          :menu view-menu))
 
 (define-subwidget (main-window info-dock)
@@ -196,6 +197,7 @@
                          :widget (make-instance 'info)
                          :main-window main-window
                          :side log-dock
+                         :height 150
                          :menu view-menu))
 
 (define-subwidget (main-window shared-dock)
@@ -203,6 +205,7 @@
                          :widget (make-instance 'shared)
                          :main-window main-window
                          :side :right
+                         :width 300
                          :menu view-menu))
 
 (define-subwidget (main-window status-timer)
@@ -242,8 +245,8 @@
                            status-label)
   (qdoto main-window
          (q+:set-window-title (format nil "LODDS - ~a" (lodds.config:get-value :name)))
-         (q+:resize 800 450)
-         (q+:set-central-widget shares-widget))
+         (q+:set-central-widget shares-widget)
+         (q+:resize 1280 720))
   (signal! main-window (reload-stylesheet)))
 
 (define-signal (main-window reload-stylesheet) ())

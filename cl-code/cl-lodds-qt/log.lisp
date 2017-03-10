@@ -45,7 +45,8 @@
                      (2 (setf *ignored-log-events*
                               (remove event *ignored-log-events*))))))
         (q+:add-widget layout checkbox)))
-    (q+:set-widget info-log-settings container)))
+    (q+:set-widget info-log-settings container)
+    (q+:set-maximum-width info-log-settings 250)))
 
 (define-signal (info-log add-log-msg) (string string string string))
 
