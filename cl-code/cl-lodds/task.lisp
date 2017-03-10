@@ -503,13 +503,14 @@
   (:method ((task task))
     (error "not implemented"))
   (:method ((task task-get-folder))
-    (with-slots (items-done items) task
+    (with-slots (items-done items state) task
       (let ((failed-file (pop items-done)))
         (destructuring-bind (nil nil size) failed-file
           (setf items
                 (append (list failed-file)
                         items))
-          (decf-load task (- size)))))
+          (decf-load task (- size))
+          (setf state :normal))))
     (lodds.task:submit-task task)))
 
 (defmethod run-task ((task task-get-folder))
