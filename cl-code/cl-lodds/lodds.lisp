@@ -341,13 +341,13 @@
 
 
 (defun get-status (&optional (format nil))
-  "Describtes Lodds current status.
-Tasks: How many tasks are currently running
+  "Describes Lodds current status.
+Total Load: Sum of all Loads accross the Network
 Load: How much load the client currently has
-Users: Amount of User on the Network
-Shared Folders: Amount of currently shared folders
+Tasks: How many tasks are currently running
 Network Files: Amount of Files in the network (non Unique)
-Total Load: Sum of all Loads accross the Network"
+Shared Folders: Amount of currently shared folders
+Users: Amount of User on the Network"
   (let ((tasker (get-subsystem :tasker))
         (total-load 0)
         (total-shared 0))
@@ -361,18 +361,18 @@ Total Load: Sum of all Loads accross the Network"
           (users (length (lodds:get-user-list)))
           (shared-folders (length (lodds.watcher:get-shared-folders))))
       (if format
-          (list (cons "Tasks" (format nil "~:d" tasks))
+          (list (cons "Total Load" (lodds.core:format-size total-load))
                 (cons "Load" (lodds.core:format-size load))
-                (cons "Users" (format nil "~:d" users))
-                (cons "Shared Folders" (format nil "~:d" shared-folders))
+                (cons "Tasks" (format nil "~:d" tasks))
                 (cons "Network Files" (format nil "~:d" total-shared))
-                (cons "Total Load" (lodds.core:format-size total-load)))
-          (list (cons "Tasks" tasks)
+                (cons "Shared Folders" (format nil "~:d" shared-folders))
+                (cons "Users" (format nil "~:d" users)))
+          (list (cons "Total Load" total-load)
                 (cons "Load" load)
-                (cons "Users" users)
-                (cons "Shared Folders" shared-folders)
+                (cons "Tasks" tasks)
                 (cons "Network Files" total-shared)
-                (cons "Total Load" total-load))))))
+                (cons "Shared Folders" shared-folders)
+                (cons "Users" users))))))
 
 (defun get-status-doc ()
   "Calling (documentation 'lodds:get-status 'function) returns nil,
