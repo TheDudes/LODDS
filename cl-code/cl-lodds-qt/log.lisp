@@ -138,9 +138,7 @@
     (:config-changed
      (if (not event-msg)
          "replaced settings"
-         (destructuring-bind (key old-val new-val) event-msg
-           (format nil "~a: ~a -> ~a"
-                   key old-val new-val))))
+         (format nil "setting ~a changed" (car event-msg))))
     (t (format nil "~{~a~^ ~}" event-msg))))
 
 (defun format-log-tooltip (event-type event-msg)
@@ -156,6 +154,12 @@
                            (list (list "..."))
                            (subseq changes (- len 10))))
            (format nil "~{~{~a~^ ~}~^~%~}" changes))))
+    (:config-changed
+     (if (not event-msg)
+         "replaced settings"
+         (destructuring-bind (key old-val new-val) event-msg
+           (format nil "~a: ~a -> ~a"
+                   key old-val new-val))))
     (t (format nil "~{~a~^ ~}" event-msg))))
 
 (defun cb-log-messages (info-log event)
