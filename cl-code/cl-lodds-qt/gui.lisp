@@ -225,7 +225,7 @@
                    (format nil "~a: ~a" (car status) (cdr status)))
                  (lodds:get-status t))))
     (q+:set-text status-label
-                 (format nil "~{~a~^ ~}" status))
+                 (format nil "~{~a~^ | ~}" status))
     (q+:set-tool-tip tray-icon
                      (format nil "~a~%~{~a~^~%~}"
                              (q+:window-title main-window)
