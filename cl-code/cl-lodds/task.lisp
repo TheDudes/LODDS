@@ -428,7 +428,7 @@
       (setf socket (request-file ip port checksum 0 size)))
     (unless file-stream
       (setf file-stream (open-file local-file-path))
-      (setf info (format nil "[Download] (~a):~a "
+      (setf info (format nil "[Download] (~a): ~a "
                          user
                          local-file-path)))
     (let ((transfered (load-chunk (usocket:socket-stream socket)
@@ -568,7 +568,7 @@
           (let* ((left (length items))
                  (done (length items-done))
                  (total (+ left done)))
-            (setf info (format nil "[Folder Download] (File ~a/~a):~a"
+            (setf info (format nil "[Folder Download] (File ~a/~a): ~a"
                                done
                                total
                                file)))
@@ -745,9 +745,14 @@
               max-load size)
         (unless (eql start 0)
           (file-position file-stream start))
-        (setf info (format nil "[Upload] (~a):~a"
-                           (lodds.core:format-size size)
-                           filename))))
+        (lodds.core:split-user-identifier (user ip port)
+            (or (car (lodds:get-user-by-ip
+                      (usocket:get-peer-address socket)))
+                "unknown@ignored:ignoed")
+          (setf info (format nil "[Upload] (~a - ~a): ~a"
+                             user
+                             (lodds.core:format-size size)
+                             filename)))))
     (let ((transfered
             (load-chunk file-stream
                         (usocket:socket-stream socket)
@@ -891,12 +896,12 @@
                  (setf time-waited timeout)
                  (setf load size
                        max-load size)
-                 (setf info (format nil "[Send File] (~a) (Sending):~a" name filepath))))
+                 (setf info (format nil "[Send File] (~a) (Sending): ~a" name filepath))))
             (3 (progn ;; on timeout wait another second
                  (incf time-waited)
                  (if (>= time-waited timeout)
                      (error "Timeout. No Response from user, aborting Send File.")
-                     (setf info (format nil "[Send File] (~a) (Waiting for accept ~a/~a):~a"
+                     (setf info (format nil "[Send File] (~a) (Waiting for accept ~a/~a): ~a"
                                         name
                                         (lodds.core:format-seconds time-waited)
                                         (lodds.core:format-seconds timeout)
