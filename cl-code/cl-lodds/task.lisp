@@ -377,7 +377,7 @@
   (with-slots (info filename id) task
     (setf info (format nil "[Request] (Incomming Request): ~a" filename))))
 
-(defun load-chunk (stream-from stream-to size &optional check-input-fn (chunk-size (ash 1 21)))
+(defun load-chunk (stream-from stream-to size &optional (chunk-size (ash 1 21)))
   "Transfers bytes from STREAM-FROM to STREAM-TO. It will never
   transfer more then (max size chunk-size) bytes. Returns the Amount
   of transfered Bytes."
@@ -385,8 +385,7 @@
                           stream-to
                           (if (> size chunk-size)
                               chunk-size
-                              size)
-                          check-input-fn))
+                              size)))
 
 (defun open-file (file-path)
   (open (lodds.core:escape-wildcards file-path)
@@ -760,9 +759,7 @@
     (let ((transfered
             (load-chunk (usocket:socket-stream socket)
                         file-stream
-                        (- size read-bytes)
-                        (lambda ()
-                          (lodds.core:input-rdy-p socket 1)))))
+                        (- size read-bytes))))
       (incf read-bytes transfered)
       (decf-load task transfered))
     (when (eql size read-bytes)

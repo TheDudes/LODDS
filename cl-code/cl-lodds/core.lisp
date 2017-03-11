@@ -26,7 +26,7 @@
         t
         nil)))
 
-(defun copy-stream (stream-from stream-to size &optional check-input-fn)
+(defun copy-stream (stream-from stream-to size)
   "will read from stream-from and write to stream-to size bytes"
   (when (= size 0)
     (return-from copy-stream 0))
@@ -36,10 +36,7 @@
                           4096))
          (buffer (make-array (list buffer-size)
                              :element-type '(unsigned-byte 8))))
-    (loop :for read = (if (or (not check-input-fn)
-                              (funcall check-input-fn))
-                          (read-sequence buffer stream-from)
-                          (return-from copy-stream written))
+    (loop :for read = (read-sequence buffer stream-from)
           :do
           (progn
             (incf written read)
@@ -47,7 +44,7 @@
               ((= read 0)
                (error "Peer closed Socket"))
               ((< read buffer-size)
-               (return-from copy-stream written))
+               (error "Read less then buffer-size"))
               ((> written size)
                (error "Read more than size on COPY-STREAM (should not be possible)"))
               ((= written size)
