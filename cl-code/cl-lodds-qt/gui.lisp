@@ -273,6 +273,7 @@
                    (lodds.config:get-value :status-update-interval))
   (set-directory-busy-check-timeout (slot-value shared-dock 'widget)
                                     (lodds.config:get-value :directory-busy-check))
+  (update-user-colors (slot-value user-dock 'widget))
   (setf (slot-value (slot-value log-dock 'widget)
                     'log-message-max)
         (lodds.config:get-value :log-message-max)))

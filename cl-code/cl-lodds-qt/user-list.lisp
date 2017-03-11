@@ -32,6 +32,22 @@
                           (or all-files 0)
                           (or unique-files 0))))))))
 
+(defmethod set-user-color ((user-list user-list) user widget)
+  (with-slots-bound (user-list user-list)
+    (with-finalizing* ((qcolor-trusted (q+:make-qcolor 0 255 0 22))
+                       (qcolor-blocked (q+:make-qcolor 255 0 0 22))
+                       (qcolor-default (q+:make-qcolor 0 0 0 0))
+                       (qbrush (q+:make-qbrush
+                                (cond ((lodds:user-is-blocked user)
+                                       qcolor-blocked)
+                                      ((lodds:user-is-trusted user)
+                                       qcolor-trusted)
+                                      (t
+                                       qcolor-default)))))
+      (q+:set-background widget
+                         +user-list-name+
+                         qbrush))))
+
 (define-slot (user-list add-user) ((user string)
                                    (load string)
                                    (last-change int))
@@ -48,6 +64,7 @@
                         new-entry
                         +user-list-send-file+
                         send-file-button)
+    (set-user-color user-list user new-entry)
     (lodds.core:split-user-identifier (name ip port) user
       (q+:set-tool-tip send-file-button
                        (format nil
@@ -86,6 +103,30 @@
                           (lodds.core:format-size (parse-integer load)))
              (q+:set-tool-tip +user-list-name+ (gen-tool-tip user))))))
 
+(define-slot (user-list prepare-menu) ((pos "const QPoint &"))
+  (declare (connected user-list (custom-context-menu-requested "const QPoint &")))
+  (with-finalizing ((global-pos (q+:map-to-global user-list pos))
+                    (menu (q+:make-qmenu)))
+    (let* ((widget (q+:item-at user-list pos))
+           (user (q+:text widget +user-list-full-name+)))
+      (if (lodds:user-is-trusted user)
+          (q+:add-action menu "Untrust")
+          (q+:add-action menu "Trust"))
+      (if (lodds:user-is-blocked user)
+          (q+:add-action menu "Unblock")
+          (q+:add-action menu "Block"))
+      (let ((option (q+:exec menu global-pos)))
+        (cond
+          ((null-qobject-p option))
+          ((string= "Trust" (q+:text option))
+           (lodds:trust-user user))
+          ((string= "Untrust" (q+:text option))
+           (lodds:untrust-user user))
+          ((string= "Block" (q+:text option))
+           (lodds:block-user user))
+          ((string= "Unblock" (q+:text option))
+           (lodds:unblock-user user)))))))
+
 (define-initializer (user-list setup-widget)
   (qdoto user-list
          (q+:set-object-name "UserList")
@@ -95,6 +136,7 @@
          (q+:set-header-labels (list "User" "Load" "" ""))
          (q+:set-alternating-row-colors t)
          (q+:set-accept-drops t)
+         (q+:set-context-menu-policy (q+:qt.custom-context-menu))
          (q+:hide-column +user-list-full-name+))
 
   (qdoto (q+:header user-list)
@@ -140,6 +182,11 @@
                   'dialog
                   :title "Error - Dont know what to do"
                   :text "Whatever you dropped there is neither a dir nor a file."))))))))
+
+(defmethod update-user-colors ((user-list user-list))
+  (maphash (lambda (user widget)
+             (set-user-color user-list user widget))
+           (slot-value user-list 'users)))
 
 (define-initializer (user-list setup-callbacks)
   (lodds.event:add-callback :qt-user-list
