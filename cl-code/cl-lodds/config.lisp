@@ -176,14 +176,14 @@
                  Default: false")
          :boolean)
    (list :download-folder
-         (format nil "~adownload"
+         (format nil "~adownload/"
                  (user-homedir-pathname))
          (format nil
                  "Default Download folder, where files get saved.~%~
                  Default: download folder inside home directory.")
          :folder)
    (list :upload-folder
-         (format nil "~aupload"
+         (format nil "~aupload/"
                  (user-homedir-pathname))
          (format nil
                  "Default Upload folder, incomming files will~%~

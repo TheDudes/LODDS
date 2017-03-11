@@ -192,7 +192,8 @@
     (q+:set-text folder (lodds.config:get-value key config))))
 
 (defmethod get-value ((folder-setting folder-setting))
-  (q+:text (slot-value folder-setting 'folder)))
+  (lodds.core:add-missing-slash
+   (q+:text (slot-value folder-setting 'folder))))
 
 ;; Functions
 
