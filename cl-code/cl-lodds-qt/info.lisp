@@ -71,6 +71,11 @@
                     (normalized-value max done))
       (qdoto widget
              (q+:set-text +info-info+ info-text)
+             (q+:set-status-tip +info-info+
+                                (format nil
+                                        "Total: ~a (~:d bytes) | Transfered: ~a (~:d bytes)"
+                                        (lodds.core:format-size max) max
+                                        (lodds.core:format-size done) done))
              (q+:set-tool-tip +info-info+
                               (format nil
                                       "Total: ~a (~:d bytes)~%Transfered: ~a (~:d bytes)"
@@ -143,6 +148,7 @@
 
 (define-initializer (info setup-widget)
   (qdoto info
+         (q+:set-mouse-tracking t)
          (q+:set-object-name "Info")
          (q+:set-focus-policy (q+:qt.no-focus))
          (q+:set-selection-mode 0)

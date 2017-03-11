@@ -71,12 +71,19 @@
 
 (defmethod add-new-dir-widget ((directories directories) dir)
   (let ((new-entry (q+:make-qtreewidgetitem directories)))
-    (q+:set-text new-entry +shared-path+
-                 (or (lodds.core:escaped-get-folder-name dir)
-                     ""))
-    (q+:set-tool-tip new-entry +shared-path+
-                     (format nil "~a" dir))
-    (q+:set-text new-entry +shared-fullpath+ (format nil "~a" dir))
+    (qdoto new-entry
+           (q+:set-text  +shared-path+
+                         (or (lodds.core:escaped-get-folder-name dir)
+                             ""))
+           (q+:set-tool-tip +shared-path+
+                            (format nil
+                                    "Click the button on the Right ~
+                                    to unshare ~a"
+                                    dir))
+           (q+:set-status-tip +shared-path+
+                              (format nil "Directory: ~a" dir))
+           (q+:set-text +shared-fullpath+
+                        (format nil "~a" dir)))
     (setf (gethash dir (slot-value directories 'dirs)) new-entry)
     (set-spinner directories new-entry)))
 
@@ -140,6 +147,7 @@
 
 (define-initializer (directories setup-widget)
   (qdoto directories
+         (q+:set-mouse-tracking t)
          (q+:set-object-name "Shared")
          (q+:set-focus-policy (q+:qt.no-focus))
          (q+:set-selection-mode 0)

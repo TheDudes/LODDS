@@ -72,6 +72,8 @@
                                name))
       (qdoto new-entry
              (q+:set-text +user-list-name+ name)
+             (q+:set-status-tip +user-list-name+
+                                (format nil "User: ~a" user))
              (q+:set-tool-tip +user-list-name+
                               (gen-tool-tip user))
              (q+:set-text +user-list-load+ (lodds.core:format-size (parse-integer load)))
@@ -129,6 +131,7 @@
 
 (define-initializer (user-list setup-widget)
   (qdoto user-list
+         (q+:set-mouse-tracking t)
          (q+:set-object-name "UserList")
          (q+:set-focus-policy (q+:qt.no-focus))
          (q+:set-selection-mode 0)

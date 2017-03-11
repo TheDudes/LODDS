@@ -164,7 +164,10 @@
              (q+:set-text +shares-size+
                           (lodds.core:format-size size))
              (q+:set-tool-tip +shares-size+
-                              (format nil "~:d bytes" size)))))
+                              (format nil "~:d bytes" size))
+             (q+:set-tool-tip +shares-name+
+                              (format nil "Double Click, Right Click ~
+                              or Press Enter to Download.")))))
   (:method ((entry shares-entry-dir))
     (call-next-method)
     (with-slots (items widget path user size) entry
@@ -173,12 +176,13 @@
             (q+:set-tool-tip widget +shares-name+
                              (format nil "Ip: ~a~%Port: ~a~%Folder Shared: ~a"
                                      ip port items)))
-          (q+:set-tool-tip widget +shares-name+ (format nil "Items: ~a" items)))))
+          (q+:set-status-tip widget +shares-name+
+                             (format nil "Items: ~a" items)))))
   (:method ((entry shares-entry-file))
     (call-next-method)
     (with-slots (widget checksum) entry
-      (q+:set-tool-tip widget +shares-name+
-                       (format nil "Checksum: ~a" checksum)))))
+      (q+:set-status-tip widget +shares-name+
+                         (format nil "Checksum: ~a" checksum)))))
 
 (defmethod initialize-instance :after ((entry shares-entry) &rest initargs)
   (declare (ignorable initargs))
@@ -547,6 +551,7 @@
                  :user ""
                  :widget (q+:invisible-root-item shares))
   (qdoto shares
+         (q+:set-mouse-tracking t)
          (q+:set-object-name "Shares")
          (q+:set-selection-behavior (q+:qabstractitemview.select-rows))
          (q+:set-selection-mode (q+:qabstractitemview.extended-selection))
