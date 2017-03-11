@@ -29,6 +29,7 @@
          nil
          (format nil
                  "If true: shared directories will be rememberd on restart~%~
+                  [Not implemented yet]~%~
                   Default: false")
          :boolean)
    (list :port
