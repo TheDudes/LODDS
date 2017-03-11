@@ -229,7 +229,20 @@
     (q+:set-tool-tip tray-icon
                      (format nil "~a~%~{~a~^~%~}"
                              (q+:window-title main-window)
-                             status))))
+                             (append
+                              status
+                              (append
+                               (let ((requests 0))
+                                 (loop :for (path . dialog) :in send-permission-dialogs
+                                       :when dialog
+                                       :do (incf requests))
+                                 (when (> requests 0)
+                                   (list
+                                    (format nil "Send Requests: ~a" requests))))
+                               (let ((folder-errors (length folder-error-dialogs)))
+                                 (unless (eql 0 folder-errors)
+                                   (list
+                                    (format nil "Folder Errors: ~a" folder-errors))))))))))
 
 (define-initializer (main-window setup-widget)
   (let ((lodds-icon (format nil "~a~a" (lodds.config:get-value :resources-folder)
