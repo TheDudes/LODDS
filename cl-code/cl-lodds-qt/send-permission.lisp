@@ -106,8 +106,7 @@
                      nil))))
            (cancel-fn (widget)
              (declare (ignore widget))
-             (lodds.task:cancel-task task)
-             (lodds.task:submit-task task)))
+             (lodds.task:cancel-task task)))
       (make-instance 'dialog
                      :title
                      (format nil

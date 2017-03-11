@@ -299,13 +299,8 @@
                                    "retry loading file"))))
           (flet ((on-close (widget)
                    (case (get-selected-solution widget)
-                     (:skip (progn
-                              (setf (slot-value task 'lodds.task::state)
-                                    :normal)
-                              (lodds.task:submit-task task)))
-                     (:abort (progn
-                               (lodds.task:cancel-task task)
-                               (lodds.task:submit-task task)))
+                     (:skip (lodds.task:skip-task task))
+                     (:abort (lodds.task:cancel-task task))
                      (:retry (lodds.task:retry-task task)))
                    t))
             (let* ((dialog (make-instance

@@ -30,7 +30,7 @@
 (defmethod get-task-count ((tasker tasker))
   (hash-table-count (slot-value tasker 'tasks)))
 
-(defmethod get-task-by-id (task-id)
+(defun get-task-by-id (task-id)
   "Returns task with given id, nil if task is not found"
   (with-slots (tasks lock) (lodds:get-subsystem :tasker)
     (let ((result nil))
@@ -39,13 +39,17 @@
               (gethash task-id tasks)))
       result)))
 
-(defgeneric cancel-task (task)
-  (:method ((task task))
-    (setf (slot-value task 'state) :canceled))
-  (:method ((task-id string))
-    (let ((task (get-task-by-id task-id)))
-      (when task
-        (cancel-task task)))))
+(defun cancel-task (task &optional (resubmit-p t))
+  (ctypecase task
+    (string
+     (let ((the-task (get-task-by-id task)))
+       (when the-task
+         (cancel-task the-task))))
+    (task
+     (progn
+       (setf (slot-value task 'state) :canceled)
+       (when resubmit-p
+         (submit-task task))))))
 
 (defparameter *id-counter* 0)
 (defmethod initialize-instance :after ((task task) &rest initargs)
@@ -181,8 +185,10 @@
         (remhash (slot-value task 'id) tasks)))
     (with-slots (socket file-stream) task
       (secure-close socket)
+      (setf socket nil)
       (when file-stream
-        (close file-stream)))))
+        (close file-stream)
+        (setf file-stream nil)))))
 
 (defgeneric run-task (task)
   (:documentation "Generic Function which will be called if task was
@@ -314,7 +320,7 @@
                        (setf tasks-running nil)
                        (maphash (lambda (task-id task)
                                   (unless (gethash task-id tasks-on-hold)
-                                    (cancel-task task)
+                                    (cancel-task task nil)
                                     (setf tasks-running t)))
                                 tasks)
                        (incf tries)
@@ -520,14 +526,24 @@
     (error "not implemented"))
   (:method ((task task-get-folder))
     (with-slots (items-done items state) task
-      (let ((failed-file (pop items-done)))
-        (destructuring-bind (nil nil size) failed-file
-          (setf items
-                (append (list failed-file)
-                        items))
-          (decf-load task (- size))
-          (setf state :normal))))
-    (lodds.task:submit-task task)))
+      (when (eql state :normal-no-resubmit)
+        (let ((failed-file (pop items-done)))
+          (destructuring-bind (nil nil size) failed-file
+            (setf items
+                  (append (list failed-file)
+                          items))
+            (decf-load task (- size))
+            (setf state :normal))))
+      (lodds.task:submit-task task))))
+
+(defgeneric skip-task (task)
+  (:method ((task task))
+    (error "not implemented"))
+  (:method ((task task-get-folder))
+    (with-slots (state) task
+      (when (eql state :normal-no-resubmit)
+        (setf state :normal))
+      (lodds.task:submit-task task))))
 
 (defmethod run-task ((task task-get-folder))
   (with-slots (local-path
@@ -588,8 +604,9 @@
                                 ;; download is complete
                                 :on-finish-hook (lambda (file-task)
                                                   (declare (ignore file-task))
-                                                  (setf state :normal)
-                                                  (submit-task task))
+                                                  (when (eql state :normal-no-resubmit)
+                                                    (setf state :normal)
+                                                    (submit-task task)))
                                 :on-error-hook on-error-hook
                                 :on-cancel-hook on-error-hook)))
                 (funcall on-error-hook nil)))))))

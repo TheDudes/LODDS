@@ -52,7 +52,7 @@
                           progress)
       (connect cancel "pressed()"
                (lambda ()
-                 (lodds.task:cancel-task id)))
+                 (lodds.task:cancel-task id nil)))
       (q+:set-item-widget info
                           new-entry
                           +info-cancel+
