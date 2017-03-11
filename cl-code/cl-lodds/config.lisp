@@ -147,6 +147,20 @@
                  them. You are still able to download files from them.~%~
                  Default: false")
          :boolean)
+   (list :validate-checksum
+         t
+         (format nil
+                 "Can be unchecked to not validate the checksum of~%~
+                 downloaded files. Even if set to true, the checksum~%~
+                 will only be validated when the file is getting~%~
+                 downloaded from multiple users (Folder download,~%~
+                 File download with user set to 'Any' or Multiple~%~
+                 selection download), because if the files gets~%~
+                 directly downloaded from a user we dont trust~%~
+                 he could just 'fake' the checksum too and the~%~
+                 validation would be useless~%~
+                 Default: true")
+         :boolean)
    ;; TODO: QT gui related settings, these should be splitted out to
    ;; lodds-qt package and then be hooked somehow, but i couldn't
    ;; think of any good way to achieve it. Thats why i will just leave

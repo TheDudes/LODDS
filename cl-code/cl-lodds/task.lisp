@@ -377,7 +377,7 @@
   (with-slots (info filename id) task
     (setf info (format nil "[Request] (Incomming Request): ~a" filename))))
 
-(defun load-chunk (stream-from stream-to size &optional (chunk-size (ash 1 21)))
+(defun load-chunk (stream-from stream-to size &optional digester (chunk-size (ash 1 21)))
   "Transfers bytes from STREAM-FROM to STREAM-TO. It will never
   transfer more then (max size chunk-size) bytes. Returns the Amount
   of transfered Bytes."
@@ -385,7 +385,8 @@
                           stream-to
                           (if (> size chunk-size)
                               chunk-size
-                              size)))
+                              size)
+                          digester))
 
 (defun open-file (file-path)
   (open (lodds.core:escape-wildcards file-path)
@@ -463,7 +464,8 @@
                read-bytes-part
                part-size
                state
-               info) task
+               info
+               digester) task
     (unless file-stream
       (setf file-stream (open-file local-file-path)))
     (unless socket
@@ -485,13 +487,28 @@
         (setf info (format nil "[Download] (~a): ~a" user local-file-path))))
     (let ((written (load-chunk (usocket:socket-stream socket)
                                file-stream
-                               (- part-size read-bytes-part))))
+                               (- part-size read-bytes-part)
+                               digester)))
       (decf-load task written)
       (incf read-bytes written)
       (incf read-bytes-part written))
     (finish-output file-stream)
     (if (eql size read-bytes)
-        (setf state :finished)
+        (cond
+          ;; if there is no digester (:validate-checksum is false)
+          ;; just finish the task
+          ((not digester)
+           (setf state :finished))
+          ;; if there is a digester, check if the checksum matches
+          ((string= checksum
+                    (ironclad:byte-array-to-hex-string
+                     (ironclad:produce-digest digester)))
+           (setf state :finished))
+          ;; if the checksum did not match, delete the downloaded file
+          ;; and throw a error
+          (t (progn
+               (delete-file (lodds.core:escape-wildcards local-file-path))
+               (error "Checksum validation Failed"))))
         (when (eql read-bytes-part part-size)
           (incf current-part)
           (setf read-bytes-part 0)

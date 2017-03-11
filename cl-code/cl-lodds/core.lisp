@@ -26,7 +26,7 @@
         t
         nil)))
 
-(defun copy-stream (stream-from stream-to size)
+(defun copy-stream (stream-from stream-to size &optional digester)
   "will read from stream-from and write to stream-to size bytes"
   (when (= size 0)
     (return-from copy-stream 0))
@@ -49,11 +49,15 @@
                (error "Read more than size on COPY-STREAM (should not be possible)"))
               ((= written size)
                (progn
+                 (when digester
+                   (ironclad:update-digest digester buffer :end read))
                  (write-sequence buffer stream-to :end read)
                  (return-from copy-stream written)))
               ((< written size)
                (let ((remaining (- size written)))
                  ;; in case the next read would be bigger then size
+                 (when digester
+                   (ironclad:update-digest digester buffer :end read))
                  (write-sequence buffer stream-to :end read)
                  (when (> buffer-size remaining)
                    ;; resize buffer to be fitting

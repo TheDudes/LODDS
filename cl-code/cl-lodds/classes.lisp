@@ -247,7 +247,13 @@
    (part-size :initform 0
               :type bignum
               :documentation "Size limit after which lodds checks
-              again for a the user with the lowest load.")))
+              again for a the user with the lowest load.")
+   (digester :initform (if (lodds.config:get-value :validate-checksum)
+                           (ironclad:make-digest :sha1)
+                           nil)
+             :documentation "If validate-checksum is set make a
+             digester, if not just set it to nil and it gets
+             ignored.")))
 
 (defclass task-get-folder (task)
   ((user :initarg :user
