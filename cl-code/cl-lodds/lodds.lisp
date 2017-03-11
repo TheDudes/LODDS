@@ -378,3 +378,45 @@ Users: Amount of User on the Network"
   "Calling (documentation 'lodds:get-status 'function) returns nil,
 dunno why. But thats why this wrapper exists."
   (documentation 'get-status 'function))
+
+(defun user-is-trusted (user)
+  (find user (lodds.config:get-value :trusted-users)
+        :test #'equal))
+
+(defun user-is-blocked (user)
+  (find user (lodds.config:get-value :blocked-users)
+        :test #'equal))
+
+(defun untrust-user (user)
+  (when (user-is-trusted user)
+    (lodds.config:update-entry
+     :trusted-users
+     (remove user
+             (lodds.config:get-value :trusted-users)
+             :test #'equal))))
+
+(defun trust-user (user)
+  (when (user-is-blocked user)
+    (unblock-user user))
+  (unless (user-is-trusted user)
+    (lodds.config:update-entry
+     :trusted-users
+     (append (list user)
+             (lodds.config:get-value :trusted-users)))))
+
+(defun unblock-user (user)
+  (when (user-is-blocked user)
+    (lodds.config:update-entry
+     :blocked-users
+     (remove user
+             (lodds.config:get-value :blocked-users)
+             :test #'equal))))
+
+(defun block-user (user)
+  (when (user-is-trusted user)
+    (untrust-user user))
+  (unless (user-is-blocked user)
+    (lodds.config:update-entry
+     :blocked-users
+     (append (list user)
+             (lodds.config:get-value :blocked-users)))))
