@@ -415,34 +415,129 @@
   (loop :for i :from 0 :below (q+:top-level-item-count shares)
         :do (dump-item (q+:top-level-item shares i))))
 
-(defmethod download-item ((shares shares) selected-item)
-  (destructuring-bind (type info)
-      (get-selected-file shares selected-item)
-    (case type
-      (:file
-       (apply #'open-download-file-dialog info))
-      (:dir
-       (apply #'open-download-folder-dialog info)))))
+(defun make-file-info-widget (checksum name size users)
+  (declare (ignore users))
+  (let* ((widget (q+:make-qwidget))
+         (layout (q+:make-qformlayout widget)))
+    (qdoto layout
+           (q+:set-form-alignment (q+:qt.align-top))
+           (q+:add-row "Checksum: " (q+:make-qlabel checksum))
+           (q+:add-row "Name: " (q+:make-qlabel name))
+           (q+:add-row "Size: " (q+:make-qlabel (format nil "~a (~:d bytes)"
+                                                        (lodds.core:format-size size)
+                                                        size)))
+           (q+:add-row "Users who share the given file:" (q+:make-qlabel "")))
+    (loop :for (user load size filenames)
+                 :in (lodds:get-file-info checksum)
+                 :do (progn
+                       (q+:add-row layout user (q+:make-qlabel (car filenames)))
+                       (loop :for file :in (cdr filenames)
+                             :do (q+:add-row layout "" (q+:make-qlabel file)))))
+    widget))
+
+(defun open-info-file-dialog (checksum name size users)
+  (make-instance 'dialog
+                 :title "File Info"
+                 :widget (make-file-info-widget checksum
+                                                name
+                                                size
+                                                users)))
+
+(defun open-info-folder-dialog (fullpath dir user size files)
+  (make-instance 'dialog
+                 :title "Folder Info"
+                 :widget
+                 (let ((widget (q+:make-qwidget)))
+                   (qdoto (q+:make-qformlayout widget)
+                          (q+:add-row "Fullpath:" (q+:make-qlabel fullpath))
+                          (q+:add-row "Dir:" (q+:make-qlabel dir))
+                          (q+:add-row "User:" (q+:make-qlabel user))
+                          (q+:add-row "Size:" (q+:make-qlabel
+                                               (format nil "~a (~:d bytes)"
+                                                       (lodds.core:format-size size)
+                                                       size)))
+                          (q+:add-row "Files:" (q+:make-qlabel (format nil "~:d" files))))
+                   widget)))
+
+(defmethod download ((shares shares))
+  (let ((selected-items (q+:selected-items shares)))
+    (case (length selected-items)
+      (0 nil)
+      (1 (destructuring-bind (type info)
+             (get-selected-file shares (car selected-items))
+           (case type
+             (:file
+              (apply #'open-download-file-dialog info))
+             (:dir
+              (apply #'open-download-folder-dialog info)))))
+      (t (open-download-multiple-dialog
+          (mapcar (lambda (item)
+                    (get-selected-file shares item))
+                  (q+:selected-items shares)))))))
+
+(defmethod info ((shares shares))
+  (let ((selected-items (q+:selected-items shares)))
+    (flet ((open-info (item)
+             (destructuring-bind (type info)
+                 (get-selected-file shares item)
+               (case type
+                 (:file
+                  (apply #'open-info-file-dialog info))
+                 (:dir
+                  (apply #'open-info-folder-dialog info))))))
+      (case (length selected-items)
+        (0 nil)
+        (1 (open-info (car selected-items)))
+        (t (let ((items (length (q+:selected-items shares))))
+             (make-instance 'dialog
+                            :title "Are you Sure?"
+                            :text
+                            (format nil "This action would open ~a Info Dialogs.~%~
+                                        Are you sure that you want to proceed~%~
+                                        (aka open ~a info dialogs)?"
+                                    items
+                                    items)
+                            :ok-text "Yes (I love dialogs)"
+                            :cancel-text "No"
+                            :on-success-fn
+                            (lambda (widget)
+                              (declare (ignore widget))
+                              (mapcar (lambda (item)
+                                        (open-info item))
+                                      (q+:selected-items shares))))))))))
 
 (define-override (shares key-press-event) (ev)
   (call-next-qmethod)
-  (when (or (= (q+:key ev) (q+:qt.key_enter))
-            (= (q+:key ev) (q+:qt.key_return)))
-    (let ((selected-items (q+:selected-items shares)))
-      (case (length selected-items)
-        (0 nil)
-        (1 (download-item shares (car selected-items)))
-        (t (open-download-multiple-dialog
-            (mapcar (lambda (item)
-                      (get-selected-file shares item))
-                    (q+:selected-items shares))))))))
+  (cond
+    ((or (= (q+:key ev) (q+:qt.key_enter))
+         (= (q+:key ev) (q+:qt.key_return)))
+     (download shares))
+    ((= (q+:key ev) (q+:qt.key_i))
+     (info shares))))
+
+(define-slot (shares prepare-menu) ((pos "const QPoint &"))
+  (declare (connected shares (custom-context-menu-requested "const QPoint &")))
+  (with-finalizing ((global-pos (q+:map-to-global shares pos))
+                    (menu (q+:make-qmenu)))
+    (qdoto menu
+           (q+:add-action "Download")
+           (q+:add-action "Info"))
+    (let* ((widget (q+:item-at shares pos))
+           (item (gethash (q+:text widget +shares-id+) entries))
+           (option (q+:exec menu global-pos)))
+      (cond
+        ((null-qobject-p option))
+        ((string= "Download" (q+:text option))
+         (download shares))
+        ((string= "Info" (q+:text option))
+         (info shares))))))
 
 (define-initializer (shares setup-widget)
   (connect shares
            "itemDoubleClicked(QTreeWidgetItem *, int)"
            (lambda (selected-item column)
-             (declare (ignore column))
-             (download-item shares selected-item)))
+             (declare (ignore column selected-item))
+             (download shares)))
   (make-instance 'shares-entry-dir
                  :shares shares
                  :is-root t
@@ -462,6 +557,7 @@
          (q+:set-alternating-row-colors t)
          (q+:set-animated t)
          (q+:set-items-expandable t)
+         (q+:set-context-menu-policy (q+:qt.custom-context-menu))
          (q+:set-expands-on-double-click nil))
   (qdoto (q+:header shares)
          (q+:hide)
