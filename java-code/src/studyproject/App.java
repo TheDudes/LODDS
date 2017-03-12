@@ -15,6 +15,7 @@ import javax.inject.Inject;
 import javax.swing.ImageIcon;
 
 import javafx.application.Application;
+import javafx.application.HostServices;
 import javafx.scene.Scene;
 import javafx.scene.image.Image;
 import javafx.stage.Stage;
@@ -36,6 +37,7 @@ public class App extends Application {
 	private MainWindowPresenter mainWindowPresenter;
 	private Stage mainStage;
 	public static Properties properties;
+	public static HostServices hostServices;
 	public static String pathToProperties = System.getProperty("user.home") + System.getProperty("file.separator")
 			+ ".lodds" + System.getProperty("file.separator") + "config.properties";
 	private MainWindowView mainView;
@@ -86,6 +88,7 @@ public class App extends Application {
 	@Override
 	public void start(Stage mainStage) throws Exception {
 		this.mainStage = mainStage;
+		App.hostServices = this.getHostServices();
 		mainStage.setTitle("Local Open Distributed Data Sharing");
 		if (properties.getProperty("windowMaximized").equals("true")) {
 			mainStage.setMaximized(true);

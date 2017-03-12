@@ -1,11 +1,83 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Hyperlink?>
 <?import javafx.scene.control.Label?>
-<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.RowConstraints?>
 
-
-<VBox alignment="CENTER" prefHeight="81.0" prefWidth="254.0" xmlns="http://javafx.com/javafx/8.0.111" xmlns:fx="http://javafx.com/fxml/1" fx:controller="studyproject.gui.aboutWindow.AboutWindowPresenter">
+<GridPane hgap="5.0" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" prefHeight="200.0" prefWidth="430.0" vgap="5.0" xmlns="http://javafx.com/javafx/8.0.65" xmlns:fx="http://javafx.com/fxml/1" fx:controller="studyproject.gui.aboutWindow.AboutWindowPresenter">
+   <columnConstraints>
+      <ColumnConstraints hgrow="NEVER" maxWidth="195.0" minWidth="10.0" prefWidth="83.0" />
+      <ColumnConstraints hgrow="SOMETIMES" maxWidth="414.0" minWidth="10.0" prefWidth="317.0" />
+   </columnConstraints>
+   <rowConstraints>
+      <RowConstraints maxHeight="89.0" minHeight="10.0" prefHeight="40.0" vgrow="NEVER" />
+      <RowConstraints maxHeight="142.0" minHeight="10.0" prefHeight="49.0" vgrow="NEVER" />
+      <RowConstraints maxHeight="100.0" minHeight="10.0" prefHeight="91.0" vgrow="SOMETIMES" />
+   </rowConstraints>
    <children>
-      <Label fx:id="aboutLabel" text="About Window" />
+      <AnchorPane GridPane.columnIndex="1">
+         <children>
+            <Label alignment="TOP_LEFT" prefHeight="80.0" prefWidth="28.0" text="Java implementation of LODDS-Protocol - JavaFX Graphical User Interface" wrapText="true" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" />
+         </children>
+      </AnchorPane>
+      <AnchorPane GridPane.columnIndex="1" GridPane.rowIndex="2">
+         <children>
+            <Label fx:id="aboutLabel" alignment="TOP_LEFT" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" prefHeight="150.0" prefWidth="200.0" text="LODDS (Local Open Distributed Data Sharing) is a protocol for Filesharing and the base for this Program. This Program is a JavaFX Gui Client which implements the LODDS Protocol and can be used to share and exchange files with others inside a local network." wrapText="true" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+               <padding>
+                  <Insets top="5.0" />
+               </padding>
+            </Label>
+         </children>
+      </AnchorPane>
+      <AnchorPane prefHeight="200.0" prefWidth="200.0" GridPane.columnIndex="1" GridPane.rowIndex="1">
+         <children>
+            <GridPane hgap="2.0" prefHeight="90.0" prefWidth="330.0" vgap="2.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+              <columnConstraints>
+                <ColumnConstraints hgrow="SOMETIMES" maxWidth="160.0" minWidth="10.0" prefWidth="77.0" />
+                <ColumnConstraints hgrow="SOMETIMES" maxWidth="280.0" minWidth="10.0" prefWidth="253.0" />
+              </columnConstraints>
+              <rowConstraints>
+                <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+              </rowConstraints>
+               <children>
+                  <AnchorPane>
+                     <children>
+                        <Label alignment="TOP_LEFT" prefHeight="26.0" prefWidth="99.0" text="Homepage: " AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" />
+                     </children>
+                  </AnchorPane>
+                  <AnchorPane GridPane.rowIndex="1">
+                     <children>
+                        <Label alignment="TOP_LEFT" prefHeight="27.0" prefWidth="99.0" text="Authors:" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" />
+                     </children>
+                  </AnchorPane>
+                  <AnchorPane GridPane.rowIndex="2">
+                     <children>
+                        <Label alignment="TOP_LEFT" prefHeight="27.0" prefWidth="99.0" text="Version:" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" />
+                     </children>
+                  </AnchorPane>
+                  <Hyperlink fx:id="homepage" alignment="TOP_LEFT" nodeOrientation="LEFT_TO_RIGHT" onAction="#showHomepage" prefHeight="19.0" prefWidth="254.0" style="-fx-border-color: transparent; -fx-padding: 4 0 4 0;" text="https://github.com/TheDudes/LODDS" GridPane.columnIndex="1" />
+                  <AnchorPane GridPane.columnIndex="1" GridPane.rowIndex="1">
+                     <children>
+                        <Label alignment="TOP_LEFT" prefHeight="27.0" prefWidth="231.0" text="Authors" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" />
+                     </children>
+                  </AnchorPane>
+                  <AnchorPane GridPane.columnIndex="1" GridPane.rowIndex="2">
+                     <children>
+                        <Label fx:id="currentVersion" alignment="TOP_LEFT" prefHeight="27.0" prefWidth="231.0" text="Label" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" />
+                     </children>
+                  </AnchorPane>
+               </children>
+            </GridPane>
+         </children>
+      </AnchorPane>
    </children>
-</VBox>
+   <padding>
+      <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
+   </padding>
+</GridPane>
