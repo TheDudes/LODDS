@@ -521,20 +521,20 @@
 
 (define-slot (shares prepare-menu) ((pos "const QPoint &"))
   (declare (connected shares (custom-context-menu-requested "const QPoint &")))
-  (with-finalizing ((global-pos (q+:map-to-global shares pos))
-                    (menu (q+:make-qmenu)))
-    (qdoto menu
-           (q+:add-action "Download")
-           (q+:add-action "Info"))
-    (let* ((widget (q+:item-at shares pos))
-           (item (gethash (q+:text widget +shares-id+) entries))
-           (option (q+:exec menu global-pos)))
-      (cond
-        ((null-qobject-p option))
-        ((string= "Download" (q+:text option))
-         (download shares))
-        ((string= "Info" (q+:text option))
-         (info shares))))))
+  (let ((widget (q+:item-at shares pos)))
+    (when (qobject-alive-p widget)
+      (with-finalizing ((global-pos (q+:map-to-global shares pos))
+                        (menu (qdoto (q+:make-qmenu)
+                                     (q+:add-action "Download")
+                                     (q+:add-action "Info"))))
+        (let ((item (gethash (q+:text widget +shares-id+) entries))
+              (option (q+:exec menu global-pos)))
+          (cond
+            ((null-qobject-p option))
+            ((string= "Download" (q+:text option))
+             (download shares))
+            ((string= "Info" (q+:text option))
+             (info shares))))))))
 
 (define-initializer (shares setup-widget)
   (connect shares
