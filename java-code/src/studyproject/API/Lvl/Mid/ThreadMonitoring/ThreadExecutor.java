@@ -91,4 +91,8 @@ public class ThreadExecutor implements Executor {
 		loddsModel.getTasksList().add(monitoredThread);
 		monitoredThread.setSubmitted(true);
 	}
+
+	public void stopAllExcutors() {
+		allExecutors.forEach(ExecutorService::shutdownNow);
+	}
 }
