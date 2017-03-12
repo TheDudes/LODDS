@@ -22,6 +22,7 @@ import studyproject.App;
 import studyproject.API.Core.Request.GetPermissionRequest;
 import studyproject.API.Errors.ErrorFactory;
 import studyproject.API.Lvl.Low.Broadcast;
+import studyproject.API.Lvl.Mid.Lodds.Lodds;
 import studyproject.gui.mainWindow.filesTree.FilesTreeView;
 import studyproject.gui.mainWindow.logArea.LogAreaView;
 import studyproject.gui.mainWindow.tasksList.TasksListView;
@@ -138,4 +139,14 @@ public class MainWindowPresenter implements Initializable {
 			mainWindowModel.getLodds().startUp(interf, (String) App.properties.get("userName"));
 		}
 	}
+
+	/**
+	 * Returns the Lodds instance from {@link MainWindowModel}
+	 * 
+	 * @return Lodds instance from {@link MainWindowModel}
+	 */
+	public Lodds getLodds() {
+		return mainWindowModel.getLodds();
+	}
+
 }

@@ -33,6 +33,7 @@ import sun.applet.Main;
 public class App extends Application {
 
 	private static Logger logger;
+	private MainWindowPresenter mainWindowPresenter;
 	private Stage mainStage;
 	public static Properties properties;
 	public static String pathToProperties = System.getProperty("user.home") + System.getProperty("file.separator")
@@ -98,10 +99,10 @@ public class App extends Application {
 		Scene mainScene = new Scene(mainView.getView());
 		mainStage.setScene(mainScene);
 		mainStage.show();
-		MainWindowPresenter mainWindowPresenter = (MainWindowPresenter) mainView.getPresenter();
+		mainWindowPresenter = (MainWindowPresenter) mainView.getPresenter();
 		mainWindowPresenter.loadInterface();
 
-		// setIcons(mainStage);
+		setIcons();
 
 		if (Utils.osIsMac()) {
 			MacDockMenuPresenter dockMenu = new MacDockMenuPresenter();
@@ -141,6 +142,7 @@ public class App extends Application {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+		mainWindowPresenter.getLodds().shutdown();
 		super.stop();
 	}
 

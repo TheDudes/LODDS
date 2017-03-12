@@ -553,6 +553,10 @@ public class Lodds {
 			logger.log(ErrorFactory.build(Level.SEVERE, LogKey.error, "IOException thrown: ", e));
 		}
 	}
+	
+	public void shutdown(){
+		threadExecutor.stopAllExcutors();
+	}
 
 	public void startUp(String interf, String userName) {
 		setInterface(interf);
