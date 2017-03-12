@@ -64,11 +64,11 @@
 ;; see: https://github.com/shirakumo/lionchat
 (defun system-about ()
   (let ((system (asdf:find-system :cl-lodds-qt)))
-    (format nil "~a<br />~
-                License: ~a<br />~
-                <br />~
-                Homepage: <a href=\"~a~:*\">~a</a><br />~
-                Author: ~a<br />~
+    (format nil "~a<br />
+                License: ~a<br />
+                <br />
+                Homepage: <a href=\"~a~:*\">~a</a><br />
+                Author: ~a<br />
                 Version: ~a<br />
                 <br />
                 LODDS (Local Open Distributed Data Sharing) is a
