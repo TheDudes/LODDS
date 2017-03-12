@@ -33,13 +33,11 @@ import sun.applet.Main;
 public class App extends Application {
 
 	private static Logger logger;
+	private Stage mainStage;
 	public static Properties properties;
 	public static String pathToProperties = System.getProperty("user.home") + System.getProperty("file.separator")
 			+ ".lodds" + System.getProperty("file.separator") + "config.properties";
 	private MainWindowView mainView;
-
-	@Inject
-	SelectedInterfaceModel selectedInterfaceModel;
 
 	public void configureLogging() {
 		logger = Logger.getGlobal();
@@ -86,6 +84,7 @@ public class App extends Application {
 
 	@Override
 	public void start(Stage mainStage) throws Exception {
+		this.mainStage = mainStage;
 		mainStage.setTitle("Local Open Distributed Data Sharing");
 		if (properties.getProperty("windowMaximized").equals("true")) {
 			mainStage.setMaximized(true);
@@ -101,18 +100,17 @@ public class App extends Application {
 		mainStage.show();
 		MainWindowPresenter mainWindowPresenter = (MainWindowPresenter) mainView.getPresenter();
 		mainWindowPresenter.loadInterface();
-		mainStage.setOnCloseRequest(e -> onCloseRequest(mainStage));
 
-		setIcons(mainStage);
-		
+		// setIcons(mainStage);
+
 		if (Utils.osIsMac()) {
 			MacDockMenuPresenter dockMenu = new MacDockMenuPresenter();
 			dockMenu.createMenus();
 		}
-			
+
 	}
 
-	private void setIcons(Stage mainStage) {
+	private void setIcons() {
 		mainStage.getIcons().add(new Image("/studyproject/resources/lodds_icon16x16.png"));
 		mainStage.getIcons().add(new Image("/studyproject/resources/lodds_icon32x32.png"));
 		mainStage.getIcons().add(new Image("/studyproject/resources/lodds_icon64x64.png"));
@@ -128,8 +126,8 @@ public class App extends Application {
 		}
 	}
 
-
-	public void onCloseRequest(Stage mainStage) {
+	@Override
+	public void stop() throws Exception {
 		if (mainStage.isMaximized()) {
 			properties.put("windowMaximized", "true");
 		} else {
@@ -143,6 +141,7 @@ public class App extends Application {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+		super.stop();
 	}
 
 	public static void main(String... args) {
