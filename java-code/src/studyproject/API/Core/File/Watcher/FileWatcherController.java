@@ -98,6 +98,7 @@ public class FileWatcherController {
 		super();
 		try {
 			watcher = new FileWatcher(this);
+			watcher.setDaemon(true);
 			watcher.start();
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
