@@ -460,10 +460,13 @@
                       best-load load)))
     (if best-user
       (lodds.core:split-user-identifier (name ip port) best-user
-        (lodds.event:push-event :debug (list "best user:" best-user
-                                             ", ip:" ip
-                                             ", port:" port
-                                             ", load:" (lodds.core:format-size best-load)))
+        (lodds.event:push-event :debug
+                                (format nil
+                                        "best user: ~a, ip: ~a, port: ~a, load: ~a"
+                                        best-user
+                                        ip
+                                        port
+                                        (lodds.core:format-size best-load)))
         (values name ip port))
       (error "Could not find a user who shares ~a~%" checksum))))
 
