@@ -2,16 +2,34 @@
 (in-readtable :qtools)
 
 (defvar +info-info+ 0)
-(defvar +info-progress+ 1)
-(defvar +info-cancel+ 2)
-(defvar +info-id+ 3)
+(defvar +info-speed+ 1)
+(defvar +info-progress+ 2)
+(defvar +info-cancel+ 3)
+(defvar +info-id+ 4)
+
+(defclass tracked-task ()
+  ((widget :initarg :widget
+           :documentation "The QTreeWidgetItem which displays the
+           task info")
+   (progressbar :initarg :progressbar
+                :documentation "The QProgressBar inside the
+                QTreeWidgetItem")
+   (max :initarg :max
+        :documentation "Total load of the task")
+   (last-load :initarg :last-load
+              :documentation "The load from the last tick")
+   (started-tracking :initform (lodds.core:get-timestamp)
+                     :documentation "Time we started tracking. used to
+                     calculate the average Transfer speed. I know
+                     seconds might be a bit vague, but since its ever
+                     only usefull on long running tasks (> 1 min) the
+                     error wont matter.")))
 
 (define-widget info (QTreeWidget)
   ((tracked-tasks :initform (make-hash-table :test #'equal)
                   :type hashtable
                   :documentation "hashtable which has task-id as key
-                  and a list out of the treewidgetitem, the
-                  displayed progressbar and max.")
+                  and tracked-task as value.")
    (lock :initform (bt:make-recursive-lock "info-lock")
          :documentation "lock to synchronize
          failed/canceled/finished-tasks")
@@ -58,34 +76,56 @@
                           +info-cancel+
                           cancel)
       (qdoto new-entry
+             (q+:set-text-alignment +info-speed+
+                                    (qt:enum-or (q+:qt.align-center)
+                                                (q+:qt.align-right)))
              (q+:set-text +info-info+ info-text)
              (q+:set-text +info-id+ id))
-      (setf (gethash id tracked-tasks) (list new-entry
-                                             progress
-                                             max)))))
+      (setf (gethash id tracked-tasks)
+            (make-instance 'tracked-task
+                           :last-load done
+                           :max max
+                           :progressbar progress
+                           :widget new-entry)))))
 
-(defmethod update-info ((info info) id max done info-text)
+(defmethod update-info ((info info) id new-max done info-text time-vanished)
   (with-slots-bound (info info)
-    (let ((entry (gethash id tracked-tasks)))
+    (with-slots (widget progressbar max last-load started-tracking)
+        (gethash id tracked-tasks)
       ;; we might have pulled the info before the max-load was set on
       ;; task, check if this is the case and update max
-      (unless (eql max (third entry))
-        (setf (third entry) max))
-      (destructuring-bind (widget progress max last-load) entry
-        (q+:set-value progress
-                      (normalized-value max done))
-        (qdoto widget
-               (q+:set-text +info-info+ info-text)
-               (q+:set-status-tip +info-info+
-                                  (format nil
-                                          "Total: ~a (~:d bytes) | Transfered: ~a (~:d bytes)"
-                                          (lodds.core:format-size max) max
-                                          (lodds.core:format-size done) done))
-               (q+:set-tool-tip +info-info+
+      (unless (eql new-max max)
+        (setf max new-max))
+      (q+:set-value progressbar
+                    (normalized-value max done))
+      (qdoto widget
+             (q+:set-text +info-info+ info-text)
+             (q+:set-text +info-speed+
+                          (format nil "~a/s"
+                                  (lodds.core:format-size
+                                   (round
+                                    (* (/ 1000 time-vanished)
+                                       (- done last-load))))))
+             (q+:set-status-tip +info-info+
                                 (format nil
-                                        "Total: ~a (~:d bytes)~%Transfered: ~a (~:d bytes)"
+                                        "Total: ~a (~:d bytes) | Transfered: ~a (~:d bytes) | Average Speed: ~a"
                                         (lodds.core:format-size max) max
-                                        (lodds.core:format-size done) done)))))))
+                                        (lodds.core:format-size done) done
+                                        (let ((total-time-vanished (- (lodds.core:get-timestamp)
+                                                                      started-tracking)))
+                                          (format nil "~a/s"
+                                                  (lodds.core:format-size
+                                                   (round
+                                                    (/ done
+                                                       (if (eql 0 total-time-vanished)
+                                                           1
+                                                           total-time-vanished))))))))
+             (q+:set-tool-tip +info-info+
+                              (format nil
+                                      "Total: ~a (~:d bytes)~%Transfered: ~a (~:d bytes)"
+                                      (lodds.core:format-size max) max
+                                      (lodds.core:format-size done) done)))
+      (setf last-load done))))
 
 (defmethod remove-info ((info info) id)
   (with-slots-bound (info info)
@@ -100,11 +140,12 @@
 (define-slot (info tick) ()
   (declare (connected timer (timeout)))
   (let ((tasks (lodds.task:get-task-progresses
-                (lodds:get-subsystem :tasker))))
+                (lodds:get-subsystem :tasker)))
+        (time-vanished (lodds.config:get-value :info-update-interval)))
     ;; add all missing, and update all we already have
     (loop :for (id max done type info-text) :in tasks
           :do (if (gethash id tracked-tasks)
-                  (update-info info id max done info-text)
+                  (update-info info id max done info-text time-vanished)
                   (when info-text
                     (add-info info id max done info-text))))
     ;; remove all old tasks
@@ -131,8 +172,8 @@
       (flet ((update-color (id color status)
                (let ((entry (gethash id tracked-tasks)))
                  (when entry
-                   (destructuring-bind (widget progress max) entry
-                     (declare (ignore progress max))
+                   (with-slots (widget progressbar max last-load) entry
+                     (declare (ignore progressbar max last-load))
                      (let ((old-widget (q+:item-widget info widget +info-progress+)))
                        (q+:remove-item-widget info widget +info-progress+)
                        (finalize old-widget))
@@ -157,9 +198,9 @@
          (q+:set-object-name "Info")
          (q+:set-focus-policy (q+:qt.no-focus))
          (q+:set-selection-mode 0)
-         (q+:set-column-count 4)
+         (q+:set-column-count 5)
          (q+:set-uniform-row-heights t)
-         (q+:set-header-labels (list "Info" "Progress" "Stop" "ID"))
+         (q+:set-header-labels (list "Info" "Speed" "Progress" "Stop" "ID"))
          (q+:hide-column +info-id+)
          (q+:set-alternating-row-colors t)
          (q+:set-animated t))
@@ -167,6 +208,7 @@
          (q+:hide)
          (q+:set-stretch-last-section nil)
          (q+:set-resize-mode +info-info+ (q+:qheaderview.stretch))
+         (q+:resize-section +info-speed+ 82)
          (q+:resize-section +info-progress+ 150)
          (q+:set-resize-mode +info-cancel+ (q+:qheaderview.resize-to-contents))))
 
