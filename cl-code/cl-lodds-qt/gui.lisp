@@ -76,7 +76,18 @@
                 Program. This Program is a Qt Gui Client which
                 implements the LODDS Protocol and can be used to
                 share and exchange files with others inside a local
-                network."
+                network.<br />
+                <br />
+                Some Icons are made by
+                <a href=\"https://icons8.com/free-ios-7-icons-in-vector/\">
+                  icons8
+                </a> (downloaded from
+                <a href=\"https://www.iconfinder.com/iconsets/ios-7-icons\">
+                  here
+                </a>) and are licensed under the
+                <a href=\"https://creativecommons.org/licenses/by-nd/3.0/\">
+                  Creative Commons Attribution-No Derivative Works 3.0 Unported
+                </a>"
             (asdf:system-description system)
             (asdf:system-license system)
             (asdf:system-homepage system)
