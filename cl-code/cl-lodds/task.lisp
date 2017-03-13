@@ -44,7 +44,7 @@
     (string
      (let ((the-task (get-task-by-id task)))
        (when the-task
-         (cancel-task the-task))))
+         (cancel-task the-task resubmit-p))))
     (task
      (progn
        (setf (slot-value task 'state) :canceled)
