@@ -29,7 +29,7 @@
             (7 (error "Could not read Broadcast Address"))
             ;; TODO: real error handling
             (6 (error "Network unreachable"))
-            (0 (lodds.event:push-event :advertiser (list :sent)))
+            (0 (lodds.event:push-event :advertiser :sent))
             (t (error
                 "Unknown error occured in low-level-api (~a) on ADVERTISER"
                 result)))
@@ -45,7 +45,7 @@
                   (try-send)
                 (error (e)
                   (lodds.event:push-event :error
-                                          (list (format nil
-                                                        "Could not advertise (~a)"
-                                                        e)))))
+                                          (format nil
+                                                  "Could not advertise (~a)"
+                                                  e))))
               (sleep (lodds.config:get-value :advertise-timeout)))))

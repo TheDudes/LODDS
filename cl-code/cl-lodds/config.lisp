@@ -402,7 +402,9 @@
         (setf (gethash key config) entry)
         (when push-event-p
           (lodds.event:push-event :config-changed
-                                  (list key old-value new-value)))
+                                  key
+                                  old-value
+                                  new-value))
         nil))))
 
 (defun load-from-file (filename &optional (config (generate-default-config)))

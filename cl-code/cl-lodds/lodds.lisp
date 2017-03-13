@@ -26,8 +26,7 @@
 (defun event-callback (event)
   (format t "log: ~a~%" event))
 
-(defun on-config-change (server  &rest event-args)
-  (declare (ignore event-args))
+(defun on-config-change (server)
   (with-server server
     (let ((advertiser (lodds:get-subsystem :advertiser))
           (incognito (lodds.config:get-value :incognito-mode)))
@@ -85,7 +84,8 @@
                           :init-fn nil)))
     (lodds.event:add-callback :lodds-config-change
                               (lambda (&rest args)
-                                (on-config-change server args))
+                                (declare (ignore args))
+                                (on-config-change server))
                               :config-changed)))
 
 (defun switch-config (new-config)
@@ -93,7 +93,7 @@
   (or (lodds.config:validate-config new-config)
       (progn
         (setf (slot-value *server* 'settings) new-config)
-        (lodds.event:push-event :config-changed nil))))
+        (lodds.event:push-event :config-changed))))
 
 (defun update-config (new-config)
   "updates the current config with the new-config. Goes over every key
@@ -272,7 +272,7 @@
 (defun shutdown ()
   "shuts down the whole server, removes all handles and joins all
   spawned threads."
-  (lodds.event:push-event :shutdown nil)
+  (lodds.event:push-event :shutdown)
   (let ((event-queue nil))
     (loop :for subsystem :in (subsystems *server*)
           :if (eql (lodds.subsystem:name subsystem)
@@ -283,7 +283,7 @@
     ;; stop event-queue after the others, so i can see stopped messages
     (when event-queue
       (lodds.subsystem:stop event-queue)
-      (lodds.event:push-event :done nil))))
+      (lodds.event:push-event :done))))
 
 (defun generate-info-response (timestamp)
   (let* ((started-tracking (lodds.watcher:started-tracking (get-subsystem :watcher)))

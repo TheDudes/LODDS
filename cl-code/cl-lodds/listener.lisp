@@ -43,7 +43,10 @@
                          (remhash name table-name)))
              (setf last-change timestamp)
              (lodds.event:push-event :list-update
-                                     (list name type timestamp changes))))
+                                     name
+                                     type
+                                     timestamp
+                                     changes)))
       (when socket
         (usocket:socket-close socket)))))
 
@@ -62,9 +65,9 @@
   (multiple-value-bind (error result) (lodds.low-level-api:read-advertise message)
     (unless (eql error 0)
       (lodds.event:push-event :error
-                              (list (format nil
-                                            "low-level-api:read-advertise returned ~a"
-                                            error)))
+                              (format nil
+                                      "low-level-api:read-advertise returned ~a"
+                                      error))
       (return-from handle-message))
     (lodds.event:push-event :listener result)
     (let ((current-time (lodds.core:get-timestamp)))

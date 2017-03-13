@@ -194,28 +194,26 @@
 
 (define-initializer (user-list setup-callbacks)
   (lodds.event:add-callback :qt-user-list
-                            (lambda (event)
-                              (destructuring-bind (name load last-change) event
-                                (signal! user-list
-                                         (add-user string string int)
-                                         name
-                                         (prin1-to-string load)
-                                         last-change)))
+                            (lambda (name load last-change)
+                              (signal! user-list
+                                       (add-user string string int)
+                                       name
+                                       (prin1-to-string load)
+                                       last-change))
                             :client-added)
   (lodds.event:add-callback :qt-user-list
-                            (lambda (event)
+                            (lambda (user)
                               (signal! user-list
                                        (remove-user string)
-                                       (car event)))
+                                       user))
                             :client-removed)
   (lodds.event:add-callback :qt-user-list
-                            (lambda (event)
-                              (destructuring-bind (name load last-change) event
-                                (signal! user-list
-                                         (update-user string string int)
-                                         name
-                                         (prin1-to-string load)
-                                         last-change)))
+                            (lambda (name load last-change)
+                              (signal! user-list
+                                       (update-user string string int)
+                                       name
+                                       (prin1-to-string load)
+                                       last-change))
                             :client-updated))
 
 (define-initializer (user-list setup-add-users)

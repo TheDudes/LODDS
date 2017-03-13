@@ -253,7 +253,7 @@
         (let ((text (format nil "Could not find lodds icon ~a"
                             lodds-icon)))
           (format t "~a~%" text)
-          (lodds.event:push-event :info (list text)))))
+          (lodds.event:push-event :info text))))
   (q+:add-permanent-widget (q+:status-bar main-window)
                            status-label)
   (qdoto main-window
@@ -365,31 +365,32 @@
 
 (define-initializer (main-window setup-callbacks)
   (lodds.event:add-callback :qt-main
-                            (lambda (event)
-                              (declare (ignore event))
+                            (lambda (&rest args)
+                              (declare (ignore args))
                               (signal! main-window (config-changed)))
                             :config-changed)
   (lodds.event:add-callback :qt-main
-                            (lambda (event)
+                            (lambda (task-id task)
+                              (declare (ignore task))
                               (signal! main-window
                                        (received-send-permission string)
-                                       (car event)))
+                                       task-id))
                             :send-permission)
   (lodds.event:add-callback :qt-main
-                            (lambda (event)
+                            (lambda (task-id)
                               (signal! main-window
                                        (folder-download-error string)
-                                       (car event)))
+                                       task-id))
                             :folder-download-error)
   (lodds.event:add-callback :qt-main
-                            (lambda (event)
+                            (lambda (error-msg)
                               (signal! main-window
                                        (directory-error string)
-                                       (car event)))
+                                       error-msg))
                             :directory-error)
   (lodds.event:add-callback :qt-main
-                            (lambda (event)
-                              (declare (ignore event))
+                            (lambda (&rest args)
+                              (declare (ignore args))
                               (signal! main-window
                                        (shutdown)))
                             :shutdown))
@@ -444,7 +445,7 @@
                             style-sheet)))
           (q+:set-style-sheet main-window
                               "")
-          (lodds.event:push-event :info (list text))
+          (lodds.event:push-event :info text)
           (format t "~a~%" text)))))
 
 (defun on-error (&rest args)

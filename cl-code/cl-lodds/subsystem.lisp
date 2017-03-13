@@ -24,18 +24,18 @@
                     (setf (alive-p subsystem) t)
                     (funcall (init-fn subsystem)))
                (lodds.event:push-event (name subsystem)
-                                       (list "stopped!"))
+                                       "stopped!")
                (setf (alive-p subsystem) nil))))
     (if (alive-p subsystem)
         (lodds.event:push-event (lodds.subsystem:name subsystem)
-                                (list "already running!"))
+                                "already running!")
         (progn
           (setf
            (thread subsystem)
            (bt:make-thread #'save-init-fn
                            :name (format nil "LODDS-~a" (name subsystem))))
           (lodds.event:push-event (lodds.subsystem:name subsystem)
-                                  (list "started!"))))))
+                                  "started!")))))
 
 (defmethod start ((subsys subsystem))
   (when subsys

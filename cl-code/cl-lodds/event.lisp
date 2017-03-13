@@ -54,13 +54,11 @@
                                     name))
                          (callbacks evt-queue))))))
 
-(defun push-event (event-type event)
+(defun push-event (event-type &rest args)
   "Pushes a given given EVENT of type EVENT-TYPE onto the
   event-queue. EVENT-TYPE is a keyword describing the event, EVENT can
   be anything."
-  (lparallel.queue:push-queue (if (listp event)
-                                  (cons event-type event)
-                                  (list event-type event))
+  (lparallel.queue:push-queue (cons event-type args)
                               (queue (lodds:get-subsystem :event-queue))))
 
 (defun handle-event (event event-queue)
@@ -69,7 +67,7 @@
   (labels ((save-call (name cb &optional event-type)
              (restart-case
                  (if event-type
-                     (funcall cb (cdr event))
+                     (apply cb (cdr event))
                      (funcall cb event))
                (retry-calling-callback ()
                  ;; reload function from hashtable and try again

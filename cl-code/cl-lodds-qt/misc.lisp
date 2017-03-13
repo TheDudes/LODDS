@@ -54,6 +54,6 @@ supress-warning if you dont want that."
           (unless supress-warning
             (let ((text (format nil "Could not find icon on ~a, falling back to text"
                                 icon-path)))
-              (lodds.event:push-event :info (list text))
+              (lodds.event:push-event :info text)
               (format t "~a~%" text)))
           (q+:set-text widget fallback-text)))))

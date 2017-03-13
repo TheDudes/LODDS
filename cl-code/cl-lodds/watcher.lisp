@@ -129,7 +129,7 @@
   dir-watcher, if so deletes list-of-changes and sets alive-p to nil"
   (cl-fs-watcher:stop-watcher dir-watcher)
   (lodds.event:push-event :unshared-directory
-                          (list (cl-fs-watcher:dir dir-watcher)))
+                          (cl-fs-watcher:dir dir-watcher))
   (when run-change-hook-p
     (loop :for info :in (get-all-tracked-file-infos dir-watcher)
           :do (funcall (change-hook dir-watcher)
@@ -147,7 +147,7 @@
               (last-change watcher) (lodds.core:get-timestamp)))
       (setf (lodds.subsystem:alive-p watcher) nil)
       (lodds.event:push-event (lodds.subsystem:name watcher)
-                              (list "stopped!")))))
+                              "stopped!"))))
 
 (defun get-file-info (checksum)
   "returns a list with information about the requested file. if file
@@ -206,9 +206,9 @@
     (setf (slot-value new-dir-watcher 'cl-fs-watcher:error-cb)
           (lambda (ev)
             (lodds.event:push-event :directory-error
-                                    (list (format nil "Directory error on ~a~%~a"
-                                                  folder-path
-                                                  ev)))
+                                    (format nil "Directory error on ~a~%~a"
+                                            folder-path
+                                            ev))
             (format t "ERROR: cl-fs-watcher error on ~a:~a"
                     new-dir-watcher
                     ev)
@@ -223,7 +223,7 @@
             (dir-watchers watcher)))
     (setf (lodds.subsystem:alive-p watcher) t)
     (lodds.event:push-event :shared-directory
-                            (list folder-path))))
+                            folder-path)))
 
 (defun share-folder (folder-path)
   "share a given folder, adds a watcher to handle updates.

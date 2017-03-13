@@ -573,23 +573,22 @@
 (define-initializer (shares setup-callbacks)
   ;; move this to list-view later
   (lodds.event:add-callback :qt-shares
-                            (lambda (event)
+                            (lambda (user)
                               (signal! shares
                                        (remove-entry string)
                                        (concatenate 'string
-                                                    (car event)
+                                                    user
                                                     "/")))
                             :client-removed)
   (lodds.event:add-callback :qt-shares
-                            (lambda (event)
-                              (destructuring-bind (name type timestamp changes) event
-                                (declare (ignore timestamp))
-                                (when (eql type :all)
-                                  (signal! shares (remove-entry string)
-                                           (concatenate 'string
-                                                        name
-                                                        "/")))
-                                (add-change shares changes name)))
+                            (lambda (name type timestamp changes)
+                              (declare (ignore timestamp))
+                              (when (eql type :all)
+                                (signal! shares (remove-entry string)
+                                         (concatenate 'string
+                                                      name
+                                                      "/")))
+                              (add-change shares changes name))
                             :list-update))
 
 (define-initializer (shares setup-add-files)

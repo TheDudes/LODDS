@@ -171,16 +171,16 @@
 
 (define-initializer (directories setup-callbacks)
   (lodds.event:add-callback :qt-directories
-                            (lambda (event)
+                            (lambda (dir)
                               (signal! directories
                                        (add-directory string)
-                                       (car event)))
+                                       dir))
                             :shared-directory)
   (lodds.event:add-callback :qt-directories
-                            (lambda (event)
+                            (lambda (dir)
                               (signal! directories
                                        (remove-directory string)
-                                       (car event)))
+                                       dir))
                             :unshared-directory))
 
 (define-finalizer (directories cleanup-callbacks)

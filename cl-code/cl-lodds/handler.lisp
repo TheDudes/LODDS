@@ -9,9 +9,7 @@
        :element-type '(unsigned-byte 8))
     (error (e)
       (lodds.event:push-event :error
-                              (list (format nil
-                                            "Error starting Listener (~a)"
-                                            e)))
+                              (format nil "Error starting Listener (~a)" e))
       (sleep 1)
       (when (lodds.subsystem:alive-p (lodds:get-subsystem :handler))
         (open-socket)))))
@@ -29,7 +27,6 @@
                                      (let ((client-socket
                                              (usocket:socket-accept socket
                                                                     :element-type '(unsigned-byte 8))))
-                                       ;; TODO: move specified timeout to settings
                                        (lodds.core:set-socket-timeout
                                         client-socket
                                         (lodds.config:get-value :socket-timeout))
