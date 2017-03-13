@@ -70,7 +70,12 @@
                           progress)
       (connect cancel "pressed()"
                (lambda ()
-                 (lodds.task:cancel-task id nil)))
+                 (let ((task (lodds.task:get-task-by-id id)))
+                   (when task
+                     (lodds.task:cancel-task task
+                                             ;; resubmit task-get-folder
+                                             (eql 'lodds.task:task-get-folder
+                                                  (type-of task)))))))
       (q+:set-item-widget info
                           new-entry
                           +info-cancel+
