@@ -577,12 +577,12 @@
                               (signal! shares
                                        (remove-entry string)
                                        (concatenate 'string
-                                                    (second event)
+                                                    (car event)
                                                     "/")))
                             :client-removed)
   (lodds.event:add-callback :qt-shares
                             (lambda (event)
-                              (destructuring-bind (name type timestamp changes) (cdr event)
+                              (destructuring-bind (name type timestamp changes) event
                                 (declare (ignore timestamp))
                                 (when (eql type :all)
                                   (signal! shares (remove-entry string)

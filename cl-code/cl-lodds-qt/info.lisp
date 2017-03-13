@@ -176,12 +176,12 @@
   (lodds.event:add-callback :qt-info
                             (lambda (event)
                               (bt:with-recursive-lock-held ((slot-value info 'lock))
-                                (push (second event) canceled-tasks)))
+                                (push (car event) canceled-tasks)))
                             :task-canceled)
   (lodds.event:add-callback :qt-info
                             (lambda (event)
                               (bt:with-recursive-lock-held ((slot-value info 'lock))
-                                (push (second event) failed-tasks)))
+                                (push (car event) failed-tasks)))
                             :task-failed))
 
 (define-finalizer (info cleanup-widget)

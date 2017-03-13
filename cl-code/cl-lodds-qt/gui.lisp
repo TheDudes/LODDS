@@ -373,19 +373,19 @@
                             (lambda (event)
                               (signal! main-window
                                        (received-send-permission string)
-                                       (second event)))
+                                       (car event)))
                             :send-permission)
   (lodds.event:add-callback :qt-main
                             (lambda (event)
                               (signal! main-window
                                        (folder-download-error string)
-                                       (second event)))
+                                       (car event)))
                             :folder-download-error)
   (lodds.event:add-callback :qt-main
                             (lambda (event)
                               (signal! main-window
                                        (directory-error string)
-                                       (second event)))
+                                       (car event)))
                             :directory-error)
   (lodds.event:add-callback :qt-main
                             (lambda (event)

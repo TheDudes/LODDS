@@ -174,13 +174,13 @@
                             (lambda (event)
                               (signal! directories
                                        (add-directory string)
-                                       (second event)))
+                                       (car event)))
                             :shared-directory)
   (lodds.event:add-callback :qt-directories
                             (lambda (event)
                               (signal! directories
                                        (remove-directory string)
-                                       (second event)))
+                                       (car event)))
                             :unshared-directory))
 
 (define-finalizer (directories cleanup-callbacks)

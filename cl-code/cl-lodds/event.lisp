@@ -66,27 +66,29 @@
 (defun handle-event (event event-queue)
   "handles a single event and calls it inside a RESTART-CASE. If a
   error occures its possible to RETRY, IGNORE or REMOVE the callback."
-  (labels ((save-call (name fn &key event-type)
+  (labels ((save-call (name cb &optional event-type)
              (restart-case
-                 (funcall fn event)
+                 (if event-type
+                     (funcall cb (cdr event))
+                     (funcall cb event))
                (retry-calling-callback ()
                  ;; reload function from hashtable and try again
-                 (destructuring-bind (new-name . new-fn)
+                 (destructuring-bind (new-name . new-cb)
                      (assoc name
                             (if event-type
                                 (gethash event-type
                                          (typed-callbacks event-queue))
                                 (callbacks event-queue)))
-                   (save-call new-name new-fn :event-type event-type)))
+                   (save-call new-name new-cb event-type)))
                (ignore-callback ()
                  nil)
                (remove-callback ()
                  (remove-callback name event-type)))))
-    (loop :for (name . fn) :in (callbacks event-queue)
-          :do (save-call name fn))
-    (loop :for (name . fn) :in  (gethash (car event)
+    (loop :for (name . cb) :in (callbacks event-queue)
+          :do (save-call name cb))
+    (loop :for (name . cb) :in  (gethash (car event)
                                          (typed-callbacks event-queue))
-          :do (save-call name fn :event-type (car event)))))
+          :do (save-call name cb (car event)))))
 
 (defun cleanup ()
   "If Event-queue gets stopped this function will be called, it will

@@ -195,7 +195,7 @@
 (define-initializer (user-list setup-callbacks)
   (lodds.event:add-callback :qt-user-list
                             (lambda (event)
-                              (destructuring-bind (name load last-change) (cdr event)
+                              (destructuring-bind (name load last-change) event
                                 (signal! user-list
                                          (add-user string string int)
                                          name
@@ -206,11 +206,11 @@
                             (lambda (event)
                               (signal! user-list
                                        (remove-user string)
-                                       (second event)))
+                                       (car event)))
                             :client-removed)
   (lodds.event:add-callback :qt-user-list
                             (lambda (event)
-                              (destructuring-bind (name load last-change) (cdr event)
+                              (destructuring-bind (name load last-change) event
                                 (signal! user-list
                                          (update-user string string int)
                                          name
