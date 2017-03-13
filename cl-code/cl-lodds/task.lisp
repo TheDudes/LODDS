@@ -385,7 +385,7 @@
           max-load size)
     (setf info (format nil "[Request] (Incomming Request): ~a" filename))))
 
-(defun load-chunk (stream-from stream-to size &optional digester (chunk-size (ash 1 21)))
+(defun load-chunk (stream-from stream-to size &optional digester (chunk-size (ash 1 18)))
   "Transfers bytes from STREAM-FROM to STREAM-TO. It will never
   transfer more then (max size chunk-size) bytes. Returns the Amount
   of transfered Bytes."
