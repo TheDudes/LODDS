@@ -101,7 +101,10 @@
                   (q+:set-window-title "About Lodds")
                   (q+:set-icon-pixmap (q+:pixmap (q+:window-icon main-window) 64 64))
                   (q+:set-text (system-about)))
-           (q+:exec about))))
+           (q+:exec about)))
+  (:item "About&Qt"
+         (finalize (q+:qmessagebox-about-qt main-window
+                                            "About Qt"))))
 
 (define-menu (main-window Lodds)
   (:item ("&Run" (ctrl r))
