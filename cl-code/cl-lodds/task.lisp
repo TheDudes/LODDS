@@ -380,7 +380,9 @@
 
 (defmethod initialize-instance :after ((task task-request-send-permission) &rest initargs)
   (declare (ignorable initargs))
-  (with-slots (info filename id) task
+  (with-slots (info filename id size load max-load) task
+    (setf load size
+          max-load size)
     (setf info (format nil "[Request] (Incomming Request): ~a" filename))))
 
 (defun load-chunk (stream-from stream-to size &optional digester (chunk-size (ash 1 21)))
@@ -791,9 +793,7 @@
                               :element-type '(unsigned-byte 8)))
       (unless (eql 0 (lodds.low-level-api:respond-send-permission
                       (usocket:socket-stream socket)))
-        (setf state :finished))
-      (setf load size
-            max-load size))
+        (setf state :finished)))
     ;; transfer the file
     (let ((transfered
             (load-chunk (usocket:socket-stream socket)
@@ -866,7 +866,9 @@
     (unless file-stream
       (setf file-stream (open (lodds.core:escape-wildcards filepath)
                               :element-type '(unsigned-byte 8)))
-      (setf size (file-length file-stream)))
+      (setf size (file-length file-stream))
+      (setf load size
+            max-load size))
     ;; open up socket
     (unless socket
       (lodds.core:split-user-identifier (name ip port t) user
@@ -894,8 +896,6 @@
           (case (lodds.low-level-api:handle-send-permission socket 1)
             (0 (progn ;; success, set time to timeout
                  (setf time-waited timeout)
-                 (setf load size
-                       max-load size)
                  (setf info (format nil "[Send File] (~a) (Sending): ~a" name filepath))))
             (3 (progn ;; on timeout wait another second
                  (incf time-waited)

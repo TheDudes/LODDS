@@ -64,23 +64,28 @@
                                              progress
                                              max)))))
 
-(defmethod update-info ((info info) id done info-text)
+(defmethod update-info ((info info) id max done info-text)
   (with-slots-bound (info info)
-    (destructuring-bind (widget progress max) (gethash id tracked-tasks)
-      (q+:set-value progress
-                    (normalized-value max done))
-      (qdoto widget
-             (q+:set-text +info-info+ info-text)
-             (q+:set-status-tip +info-info+
+    (let ((entry (gethash id tracked-tasks)))
+      ;; we might have pulled the info before the max-load was set on
+      ;; task, check if this is the case and update max
+      (unless (eql max (third entry))
+        (setf (third entry) max))
+      (destructuring-bind (widget progress max last-load) entry
+        (q+:set-value progress
+                      (normalized-value max done))
+        (qdoto widget
+               (q+:set-text +info-info+ info-text)
+               (q+:set-status-tip +info-info+
+                                  (format nil
+                                          "Total: ~a (~:d bytes) | Transfered: ~a (~:d bytes)"
+                                          (lodds.core:format-size max) max
+                                          (lodds.core:format-size done) done))
+               (q+:set-tool-tip +info-info+
                                 (format nil
-                                        "Total: ~a (~:d bytes) | Transfered: ~a (~:d bytes)"
+                                        "Total: ~a (~:d bytes)~%Transfered: ~a (~:d bytes)"
                                         (lodds.core:format-size max) max
-                                        (lodds.core:format-size done) done))
-             (q+:set-tool-tip +info-info+
-                              (format nil
-                                      "Total: ~a (~:d bytes)~%Transfered: ~a (~:d bytes)"
-                                      (lodds.core:format-size max) max
-                                      (lodds.core:format-size done) done))))))
+                                        (lodds.core:format-size done) done)))))))
 
 (defmethod remove-info ((info info) id)
   (with-slots-bound (info info)
@@ -99,7 +104,7 @@
     ;; add all missing, and update all we already have
     (loop :for (id max done type info-text) :in tasks
           :do (if (gethash id tracked-tasks)
-                  (update-info info id done info-text)
+                  (update-info info id max done info-text)
                   (when info-text
                     (add-info info id max done info-text))))
     ;; remove all old tasks
