@@ -20,7 +20,8 @@
          (car (lodds.core:get-interfaces))
          (format nil
                  "Interface Lodds uses to get his own Ip and Broadcast~%~
-                 Address.~%~
+                 Address. You have to restart Lodds for changes to
+                 take effect~%~
                  Default: The first interface with an ip (excluding loopback)")
          :selection
          (lambda ()
@@ -29,14 +30,15 @@
          nil
          (format nil
                  "If true: shared directories will be rememberd on restart~%~
-                  [Not implemented yet]~%~
-                  Default: false")
+                 [Not implemented yet]~%~
+                 Default: false")
          :boolean)
    (list :port
          4567
          (format nil
                  "The Port where Lodds is listning on for incomming~%~
                  requests. Value between 1024 and 65535.~%~
+                 Restart is needed for changes to take effect.~%~
                  Default: 4567")
          :integer
          1024
@@ -197,7 +199,7 @@
                  "Folder which contains resources for Lodds,~%~
                  like icons, stylesheets, ...~%~
                  Changing this value will have no direct effect,~%~
-                 Restart (stop/start) lodds, reload the~%~
+                 Restart lodds (Lodds -> Restart), reload the~%~
                  stylesheet (Lodds -> Reload Stylesheet) and~%~
                  reshare (unshare/share) all folders for changes~%~
                  to take effect~%~
@@ -266,8 +268,8 @@
                  size. For example bigger files/folders will be colored red,~%~
                  while smaller will be colored in a greenish color.~%~
                  Changing this setting will not have a direct effect,~%~
-                 Restarting Lodds (Stop & Start) to build a new tree is~%~
-                 needed.~%~
+                 Restarting Lodds (Lodds -> Restart) to build a new~%~
+                 tree is needed.~%~
                  Default: true")
          :boolean)))
 

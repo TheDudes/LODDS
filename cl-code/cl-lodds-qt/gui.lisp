@@ -117,6 +117,24 @@
                           (or (asdf:system-license system) "(not specified)")
                           (or (asdf:system-author system) "(not specified)"))))))
 
+(defun restart-lodds (main-window)
+  (lodds:stop)
+  (let* ((timer (qdoto (q+:make-qtimer)
+                       (q+:start 100))))
+    (connect timer "timeout()"
+             (let ((time 0))
+               (lambda ()
+                 (incf time 1)
+                 (q+:show-message
+                  (q+:status-bar main-window)
+                  (format nil "Restarting lodds ~c"
+                          (aref #(#\/ #\- #\\ #\|)
+                                (mod time 4))))
+                 (when (> time 50)
+                   (finalize timer)
+                   (q+:clear-message (q+:status-bar main-window))
+                   (lodds:start)))))))
+
 (define-menu (main-window Help)
   (:item "&About"
          (finalize
@@ -145,6 +163,8 @@
          (run))
   (:item ("&Stop" (ctrl s))
          (lodds:stop))
+  (:item ("&Restart" (ctrl e))
+         (restart-lodds main-window))
   (:separator)
   (:item "&Reload Stylesheet"
          (signal! main-window (reload-stylesheet)))
