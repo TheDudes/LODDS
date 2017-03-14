@@ -180,7 +180,7 @@
   (:item "&Reload Stylesheet"
          (signal! main-window (reload-stylesheet)))
   (:separator)
-  (:item ("&Share Directory" (ctrl o))
+  (:item ("Share &Directory" (ctrl o))
          (let ((dir (q+:qfiledialog-get-existing-directory)))
            (when (> (length dir) 0)
              (let* ((dock (slot-value main-window 'shared-dock))
