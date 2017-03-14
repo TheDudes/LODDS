@@ -1,15 +1,15 @@
 * General
-** TODO missing [0/1]
-   - [ ] File Header with Description
+** TODO missing [1/1]
+   - [X] File Header with Description
 
 * GUI
-** TODO missing [20/26]
-   - [ ] Infobar (Statusbar) with Current Transfers, Load, Connections, ...
-   - [ ] Label & more Info on Interface ComboBox
-   - [ ] Download Button with Icon
+** TODO missing [23/26]
    - [ ] Icons for Up/Download
-   - [ ] Stylesheet into res/ folder
    - [ ] Send File Dialog while waiting/sending
+   - [ ] Label & more Info on Interface ComboBox
+   - [X] Stylesheet into res/ folder
+   - [X] Download Button with Icon
+   - [X] Infobar (Statusbar) with Current Transfers, Load, Connections, ...
    - [X] Close Gui on shutdown
    - [X] colorize logmessage count
    - [X] Incognito Mode
