@@ -220,7 +220,15 @@
     (q+:make-qscrollarea settings-widget))
 
 (define-subwidget (settings-widget save)
-    (q+:make-qpushbutton "Save to File" settings-widget))
+    (q+:make-qpushbutton "Save to File" settings-widget)
+  (q+:set-tool-tip save
+                   (format nil
+                           "Lodds will load the following files on startup:~%~
+                           ~{~a~%~}~
+                           These files will be loaded from top to bottom. The~%~
+                           ones loaded later override settings from the~%~
+                           earlier ones."
+                           lodds.config:*load-path*)))
 
 (define-subwidget (settings-widget load-file)
     (q+:make-qpushbutton "Load from File" settings-widget))
