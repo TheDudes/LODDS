@@ -1,3 +1,11 @@
+#|
+
+This file contains the Handler, his job is to listen for incomming
+connections. When there is a connection he will submit a task-requst
+thread to the tasker, which then handles the request.
+
+|#
+
 (in-package #:lodds.handler)
 
 (defun open-socket ()

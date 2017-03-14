@@ -1,3 +1,10 @@
+#|
+
+Contains a widget and code to wrap the QDockWidget functionality in a
+more lispy way
+
+|#
+
 (in-package #:lodds-qt)
 (in-readtable :qtools)
 

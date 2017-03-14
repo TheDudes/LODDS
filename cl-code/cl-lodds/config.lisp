@@ -1,4 +1,15 @@
-;;;; config.lisp
+#|
+
+This file contains all configuration related functions and the default
+config. A 'config' is basically a hashmap which has the config name as
+key and information about it as value.
+
+Each config key exists of at least a value, a description and a type,
+see generate-default-list for more info. Some types contain addition
+fields, like :integer for example. It contains a minimum and a maximum
+value (to verify the new value on change).
+
+|#
 
 (in-package #:lodds.config)
 

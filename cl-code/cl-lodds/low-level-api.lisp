@@ -1,5 +1,3 @@
-;;;; lodds-low-level-api.lisp
-
 #|
 
 This file contains the low-level-api implementation of the LODDS protocol,

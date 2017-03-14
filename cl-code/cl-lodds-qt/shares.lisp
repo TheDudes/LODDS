@@ -1,3 +1,10 @@
+#|
+
+Contains Shares widget related stuff, The Shares widget is the
+QTreeWidget in the middle, which displays all shared files
+
+|#
+
 (in-package #:lodds-qt)
 (in-readtable :qtools)
 

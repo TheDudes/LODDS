@@ -1,4 +1,14 @@
-;;;; lodds.lisp
+#|
+
+This file should become a interface to the outer world. It contains
+all kinds of handy functions to modify the lodds-server or get
+information. This file should (once finished) behave like a interface
+with all kinds of handy functions a user of the library needs. Atm
+there is still much stuff missing which is not wrapped yet, but some
+importand functions are there already (for example:
+start,stop,shutdown, ...).
+
+|#
 
 (in-package #:lodds)
 

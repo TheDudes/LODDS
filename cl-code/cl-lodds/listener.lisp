@@ -1,3 +1,13 @@
+#|
+
+This File contains the Listener, which is the counterpart to the
+Advertiser. His job is to listen for broadcast messages and update the
+client infos on the lodds-server object once he gets new information.
+
+TODO: submitting tasks might be a better way
+
+|#
+
 (in-package lodds.listener)
 
 (defun update-client-list (client)

@@ -1,4 +1,13 @@
-;;;; watcher.lisp
+#|
+
+This file contains all watcher related stuff. The Watcher handles
+watching directories, but most of the heavy lifting is done by the
+cl-fs-watcher library. The watcher basically just a wrapper around the
+cl-fs-watcher and handles all lodds related things, like generating
+checksums on file changes, adding and deleting of files and keeping
+tracked about the shared files.
+
+|#
 
 (in-package #:lodds.watcher)
 

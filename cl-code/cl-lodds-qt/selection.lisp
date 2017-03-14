@@ -1,3 +1,10 @@
+#|
+
+Selection is a Widget which displays group of radio buttons where the
+user can select one solution.
+
+|#
+
 (in-package #:lodds-qt)
 (in-readtable :qtools)
 

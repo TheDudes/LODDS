@@ -1,3 +1,10 @@
+#|
+
+This file contains all kinds of helper functions which are used
+throughout the gui code
+
+|#
+
 (in-package #:lodds-qt)
 (in-readtable :qtools)
 

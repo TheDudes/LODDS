@@ -1,4 +1,9 @@
-;;;; core.lisp
+#|
+
+This file contains all kinds of utility helper and wrapper
+functions.
+
+|#
 
 (in-package #:lodds.core)
 

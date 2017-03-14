@@ -1,3 +1,33 @@
+#|
+
+This file contains the event-queue implementation. The event-queue
+(the class) is a wrapper around lparallel:queue with utility functions
+to add/remove callbacks. The idea is simple, a consumer attaches a
+callback for an event he is interested in which the event-queue calls
+once the event occures.
+
+For example:
+
+lets say a producer puts money into bank accounts and then pushes
+:on-money-received events with the account and amount like this:
+
+(push-event :on-money-received "some-account-id" 100)
+
+Then a consumer (who wants to get notified on a :on-money-received
+event) attaches a callback like so:
+(add-callback :consumer-102
+              (lambda (bank-account amount)
+                (format t "i just received ~a on account ~a~%" bank-account amount))
+              :on-money-received)
+
+and if he wants to remove the callback he calls:
+(remove-callback :consumer-102 :on-money-received)
+
+Note: The callback will be called from the event thread, and should
+not block too long, since it will block other events
+
+|#
+
 (in-package #:lodds.event)
 
 (defmacro update-callback (name fn alist-accessor)

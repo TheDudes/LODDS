@@ -1,3 +1,11 @@
+#|
+
+This files contains the advertiser, which job it is to send broadcast
+messages so that others know where they can find us and get
+information about our load, last change etc.
+
+|#
+
 (in-package #:lodds.advertiser)
 
 (defun try-send ()

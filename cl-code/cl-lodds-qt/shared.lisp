@@ -1,3 +1,11 @@
+#|
+
+Contains Shared widget related stuff, The Shared widget displays all
+locally shared directories. (The once the lodds client shares with
+others)
+
+|#
+
 (in-package #:lodds-qt)
 (in-readtable :qtools)
 

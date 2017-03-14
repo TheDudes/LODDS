@@ -1,3 +1,10 @@
+#|
+
+This file contains the menus, the main-window and related
+functionality (for example system tray and status-info)
+
+|#
+
 (in-package #:lodds-qt)
 (in-readtable :qtools)
 

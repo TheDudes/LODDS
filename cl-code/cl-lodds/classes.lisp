@@ -1,4 +1,10 @@
-;; lodds.subsystem classes
+#|
+
+This file contains all classes (iam not sure if it contains all,but at
+least 95% of them :D). This way classes can be 'forward declared' by
+loadin the classes file first.
+
+|#
 
 (in-package #:lodds.subsystem)
 
