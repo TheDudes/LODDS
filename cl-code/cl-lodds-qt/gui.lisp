@@ -87,14 +87,13 @@
                 </a>) and are licensed under the
                 <a href=\"https://creativecommons.org/licenses/by-nd/3.0/\">
                   Creative Commons Attribution-No Derivative Works 3.0 Unported
-                </a>"
+                </a> License"
             :cl-lodds-qt
             (asdf:system-description system)
             (asdf:system-license system)
             (asdf:system-homepage system)
             (asdf:system-author system)
             (asdf:component-version system))))
-
 
 (defun used-libraries ()
   (format nil "~{~a~^<br /><br />~}"
