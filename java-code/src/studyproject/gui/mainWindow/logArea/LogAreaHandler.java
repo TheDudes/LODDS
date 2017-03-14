@@ -14,6 +14,7 @@ import javafx.collections.ObservableList;
 import javafx.scene.Node;
 import javafx.scene.control.Skin;
 import javafx.scene.control.TableView;
+import studyproject.App;
 import studyproject.API.Errors.Error;
 import studyproject.logging.LogKey;
 
@@ -21,7 +22,8 @@ public class LogAreaHandler extends Handler {
 
 	private TableView<Error> toLogTo;
 	private SimpleBooleanProperty error;
-	public static final int MAX_LOG_MSG_COUNT = 1000;
+	public static final int MAX_LOG_MSG_COUNT = Integer.valueOf(App.properties.getProperty("MAX_LOG_MSG_COUNT"));
+	@SuppressWarnings("rawtypes")
 	private VirtualFlow virtualFlow;
 	private SimpleBooleanProperty info;
 	private SimpleBooleanProperty getRec;
@@ -56,8 +58,10 @@ public class LogAreaHandler extends Handler {
 	 * Extracts the VirtualFlow from the LogAreas skinProperty, the VirtualFlow
 	 * is used for scrolling reasons
 	 */
+	@SuppressWarnings("rawtypes")
 	private void getVirtualFlow() {
 		toLogTo.skinProperty().addListener(new ChangeListener<Skin>() {
+			@SuppressWarnings("unchecked")
 			@Override
 			public void changed(ObservableValue<? extends Skin> ov, Skin t, Skin t1) {
 				if (t1 == null) {
@@ -77,13 +81,11 @@ public class LogAreaHandler extends Handler {
 
 	@Override
 	public void close() throws SecurityException {
-		// TODO Auto-generated method stub
 
 	}
 
 	@Override
 	public void flush() {
-		// TODO Auto-generated method stub
 
 	}
 

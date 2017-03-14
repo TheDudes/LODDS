@@ -5,21 +5,28 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import studyproject.App;
+import studyproject.API.Lvl.Mid.ShareFolderThread;
 import studyproject.API.Lvl.Mid.Lodds.LoddsModel;
 
 /**
- * This is an executor who splits incoming runnables into 4 Executors, according
- * to their {@link ThreadType}.
+ * This is an executor who splits incoming runnables into 5
+ * {@link ExecutorService}s, according to their {@link ThreadType}.
  * 
  * 
  * @author ninti
  *
  */
 public class ThreadExecutor implements Executor {
-	private final int DEFAULT_AT_A_TIME_UPLOADS = 20;
-	private final int DEFAULT_AT_A_TIME_DOWNLOADS = 20;
-	private final int DEFAULT_AT_A_TIME_SHARES = 10;
+	private final int DEFAULT_AT_A_TIME_UPLOADS = Integer
+			.valueOf(App.properties.getProperty("DEFAULT_AT_A_TIME_UPLOADS"));
+	private final int DEFAULT_AT_A_TIME_DOWNLOADS = Integer
+			.valueOf(App.properties.getProperty("DEFAULT_AT_A_TIME_DOWNLOADS"));
+	private final int DEFAULT_AT_A_TIME_SHARES = Integer
+			.valueOf(App.properties.getProperty("DEFAULT_AT_A_TIME_SHARES"));
+
 	private final int NR_OF_FIXED_THREADS = 5;
+
 	private ExecutorService infoExecutor;
 	private ExecutorService sendFileExecutor;
 	private ExecutorService getFileExecutor;
@@ -30,7 +37,17 @@ public class ThreadExecutor implements Executor {
 	private LoddsModel loddsModel;
 
 	/**
-	 * Default Constructor, initialises the threadFactoryBuilder and
+	 * Default Constructor, initializes the threadFactoryBuilder and all
+	 * Executors<br>
+	 * <br>
+	 * - infoExecutor - For all info threads <br>
+	 * - sendFileExecutor - For Upload<br>
+	 * - getFileExecutor - For Downloads <br>
+	 * - fixedThreadExecutor - For all fixed Threads <br>
+	 * - shareFolderExecutor - {@link ShareFolderThread}<br>
+	 * <br>
+	 * For more information about which Thread is executed by which executor
+	 * refer to {@link ThreadType} and this classes execute method
 	 */
 	public ThreadExecutor(LoddsModel loddsModel) {
 		threadFactoryBuilder = new ThreadFactoryBuilder();
@@ -49,6 +66,10 @@ public class ThreadExecutor implements Executor {
 		this.loddsModel = loddsModel;
 	}
 
+	/**
+	 * adds all {@link ExecutorService}s of this class to the allExecutor vector
+	 * of this class
+	 */
 	private void addExecutorsToVector() {
 		allExecutors.addElement(sendFileExecutor);
 		allExecutors.addElement(infoExecutor);
@@ -60,7 +81,6 @@ public class ThreadExecutor implements Executor {
 	@Override
 	public void execute(Runnable runnable) {
 		ThreadType threadType = ThreadType.getType(runnable);
-		// TODO thread not executable error
 		switch (threadType) {
 		case none:
 			return;
@@ -87,11 +107,20 @@ public class ThreadExecutor implements Executor {
 		}
 	}
 
+	/**
+	 * Adds a {@link MonitoredThread} to the {@link LoddsModel}s tasklist
+	 * 
+	 * @param monitoredThread
+	 *            the monitored thread to add to the task list
+	 */
 	private void addToList(MonitoredThread monitoredThread) {
 		loddsModel.getTasksList().add(monitoredThread);
-		monitoredThread.setSubmitted(true);
 	}
 
+	/**
+	 * Calls shutdownNow on all {@link ExecutorService}s in the allExecutor
+	 * vector of this class
+	 */
 	public void stopAllExcutors() {
 		allExecutors.forEach(ExecutorService::shutdownNow);
 	}

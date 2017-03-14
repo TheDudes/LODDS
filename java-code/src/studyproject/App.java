@@ -105,7 +105,8 @@ public class App extends Application {
 		mainWindowPresenter = (MainWindowPresenter) mainView.getPresenter();
 		mainWindowPresenter.loadInterface();
 
-		setIcons();
+		if (Boolean.valueOf(App.properties.getProperty("icons")))
+			setIcons();
 
 		if (Utils.osIsMac()) {
 			MacDockMenuPresenter dockMenu = new MacDockMenuPresenter();
