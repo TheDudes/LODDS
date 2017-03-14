@@ -64,9 +64,9 @@
 ;; see: https://github.com/shirakumo/lionchat
 (defun system-about ()
   (let ((system (asdf:find-system :cl-lodds-qt)))
-    (format nil "~a<br />
+    (format nil "<h2>About ~a</h2>
+                <h4>~a</h4>
                 License: ~a<br />
-                <br />
                 Homepage: <a href=\"~a~:*\">~a</a><br />
                 Author: ~a<br />
                 Version: ~a<br />
@@ -88,23 +88,57 @@
                 <a href=\"https://creativecommons.org/licenses/by-nd/3.0/\">
                   Creative Commons Attribution-No Derivative Works 3.0 Unported
                 </a>"
+            :cl-lodds-qt
             (asdf:system-description system)
             (asdf:system-license system)
             (asdf:system-homepage system)
             (asdf:system-author system)
             (asdf:component-version system))))
 
+
+(defun used-libraries ()
+  (format nil "~{~a~^<br /><br />~}"
+          (loop :for name
+                :in (remove-duplicates
+                     (append (asdf:system-depends-on
+                              (asdf:find-system :cl-lodds-qt))
+                             (asdf:system-depends-on
+                              (asdf:find-system :cl-lodds))))
+                :collect
+                (let ((system (asdf:find-system name)))
+                  (format nil
+                          "<h1>~a </h1><a href=\"~a~:*\">~a</a>
+                          <h4>~a</h4>
+                          Licence: ~a<br />
+                          Author: ~a"
+                          name
+                          (or (asdf:system-homepage system) "")
+                          (or (asdf:system-description system) "(not specified)")
+                          (or (asdf:system-license system) "(not specified)")
+                          (or (asdf:system-author system) "(not specified)"))))))
+
 (define-menu (main-window Help)
   (:item "&About"
-         (with-finalizing ((about (q+:make-qmessagebox)))
-           (qdoto about
-                  (q+:set-window-title "About Lodds")
-                  (q+:set-icon-pixmap (q+:pixmap (q+:window-icon main-window) 64 64))
-                  (q+:set-text (system-about)))
-           (q+:exec about)))
+         (finalize
+          (qdoto (q+:make-qmessagebox)
+                 (q+:set-window-title "About Lodds")
+                 (q+:set-icon-pixmap (q+:pixmap (q+:window-icon main-window) 64 64))
+                 (q+:set-text (system-about))
+                 (q+:exec))))
   (:item "About&Qt"
          (finalize (q+:qmessagebox-about-qt main-window
-                                            "About Qt"))))
+                                            "About Qt")))
+  (:item "&Used Libraries"
+         (make-instance 'dialog
+                        :widget
+                        (qdoto (q+:make-qtextbrowser)
+                               (q+:set-read-only t)
+                               (q+:set-open-external-links t)
+                               (q+:append (used-libraries))
+                               (q+:move-cursor (q+:qtextcursor.start)))
+                        :width 500
+                        :height 500
+                        :title "Used Libraries")))
 
 (define-menu (main-window Lodds)
   (:item ("&Run" (ctrl r))
