@@ -6,14 +6,14 @@
 <?import javafx.scene.control.TableColumn?>
 <?import javafx.scene.control.TableView?>
 
-<TableView fx:id="logTableView" tableMenuButtonVisible="true" xmlns="http://javafx.com/javafx/8.0.112" xmlns:fx="http://javafx.com/fxml/1" fx:controller="studyproject.gui.mainWindow.logArea.LogAreaPresenter">
+<TableView fx:id="logTableView" tableMenuButtonVisible="true" xmlns="http://javafx.com/javafx/8.0.65" xmlns:fx="http://javafx.com/fxml/1" fx:controller="studyproject.gui.mainWindow.logArea.LogAreaPresenter">
   <columns>
-      <TableColumn fx:id="timestampCol" maxWidth="-1.0" minWidth="100.0" prefWidth="100.0" text="Timestamp" />
-      <TableColumn fx:id="logLvlCol" maxWidth="-1.0" minWidth="100.0" prefWidth="100.0" text="LogLvl" />
-    <TableColumn fx:id="logKeyCol" minWidth="100.0" prefWidth="150.0" text="LogKey" />
-      <TableColumn fx:id="sourceClassCol" minWidth="100.0" prefWidth="158.0" text="SourceClass" />
-    <TableColumn fx:id="sourceMethodCol" minWidth="75.0" prefWidth="75.0" text="SourceMethod" />
-      <TableColumn fx:id="msgCol" minWidth="100.0" prefWidth="442.0" text="Message" />
+      <TableColumn fx:id="timestampCol" maxWidth="95.0" minWidth="67.0" prefWidth="79.0" text="Timestamp" />
+      <TableColumn fx:id="logLvlCol" maxWidth="133.0" minWidth="45.0" prefWidth="53.0" text="LogLvl" />
+    <TableColumn fx:id="logKeyCol" minWidth="20.0" prefWidth="128.0" text="LogKey" />
+      <TableColumn fx:id="sourceClassCol" minWidth="50.0" prefWidth="157.0" text="SourceClass" />
+    <TableColumn fx:id="sourceMethodCol" minWidth="50.0" prefWidth="181.0" text="SourceMethod" />
+      <TableColumn fx:id="msgCol" minWidth="200.0" prefWidth="427.0" text="Message" />
   </columns>
    <contextMenu>
       <ContextMenu>
