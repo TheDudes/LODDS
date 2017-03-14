@@ -34,7 +34,7 @@ public class UsersListPresenter implements Initializable {
 
 	private FilteredList<UserInfo> filteredUserList;
 
-	private final Image refreshImage = new Image(getClass().getResourceAsStream("/studyproject/resources/reload.png"),
+	private final Image refreshImage = new Image(getClass().getResourceAsStream(App.ICON_PATH + "reload.png"),
 			16, 16, true, true);
 	private TopMenuPresenter topMenuPresenter = (TopMenuPresenter) (new TopMenuView()).getPresenter();
 

@@ -50,15 +50,16 @@ public class FilesTreePresenter implements Initializable {
 
 	private final TreeItem<FileCoreInfo> root = new TreeItem<FileCoreInfo>();
 	private FilteredList<TreeItem<FileCoreInfo>> filteredFileList;
-	private final Image fileImage = new Image(getClass().getResourceAsStream("/studyproject/resources/file.png"));
-	private final Image refreshImage = new Image(getClass().getResourceAsStream("/studyproject/resources/reload.png"),
-			16, 16, true, true);
+	private final Image fileImage = new Image(getClass().getResourceAsStream(App.ICON_PATH + "file.png"));
+	private final Image refreshImage = new Image(getClass().getResourceAsStream(App.ICON_PATH + "reload.png"), 16, 16,
+			true, true);
 
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {
 		filesTreeView.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
 		filesTreeView.setShowRoot(false);
 		filesTreeView.setRoot(root);
+		// TODO images are not loaded safely asking for the icons property
 		downloadButton.setOnAction(e -> downloadPressed());
 		userListModel.getSelectedUser().addListener(new ChangeListener<UserInfo>() {
 			@Override
@@ -111,8 +112,8 @@ public class FilesTreePresenter implements Initializable {
 		}
 		if (index == subPaths.length - 1) {
 			// ADD THE FILE
-			
-			//if icons property set style with icon
+
+			// if icons property set style with icon
 			if (Boolean.valueOf(App.properties.getProperty("icons"))) {
 				ImageView imageView = new ImageView();
 				imageView.setPreserveRatio(true);

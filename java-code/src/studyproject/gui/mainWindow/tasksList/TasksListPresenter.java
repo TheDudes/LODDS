@@ -11,6 +11,7 @@ import javafx.scene.control.ListView;
 import javafx.scene.image.Image;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
+import studyproject.App;
 import studyproject.API.Lvl.Mid.ThreadMonitoring.MonitoredThread;
 import studyproject.gui.mainWindow.MainWindowModel;
 import studyproject.gui.mainWindow.tasksList.singleTask.SingleTaskListCell;
@@ -24,7 +25,7 @@ public class TasksListPresenter implements Initializable {
 	@Inject
 	MainWindowModel mainWindowModel;
 
-	private final Image cancelButtonImage = new Image(getClass().getResourceAsStream("/studyproject/resources/x.png"));
+	private final Image cancelButtonImage = new Image(getClass().getResourceAsStream(App.ICON_PATH + "x.png"));
 
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {

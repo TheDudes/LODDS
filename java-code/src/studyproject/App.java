@@ -38,6 +38,7 @@ public class App extends Application {
 	private Stage mainStage;
 	public static Properties properties;
 	public static HostServices hostServices;
+	public static final String ICON_PATH = "/studyproject/resources/lodds_icon/";
 	public static String pathToProperties = System.getProperty("user.home") + System.getProperty("file.separator")
 			+ ".lodds" + System.getProperty("file.separator") + "config.properties";
 	private MainWindowView mainView;
@@ -118,7 +119,7 @@ public class App extends Application {
 
 	private void setMacIcons() {
 		try {
-			URL iconURL = Main.class.getResource("/studyproject/resources/lodds_icon64x64.png");
+			URL iconURL = Main.class.getResource(ICON_PATH + "lodds_icon64x64.png");
 			java.awt.Image image = new ImageIcon(iconURL).getImage();
 			com.apple.eawt.Application.getApplication().setDockIconImage(image);
 		} catch (Exception e) {
@@ -127,7 +128,7 @@ public class App extends Application {
 	}
 
 	private void setIcons() {
-		mainStage.getIcons().add(new Image(getClass().getResourceAsStream("resources/lodds.png")));
+		mainStage.getIcons().add(new Image(getClass().getResourceAsStream(ICON_PATH + "lodds.png")));
 	}
 
 	@Override
