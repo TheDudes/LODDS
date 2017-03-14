@@ -1,0 +1,71 @@
+<h1 align="center">Hi!</h1>
+<h3 align="center">and Welcome to Lodds</h3>
+
+This is a short Introduction so you can get started right away.
+
+<h2>Overview and Windows</h2>
+What you see once you started up Lodds is the Main Window, it has a
+User List on the left, Directories you Share on the right and a Info
+Section at the bottom. In the middle of the Main Window is a Tree
+which displays shared files of all found Lodds clients in the
+network. At the Top left you can find the Menubar which contains the
+Lodds, View and Help Menus.
+
+<h2>Navigating the Tree</h2>
+To open/close a Folder you can click on the Folder Icon on the left of
+the Folder. You can also use the Arrow Keys to navigate the tree,
+Using <kbd>right</kbd> and <kbd>left</kbd> to open and close.
+
+<h2>Downloading Files</h2>
+To download a single File or Folder you can <kbd>Double click</kbd>
+the Entry. To Download Multiple Files at once you can select the
+entries as usual (Left Click plus <kbd>Shift</kbd> or <kbd>Ctrl</kbd>)
+and then either press <kbd>Enter</kbd> or <kbd>Right Click</kbd> ->
+<kbd>Download</kbd>.
+
+<h2>Sharing Files</h2>
+To Share a Folder you can either Press <kbd>Ctrl-o</kbd>, click the
+'Share Directory' Button at the bottom of the Directory Shared widget
+or Drag and Drop a Folder onto the widget. Lodds will then start
+tracking the selected Directory and generate Checksums. This might
+take a while, depending on how many items the Directory contains and
+how big they are. (> 2 gigabyte might take over a minute). Once a
+Directory is shared, it also tracks file changes inside it. This means
+that when you put new files into a shared folder they will
+automatically be shared too (and the other clients will be informed
+about the change and update their list).
+
+<h2>Sending Files</h2>
+It is also possible to send files to a User. You can click on the
+send-file icon on the right side of the Username. This will open up a
+Dialog to choose a File and a Timeout. The timeout specifies how much
+time the selected user has to accept the File. The Transfer will be
+aborted in case the user does not respond withing the time limit, or
+denies the request.
+
+<h2>Receiving Files</h2>
+When a User wants to send a File to you, a Dialog will pop up and show
+you information about the given file and how much time is left to
+accept it. You can then choose a name and a location for the incomming
+file and accept the request. (or deny it if you dont want it,
+obviously)
+
+<h2>Trusting and Blocking of Users</h2>
+You are able to Trust/Block a User, but this is only used to auto
+accept/block incoming Files. Since there is no way to really identify
+a User it would make no sense to implement the blocking of downloads
+or similar. This trusting/blocking mechanism is just to ease the
+sending of files to multiple user. For example if a user wants to
+distribute files from time to time to multiple users everyone can just
+auto accept his requests (trust him), instead of everyone downloading
+the files from him.
+
+<h2>Settings</h2>
+Settings can be opened by pressing <kbd>Ctrl-c</kbd> or by clicking on
+the settings entry inside the Lodds Menu. Changed Settings will be
+applied once the 'ok' button on the bottom right corner of the
+settings dialog is pressed. You can also Save/Load settings to/from a
+File and load back the default. The Save File Button has a Tooltip
+which tells you what locations will be loaded once Lodds starts up,
+these can be used to always save and load your settings on the next
+startup.

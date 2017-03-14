@@ -136,6 +136,17 @@
                    (lodds:start)))))))
 
 (define-menu (main-window Help)
+  (:item "&Intro"
+         (make-instance 'dialog
+                        :widget
+                        (qdoto (q+:make-qtextbrowser)
+                               (q+:set-read-only t)
+                               (q+:set-open-external-links t)
+                               (q+:append #.(uiop:read-file-string "intro.html"))
+                               (q+:move-cursor (q+:qtextcursor.start)))
+                        :width 400
+                        :height 600
+                        :title "Intro"))
   (:item "&About"
          (finalize
           (qdoto (q+:make-qmessagebox)
