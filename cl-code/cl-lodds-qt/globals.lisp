@@ -1,6 +1,12 @@
 (in-package #:lodds-qt)
 (in-readtable :qtools)
 
+(defparameter *intro*
+  #.(uiop:read-file-string
+     (merge-pathnames
+      "../intro.html"
+      (uiop:current-lisp-file-pathname))))
+
 (defvar +events+
   '(:advertiser
     :listener

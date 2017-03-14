@@ -142,7 +142,7 @@
                         (qdoto (q+:make-qtextbrowser)
                                (q+:set-read-only t)
                                (q+:set-open-external-links t)
-                               (q+:append #.(uiop:read-file-string "intro.html"))
+                               (q+:append *intro*)
                                (q+:move-cursor (q+:qtextcursor.start)))
                         :width 400
                         :height 600
