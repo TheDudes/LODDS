@@ -10,7 +10,7 @@ public interface MonitoredThread {
 	/**
 	 * Shall return true if the thread is running and false if not
 	 * 
-	 * @return
+	 * @return true if the thread is running and false if not
 	 */
 	SimpleBooleanProperty isRunning();
 
@@ -20,9 +20,9 @@ public interface MonitoredThread {
 	void setRunning(boolean toSet);
 
 	/**
-	 * Shall return true if the MonitoredThread is finsihed or false if not
+	 * Shall return true if the MonitoredThread is finished or false if not
 	 * 
-	 * @return
+	 * @return true if the MonitoredThread is finished or false if not
 	 */
 	SimpleBooleanProperty isFinished();
 
@@ -30,43 +30,16 @@ public interface MonitoredThread {
 	 * Returns true if the MonitoredThread is in a queue of a
 	 * {@link MultipleDownloadHelper}
 	 * 
-	 * @return
+	 * @return true if the MonitoredThread is in a queue of a
+	 *         {@link MultipleDownloadHelper}
 	 */
 	boolean isOneOfMultiple();
 
 	/**
 	 * Sets the boolean oneOfMultiple which states if the
-	 * {@link MonitoredThread} is in a quere of a {@link MultipleDownloadHelper}
+	 * {@link MonitoredThread} is in a queue of a {@link MultipleDownloadHelper}
 	 */
 	void setOneOfMultiple(boolean oneOfMultiple);
-
-	/**
-	 * Returns the submitted boolean of the Monitored thread, which states if
-	 * the thread was submitted to the {@link ThreadExecutor}
-	 * 
-	 * @return true if the Monitored thread was submitted to the
-	 *         {@link ThreadExecutor} and false if not
-	 */
-	boolean isSubmitted();
-
-	/**
-	 * Function to set the submitted boolean of the @{@link MonitoredThread},
-	 * which is done by the @{@link ThreadExecutor}. This function is called for
-	 * every Thread submitted to the {@link ThreadExecutor}
-	 * 
-	 * @param toSet
-	 *            the bool to set, either true, if the thread was submitted to
-	 *            the {@link ThreadExecutor} or false if not
-	 */
-	void setSubmitted(boolean toSet);
-
-	/**
-	 * 0.00 to 1.00 for finished
-	 * 
-	 * @param toSet
-	 *            the number to set
-	 */
-	void setProgress(SimpleDoubleProperty toSet);
 
 	/**
 	 * Returns the current progress of the monitored thread ranges from 0.0 for
@@ -81,30 +54,33 @@ public interface MonitoredThread {
 	 * Shall return a long which states the size in bytes which where already
 	 * sent or received
 	 * 
-	 * @return
+	 * @return a long which states the size in bytes which where already sent or
+	 *         received
 	 */
 	SimpleLongProperty getDoneSize();
 
 	/**
 	 * Returns the whole size in bytes which needs to be either received or sent
+	 * as a long
 	 * 
-	 * @return
+	 * @return whole size in bytes which needs to be either received or sent as
+	 *         a long
 	 */
 	long getWholeSize();
 
 	/**
 	 * Returns the name of the currently downloaded file
 	 * 
-	 * @return
+	 * @return the name of the currently downloaded file
 	 */
 	StringProperty getCurrentFileName();
 
 	/**
 	 * Returns the String which shall be displayed on the downloads widget, for
-	 * a multiple download this should be the top dir and for a single file
+	 * a multiple download this should be the base/topdir and for a single file
 	 * download this should be the filename
 	 * 
-	 * @return
+	 * @return the String which shall be displayed on the downloads widget
 	 */
 	String getNameToDisplay();
 

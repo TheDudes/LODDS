@@ -8,6 +8,7 @@ import javafx.beans.property.SimpleStringProperty;
 import studyproject.API.Errors.ErrorFactory;
 import studyproject.API.Lvl.Mid.Core.FileCoreInfo;
 import studyproject.API.Lvl.Mid.Core.UserInfo;
+import studyproject.gui.mainWindow.filesTree.FilesTreeView;
 import studyproject.API.Lvl.Mid.FileConnectionThread;
 import studyproject.logging.LogKey;
 
@@ -16,24 +17,42 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
+ * This class manages the download of a "Folder" For each file a new
+ * {@link FileConnectionThread} is started serially after one was finished.
+ * 
  * @author ninti
  */
 public class MultipleDownloadHelper extends Thread implements MonitoredThread {
-	Vector<FileCoreInfo> assignedDownloads;
-	UserInfo user;
-	SimpleDoubleProperty progress = new SimpleDoubleProperty(0);
-	boolean submitted = false;
-	long wholeSize = 0;
-	SimpleLongProperty doneSize = new SimpleLongProperty(0);
-	SimpleStringProperty currentDownloadedFile = new SimpleStringProperty("");
-	String pathToDownloadTo = "";
-	boolean oneOfMultiple = false;
-	String baseDir = "";
-	Logger logger = Logger.getGlobal();
-	SimpleBooleanProperty finished = new SimpleBooleanProperty(false);
-	SimpleBooleanProperty running = new SimpleBooleanProperty(true);
-	FileConnectionThread currentFileConnectionThread = null;
+	private Vector<FileCoreInfo> assignedDownloads;
+	private UserInfo user;
+	private SimpleDoubleProperty progress = new SimpleDoubleProperty(0);
+	private long wholeSize = 0;
+	private SimpleLongProperty doneSize = new SimpleLongProperty(0);
+	private SimpleStringProperty currentDownloadedFile = new SimpleStringProperty("");
+	private String pathToDownloadTo = "";
+	private boolean oneOfMultiple = false;
+	private String baseDir = "";
+	private Logger logger = Logger.getGlobal();
+	private SimpleBooleanProperty finished = new SimpleBooleanProperty(false);
+	private SimpleBooleanProperty running = new SimpleBooleanProperty(true);
+	private FileConnectionThread currentFileConnectionThread = null;
 
+	/**
+	 * Creates a new Instance of {@link MultipleDownloadHelper} which starts a
+	 * {@link FileConnectionThread} for each {@link FileCoreInfo} given in the
+	 * Vector
+	 * 
+	 * @param assignedDownloads
+	 *            the vector list with {@link FileCoreInfo}s to download
+	 * @param user
+	 *            the user to get the files from
+	 * @param pathToDownloadTo
+	 *            the path to download the files to
+	 * @param baseDir
+	 *            the basedir aka the foldername which contains the files, aka
+	 *            the parent of the {@link FileCoreInfo}s in the
+	 *            {@link FilesTreeView}
+	 */
 	public MultipleDownloadHelper(Vector<FileCoreInfo> assignedDownloads, UserInfo user, String pathToDownloadTo,
 			String baseDir) {
 		this.assignedDownloads = assignedDownloads;
@@ -43,6 +62,9 @@ public class MultipleDownloadHelper extends Thread implements MonitoredThread {
 		determineWholeFileSize();
 	}
 
+	/**
+	 * calculates the size of the {@link FileCoreInfo} vector list
+	 */
 	private void determineWholeFileSize() {
 		for (FileCoreInfo info : assignedDownloads) {
 			wholeSize += info.getFilesize();
@@ -57,6 +79,7 @@ public class MultipleDownloadHelper extends Thread implements MonitoredThread {
 			Platform.runLater(() -> currentDownloadedFile.set(currentFile.getFileName()));
 			currentFileConnectionThread = new FileConnectionThread(user, currentFile.getChecksum(),
 					currentFile.getFilesize(), pathToDownloadTo + currentFile.getFilePath());
+			currentFileConnectionThread.setDaemon(true);
 			currentFileConnectionThread.setOneOfMultiple(true);
 			currentFileConnectionThread.getDoneSize().addListener((observable, oldValue, newValue) -> {
 				Platform.runLater(() -> {
@@ -64,6 +87,9 @@ public class MultipleDownloadHelper extends Thread implements MonitoredThread {
 					progress.set((double) doneSize.get() / (double) wholeSize);
 				});
 			});
+			// TODO ninti: thread was setted to daemon, but it's not submitted
+			// to the threadExeccutor from lodds, fix this when testing with
+			// others
 			currentFileConnectionThread.start();
 			try {
 				currentFileConnectionThread.join();
@@ -88,21 +114,6 @@ public class MultipleDownloadHelper extends Thread implements MonitoredThread {
 	@Override
 	public synchronized long getWholeSize() {
 		return wholeSize;
-	}
-
-	@Override
-	public synchronized boolean isSubmitted() {
-		return submitted;
-	}
-
-	@Override
-	public synchronized void setSubmitted(boolean toSet) {
-		this.submitted = toSet;
-	}
-
-	@Override
-	public synchronized void setProgress(SimpleDoubleProperty toSet) {
-		this.progress = toSet;
 	}
 
 	@Override

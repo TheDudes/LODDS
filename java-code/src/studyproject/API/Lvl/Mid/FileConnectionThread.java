@@ -35,7 +35,6 @@ public class FileConnectionThread extends Thread implements MonitoredThread {
 	private long endIndex = 0;
 	private boolean supportLoadbalancing = false;
 	private FileOutputStream fileOutStream;
-	private boolean submitted;
 	ProgressInfo progressInfo;
 	private final long chunksize = 1 << 21;
 	private SimpleLongProperty startIndex = new SimpleLongProperty(0L);
@@ -202,21 +201,6 @@ public class FileConnectionThread extends Thread implements MonitoredThread {
 		}
 		if (running.get() == false && finished.get() == false)
 			finished.setValue(true);
-	}
-
-	@Override
-	public boolean isSubmitted() {
-		return submitted;
-	}
-
-	@Override
-	public void setSubmitted(boolean toSet) {
-		submitted = toSet;
-	}
-
-	@Override
-	public synchronized void setProgress(SimpleDoubleProperty toSet) {
-		this.progress = toSet;
 	}
 
 	@Override
