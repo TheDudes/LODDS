@@ -17,26 +17,18 @@ import studyproject.gui.mainWindow.topMenu.TopMenuView;
  */
 public class MacDockMenuPresenter {
 
+	private TopMenuPresenter topMenuPresenter;
+
 	/**
 	 * Creates dock menu entries
 	 */
 	public void createMenus() {
+		topMenuPresenter = (TopMenuPresenter) (new TopMenuView()).getPresenter();
 		MenuItem shareFolder = new MenuItem("Share folder");
-		shareFolder.addActionListener(new ActionListener() {
-
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				// Share folder
-				Platform.runLater(new Runnable() {
-
-					@Override
-					public void run() {
-						((TopMenuPresenter) new TopMenuView().getPresenter()).shareFolderPressed();
-					}
-				});
-
-			}
-		});
+		// TODO gitmalong, this should work out fine without wrapping it in the
+		// fx application thread
+		// if not just revert this change
+		shareFolder.addActionListener(e -> topMenuPresenter.shareFolderPressed());
 
 		PopupMenu menu = new PopupMenu();
 		menu.add(shareFolder);
