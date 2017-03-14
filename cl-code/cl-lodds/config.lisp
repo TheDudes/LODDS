@@ -7,7 +7,8 @@
   (list "/etc/lodds.config"
         (format nil "~a.lodds.config"
                 (user-homedir-pathname))
-        (format nil "~a.config/lodds.config"
+        (format nil "~alodds.config"
+                (uiop:xdg-config-home)
                 (user-homedir-pathname))
         (format nil "./lodds.config")))
 
