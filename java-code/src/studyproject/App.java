@@ -119,7 +119,7 @@ public class App extends Application {
 
 	private void setMacIcons() {
 		try {
-			URL iconURL = Main.class.getResource(ICON_PATH + "lodds_icon64x64.png");
+			URL iconURL = getClass().getResource(ICON_PATH + "lodds.png");
 			java.awt.Image image = new ImageIcon(iconURL).getImage();
 			com.apple.eawt.Application.getApplication().setDockIconImage(image);
 		} catch (Exception e) {
