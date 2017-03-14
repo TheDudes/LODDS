@@ -23,7 +23,7 @@ import studyproject.logging.LogKey;
  *
  */
 public class Broadcast {
-
+	//TODO Where to set the user chosen ports if they are available
 	private static final int DEFAULT_PORT = 9002;
 	private static final int DEFAULT_PORT_SENDING = 9003;
 	private static final int DEFAULT_BUFFERSIZE = 2048;

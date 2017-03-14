@@ -26,12 +26,12 @@ public class TasksListPresenter implements Initializable {
 
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {
-		bindLoddsModelTaskGoTasksList();
+		bindLoddsModelTaskToTasksList();
 		monitoredThreadListView.setItems(tasksListModel.getTasks());
 		monitoredThreadListView.setCellFactory(monitoredThreadListView1 -> new SingleTaskListCell());
 	}
 
-	private void bindLoddsModelTaskGoTasksList() {
+	private void bindLoddsModelTaskToTasksList() {
 		mainWindowModel.getLodds().getLoddsModel().getTasksList()
 				.addListener(new ListChangeListener<MonitoredThread>() {
 					@Override
