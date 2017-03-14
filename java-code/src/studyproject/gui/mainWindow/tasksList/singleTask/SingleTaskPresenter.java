@@ -6,6 +6,8 @@ import javafx.fxml.Initializable;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ProgressBar;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import studyproject.API.Lvl.Mid.ThreadMonitoring.MonitoredThread;
 import studyproject.gui.mainWindow.MainWindowModel;
 
@@ -35,13 +37,24 @@ public class SingleTaskPresenter implements Initializable {
 	@Inject
 	MainWindowModel mainWindowModel;
 
+	private ImageView cancelButtonIV;
+
 	@Override
 	public void initialize(URL url, ResourceBundle resourceBundle) {
+		cancelButtonIV = new ImageView();
+		cancelButtonIV.setPreserveRatio(true);
+		cancelButtonIV.setFitWidth(12.0);
+		cancelButtonIV.setFitHeight(12.0);
 	}
 
-	public void setMonitoredThread(MonitoredThread monitoredThread) {
+	public void setMonitoredThread(MonitoredThread monitoredThread, Image cancelButtonImage) {
 		this.monitoredThread = monitoredThread;
 		cancel.setOnAction((e) -> this.monitoredThread.setRunning(false));
+
+		cancel.setText(null);
+		cancelButtonIV.setImage(cancelButtonImage);
+		cancel.setGraphic(cancelButtonIV);
+
 		progressBar.progressProperty().bindBidirectional(this.monitoredThread.getProgress());
 		currentFileLabel.textProperty().bindBidirectional(this.monitoredThread.getCurrentFileName());
 		folderFileNameLabel.setText(this.monitoredThread.getNameToDisplay());

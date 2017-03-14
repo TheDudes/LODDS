@@ -17,6 +17,9 @@ import javafx.collections.transformation.FilteredList;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.*;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
+import studyproject.App;
 import studyproject.API.Errors.ErrorFactory;
 import studyproject.API.Lvl.Mid.Core.FileCoreInfo;
 import studyproject.API.Lvl.Mid.Core.UserInfo;
@@ -47,6 +50,9 @@ public class FilesTreePresenter implements Initializable {
 
 	private final TreeItem<FileCoreInfo> root = new TreeItem<FileCoreInfo>();
 	private FilteredList<TreeItem<FileCoreInfo>> filteredFileList;
+	private final Image fileImage = new Image(getClass().getResourceAsStream("/studyproject/resources/file.png"));
+	private final Image refreshImage = new Image(getClass().getResourceAsStream("/studyproject/resources/reload.png"),
+			16, 16, true, true);
 
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {
@@ -66,6 +72,13 @@ public class FilesTreePresenter implements Initializable {
 			filesTreeSearchChanged();
 		});
 		filteredFileList = new FilteredList<TreeItem<FileCoreInfo>>(root.getChildren(), p -> true);
+
+		// style button
+		if (Boolean.valueOf(App.properties.getProperty("icons"))) {
+			filesTreeRefresh.setGraphic(new ImageView(refreshImage));
+			filesTreeRefresh.setText(null);
+		}
+
 	}
 
 	public void createTree(UserInfo userInfo) {
@@ -98,9 +111,22 @@ public class FilesTreePresenter implements Initializable {
 		}
 		if (index == subPaths.length - 1) {
 			// ADD THE FILE
-			parent.getChildren().add(new TreeItem<FileCoreInfo>(infoToAdd));
+			
+			//if icons property set style with icon
+			if (Boolean.valueOf(App.properties.getProperty("icons"))) {
+				ImageView imageView = new ImageView();
+				imageView.setPreserveRatio(true);
+				imageView.setFitHeight(16);
+				imageView.setFitWidth(16);
+				imageView.setImage(fileImage);
+				parent.getChildren().add(new TreeItem<FileCoreInfo>(infoToAdd, new ImageView(fileImage)));
+			} else {
+				parent.getChildren().add(new TreeItem<FileCoreInfo>(infoToAdd));
+			}
 			// return child.size();
-		} else {
+		} else
+
+		{
 			// ADD new folder and recur with it
 			String folderPath;
 			if (parent.equals(root)) {

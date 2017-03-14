@@ -1,0 +1,28 @@
+.tree-cell .tree-disclosure-node .arrow {
+    -fx-shape: null;
+    -fx-padding: 0 16 16 0;
+    -fx-background-color: null;
+    -fx-background-repeat: no-repeat;
+    -fx-background-image: url("/studyproject/resources/folder-closed.png");
+}
+.tree-cell:expanded .tree-disclosure-node .arrow {
+    -fx-shape: null;
+    -fx-padding: 0 16 16 0;
+    -fx-background-repeat: false;
+    -fx-background-color: no-repeat;
+    -fx-background-image: url("/studyproject/resources/folder-open.png");
+}
+
+.tree-cell {
+    -fx-padding: 0em 0em 0em 0em;
+}
+
+.tree-cell:sub-tree-item {
+    -fx-padding: 0em 0em 0em 0em;
+}
+
+.tree-cell:expanded > .tree-disclosure-node > .arrow,
+.tree-table-row-cell:expanded > .tree-disclosure-node > .arrow {
+    -fx-rotate: 360;
+}
+

@@ -2,9 +2,7 @@ package studyproject.gui.mainWindow.usersList;
 
 import java.net.URL;
 import java.util.ResourceBundle;
-
 import javax.inject.Inject;
-
 import javafx.application.Platform;
 import javafx.collections.ListChangeListener;
 import javafx.collections.transformation.FilteredList;
@@ -13,8 +11,13 @@ import javafx.fxml.Initializable;
 import javafx.scene.control.Button;
 import javafx.scene.control.ListView;
 import javafx.scene.control.TextField;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
+import studyproject.App;
 import studyproject.API.Lvl.Mid.Core.UserInfo;
 import studyproject.gui.mainWindow.MainWindowModel;
+import studyproject.gui.mainWindow.topMenu.TopMenuPresenter;
+import studyproject.gui.mainWindow.topMenu.TopMenuView;
 
 public class UsersListPresenter implements Initializable {
 
@@ -31,6 +34,10 @@ public class UsersListPresenter implements Initializable {
 
 	private FilteredList<UserInfo> filteredUserList;
 
+	private final Image refreshImage = new Image(getClass().getResourceAsStream("/studyproject/resources/reload.png"),
+			16, 16, true, true);
+	private TopMenuPresenter topMenuPresenter = (TopMenuPresenter) (new TopMenuView()).getPresenter();
+
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {
 		linkLoddsUserList();
@@ -39,6 +46,11 @@ public class UsersListPresenter implements Initializable {
 		usersListV.setItems(filteredUserList);
 		addUsersSearchListener();
 		refreshUsers.setOnAction(e -> refreshUsers());
+		if (Boolean.valueOf(App.properties.getProperty("icons"))) {
+			addListViewCellFactory();
+			refreshUsers.setGraphic(new ImageView(refreshImage));
+			refreshUsers.setText(null);
+		}
 	}
 
 	private void addUserListMouseClickSelection() {
@@ -82,6 +94,10 @@ public class UsersListPresenter implements Initializable {
 		});
 	}
 
+	private void addListViewCellFactory() {
+		usersListV.setCellFactory(param -> new UsersListCell(topMenuPresenter));
+	}
+
 	private void addUsersSearchListener() {
 		usersSearch.textProperty().addListener(l -> {
 			if (usersSearch.textProperty().get() == null || usersSearch.textProperty().get().isEmpty()) {
@@ -91,7 +107,7 @@ public class UsersListPresenter implements Initializable {
 			}
 		});
 	}
-	
+
 	private void refreshUsers() {
 		mainWindowModel.getLodds().getLoddsModel().getClientList().clear();
 	}

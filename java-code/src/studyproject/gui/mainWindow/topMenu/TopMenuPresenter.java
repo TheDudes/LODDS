@@ -21,6 +21,7 @@ import javafx.stage.Stage;
 import studyproject.App;
 import studyproject.API.Core.File.FileInfo;
 import studyproject.API.Errors.ErrorFactory;
+import studyproject.API.Lvl.Mid.Core.UserInfo;
 import studyproject.gui.Core.Utils;
 import studyproject.gui.aboutWindow.AboutWindowView;
 import studyproject.gui.mainWindow.MainWindowModel;
@@ -55,7 +56,7 @@ public class TopMenuPresenter implements Initializable {
 
 		settingsItem.setOnAction(e -> settingsItemPressed());
 		shareFolder.setOnAction(e -> shareFolderPressed());
-		sendFileToUser.setOnAction(e -> sendFileToUser());
+		sendFileToUser.setOnAction(e -> sendFileToUser(usersListModel.getSelectedUser().get()));
 		aboutItem.setOnAction(e -> aboutItemPressed());
 
 		if (Utils.osIsMac()) {
@@ -88,10 +89,12 @@ public class TopMenuPresenter implements Initializable {
 	/**
 	 * Send one file to the selected User from the usersList
 	 */
-	private void sendFileToUser() {
-		String userName = usersListModel.getSelectedUser().get().getUserName();
+	public void sendFileToUser(UserInfo userInfo) {
+		String userName = userInfo.getUserName();
 		long timeout = Long.parseLong((String) App.properties.get("getPermissionTimeout")) * 1000;
 		File file = Utils.getChoosenFile("Select File to share");
+		if (file == null)
+			return;
 		FileInfo fileInfo;
 		try {
 			fileInfo = new FileInfo(file.getPath(), file.getPath());

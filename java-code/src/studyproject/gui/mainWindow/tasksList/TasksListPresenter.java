@@ -8,7 +8,7 @@ import javax.inject.Inject;
 import javafx.application.Platform;
 import javafx.collections.ListChangeListener;
 import javafx.scene.control.ListView;
-
+import javafx.scene.image.Image;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import studyproject.API.Lvl.Mid.ThreadMonitoring.MonitoredThread;
@@ -24,11 +24,13 @@ public class TasksListPresenter implements Initializable {
 	@Inject
 	MainWindowModel mainWindowModel;
 
+	private final Image cancelButtonImage = new Image(getClass().getResourceAsStream("/studyproject/resources/x.png"));
+
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {
 		bindLoddsModelTaskToTasksList();
 		monitoredThreadListView.setItems(tasksListModel.getTasks());
-		monitoredThreadListView.setCellFactory(monitoredThreadListView1 -> new SingleTaskListCell());
+		monitoredThreadListView.setCellFactory(monitoredThreadListView1 -> new SingleTaskListCell(cancelButtonImage));
 	}
 
 	private void bindLoddsModelTaskToTasksList() {
