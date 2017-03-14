@@ -111,24 +111,23 @@ public class App extends Application {
 		if (Utils.osIsMac()) {
 			MacDockMenuPresenter dockMenu = new MacDockMenuPresenter();
 			dockMenu.createMenus();
+			setMacIcons();
 		}
 
 	}
 
-	private void setIcons() {
-		mainStage.getIcons().add(new Image("/studyproject/resources/lodds_icon16x16.png"));
-		mainStage.getIcons().add(new Image("/studyproject/resources/lodds_icon32x32.png"));
-		mainStage.getIcons().add(new Image("/studyproject/resources/lodds_icon64x64.png"));
-
-		if (Utils.osIsMac()) {
-			try {
-				URL iconURL = Main.class.getResource("/studyproject/resources/lodds_icon64x64.png");
-				java.awt.Image image = new ImageIcon(iconURL).getImage();
-				com.apple.eawt.Application.getApplication().setDockIconImage(image);
-			} catch (Exception e) {
-				// Won't work on Windows or Linux.
-			}
+	private void setMacIcons() {
+		try {
+			URL iconURL = Main.class.getResource("/studyproject/resources/lodds_icon64x64.png");
+			java.awt.Image image = new ImageIcon(iconURL).getImage();
+			com.apple.eawt.Application.getApplication().setDockIconImage(image);
+		} catch (Exception e) {
+			// Won't work on Windows or Linux.
 		}
+	}
+
+	private void setIcons() {
+		mainStage.getIcons().add(new Image(getClass().getResourceAsStream("resources/lodds.png")));
 	}
 
 	@Override
