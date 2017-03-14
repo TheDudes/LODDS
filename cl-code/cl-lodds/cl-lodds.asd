@@ -16,7 +16,9 @@
                :cl-ppcre
                :bordeaux-threads
                :cl-fs-watcher
-               :lparallel)
+               :lparallel
+               :uiop
+               :asdf)
   :components ((:file "package")
                (:file "core")
                (:file "config")
