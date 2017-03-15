@@ -86,10 +86,10 @@ public class Responses {
 	 */
 	public static int respondFile(BufferedOutputStream socketStream,
 			FileInputStream fileStream, long startIndex, long endIndex) {
+		byte[] readBuffer = new byte[BUFFERSIZE];
+		int toRead;
+		long currentPosition = 0;
 		try {
-			byte[] readBuffer = new byte[BUFFERSIZE];
-			int toRead;
-			long currentPosition = 0;
 			// go to the starting index and skip all info until then
 			while (currentPosition < startIndex) {
 				if ((startIndex - currentPosition) > BUFFERSIZE) {
@@ -115,6 +115,10 @@ public class Responses {
 			}
 		} catch (IOException e) {
 			return 1;
+		} finally {
+			if(currentPosition < endIndex){
+				Load.decrementLoad(endIndex - currentPosition);
+			}
 		}
 		return 0;
 	}
