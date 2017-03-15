@@ -109,22 +109,22 @@ public class App extends Application {
 		mainWindowPresenter = (MainWindowPresenter) mainView.getPresenter();
 		mainWindowPresenter.loadInterface();
 
-		if (Boolean.valueOf(App.properties.getProperty("icons")))
+		if (Boolean.valueOf(App.properties.getProperty("icons"))) {
 			setIcons();
 
-		if (Utils.osIsMac()) {
-			MacDockMenuPresenter dockMenu = new MacDockMenuPresenter();
-			dockMenu.createMenus();
-			setMacIcons();
+			if (Utils.osIsMac()) {
+				MacDockMenuPresenter dockMenu = new MacDockMenuPresenter();
+				dockMenu.createMenus();
+				setMacIcons();
+			}
 		}
-
 	}
 
 	private void setMacIcons() {
 		try {
 			URL iconURL = getClass().getResource(ICON_PATH + "lodds.png");
 			java.awt.Image image = new ImageIcon(iconURL).getImage();
-			// com.apple.eawt.Application.getApplication().setDockIconImage(image);
+			com.apple.eawt.Application.getApplication().setDockIconImage(image);
 		} catch (Exception e) {
 			// Won't work on Windows or Linux.
 		}
