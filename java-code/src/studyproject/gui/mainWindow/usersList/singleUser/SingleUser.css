@@ -1,0 +1,41 @@
+.column-header-background {
+    -fx-max-height: 0;
+    -fx-pref-height: 0;
+    -fx-min-height: 0;
+}
+
+.table-view{
+    -fx-background-color: white;
+    -fx-border-color: white;
+}
+
+.table-row-cell{
+    -fx-border-color: white;
+    -fx-table-cell-border-color:white;
+    -fx-background-insets: 0, 0 0 0 0;
+    -fx-padding: 0.0em; /* 0 */
+}
+
+.table-row-cell:selected{
+    -fx-background-color: lightgrey;
+    -fx-border-color: lightgrey;
+    -fx-table-cell-border-color:lightgrey;
+    -fx-background-insets: 0, 0 0 0 0;
+    -fx-padding: 0.0em; /* 0 */
+}
+
+.table-row-cell:odd{
+    -fx-background-color: #F5F5F5;
+    -fx-border-color: #F5F5F5;
+    -fx-table-cell-border-color: #F5F5F5;
+    -fx-background-insets: 0, 0 0 0 0;
+    -fx-padding: 0.0em; /* 0 */
+}
+
+.table-row-cell:odd:selected{
+    -fx-background-color: lightgrey;
+    -fx-border-color: lightgrey;
+    -fx-table-cell-border-color:lightgrey;
+    -fx-background-insets: 0, 0 0 0 0;
+    -fx-padding: 0.0em; /* 0 */
+}
