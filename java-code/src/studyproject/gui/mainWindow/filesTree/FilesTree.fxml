@@ -9,7 +9,7 @@
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
 
-<VBox xmlns="http://javafx.com/javafx/8.0.111" xmlns:fx="http://javafx.com/fxml/1" fx:controller="studyproject.gui.mainWindow.filesTree.FilesTreePresenter">
+<VBox xmlns="http://javafx.com/javafx/8.0.65" xmlns:fx="http://javafx.com/fxml/1" fx:controller="studyproject.gui.mainWindow.filesTree.FilesTreePresenter">
    <children>
       <HBox VBox.vgrow="NEVER">
          <children>
@@ -17,7 +17,7 @@
             <Button fx:id="filesTreeRefresh" mnemonicParsing="false" text="Refresh" />
          </children>
       </HBox>
-      <TreeView fx:id="filesTreeView" prefHeight="200.0" prefWidth="200.0" VBox.vgrow="ALWAYS">
+      <TreeView fx:id="filesTreeView" fixedCellSize="20.0" prefHeight="200.0" prefWidth="200.0" VBox.vgrow="ALWAYS">
          <contextMenu>
             <ContextMenu>
               <items>

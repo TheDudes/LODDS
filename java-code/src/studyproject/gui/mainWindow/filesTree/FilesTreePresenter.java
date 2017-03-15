@@ -55,14 +55,9 @@ public class FilesTreePresenter implements Initializable {
 
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {
-		if(Boolean.valueOf(App.properties.getProperty("icons"))) {
-			fileImage = new Image(getClass().getResourceAsStream(App.ICON_PATH + "file.png"));
-			refreshImage = new Image(getClass().getResourceAsStream(App.ICON_PATH + "reload.png"), 16, 16, true, true);
-		}
 		filesTreeView.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
 		filesTreeView.setShowRoot(false);
 		filesTreeView.setRoot(root);
-		// TODO images are not loaded safely asking for the icons property
 		downloadButton.setOnAction(e -> downloadPressed());
 		userListModel.getSelectedUser().addListener(new ChangeListener<UserInfo>() {
 			@Override
@@ -79,6 +74,8 @@ public class FilesTreePresenter implements Initializable {
 
 		// style button
 		if (Boolean.valueOf(App.properties.getProperty("icons"))) {
+			fileImage = new Image(getClass().getResourceAsStream(App.ICON_PATH + "file.png"));
+			refreshImage = new Image(getClass().getResourceAsStream(App.ICON_PATH + "reload.png"), 16, 16, true, true);
 			filesTreeRefresh.setGraphic(new ImageView(refreshImage));
 			filesTreeRefresh.setText(null);
 		}
@@ -120,8 +117,8 @@ public class FilesTreePresenter implements Initializable {
 			if (Boolean.valueOf(App.properties.getProperty("icons"))) {
 				ImageView imageView = new ImageView();
 				imageView.setPreserveRatio(true);
-				imageView.setFitHeight(16);
-				imageView.setFitWidth(16);
+				imageView.setFitHeight(18);
+				imageView.setFitWidth(18);
 				imageView.setImage(fileImage);
 				parent.getChildren().add(new TreeItem<FileCoreInfo>(infoToAdd, new ImageView(fileImage)));
 			} else {
