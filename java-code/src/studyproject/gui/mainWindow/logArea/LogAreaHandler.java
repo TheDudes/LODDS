@@ -29,6 +29,7 @@ public class LogAreaHandler extends Handler {
 	private SimpleBooleanProperty getRec;
 	private SimpleBooleanProperty getSent;
 	private SimpleBooleanProperty broadcast;
+	private boolean wasRemoved;
 
 	/**
 	 * Creates a new instance of an LogAreaHandler
@@ -108,24 +109,17 @@ public class LogAreaHandler extends Handler {
 		if (!isLoggable(record))
 			return;
 		if (shouldBeLogged((Error) record)) {
-
-			Platform.runLater(new Runnable() {
-				boolean wasRemoved = false;
-
-				@Override
-				public void run() {
-					if (toLogTo.getItems().size() >= MAX_LOG_MSG_COUNT) {
-						toLogTo.getItems().remove(0);
-						wasRemoved = true;
-					}
-					toLogTo.getItems().add((Error) record);
-
-					if (wasRemoved)
-						virtualFlow.scrollToOffset(-1);
-
+			wasRemoved = false;
+			Platform.runLater(() -> {
+				if (toLogTo.getItems().size() >= MAX_LOG_MSG_COUNT) {
+					toLogTo.getItems().remove(0);
+					wasRemoved = true;
 				}
-			});
+				toLogTo.getItems().add((Error) record);
 
+				if (wasRemoved)
+					virtualFlow.scrollToOffset(-1);
+			});
 		}
 	}
 
