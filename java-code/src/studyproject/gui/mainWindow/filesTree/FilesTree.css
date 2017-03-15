@@ -3,14 +3,14 @@
     -fx-padding: 0 16 16 0;
     -fx-background-color: null;
     -fx-background-repeat: no-repeat;
-    -fx-background-image: url("/studyproject/resources/folder-closed.png");
+    -fx-background-image: url("/studyproject/resources/lodds_icon/folder-closed.png");
 }
 .tree-cell:expanded .tree-disclosure-node .arrow {
     -fx-shape: null;
     -fx-padding: 0 16 16 0;
-    -fx-background-repeat: false;
-    -fx-background-color: no-repeat;
-    -fx-background-image: url("/studyproject/resources/folder-open.png");
+    -fx-background-repeat: no-repeat;
+    -fx-background-color: null;
+    -fx-background-image: url("/studyproject/resources/lodds_icon/folder-open.png");
 }
 
 .tree-cell {
