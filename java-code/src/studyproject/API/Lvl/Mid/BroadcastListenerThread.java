@@ -82,6 +82,8 @@ public class BroadcastListenerThread extends Thread {
 			long currentTime = System.currentTimeMillis() / 1000;
 
 			for (int index = 0; index < clientList.size();) {
+				// TODO somehow this is not counting further on, since the
+				// thread dies if the other client closes connection?
 				if (((clientList.get(index).getLastReceivedBroadcast() + 5) < currentTime)
 						&& (clientList.get(index).getLastReceivedBroadcast() != 0)) {
 					logger.log(ErrorFactory.build(Level.WARNING, LogKey.warning,
