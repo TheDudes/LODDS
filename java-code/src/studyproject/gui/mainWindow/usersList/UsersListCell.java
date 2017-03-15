@@ -28,8 +28,8 @@ public class UsersListCell extends ListCell<UserInfo> {
 
 		if (Boolean.valueOf(App.properties.getProperty("icons"))) {
 			// load images
-			userImage = new Image(getClass().getResourceAsStream("/studyproject/resources/user.png"));
-			sendFileImage = new Image(getClass().getResourceAsStream("/studyproject/resources/send-file.png"));
+			userImage = new Image(getClass().getResourceAsStream(App.ICON_PATH + "user.png"));
+			sendFileImage = new Image(getClass().getResourceAsStream(App.ICON_PATH + "send-file.png"));
 
 			// image view for user icon
 			userIV.setFitWidth(20);
