@@ -50,12 +50,15 @@ public class FilesTreePresenter implements Initializable {
 
 	private final TreeItem<FileCoreInfo> root = new TreeItem<FileCoreInfo>();
 	private FilteredList<TreeItem<FileCoreInfo>> filteredFileList;
-	private final Image fileImage = new Image(getClass().getResourceAsStream(App.ICON_PATH + "file.png"));
-	private final Image refreshImage = new Image(getClass().getResourceAsStream(App.ICON_PATH + "reload.png"), 16, 16,
-			true, true);
+	private Image fileImage;
+	private Image refreshImage;
 
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {
+		if(Boolean.valueOf(App.properties.getProperty("icons"))) {
+			fileImage = new Image(getClass().getResourceAsStream(App.ICON_PATH + "file.png"));
+			refreshImage = new Image(getClass().getResourceAsStream(App.ICON_PATH + "reload.png"), 16, 16, true, true);
+		}
 		filesTreeView.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
 		filesTreeView.setShowRoot(false);
 		filesTreeView.setRoot(root);

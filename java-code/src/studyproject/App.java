@@ -89,6 +89,9 @@ public class App extends Application {
 	@Override
 	public void start(Stage mainStage) throws Exception {
 		this.mainStage = mainStage;
+		// TODO ninti java.lang.ClassNotFoundException:
+		// com.sun.deploy.uitoolkit.impl.fx.HostServicesFactory
+		// on laptop
 		App.hostServices = this.getHostServices();
 		mainStage.setTitle("Local Open Distributed Data Sharing");
 		if (properties.getProperty("windowMaximized").equals("true")) {
@@ -121,7 +124,7 @@ public class App extends Application {
 		try {
 			URL iconURL = getClass().getResource(ICON_PATH + "lodds.png");
 			java.awt.Image image = new ImageIcon(iconURL).getImage();
-			com.apple.eawt.Application.getApplication().setDockIconImage(image);
+			// com.apple.eawt.Application.getApplication().setDockIconImage(image);
 		} catch (Exception e) {
 			// Won't work on Windows or Linux.
 		}

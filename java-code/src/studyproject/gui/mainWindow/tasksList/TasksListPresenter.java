@@ -25,10 +25,13 @@ public class TasksListPresenter implements Initializable {
 	@Inject
 	MainWindowModel mainWindowModel;
 
-	private final Image cancelButtonImage = new Image(getClass().getResourceAsStream(App.ICON_PATH + "x.png"));
+	private Image cancelButtonImage;
 
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {
+		if (Boolean.valueOf(App.properties.getProperty("icons"))) {
+			cancelButtonImage = new Image(getClass().getResourceAsStream(App.ICON_PATH + "x.png"));
+		}
 		bindLoddsModelTaskToTasksList();
 		monitoredThreadListView.setItems(tasksListModel.getTasks());
 		monitoredThreadListView.setCellFactory(monitoredThreadListView1 -> new SingleTaskListCell(cancelButtonImage));

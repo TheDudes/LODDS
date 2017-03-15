@@ -34,8 +34,7 @@ public class UsersListPresenter implements Initializable {
 
 	private FilteredList<UserInfo> filteredUserList;
 
-	private final Image refreshImage = new Image(getClass().getResourceAsStream(App.ICON_PATH + "reload.png"),
-			16, 16, true, true);
+	private Image refreshImage;
 	private TopMenuPresenter topMenuPresenter = (TopMenuPresenter) (new TopMenuView()).getPresenter();
 
 	@Override
@@ -47,6 +46,7 @@ public class UsersListPresenter implements Initializable {
 		addUsersSearchListener();
 		refreshUsers.setOnAction(e -> refreshUsers());
 		if (Boolean.valueOf(App.properties.getProperty("icons"))) {
+			refreshImage = new Image(getClass().getResourceAsStream(App.ICON_PATH + "reload.png"), 16, 16, true, true);
 			addListViewCellFactory();
 			refreshUsers.setGraphic(new ImageView(refreshImage));
 			refreshUsers.setText(null);
