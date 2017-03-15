@@ -68,7 +68,7 @@
     (lodds.core:split-user-identifier (name ip port) user
       (q+:set-tool-tip send-file-button
                        (format nil
-                               "Click to Select and Send a file to User ~a"
+                               "Click to select and send a file to user ~a"
                                name))
       (qdoto new-entry
              (q+:set-text +user-list-name+ name)
@@ -172,7 +172,7 @@
                 ((lodds.core:directory-exists filepath)
                  (make-instance
                   'dialog
-                  :title (format nil "Error - Cannot send Directory (~a)"
+                  :title (format nil "Error - Cannot send directory (~a)"
                                  filepath)
                   :text "Its not possible to send a directory, select a file please."))
                 ((lodds.core:file-exists filepath)

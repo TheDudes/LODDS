@@ -35,9 +35,9 @@ others)
              (q+:set-tool-tip
               (format nil
                       "Directory ~a is currently busy~%~
-                      This means some files where added or removed~%~
-                      And the Directory Watcher is currently generating~%~
-                      Checksums for the new files."
+                      which means some files where added or removed~%~
+                      and the directory watcher is currently generating~%~
+                      checksums for the new files."
                       (q+:text entry +shared-path+))))
       (q+:set-item-widget directories
                           entry
@@ -85,7 +85,7 @@ others)
                              ""))
            (q+:set-tool-tip +shared-path+
                             (format nil
-                                    "Click the button on the Right ~
+                                    "Click the button on the right ~
                                     to unshare ~a"
                                     dir))
            (q+:set-status-tip +shared-path+

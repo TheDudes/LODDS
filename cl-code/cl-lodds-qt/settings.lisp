@@ -301,7 +301,7 @@
           (lodds.config:load-from-file file-choosen config)
         (if error
             (make-instance 'dialog
-                           :title "Error Reading Config File"
+                           :title "Error reading config file"
                            :text error)
             (progn
               (setf config new-config)
@@ -318,7 +318,7 @@
                                                  config)))
             (when err
               (make-instance 'dialog
-                             :title "ERROR - Wrong Setting"
+                             :title "ERROR - Wrong setting"
                              :text (format nil "Error on setting key: ~a~%~a"
                                            key
                                            err))

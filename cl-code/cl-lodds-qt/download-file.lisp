@@ -19,7 +19,7 @@
 (define-subwidget (download-file filename)
     (q+:make-qlineedit download-file)
   (q+:set-tool-tip filename
-                   (format nil "Local Filename of the downloaded file.~%~
+                   (format nil "Local filename of the downloaded file.~%~
                                Can be changed to rename the file.")))
 
 (define-subwidget (download-file folder)
@@ -27,7 +27,7 @@
   (let* ((completer (q+:make-qcompleter download-file))
          (dir-model (q+:make-qdirmodel completer)))
     (q+:set-tool-tip folder
-                     (format nil "Local Folder where the file will~%~
+                     (format nil "Local folder where the file will~%~
                                  be saved."))
     (q+:set-filter dir-model (q+:qdir.dirs))
     (q+:set-model completer dir-model)
@@ -86,19 +86,19 @@
          (progn
            (make-instance 'dialog
                           :title "Error - No Directory selected"
-                          :text "Please select a Directory")
+                          :text "Please select a directory")
            nil))
         ((not (lodds.core:directory-exists directory))
          (progn
            (make-instance 'dialog
                           :title "Error - Directory does not exists"
-                          :text "Please select a Directory which exists")
+                          :text "Please select a directory which exists")
            nil))
         ((eql 0 (length filename))
          (progn
            (make-instance 'dialog
-                          :title "Error - No Filename given"
-                          :text "Please select a Filename")
+                          :title "Error - No filename given"
+                          :text "Please select a filename")
            nil))
         (t (progn
              (lodds:get-file (concatenate 'string
@@ -111,8 +111,8 @@
 
 (defun open-download-file-dialog (checksum name size users)
   (make-instance 'dialog
-                 :title "Download File"
-                 :text (format nil "Download File ~a" name)
+                 :title "Download file"
+                 :text (format nil "Download file ~a" name)
                  :widget
                  (make-instance 'download-file
                                 :name name

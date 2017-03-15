@@ -14,8 +14,8 @@
   (let* ((completer (q+:make-qcompleter download-folder))
          (dir-model (q+:make-qdirmodel completer)))
     (q+:set-tool-tip folder
-                     (format nil "Local Folder where the downloaded~%~
-                                 Folder will be saved."))
+                     (format nil "Local folder where the downloaded~%~
+                                 folder will be saved."))
     (q+:set-filter dir-model (q+:qdir.dirs))
     (q+:set-model completer dir-model)
     (q+:set-completer folder completer)
@@ -60,14 +60,14 @@
         ((eql 0 (length directory))
          (progn
            (make-instance 'dialog
-                          :title "Error - No Directory selected"
-                          :text "Please select a Directory")
+                          :title "Error - No directory selected"
+                          :text "Please select a directory")
            nil))
         ((not (lodds.core:directory-exists directory))
          (progn
            (make-instance 'dialog
                           :title "Error - Directory does not exists"
-                          :text "Please select a Directory which exists")
+                          :text "Please select a directory which exists")
            nil))
         (t (progn
              (lodds:get-folder full-dir
@@ -77,8 +77,8 @@
 
 (defun open-download-folder-dialog (fullpath dir user size files)
   (make-instance 'dialog
-                 :title "Download Folder"
-                 :text (format nil "Download Folder ~a" fullpath)
+                 :title "Download folder"
+                 :text (format nil "Download folder ~a" fullpath)
                  :widget
                  (make-instance 'download-folder
                                 :dir-name dir

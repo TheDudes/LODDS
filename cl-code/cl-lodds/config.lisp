@@ -31,8 +31,8 @@ value (to verify the new value on change).
    (list :interface
          (car (lodds.core:get-interfaces))
          (format nil
-                 "Interface Lodds uses to get his own Ip and Broadcast~%~
-                 Address. You have to restart Lodds for changes to
+                 "Interface lodds uses to get his own ip and broadcast~%~
+                 address. You have to restart lodds for changes to
                  take effect~%~
                  Default: The first interface with an ip (excluding loopback)")
          :selection
@@ -48,7 +48,7 @@ value (to verify the new value on change).
    (list :port
          4567
          (format nil
-                 "The Port where Lodds is listning on for incomming~%~
+                 "The port where lodds is listning on for incomming~%~
                  requests. Value between 1024 and 65535.~%~
                  Restart is needed for changes to take effect.~%~
                  Default: 4567")
@@ -58,9 +58,9 @@ value (to verify the new value on change).
    (list :broadcast-port
          9002
          (format nil
-                 "The Port where Lodds will listen for Broadcast~%~
-                 Messages from other clients. This Port is also~%~
-                 used for advertisements of the Client (as expected,~%~
+                 "The port where lodds will listen for broadcast~%~
+                 messages from other clients. This port is also~%~
+                 used for advertisements of the client (as expected,~%~
                  i guess). Value between 1024 and 65535.~%~
                  Default: 9002")
          :integer
@@ -69,8 +69,8 @@ value (to verify the new value on change).
    (list :name
          (machine-instance)
          (format nil
-                 "Displayed/broadcasted name of Lodds Client.~%~
-                  Default: User Name of System")
+                 "Displayed/broadcasted name of lodds client.~%~
+                  Default: OS username")
          :string)
    (list :deny-requests
          nil
@@ -82,12 +82,12 @@ value (to verify the new value on change).
    (list :allow-unkown-user-send
          t
          (format nil
-                 "If a Send Request is received Lodds tries to~%~
-                 Figure out which user sent the request (via the~%~
-                 Ip). If the User does not Advertise himself~%~
-                 Lodds cannot determine the User who send the request~%~
-                 Since the user is unkown. If allow-unknown-user-send~%~
-                 is false, users which are unknown to Lodds wont~%~
+                 "If a send request is received lodds tries to~%~
+                 figure out which user sent the request (via the~%~
+                 ip). If the user does not advertise himself~%~
+                 lodds cannot determine the user who send the request~%~
+                 since the user is unkown. If allow-unknown-user-send~%~
+                 is false, users which are unknown to lodds wont~%~
                  be able to send files.~%~
                  Default: true")
          :boolean)
@@ -101,8 +101,8 @@ value (to verify the new value on change).
                  to be specified with ip and port in the following~%~
                  notation: username@ip:port~%~
                  for example: pete@192.168.2.100:1234~%~
-                 To get the ip and port of a user hover over the User~%~
-                 on the Userlist.~%~
+                 To get the ip and port of a user hover over the user~%~
+                 on the userlist.~%~
                  Default: empty")
          :list
          (lambda ()
@@ -111,13 +111,13 @@ value (to verify the new value on change).
          nil
          (format nil
                  "Comma seperated list of users which are not~%~
-                 trused. If a User on this list tries to send~%~
+                 trused. if a user on this list tries to send~%~
                  you a file, he will automatically be blocked.~%~
-                 Each user needs to be specified with ip and port~%~
+                 each user needs to be specified with ip and port~%~
                  in the following notation: username@ip:port~%~
-                 for example: pete@192.168.2.100:1234~%~
+                 For example: pete@192.168.2.100:1234~%~
                  To get the ip and port of a user hover over the~%~
-                 User on the Userlist.~%~
+                 user on the userlist.~%~
                  Default: empty")
          :list
          (lambda ()
@@ -156,9 +156,9 @@ value (to verify the new value on change).
    (list :incognito-mode
          nil
          (format nil
-                 "When Incognito Mode is on lodds the advertiser~%~
+                 "When Incognito mode is on lodds the advertiser~%~
                  will be stopped, this means other clients can not~%~
-                 Find you anymore and you cannot share your files~%~
+                 find you anymore and you cannot share your files~%~
                  them. You are still able to download files from them.~%~
                  Default: false")
          :boolean)
@@ -168,8 +168,8 @@ value (to verify the new value on change).
                  "Can be unchecked to not validate the checksum of~%~
                  downloaded files. Even if set to true, the checksum~%~
                  will only be validated when the file is getting~%~
-                 downloaded from multiple users (Folder download,~%~
-                 File download with user set to 'Any' or Multiple~%~
+                 downloaded from multiple users (folder download,~%~
+                 file download with user set to 'Any' or multiple~%~
                  selection download), because if the files gets~%~
                  directly downloaded from a user we dont trust~%~
                  he could just 'fake' the checksum too and the~%~
@@ -183,9 +183,9 @@ value (to verify the new value on change).
    (list :minimize-to-tray
          nil
          (format nil
-                 "If true Lodds will not Quit when being closed~%~
-                 and rather minimize to Tray. Lodds will always~%~
-                 quit when 'Quit' on the system tray or Menubar~%~
+                 "If true lodds will not quit when being closed~%~
+                 and rather minimize to tray. Lodds will always~%~
+                 quit when 'Quit' on the system tray or menubar~%~
                  is clicked.~%~
                  Default: false")
          :boolean)
@@ -193,14 +193,14 @@ value (to verify the new value on change).
          (format nil "~adownload/"
                  (user-homedir-pathname))
          (format nil
-                 "Default Download folder, where files get saved.~%~
-                 Default: download folder inside home directory.")
+                 "Default download folder, where files get saved.~%~
+                 Default: 'download' folder inside home directory.")
          :folder)
    (list :upload-folder
          (format nil "~aupload/"
                  (user-homedir-pathname))
          (format nil
-                 "Default Upload folder, incomming files will~%~
+                 "Default upload folder, incomming files will~%~
                  be saved there. If a 'trused-user' is sending~%~
                  a file, its saved there too.~%~
                  Default: upload folder inside home directory")
@@ -208,7 +208,7 @@ value (to verify the new value on change).
    (list :resources-folder
          "./res/"
          (format nil
-                 "Folder which contains resources for Lodds,~%~
+                 "Folder which contains resources for lodds,~%~
                  like icons, stylesheets, ...~%~
                  Changing this value will have no direct effect,~%~
                  Restart lodds (Lodds -> Restart), reload the~%~
@@ -220,7 +220,7 @@ value (to verify the new value on change).
    (list :timeout-send-file
          300
          (format nil
-                 "Default Timeout in seconds when sending a~%~
+                 "Default timeout in seconds when sending a~%~
                  file. Value between 1 and 3600~%~
                  Default: 300")
          :integer
@@ -250,7 +250,7 @@ value (to verify the new value on change).
          (format nil
                  "Timeout (in milliseconds) between checks~%~
                  if a directory is busy (This is used to~%~
-                 display the Spinner when a directory is~%~
+                 display the spinner when a directory is~%~
                  busy). Value between 50 and 100.000~%~
                  Default: 1000")
          :integer
@@ -259,9 +259,9 @@ value (to verify the new value on change).
    (list :log-message-max
          500
          (format nil
-                 "Maximum of displayed Log Messages. If a new entry~%~
-                 is logged, the oldest (top) will be removed. Value between~%~
-                 10 and 10000.~%~
+                 "Maximum of displayed log messages. If a new entry~%~
+                 is logged, the oldest (top) will be removed. Value~%~
+                 between 10 and 10000.~%~
                  Default: 500")
          :integer
          10

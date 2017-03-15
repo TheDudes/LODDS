@@ -18,8 +18,8 @@
     (q+:set-completer file completer))
   (q+:set-tool-tip file
                    (format nil
-                           "Selected File you want to send~%~
-                           to the selected User(s)."))
+                           "Selected file you want to send~%~
+                           to the selected user(s)."))
   (setf (q+:size-policy file)
         (values (q+:qsizepolicy.expanding)
                 (q+:qsizepolicy.fixed))))
@@ -47,8 +47,8 @@
     (q+:make-qspinbox send-file)
   (qdoto timeout
          (q+:set-tool-tip (format nil
-                                  "Timeout in Seconds the choosen~%~
-                                  User(s) have to accept the File.~%~
+                                  "Timeout in seconds the choosen~%~
+                                  user(s) have to accept the file.~%~
                                   If they do not accept withing the~%~
                                   the given timeout, the transfer~%~
                                   will be aborted."))
@@ -107,7 +107,7 @@
                      (q+:adjust-size (q+:parent send-file)))))))
   (qdoto show-users
          (q+:set-tool-tip (format nil
-                                  "Click to select multiple Users."))
+                                  "Click to select multiple users."))
          (q+:set-checkable t)
          (q+:set-minimum-width 400)
          (q+:set-checked nil)))
@@ -127,8 +127,8 @@
 
 (defun open-send-file-dialog (&optional user file)
   (make-instance 'dialog
-                 :title "Send File"
-                 :text "Select a File and a Timeout"
+                 :title "Send file"
+                 :text "Select a file and a timeout"
                  :widget (make-instance 'send-file
                                         :users-selected (if user
                                                             (list user)
@@ -149,11 +149,11 @@
                                      :finally (return t))
                                (progn
                                  (make-instance 'dialog
-                                                :title "Error - No Users selected"
-                                                :text "Please Select at least one User")
+                                                :title "Error - No users selected"
+                                                :text "Please select at least one user")
                                  nil))
                            (progn
                              (make-instance 'dialog
                                             :title "Error - File does not exist"
-                                            :text "Selected File does not exist")
+                                            :text "Selected file does not exist")
                              nil)))))))

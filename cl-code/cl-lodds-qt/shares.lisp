@@ -173,8 +173,8 @@ QTreeWidget in the middle, which displays all shared files
              (q+:set-tool-tip +shares-size+
                               (format nil "~:d bytes" size))
              (q+:set-tool-tip +shares-name+
-                              (format nil "Double Click, Right Click ~
-                              or Press Enter to Download.")))))
+                              (format nil "Double click, right click ~
+                              or press Enter to download.")))))
   (:method ((entry shares-entry-dir))
     (call-next-method)
     (with-slots (items widget path user size) entry
@@ -503,7 +503,7 @@ QTreeWidget in the middle, which displays all shared files
              (make-instance 'dialog
                             :title "Are you Sure?"
                             :text
-                            (format nil "This action would open ~a Info Dialogs.~%~
+                            (format nil "This action would open ~a info dialogs.~%~
                                         Are you sure that you want to proceed~%~
                                         (aka open ~a info dialogs)?"
                                     items

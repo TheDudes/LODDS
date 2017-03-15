@@ -27,7 +27,7 @@
     (q+:set-model completer dir-model)
     (qdoto folder
            (q+:set-tool-tip (format nil
-                                    "Local Folder where the incomming file.~%~
+                                    "Local folder where the incomming file.~%~
                                     will be saved."))
            (q+:set-completer completer))))
 
@@ -35,7 +35,7 @@
     (q+:make-qlineedit send-permission)
   (q+:set-tool-tip filename
                    (format nil
-                           "Local Filename of the incomming file.~%~
+                           "Local filename of the incomming file.~%~
                            Can be changed to rename the file.")))
 
 (define-subwidget (send-permission timer)
@@ -101,7 +101,7 @@
                      t)
                    (progn
                      (make-instance 'dialog
-                                    :title "Error - Invalid Input"
+                                    :title "Error - Invalid input"
                                     :text "The given input was invalid")
                      nil))))
            (cancel-fn (widget)
@@ -117,7 +117,7 @@
                      (format nil
                              "If you want to accept the File, ~
                              select a folder and a filename and ~
-                             click OK")
+                             click 'Accept'")
                      :widget widget
                      :ok-text "Accept"
                      :cancel-text "Deny"

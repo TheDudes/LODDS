@@ -1,35 +1,34 @@
 #|
 
-This File contains everything task realted. Tasks are Objects which
+This file contains everything task realted. Tasks are objects which
 hold information and a state. They get submitted to the tasker, which
-is basically a threadpool. When a Task gets selected by the threadpool
+is basically a threadpool. When a task gets selected by the threadpool
 it calls the run-task method with the given task. Each specific
 run-task is wraped with a :around method which catches and handles
 errors, cancelation, cleanup etc. While a task has :normal as state it
-gets resubmitted to the tasker. While a task exists he gets
+gets resubmitted to the tasker. When a task exists he gets
 resubmitted multiple times, since every run-task does just a bit of
 work and then returns and when no error occured it will be resubmitted
 to the tasker. This is done to not block the tasker and ensure the
-hanlding of more tasks than threads on the threadpool. Because while a
-task is active, he blocks (or uses) a thread from the threadpool,
-which would block the whole threadpool once there are more active
-tasks then threads.
+handling of more tasks than there are threads on the
+threadpool. Because while a task is active, he blocks (or uses) a
+thread from the threadpool, which would block the whole threadpool
+once there are more active tasks then threads.
 
 Most of the tasks get created and submitted to the tasker, which then
 runs them again and again until they are finished, then they get
 cleared up and deleted. But two tasks are special by not following
-this role. These tasks are task-get-folder and
-task-request. Task-get-folder for example wont 'do' anything, it just
-keeps a list of files (two to be honest, one for outstanding files,
-one for finished files) and just runs a task-get-file-from-users for
-each file. task-get-folder does not get resubmitted by default,
-instead the task-get-file-from-users resubmits it, once it finishes
-the file download succesfully.
-The other 'special' task is task-request, it gets created and
-submitted once a user request something, run-task on task-request will
-then figure out whats requested and submits another task with the
-information (one of task-request-file, task-request-info or
-task-request-send-permission).
+this role. These tasks are task-get-folder and task-request.
+Task-get-folder for example wont 'do' anything, it just keeps a list
+of files (two to be honest, one for outstanding files, one for
+finished files) and just runs a task-get-file-from-users for each
+file. task-get-folder does not get resubmitted by default, instead the
+task-get-file-from-users resubmits it, once it finishes the file
+download succesfully. The other 'special' task is task-request, it
+gets created and submitted once a user request something, run-task on
+task-request will then figure out whats requested and submits another
+task with the information (one of task-request-file, task-request-info
+or task-request-send-permission).
 
 |#
 

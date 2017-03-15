@@ -10,8 +10,8 @@
   (let* ((completer (q+:make-qcompleter download-multiple))
          (dir-model (q+:make-qdirmodel completer)))
     (q+:set-tool-tip folder
-                     (format nil "Local Folder where the selected Files~%~
-                                 and Folders will be saved."))
+                     (format nil "Local folder where the selected files~%~
+                                 and folders will be saved."))
     (q+:set-filter dir-model (q+:qdir.dirs))
     (q+:set-model completer dir-model)
     (q+:set-completer folder completer)
@@ -84,14 +84,14 @@
         ((eql 0 (length directory))
          (progn
            (make-instance 'dialog
-                          :title "Error - No Directory selected"
-                          :text "Please select a Directory")
+                          :title "Error - No directory selected"
+                          :text "Please select a directory")
            nil))
         ((not (lodds.core:directory-exists directory))
          (progn
            (make-instance 'dialog
                           :title "Error - Directory does not exists"
-                          :text "Please select a Directory which exists")
+                          :text "Please select a directory which exists")
            nil))
         (t (loop :for (type info) :in items
                  :do (case type
@@ -112,8 +112,8 @@
 
 (defun open-download-multiple-dialog (selected-items-infos)
   (make-instance 'dialog
-                 :title "Download Multiple"
-                 :text "Downloading Multiple Files"
+                 :title "Download multiple"
+                 :text "Downloading multiple files"
                  :widget
                  (make-instance 'download-multiple
                                 :items selected-items-infos)

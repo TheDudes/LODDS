@@ -43,7 +43,7 @@ functionality (for example system tray and status-info)
       (make-instance
        'dialog
        :title "Error - Interface not set!"
-       :text "Please select a Interface first."
+       :text "Please select a interface first."
        :widget (make-setting :interface
                              (slot-value lodds:*server*
                                          'lodds:settings))
@@ -79,8 +79,8 @@ functionality (for example system tray and status-info)
                 Version: ~a<br />
                 <br />
                 LODDS (Local Open Distributed Data Sharing) is a
-                protocol for Filesharing and the base for this
-                Program. This Program is a Qt Gui Client which
+                protocol for filesharing and the base for this
+                program. This program is a Qt gui client which
                 implements the LODDS Protocol and can be used to
                 share and exchange files with others inside a local
                 network.<br />
@@ -247,9 +247,9 @@ functionality (for example system tray and status-info)
                              "Lodds Minimized"
                              (format nil
                                      "Lodds is still running in the~%~
-                                     Background. This Behaviour can~%~
+                                     background. This behaviour can~%~
                                      be changed in the settings. Click~%~
-                                     to not Show this Message again.")))))
+                                     to not show this message again.")))))
       (q+:qcoreapplication-quit)))
 
 (define-slot (main-window tray-message-clicked) ()
@@ -413,8 +413,8 @@ functionality (for example system tray and status-info)
                    t))
             (let* ((dialog (make-instance
                             'dialog
-                            :title "Error - File from Directory Download failed"
-                            :text (format nil
+                            :title "Error - File from directory download failed"
+                            :text (format dil
                                           "File ~a (~a) which is part of directory download (~a) failed"
                                           file
                                           (lodds.core:format-size size)
@@ -431,13 +431,13 @@ functionality (for example system tray and status-info)
                 (push list-entry folder-error-dialogs)
                 (setf last-tray-message :folder-error)
                 (q+:show-message tray-icon
-                                 "Error Downloading Folder"
+                                 "Error downloading folder"
                                  (format nil
                                          "There was a error downloading file~%~
                                          ~a~%~
                                          of Folder~%~
                                          ~a~%~
-                                         Click Message or Tray Icon to fix."
+                                         Click message or tray icon to fix."
                                          file
                                          remote-path))))))))))
 
@@ -452,7 +452,7 @@ functionality (for example system tray and status-info)
         (setf directory-error-dialog
               (make-instance
                'dialog
-               :title "Error - Directory Watcher threw uncaught error"
+               :title "Error - Directory watcher threw uncaught error"
                :text error-message
                :on-cancel-fn #'remove-dialog
                :on-success-fn #'remove-dialog)))))
@@ -549,7 +549,7 @@ functionality (for example system tray and status-info)
   (apply #'qui:invoke-gui-debugger args))
 
 (defparameter *main-window* nil
-  "Contains the Main-window, usefull to debug/inspect gui widgets.")
+  "Contains the main-window, usefull to debug/inspect gui widgets.")
 
 (defun main (&optional (lodds-server (make-instance 'lodds:lodds-server) server-given-p))
   ;; so iam calling tmt:with-body-in-main-thread here myself and set
