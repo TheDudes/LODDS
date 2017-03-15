@@ -303,7 +303,14 @@ functionality (for example system tray and status-info)
 (define-subwidget (main-window status-label)
     (q+:make-qlabel main-window)
   (q+:set-tool-tip status-label
-                   (lodds:get-status-doc)))
+                   (format nil
+                           "Describes Lodds current status.~%~
+                           Total Load: Sum of all Loads accross the Network~%~
+                           Load: How much load the client currently has~%~
+                           Tasks: How many tasks are currently running~%~
+                           Network Files: Amount of Files in the network (non Unique)~%~
+                           Shared Folders: Amount of currently shared folders~%~
+                           Users: Amount of User on the Network")))
 
 (define-slot (main-window tick) ()
   (declare (connected status-timer (timeout)))

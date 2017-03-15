@@ -384,11 +384,6 @@ Users: Amount of User on the Network"
                 (cons "Shared Folders" shared-folders)
                 (cons "Users" users))))))
 
-(defun get-status-doc ()
-  "Calling (documentation 'lodds:get-status 'function) returns nil,
-dunno why. But thats why this wrapper exists."
-  (documentation 'get-status 'function))
-
 (defun user-is-trusted (user)
   (find user (lodds.config:get-value :trusted-users)
         :test #'equal))

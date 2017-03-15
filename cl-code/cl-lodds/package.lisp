@@ -206,7 +206,6 @@
            #:switch-config
            #:update-config
            #:get-status
-           #:get-status-doc
            #:user-is-trusted
            #:user-is-blocked
            #:untrust-user
