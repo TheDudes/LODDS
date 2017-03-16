@@ -854,7 +854,8 @@ or task-request-send-permission).
                timestamp
                user-load
                last-change
-               state) task
+               state
+               socket) task
     (setf state :finished)
     (let ((client-info (lodds:get-user-info user)))
       (unless client-info
@@ -872,26 +873,32 @@ or task-request-send-permission).
                                 user
                                 user-load
                                 last-change))
-      (let ((locked (bt:acquire-lock (lodds:c-lock client-info) nil)))
-        (if locked
+      (let* ((old-load (lodds:c-load client-info))
+             (lock (lodds:c-lock client-info)))
+        (setf (lodds:c-last-message client-info) timestamp
+              (lodds:c-load client-info) user-load)
+        (if (bt:acquire-lock lock nil)
             ;; only go on if we locked, if not, just drop the update, we
             ;;will update on the next advertise. unwind-protect to be sure
             ;;we unlock that lock.
             (unwind-protect
-                 (let ((old-load (lodds:c-load client-info))
-                       (user-has-new-changes-p (<= (lodds:c-last-change client-info)
-                                                   last-change)))
-                   (setf (lodds:c-last-message client-info) timestamp
-                         (lodds:c-load client-info) user-load)
+                 (let ((user-has-new-changes-p
+                         (<= (lodds:c-last-change client-info)
+                             last-change)))
                    (when user-has-new-changes-p
-                     (lodds.listener:update-client-list client-info))
+                     (setf socket
+                           (usocket:socket-connect ip port
+                                                   :timeout 1
+                                                   :element-type '(unsigned-byte 8)))
+                     (lodds.core:set-socket-timeout socket 1)
+                     (update-client-list socket client-info))
                    (when (or user-has-new-changes-p
                              (not (eql old-load user-load)))
                      (lodds.event:push-event :client-updated
                                              user
                                              user-load
                                              last-change)))
-              (bt:release-lock (lodds:c-lock client-info)))
+              (bt:release-lock lock))
             (lodds.event:push-event :info :dropped task))))))
 
 (defmethod run-task ((task task-send-file))
