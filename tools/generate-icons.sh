@@ -13,14 +13,18 @@
 
 # make it work when it is called through eclipse builder
 export PATH=/usr/local/bin:$PATH
-dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"/../
+svg_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"/../res/
+java_res_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"/../java-code/src/studyproject/resources/
 
-svg=${dir}lodds.svg
-prefix=${dir}java-code/src/studyproject/resources/lodds_icon
+# Convert lodds icon in various solution
+svg=${svg_dir}lodds.svg
+lodds_prefix=${java_res_dir}lodds_icon
 
 resolutions=(16x16 32x32 64x64)
 for i in "${resolutions[@]}"
 do
-   : 
-   convert -background transparent -resize $i $svg ${prefix}${i}.png
+: 
+   convert -background transparent -resize $i $svg ${lodds_prefix}${i}.png
 done
+
+
