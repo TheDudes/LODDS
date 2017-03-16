@@ -13,8 +13,9 @@
 
 # make it work when it is called through eclipse builder
 export PATH=/usr/local/bin:$PATH
-svg_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"/../res/
-java_res_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"/../java-code/src/studyproject/resources/
+script_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"/ 
+svg_dir=${script_dir}../res/
+java_res_dir=${script_dir}../java-code/src/studyproject/resources/
 
 # Convert lodds icon in various solution
 svg=${svg_dir}lodds.svg
@@ -27,4 +28,11 @@ do
    convert -background transparent -resize $i $svg ${lodds_prefix}${i}.png
 done
 
+# Convert other svg files
+svgs=(file folder-closed folder-open reload send-file shared user x)
+for i in "${svgs[@]}"
+do
+: 
+   convert -background transparent ${svg_dir}$i.svg ${java_res_dir}${i}.png
+done
 
