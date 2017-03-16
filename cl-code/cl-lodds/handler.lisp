@@ -23,21 +23,20 @@ thread to the tasker, which then handles the request.
         (open-socket)))))
 
 (defun run ()
-  (let ((socket (open-socket)))
-    (unwind-protect
-         (loop :while (lodds.subsystem:alive-p (lodds:get-subsystem :handler))
-               :do (when (and (lodds.core:input-rdy-p socket 1)
-                              (eql :read (usocket:socket-state socket)))
-                     (lodds.task:submit-task
-                      (make-instance 'lodds.task:task-request
-                                     :name "request"
-                                     :socket
-                                     (let ((client-socket
-                                             (usocket:socket-accept socket
-                                                                    :element-type '(unsigned-byte 8))))
-                                       (lodds.core:set-socket-timeout
-                                        client-socket
-                                        (lodds.config:get-value :socket-timeout))
-                                       client-socket)))))
-      (when socket
-        (usocket:socket-close socket)))))
+  (usocket:with-server-socket (socket (open-socket))
+    (loop :while (lodds.subsystem:alive-p (lodds:get-subsystem :handler))
+          :do
+          (when (and (lodds.core:input-rdy-p socket 1)
+                     (eql :read (usocket:socket-state socket)))
+            (let ((client-socket
+                    (handler-case
+                        (usocket:socket-accept socket
+                                               :element-type '(unsigned-byte 8))
+                      (usocket:connection-aborted-error ()))))
+              (when client-socket
+                (lodds.core:set-socket-timeout client-socket
+                                               (lodds.config:get-value :socket-timeout))
+                (lodds.task:submit-task
+                 (make-instance 'lodds.task:task-request
+                                :name "request"
+                                :socket client-socket))))))))
