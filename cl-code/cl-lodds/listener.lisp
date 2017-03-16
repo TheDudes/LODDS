@@ -74,7 +74,8 @@ client infos on the lodds-server object once he gets new information.
                         (when msg
                           (handle-message msg)))))
         (error (e)
-          (declare (ignore e))
+          (lodds.event:push-event :listener
+                                  e)
           (when socket
             (usocket:socket-close socket))))
       (when socket
