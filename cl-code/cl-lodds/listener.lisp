@@ -4,61 +4,9 @@ This File contains the Listener, which is the counterpart to the
 Advertiser. His job is to listen for broadcast messages and update the
 client infos on the lodds-server object once he gets new information.
 
-TODO: submitting tasks might be a better way
-
 |#
 
 (in-package lodds.listener)
-
-(defun update-client-list (client)
-  (let ((socket nil))
-    (unwind-protect
-         (with-accessors ((name lodds:c-name)
-                          (load lodds:c-load)
-                          (ip lodds:c-ip)
-                          (port lodds:c-port)
-                          (last-change lodds:c-last-change)
-                          (table-hash lodds:c-file-table-hash)
-                          (table-name lodds:c-file-table-name)) client
-           (setf socket (usocket:socket-connect ip port
-                                                :timeout 1
-                                                :element-type '(unsigned-byte 8)))
-           (let ((error (lodds.low-level-api:get-info
-                         (usocket:socket-stream socket) last-change)))
-             (unless (eql 0 error)
-               (error "low level api threw error ~a in get-info" error)))
-           (multiple-value-bind (error type timestamp changes)
-               (lodds.low-level-api:handle-info socket)
-             (unless (eql 0 error)
-               (error "low level api threw error ~a in handle-info" error))
-             (when (eql type :all)
-               (setf table-hash (make-hash-table :test 'equal)
-                     table-name (make-hash-table :test 'equal)))
-             (loop :for (typ cs size name) :in changes
-                   :if (eql typ :add)
-                   :do (let ((val (gethash cs table-hash)))
-                         (unless (find name val :test #'string=)
-                           (setf (gethash cs table-hash)
-                                 (cons name val)))
-                         (setf (gethash name table-name)
-                               (list cs size)))
-                   :else
-                   :do (let ((new-val (remove name (gethash cs table-hash)
-                                              :test #'string=)))
-
-                         (if new-val
-                             (setf (gethash cs table-hash)
-                                   new-val)
-                             (remhash cs table-hash))
-                         (remhash name table-name)))
-             (setf last-change timestamp)
-             (lodds.event:push-event :list-update
-                                     name
-                                     type
-                                     timestamp
-                                     changes)))
-      (when socket
-        (usocket:socket-close socket)))))
 
 (defun remove-old-clients (&optional (current-time (lodds.core:get-timestamp)))
   "removes all clients older than client-timeout"

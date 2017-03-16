@@ -847,6 +847,49 @@ or task-request-send-permission).
     (when (eql size read-bytes)
       (setf state :finished))))
 
+(defun update-client-list (socket client)
+  (unwind-protect
+       (with-accessors ((name lodds:c-name)
+                        (load lodds:c-load)
+                        (ip lodds:c-ip)
+                        (port lodds:c-port)
+                        (last-change lodds:c-last-change)
+                        (table-hash lodds:c-file-table-hash)
+                        (table-name lodds:c-file-table-name)) client
+         (let ((error (lodds.low-level-api:get-info
+                       (usocket:socket-stream socket) last-change)))
+           (unless (eql 0 error)
+             (error "low level api threw error ~a in get-info" error)))
+         (multiple-value-bind (error type timestamp changes)
+             (lodds.low-level-api:handle-info socket)
+           (unless (eql 0 error)
+             (error "low level api threw error ~a in handle-info" error))
+           (when (eql type :all)
+             (setf table-hash (make-hash-table :test 'equal)
+                   table-name (make-hash-table :test 'equal)))
+           (loop :for (typ cs size name) :in changes
+                 :if (eql typ :add)
+                 :do (let ((val (gethash cs table-hash)))
+                       (unless (find name val :test #'string=)
+                         (setf (gethash cs table-hash)
+                               (cons name val)))
+                       (setf (gethash name table-name)
+                             (list cs size)))
+                 :else
+                 :do (let ((new-val (remove name (gethash cs table-hash)
+                                            :test #'string=)))
+                       (if new-val
+                           (setf (gethash cs table-hash)
+                                 new-val)
+                           (remhash cs table-hash))
+                       (remhash name table-name)))
+           (setf last-change timestamp)
+           (lodds.event:push-event :list-update
+                                   name
+                                   type
+                                   timestamp
+                                   changes)))))
+
 (defmethod run-task ((task task-info))
   (with-slots (user
                ip
