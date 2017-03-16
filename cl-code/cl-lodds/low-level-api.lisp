@@ -55,13 +55,9 @@ multiple-value-bind.
   (let ((line (list))
         (byte nil)
         (stream (usocket:socket-stream socket)))
-    ;; TODO: set default timeout in settings
     (loop :until nil
           :do (progn
-                (if (lodds.core:input-rdy-p socket 15)
-                    (setf byte (read-byte stream))
-                    ;; TODO: default from settings
-                    (error "no response after ~a seconds." 15))
+                (setf byte (read-byte stream))
                 (if (eql 10 byte)
                     (return-from read-line-from-socket
                       (map 'string #'code-char (reverse line)))
