@@ -3,22 +3,20 @@ package studyproject.gui.mainWindow.logArea;
 import javax.annotation.PostConstruct;
 
 import javafx.beans.property.SimpleBooleanProperty;
+import studyproject.gui.introduction.IntroductionInterface;
 
-
-public class LogAreaModel {
+public class LogAreaModel implements IntroductionInterface {
 
 	@PostConstruct
 	public void init() {
 	}
-	
+
 	private SimpleBooleanProperty error = new SimpleBooleanProperty();
 	private SimpleBooleanProperty info = new SimpleBooleanProperty();
 	private SimpleBooleanProperty getRec = new SimpleBooleanProperty();
 	private SimpleBooleanProperty getSent = new SimpleBooleanProperty();
 	private SimpleBooleanProperty broadcast = new SimpleBooleanProperty();
-	
-	
-	
+
 	public SimpleBooleanProperty getInfo() {
 		return info;
 	}
@@ -58,10 +56,15 @@ public class LogAreaModel {
 	public void setError(SimpleBooleanProperty error) {
 		this.error = error;
 	}
-	
-	
-	
-	
 
-	
+	@Override
+	public String getViewDiscription() {
+		return "This is the Log Area discription";
+	}
+
+	@Override
+	public String getViewTitle() {
+		return "Log Area";
+	}
+
 }

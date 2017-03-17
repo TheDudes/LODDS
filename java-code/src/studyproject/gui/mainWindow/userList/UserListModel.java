@@ -7,8 +7,9 @@ import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import studyproject.API.Lvl.Mid.Core.UserInfo;
+import studyproject.gui.introduction.IntroductionInterface;
 
-public class UserListModel {
+public class UserListModel implements IntroductionInterface {
 	private ObservableList<UserInfo> users;
 	private ObjectProperty<UserInfo> selectedUser;
 
@@ -32,5 +33,15 @@ public class UserListModel {
 
 	public void setSelectedUser(ObjectProperty<UserInfo> selectedUser) {
 		this.selectedUser = selectedUser;
+	}
+
+	@Override
+	public String getViewDiscription() {
+		return "This is the User List Discription";
+	}
+
+	@Override
+	public String getViewTitle() {
+		return "User List";
 	}
 }

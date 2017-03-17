@@ -3,8 +3,9 @@ package studyproject.gui.mainWindow;
 import javax.annotation.PostConstruct;
 
 import studyproject.API.Lvl.Mid.Lodds.Lodds;
+import studyproject.gui.introduction.IntroductionInterface;
 
-public class MainWindowModel {
+public class MainWindowModel implements IntroductionInterface {
 
 	private Lodds lodds;
 
@@ -19,5 +20,15 @@ public class MainWindowModel {
 
 	public void setLodds(Lodds lodds) {
 		this.lodds = lodds;
+	}
+
+	@Override
+	public String getViewDiscription() {
+		return "This is the Main Window discription";
+	}
+
+	@Override
+	public String getViewTitle() {
+		return "Main Window";
 	}
 }
