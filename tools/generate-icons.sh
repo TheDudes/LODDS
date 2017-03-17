@@ -15,7 +15,8 @@
 export PATH=/usr/local/bin:$PATH
 script_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"/ 
 svg_dir=${script_dir}../res/
-java_res_dir=${script_dir}../java-code/src/studyproject/resources/
+java_res_dir=${script_dir}../java-code/src/studyproject/resources/lodds_icon/
+mkdir -p java_res_dir
 
 # Convert lodds icon in various solution
 svg=${svg_dir}lodds.svg
