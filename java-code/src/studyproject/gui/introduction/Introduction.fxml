@@ -24,12 +24,12 @@
    <children>
       <HBox nodeOrientation="RIGHT_TO_LEFT" prefHeight="63.0" prefWidth="497.0" spacing="10.0" GridPane.halignment="RIGHT" GridPane.rowIndex="3">
          <children>
-            <Button fx:id="nextBtn" mnemonicParsing="false" text="Next" HBox.hgrow="NEVER" />
+            <Button fx:id="nextBtn" mnemonicParsing="false" prefHeight="25.0" prefWidth="52.0" text="Next" HBox.hgrow="NEVER" />
             <Button fx:id="prevBtn" layoutX="10.0" layoutY="10.0" mnemonicParsing="false" text="Previous" HBox.hgrow="NEVER" />
-            <Button fx:id="cancelBtn" layoutX="72.0" layoutY="10.0" mnemonicParsing="false" text="Cancel" HBox.hgrow="NEVER" />
+            <Button fx:id="cancelBtn" cancelButton="true" layoutX="72.0" layoutY="10.0" mnemonicParsing="false" text="Cancel" HBox.hgrow="NEVER" />
          </children>
       </HBox>
-      <CheckBox fx:id="dontShowAgainCB" alignment="CENTER" contentDisplay="RIGHT" mnemonicParsing="false" nodeOrientation="LEFT_TO_RIGHT" text="Don't show Dialog this again" GridPane.halignment="RIGHT" GridPane.rowIndex="2" />
+      <CheckBox fx:id="dontShowAgainCB" alignment="CENTER" contentDisplay="RIGHT" mnemonicParsing="false" nodeOrientation="LEFT_TO_RIGHT" prefHeight="17.0" prefWidth="185.0" text="Don't show Dialog this again" GridPane.halignment="RIGHT" GridPane.rowIndex="2" />
       <AnchorPane GridPane.rowIndex="1">
          <children>
             <Label fx:id="textLabel" alignment="TOP_LEFT" lineSpacing="1.0" prefHeight="214.0" prefWidth="420.0" text="Discription" wrapText="true" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" />

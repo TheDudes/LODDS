@@ -24,6 +24,8 @@ import studyproject.API.Errors.ErrorFactory;
 import studyproject.API.Lvl.Low.Broadcast;
 import studyproject.API.Lvl.Mid.Lodds.Lodds;
 import studyproject.gui.Core.Utils;
+import studyproject.gui.introduction.IntroductionPresenter;
+import studyproject.gui.introduction.IntroductionView;
 import studyproject.gui.mainWindow.filesTree.FilesTreeView;
 import studyproject.gui.mainWindow.logArea.LogAreaView;
 import studyproject.gui.mainWindow.tasksList.TasksListView;
@@ -120,6 +122,20 @@ public class MainWindowPresenter implements Initializable {
 				}
 			}
 		});
+	}
+
+	public void showFirstTimeIntroduction() {
+		Stage introductionStage = new Stage();
+		Utils.addLoddsImageToStage(introductionStage);
+		introductionStage.initModality(Modality.APPLICATION_MODAL);
+		introductionStage.setMinWidth(300);
+		introductionStage.setMinHeight(200);
+		IntroductionView introductionView = new IntroductionView();
+		introductionStage.setScene(new Scene(introductionView.getView()));
+		introductionStage.setOnCloseRequest((e) -> {
+			((IntroductionPresenter) introductionView.getPresenter()).closeDialog();
+		});
+		introductionStage.showAndWait();
 	}
 
 	public void loadInterface() {

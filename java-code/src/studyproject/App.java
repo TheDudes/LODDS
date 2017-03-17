@@ -107,6 +107,9 @@ public class App extends Application {
 		mainStage.setScene(mainScene);
 		mainStage.show();
 		mainWindowPresenter = (MainWindowPresenter) mainView.getPresenter();
+		if (Boolean.valueOf(App.properties.getProperty("introduction")))
+			mainWindowPresenter.showFirstTimeIntroduction();
+
 		mainWindowPresenter.loadInterface();
 
 		if (Boolean.valueOf(App.properties.getProperty("icons"))) {
