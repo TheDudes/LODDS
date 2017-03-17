@@ -73,6 +73,7 @@ public class SettingsWindowPresenter implements Initializable {
 				// Get available network addresses
 				ArrayList<String> na = new ArrayList<>();
 				Broadcast.getNetworkAddresses(na);
+				na.add("");
 				ComboBox<String> dd = new ComboBox<String>(FXCollections.observableArrayList(na));
 				dd.setValue(value);
 				newNode = dd;
