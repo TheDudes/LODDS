@@ -27,11 +27,10 @@ import studyproject.API.Lvl.Mid.Core.UserInfo;
 import studyproject.gui.mainWindow.MainWindowModel;
 import studyproject.gui.mainWindow.topMenu.TopMenuPresenter;
 import studyproject.gui.mainWindow.topMenu.TopMenuView;
-import studyproject.gui.mainWindow.usersList.UsersListModel;
 
 public class UserListPresenter implements Initializable {
 	@Inject
-	UsersListModel usersListModel;
+	UserListModel usersListModel;
 
 	@Inject
 	MainWindowModel mainWindowModel;

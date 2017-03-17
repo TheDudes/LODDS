@@ -1,4 +1,4 @@
-package studyproject.gui.mainWindow.usersList;
+package studyproject.gui.mainWindow.userList;
 
 import javax.annotation.PostConstruct;
 
@@ -8,7 +8,7 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import studyproject.API.Lvl.Mid.Core.UserInfo;
 
-public class UsersListModel {
+public class UserListModel {
 	private ObservableList<UserInfo> users;
 	private ObjectProperty<UserInfo> selectedUser;
 

@@ -26,7 +26,7 @@ import studyproject.API.Lvl.Mid.Core.UserInfo;
 import studyproject.gui.Core.Utils;
 import studyproject.gui.mainWindow.MainWindowModel;
 import studyproject.gui.mainWindow.tasksList.TasksListModel;
-import studyproject.gui.mainWindow.usersList.UsersListModel;
+import studyproject.gui.mainWindow.userList.UserListModel;
 import studyproject.logging.LogKey;
 
 public class FilesTreePresenter implements Initializable {
@@ -38,7 +38,7 @@ public class FilesTreePresenter implements Initializable {
 	@FXML
 	MenuItem reloadTreeCM;
 	@Inject
-	UsersListModel userListModel;
+	UserListModel userListModel;
 	@Inject
 	MainWindowModel mainWindowModel;
 	@Inject

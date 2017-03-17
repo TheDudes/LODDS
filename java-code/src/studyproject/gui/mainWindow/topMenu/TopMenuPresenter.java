@@ -25,7 +25,7 @@ import studyproject.API.Lvl.Mid.Core.UserInfo;
 import studyproject.gui.Core.Utils;
 import studyproject.gui.aboutWindow.AboutWindowView;
 import studyproject.gui.mainWindow.MainWindowModel;
-import studyproject.gui.mainWindow.usersList.UsersListModel;
+import studyproject.gui.mainWindow.userList.UserListModel;
 import studyproject.gui.settingsWindow.SettingsWindowView;
 import studyproject.logging.LogKey;
 
@@ -45,7 +45,7 @@ public class TopMenuPresenter implements Initializable {
 	@Inject
 	MainWindowModel mainWindowModel;
 	@Inject
-	UsersListModel usersListModel;
+	UserListModel usersListModel;
 
 	private Logger logger;
 
