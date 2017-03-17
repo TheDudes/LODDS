@@ -6,6 +6,7 @@ import java.util.List;
 import javax.inject.Inject;
 
 import javafx.scene.Node;
+import javafx.scene.image.Image;
 import javafx.scene.layout.AnchorPane;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
@@ -88,5 +89,9 @@ public class Utils {
 
 	public static Boolean osIsMac() {
 		return System.getProperty("os.name").toLowerCase().indexOf("mac") >= 0;
+	}
+
+	public static void addLoddsImageToStage(Stage stage) {
+		stage.getIcons().add(new Image(Utils.class.getResourceAsStream(App.ICON_PATH + "lodds.png")));
 	}
 }

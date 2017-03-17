@@ -23,6 +23,7 @@ import studyproject.API.Core.Request.GetPermissionRequest;
 import studyproject.API.Errors.ErrorFactory;
 import studyproject.API.Lvl.Low.Broadcast;
 import studyproject.API.Lvl.Mid.Lodds.Lodds;
+import studyproject.gui.Core.Utils;
 import studyproject.gui.mainWindow.filesTree.FilesTreeView;
 import studyproject.gui.mainWindow.logArea.LogAreaView;
 import studyproject.gui.mainWindow.tasksList.TasksListView;
@@ -106,6 +107,8 @@ public class MainWindowPresenter implements Initializable {
 								+ permissionReq.fileName + " (" + permissionReq.fileSize + " Bytes)";
 						permissionStage = new SendPermissionDialog(permissionReq, newText);
 						SendPermissionView sendPermissionView = new SendPermissionView();
+						if (Boolean.valueOf(App.properties.getProperty("icons")))
+							Utils.addLoddsImageToStage(permissionStage);
 						permissionStage.setScene(new Scene(sendPermissionView.getView()));
 						permissionStage.setTitle("Permission Request");
 						sendPermissionModel.getDialogLabel().setValue(newText);
@@ -129,6 +132,8 @@ public class MainWindowPresenter implements Initializable {
 		if ((interf == null) || interf.isEmpty() || (!interfaces.contains(interf))) {
 			SelectedInterfaceView selectedInterfaceView = new SelectedInterfaceView();
 			Stage interfaceStage = new Stage();
+			if (Boolean.valueOf(App.properties.getProperty("icons")))
+				Utils.addLoddsImageToStage(interfaceStage);
 			interfaceStage.setMinWidth(300);
 			interfaceStage.setMinHeight(200);
 			interfaceStage.setTitle("Startup...");

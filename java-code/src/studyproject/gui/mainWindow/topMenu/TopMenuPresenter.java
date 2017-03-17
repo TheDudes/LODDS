@@ -81,6 +81,8 @@ public class TopMenuPresenter implements Initializable {
 
 	private void settingsItemPressed() {
 		Stage stage = new Stage();
+		if (Boolean.valueOf(App.properties.getProperty("icons")))
+			Utils.addLoddsImageToStage(stage);
 		stage.setScene(new Scene(new SettingsWindowView().getView()));
 		stage.initModality(Modality.APPLICATION_MODAL);
 		stage.show();
@@ -108,6 +110,9 @@ public class TopMenuPresenter implements Initializable {
 
 	private void aboutItemPressed() {
 		Stage stage = new Stage();
+		stage.setTitle("About LODDS");
+		if (Boolean.valueOf(App.properties.getProperty("icons")))
+			Utils.addLoddsImageToStage(stage);
 		stage.setScene(new Scene(new AboutWindowView().getView()));
 		stage.initModality(Modality.APPLICATION_MODAL);
 		stage.show();

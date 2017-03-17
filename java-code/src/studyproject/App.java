@@ -110,7 +110,7 @@ public class App extends Application {
 		mainWindowPresenter.loadInterface();
 
 		if (Boolean.valueOf(App.properties.getProperty("icons"))) {
-			setIcons();
+			Utils.addLoddsImageToStage(mainStage);
 
 			if (Utils.osIsMac()) {
 				MacDockMenuPresenter dockMenu = new MacDockMenuPresenter();
@@ -128,10 +128,6 @@ public class App extends Application {
 		} catch (Exception e) {
 			// Won't work on Windows or Linux.
 		}
-	}
-
-	private void setIcons() {
-		mainStage.getIcons().add(new Image(getClass().getResourceAsStream(ICON_PATH + "lodds.png")));
 	}
 
 	@Override
