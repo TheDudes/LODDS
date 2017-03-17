@@ -25,11 +25,15 @@ public class MacDockMenuPresenter {
 	public void createMenus() {
 		topMenuPresenter = (TopMenuPresenter) (new TopMenuView()).getPresenter();
 		MenuItem shareFolder = new MenuItem("Share folder");
-		// TODO gitmalong, this should work out fine without wrapping it in the
-		// fx application thread
-		// if not just revert this change
-		shareFolder.addActionListener(e -> topMenuPresenter.shareFolderPressed());
-
+		
+		// Need to be in fx application thread
+		shareFolder.addActionListener(e -> Platform.runLater(new Runnable() {
+			@Override
+			public void run() {
+				topMenuPresenter.shareFolderPressed();
+			}
+		}));
+		
 		PopupMenu menu = new PopupMenu();
 		menu.add(shareFolder);
 
