@@ -6,16 +6,16 @@
 - [ ] Properties
 
 ## GUI
-- [ ] About menu entry and dialog with license information
+- [X] About menu entry and dialog with license information
 - [X] Download whole folder
 - [x] Validate user name (gitmalong)
 - [x] Replace settings interface textfield with dropdown (gitmalong)
 
 - [ ] Pop-Up to unshare folder
 - [ ] Pop-Up to introduce at first start up 
-- [ ] Icons
+- [X] Icons
 	+ Fancynate the Refresh Button
-- [ ] About-Window
+- [X] About-Window
 
 
 ## Doc
