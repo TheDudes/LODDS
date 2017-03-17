@@ -2,8 +2,6 @@ package studyproject.gui.macDockMenu;
 
 import java.awt.MenuItem;
 import java.awt.PopupMenu;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 
 import javafx.application.Platform;
 import studyproject.gui.mainWindow.topMenu.TopMenuPresenter;
