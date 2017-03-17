@@ -1,4 +1,4 @@
-package studyproject.gui.mainWindow.usersList.singleUser;
+package studyproject.gui.mainWindow.userList;
 
 import javafx.geometry.Insets;
 import javafx.scene.control.Button;

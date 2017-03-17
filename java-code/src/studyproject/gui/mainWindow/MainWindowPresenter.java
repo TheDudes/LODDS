@@ -28,7 +28,7 @@ import studyproject.gui.mainWindow.filesTree.FilesTreeView;
 import studyproject.gui.mainWindow.logArea.LogAreaView;
 import studyproject.gui.mainWindow.tasksList.TasksListView;
 import studyproject.gui.mainWindow.topMenu.TopMenuView;
-import studyproject.gui.mainWindow.usersList.singleUser.SingleUserView;
+import studyproject.gui.mainWindow.userList.UserListView;
 import studyproject.gui.selectedInterface.SelectedInterfaceView;
 import studyproject.gui.sendPermissionDialog.SendPermissionDialog;
 import studyproject.gui.sendPermissionDialog.SendPermissionModel;
@@ -66,7 +66,7 @@ public class MainWindowPresenter implements Initializable {
 		LogAreaView logAreaView = new LogAreaView();
 		logAreaAnchor.getChildren().addAll(logAreaView.getView());
 
-		SingleUserView singleUserView = new SingleUserView();
+		UserListView singleUserView = new UserListView();
 		usersListAnchor.getChildren().addAll(singleUserView.getView());
 
 		TasksListView tasksListView = new TasksListView();

@@ -1,4 +1,4 @@
-package studyproject.gui.mainWindow.usersList.singleUser;
+package studyproject.gui.mainWindow.userList;
 
 import java.net.URL;
 import java.util.ResourceBundle;
@@ -29,7 +29,7 @@ import studyproject.gui.mainWindow.topMenu.TopMenuPresenter;
 import studyproject.gui.mainWindow.topMenu.TopMenuView;
 import studyproject.gui.mainWindow.usersList.UsersListModel;
 
-public class SingleUserPresenter implements Initializable {
+public class UserListPresenter implements Initializable {
 	@Inject
 	UsersListModel usersListModel;
 
