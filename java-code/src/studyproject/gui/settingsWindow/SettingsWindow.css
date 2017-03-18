@@ -10,3 +10,11 @@
 #seperator {
 	-fx-padding:10 0 8 0;
 }
+
+#scrollPane {
+	-fx-background-color:transparent;
+}
+
+.titleLabel {
+	-fx-font-size:16;
+}
