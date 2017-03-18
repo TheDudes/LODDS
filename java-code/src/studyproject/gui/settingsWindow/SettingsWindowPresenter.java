@@ -59,7 +59,6 @@ public class SettingsWindowPresenter implements Initializable {
 	 * Load Key-Value pairs from the properties file
 	 */
 	private void loadSettings() {
-		int numberOfRows = 0;
 		for (Entry<Object, Object> entry : App.properties.entrySet()) {
 			String key = (String) entry.getKey();
 			String value = (String) entry.getValue();
@@ -68,37 +67,41 @@ public class SettingsWindowPresenter implements Initializable {
 				continue;
 			}
 
-			Node newNode;
-			if (key.equals("defaultInterface")) {
-				// Get available network addresses
-				ArrayList<String> na = new ArrayList<>();
-				Broadcast.getNetworkAddresses(na);
-				na.add("");
-				ComboBox<String> dd = new ComboBox<String>(FXCollections.observableArrayList(na));
-				dd.setValue(value);
-				newNode = dd;
+			Node node = settingsGrid.lookup("#" + key);
+			if (node != null) {
 
-			} else if (key.equals("userName")) {
-				// Live username validation
-				TextField userNameTf = new TextField(value);
-				userNameTf.textProperty().addListener((observable, oldValue, newValue) -> {
-					if (UserInfo.validateUserName(newValue)) {
-						userNameTf.setStyle("-fx-control-inner-background: #FFFFFF;");
-					} else {
-						userNameTf.setStyle("-fx-control-inner-background: #FA9D9D;");
+				// defaultInterface ComboBox Interface
+				if (key.equals("defaultInterface")) {
+					ArrayList<String> na = new ArrayList<>();
+					Broadcast.getNetworkAddresses(na);
+					na.add("");
+					@SuppressWarnings("unchecked")
+					ComboBox<String> dd = (ComboBox<String>) node;
+					dd.setItems(FXCollections.observableArrayList(na));
+					dd.setValue(value);
+				}
+				// TextFields
+				else {
+					TextField txtNode = (TextField) node;
+					txtNode.setText(value);
+
+					if (key.equals("userName")) {
+						// Live username validation
+						txtNode.textProperty().addListener((observable, oldValue, newValue) -> {
+							if (UserInfo.validateUserName(newValue)) {
+								txtNode.setStyle("-fx-control-inner-background: #FFFFFF;");
+							} else {
+								txtNode.setStyle("-fx-control-inner-background: #FA9D9D;");
+							}
+						});
 					}
-				});
-				newNode = userNameTf;
-			} else {
-				newNode = new TextField(value);
+				}
+
 			}
 
-			settingsGrid.addRow(numberOfRows++, new Label(key), newNode);
-
 		}
-		for (
 
-		Node node : settingsGrid.getChildren()) {
+		for (Node node : settingsGrid.getChildren()) {
 			GridPane.setVgrow(node, Priority.ALWAYS);
 		}
 	}
@@ -128,37 +131,34 @@ public class SettingsWindowPresenter implements Initializable {
 			}
 			label = (Label) l;
 
-			// find the value holding textField which is next to the Label
-			for (Node tf : observList) {
-				if (GridPane.getRowIndex(tf) == GridPane.getRowIndex(l)
-						&& GridPane.getColumnIndex(tf) == GridPane.getColumnIndex(l) + 1) {
+			Node tf = label.getLabelFor();
+			
+			if (tf == null)
+				System.out.println("ERROR: label for node not found: " + label.getText());
 
-					String propertyValue = "";
+			String propertyValue = "";
 
-					if (tf instanceof TextField) {
-						textField = (TextField) tf;
-						propertyValue = textField.getText();
+			if (tf instanceof TextField) {
+				textField = (TextField) tf;
+				propertyValue = textField.getText();
 
-						// Show error message if username is invalid
-						if (label.getText().equals("userName")
-								&& UserInfo.validateUserName(textField.getText()) == false) {
-							showInputError("Please make sure to choose a valid username. '" + textField.getText()
-									+ "' is not a valid username.");
-							return false;
-						}
-
-					} else if (tf instanceof ComboBox<?>) {
-						@SuppressWarnings("unchecked")
-						ComboBox<String> cBox = (ComboBox<String>) tf;
-						propertyValue = cBox.getValue();
-					}
-
-					App.properties.setProperty(label.getText(), propertyValue);
-					break;
-
+				// Show error message if username is invalid
+				if (label.getText().equals("userName") && UserInfo.validateUserName(textField.getText()) == false) {
+					showInputError("Please make sure to choose a valid username. '" + textField.getText()
+							+ "' is not a valid username.");
+					return false;
 				}
+
+			} else if (tf instanceof ComboBox<?>) {
+				@SuppressWarnings("unchecked")
+				ComboBox<String> cBox = (ComboBox<String>) tf;
+				propertyValue = cBox.getValue();
 			}
+
+			App.properties.setProperty(label.getText(), propertyValue);
+
 		}
+
 		try {
 			App.properties.store(new FileOutputStream(App.pathToProperties), null);
 			logger.log(ErrorFactory.build(Level.INFO, LogKey.info, "Saved properties to " + App.pathToProperties));

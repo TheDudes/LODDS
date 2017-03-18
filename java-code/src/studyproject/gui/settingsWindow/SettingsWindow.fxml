@@ -3,22 +3,88 @@
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.Separator?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.control.ComboBox?>
 <?import javafx.scene.layout.ColumnConstraints?>
 <?import javafx.scene.layout.GridPane?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.RowConstraints?>
 <?import javafx.scene.layout.VBox?>
+<?import studyproject.gui.settingsWindow.GridPaneRowCounter?>
 
 <VBox id='settingsWindow' maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" xmlns="http://javafx.com/javafx/8.0.76-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="studyproject.gui.settingsWindow.SettingsWindowPresenter">
    <children>
       <GridPane fx:id="settingsGrid" VBox.vgrow="ALWAYS">
+		<fx:define>
+	        <GridPaneRowCounter fx:id="rc" />
+	    </fx:define>
+	    
         <columnConstraints>
           <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="-1.0" />
           <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
         </columnConstraints>
         <rowConstraints>
-          <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+          <RowConstraints minHeight="10.0" prefHeight="30.0" />
         </rowConstraints>
+     
+ 		<TextField GridPane.columnIndex="1" GridPane.rowIndex="$rc.currentRow" fx:id="pathToLogFile" id="pathToLogFile" />
+	    <Label text="pathToLogFile" GridPane.columnIndex="0" GridPane.rowIndex="$rc.currentRowAndIncrement" labelFor="$pathToLogFile"/>
+
+		<TextField GridPane.columnIndex="1" GridPane.rowIndex="$rc.currentRow" fx:id="defaultSavePath" id="defaultSavePath" />
+	    <Label text="defaultSavePath" GridPane.columnIndex="0" GridPane.rowIndex="$rc.currentRowAndIncrement" labelFor="$defaultSavePath"/>
+
+		<TextField GridPane.columnIndex="1" GridPane.rowIndex="$rc.currentRow" fx:id="introduction" id="introduction"/>
+        <Label text="introduction" GridPane.columnIndex="0" GridPane.rowIndex="$rc.currentRowAndIncrement" labelFor="$introduction"/>
+
+		<TextField GridPane.columnIndex="1" GridPane.rowIndex="$rc.currentRow" fx:id="currentVersion" id="currentVersion"/>
+		<Label text="currentVersion" GridPane.columnIndex="0" GridPane.rowIndex="$rc.currentRowAndIncrement" labelFor="$currentVersion"/>
+
+		<TextField GridPane.columnIndex="1" GridPane.rowIndex="$rc.currentRow" fx:id="getSentCB" id="getSentCB"/>
+		<Label text="getSentCB" GridPane.columnIndex="0" GridPane.rowIndex="$rc.currentRowAndIncrement" labelFor="$getSentCB"/>
+
+		<TextField GridPane.columnIndex="1" GridPane.rowIndex="$rc.currentRow" fx:id="fileAssemblerSleepTime" id="fileAssemblerSleepTime"/>
+		<Label text="fileAssemblerSleepTime" GridPane.columnIndex="0" GridPane.rowIndex="$rc.currentRowAndIncrement" labelFor="$fileAssemblerSleepTime"/>
+
+		<TextField GridPane.columnIndex="1" GridPane.rowIndex="$rc.currentRow" fx:id="userName" id="userName"/>
+		<Label text="userName" GridPane.columnIndex="0" GridPane.rowIndex="$rc.currentRowAndIncrement" labelFor="$userName"/>
+
+		<TextField GridPane.columnIndex="1" GridPane.rowIndex="$rc.currentRow" fx:id="windowHeight" id="windowHeight"/>
+		<Label text="windowHeight" GridPane.columnIndex="0" GridPane.rowIndex="$rc.currentRowAndIncrement" labelFor="$windowHeight"/>
+
+		<TextField GridPane.columnIndex="1" GridPane.rowIndex="$rc.currentRow" fx:id="broadcastCB" id="broadcastCB"/>
+		<Label text="broadcastCB" GridPane.columnIndex="0" GridPane.rowIndex="$rc.currentRowAndIncrement" labelFor="$broadcastCB"/>
+
+		<TextField GridPane.columnIndex="1" GridPane.rowIndex="$rc.currentRow" fx:id="windowMaximized" id="windowMaximized"/>
+		<Label text="windowMaximized" GridPane.columnIndex="0" GridPane.rowIndex="$rc.currentRowAndIncrement" labelFor="$windowMaximized"/>
+
+		<TextField GridPane.columnIndex="1" GridPane.rowIndex="$rc.currentRow" fx:id="getPermissionTimeout" id="getPermissionTimeout"/>
+		<Label text="getPermissionTimeout" GridPane.columnIndex="0" GridPane.rowIndex="$rc.currentRowAndIncrement" labelFor="$getPermissionTimeout"/>
+	
+		<TextField GridPane.columnIndex="1" GridPane.rowIndex="$rc.currentRow" fx:id="MAX_LOG_MSG_COUNT" id="MAX_LOG_MSG_COUNT"/>	
+		<Label text="MAX_LOG_MSG_COUNT" GridPane.columnIndex="0" GridPane.rowIndex="$rc.currentRowAndIncrement" labelFor="$MAX_LOG_MSG_COUNT"/>
+	
+		<TextField GridPane.columnIndex="1" GridPane.rowIndex="$rc.currentRow" fx:id="infoCB" id="infoCB"/>	
+		<Label text="infoCB" GridPane.columnIndex="0" GridPane.rowIndex="$rc.currentRowAndIncrement" labelFor="$infoCB"/>
+	
+		<TextField GridPane.columnIndex="1" GridPane.rowIndex="$rc.currentRow" fx:id="errorCB" id="errorCB"/>	
+		<Label text="errorCB" GridPane.columnIndex="0" GridPane.rowIndex="$rc.currentRowAndIncrement" labelFor="$errorCB"/>
+	
+		<TextField GridPane.columnIndex="1" GridPane.rowIndex="$rc.currentRow" fx:id="icons" id="icons" />	
+		<Label text="icons" GridPane.columnIndex="0" GridPane.rowIndex="$rc.currentRowAndIncrement" labelFor="$icons"/>
+
+		<TextField GridPane.columnIndex="1" GridPane.rowIndex="$rc.currentRow" fx:id="windowWidth" id="windowWidth"/>	
+		<Label text="windowWidth" GridPane.columnIndex="0" GridPane.rowIndex="$rc.currentRowAndIncrement" labelFor="$windowWidth"/>
+					
+		<TextField GridPane.columnIndex="1" GridPane.rowIndex="$rc.currentRow" fx:id="getRecCB" id="getRecCB"/>	
+		<Label text="getRecCB" GridPane.columnIndex="0" GridPane.rowIndex="$rc.currentRowAndIncrement" labelFor="$getRecCB"/>
+
+		<TextField GridPane.columnIndex="1" GridPane.rowIndex="$rc.currentRow" fx:id="DEFAULT_AT_A_TIME_DOWNLOADS" id="DEFAULT_AT_A_TIME_DOWNLOADS"/>	
+		<Label text="DEFAULT_AT_A_TIME_DOWNLOADS" GridPane.columnIndex="0" GridPane.rowIndex="$rc.currentRowAndIncrement" labelFor="$DEFAULT_AT_A_TIME_DOWNLOADS"/>
+
+		<ComboBox fx:id="defaultInterface" id="defaultInterface" GridPane.columnIndex="1" GridPane.rowIndex="$rc.currentRow" />
+		<Label text="defaultInterface" GridPane.columnIndex="0" GridPane.rowIndex="$rc.currentRowAndIncrement" labelFor="$defaultInterface"/>
+										
       </GridPane>
       <Separator prefWidth="200.0" VBox.vgrow="NEVER" id='seperator' />
       <HBox alignment="CENTER_RIGHT" spacing="5.0" VBox.vgrow="NEVER">
