@@ -98,6 +98,12 @@ public class Broadcast {
 		return getAddress(interfaceName, networkAddress);
 	}
 
+	/**
+	 * TODO: Document method and return values
+	 * @param interfaceName
+	 * @param broadcastAddress
+	 * @return
+	 */
 	private static int getAddress(String interfaceName, StringBuilder broadcastAddress) {
 		try {
 			Enumeration<NetworkInterface> networkInterfaces = NetworkInterface.getNetworkInterfaces();
@@ -122,9 +128,8 @@ public class Broadcast {
 			Logger.getGlobal().log(ErrorFactory.build(Level.SEVERE, LogKey.error, f));
 			System.exit(1);
 		}
-		Logger.getGlobal().log(ErrorFactory.build(Level.SEVERE, LogKey.error, "No Suitable Interface found"));
-		System.exit(1);
-		return 0;
+		Logger.getGlobal().log(ErrorFactory.build(Level.SEVERE, LogKey.error, "No Suitable Interface found: " + interfaceName));
+		return 1;
 	}
 
 	/**
