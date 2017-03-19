@@ -131,15 +131,16 @@ public class SettingsWindowPresenter implements Initializable {
 			}
 			label = (Label) l;
 
-			Node tf = label.getLabelFor();
-			
-			if (tf == null)
-				System.out.println("ERROR: label for node not found: " + label.getText());
+			Node inputNode = label.getLabelFor();
+						
+			if (label.getStyleClass() != null && label.getStyleClass().contains("titleLabel")) {
+				continue;
+			}
 
 			String propertyValue = "";
 
-			if (tf instanceof TextField) {
-				textField = (TextField) tf;
+			if (inputNode instanceof TextField) {
+				textField = (TextField) inputNode;
 				propertyValue = textField.getText();
 
 				// Show error message if username is invalid
@@ -149,13 +150,13 @@ public class SettingsWindowPresenter implements Initializable {
 					return false;
 				}
 
-			} else if (tf instanceof ComboBox<?>) {
+			} else if (inputNode instanceof ComboBox<?>) {
 				@SuppressWarnings("unchecked")
-				ComboBox<String> cBox = (ComboBox<String>) tf;
+				ComboBox<String> cBox = (ComboBox<String>) inputNode;
 				propertyValue = cBox.getValue();
 			}
 
-			App.properties.setProperty(label.getText(), propertyValue);
+			App.properties.setProperty(inputNode.getId(), propertyValue);
 
 		}
 

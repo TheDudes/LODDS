@@ -34,39 +34,37 @@
 	        
 	     	<Label styleClass="titleLabel" text="General" GridPane.columnIndex="0" GridPane.columnSpan="2" GridPane.rowIndex="$rc.currentRowAndIncrement"/>
 		        <TextField GridPane.columnIndex="1" GridPane.rowIndex="$rc.currentRow" fx:id="userName" id="userName"/>
-				<Label text="userName" GridPane.columnIndex="0" GridPane.rowIndex="$rc.currentRowAndIncrement" labelFor="$userName"/>
+				<Label text="User name" GridPane.columnIndex="0" GridPane.rowIndex="$rc.currentRowAndIncrement" labelFor="$userName"/>
 		        
 				<ComboBox fx:id="defaultInterface" id="defaultInterface" GridPane.columnIndex="1" GridPane.rowIndex="$rc.currentRow" />
-				<Label text="defaultInterface" GridPane.columnIndex="0" GridPane.rowIndex="$rc.currentRowAndIncrement" labelFor="$defaultInterface"/>
+				<Label text="Default interface" GridPane.columnIndex="0" GridPane.rowIndex="$rc.currentRowAndIncrement" labelFor="$defaultInterface"/>
 
 				<TextField GridPane.columnIndex="1" GridPane.rowIndex="$rc.currentRow" fx:id="DEFAULT_AT_A_TIME_DOWNLOADS" id="DEFAULT_AT_A_TIME_DOWNLOADS"/>	
-				<Label text="DEFAULT_AT_A_TIME_DOWNLOADS" GridPane.columnIndex="0" GridPane.rowIndex="$rc.currentRowAndIncrement" labelFor="$DEFAULT_AT_A_TIME_DOWNLOADS"/>
+				<Label text="Simultaneous downloads" GridPane.columnIndex="0" GridPane.rowIndex="$rc.currentRowAndIncrement" labelFor="$DEFAULT_AT_A_TIME_DOWNLOADS"/>
 		
 				<TextField GridPane.columnIndex="1" GridPane.rowIndex="$rc.currentRow" fx:id="defaultSavePath" id="defaultSavePath" />
-			    <Label text="defaultSavePath" GridPane.columnIndex="0" GridPane.rowIndex="$rc.currentRowAndIncrement" labelFor="$defaultSavePath"/>
+			    <Label text="Default download directory" GridPane.columnIndex="0" GridPane.rowIndex="$rc.currentRowAndIncrement" labelFor="$defaultSavePath"/>
 
 			<Separator GridPane.columnIndex="0" GridPane.columnSpan="2" GridPane.rowIndex="$rc.currentRowAndIncrement"/>
 	     	<Label styleClass="titleLabel" text="GUI" GridPane.columnIndex="0" GridPane.columnSpan="2" GridPane.rowIndex="$rc.currentRowAndIncrement"/>
+				
 				<TextField GridPane.columnIndex="1" GridPane.rowIndex="$rc.currentRow" fx:id="windowWidth" id="windowWidth"/>	
-				<Label text="windowWidth" GridPane.columnIndex="0" GridPane.rowIndex="$rc.currentRowAndIncrement" labelFor="$windowWidth"/>
+				<Label text="Window width" GridPane.columnIndex="0" GridPane.rowIndex="$rc.currentRowAndIncrement" labelFor="$windowWidth"/>
 							
 	     		<TextField GridPane.columnIndex="1" GridPane.rowIndex="$rc.currentRow" fx:id="windowHeight" id="windowHeight"/>
-				<Label text="windowHeight" GridPane.columnIndex="0" GridPane.rowIndex="$rc.currentRowAndIncrement" labelFor="$windowHeight"/>
+				<Label text="Window height" GridPane.columnIndex="0" GridPane.rowIndex="$rc.currentRowAndIncrement" labelFor="$windowHeight"/>
 	
 				<TextField GridPane.columnIndex="1" GridPane.rowIndex="$rc.currentRow" fx:id="windowMaximized" id="windowMaximized"/>
-				<Label text="windowMaximized" GridPane.columnIndex="0" GridPane.rowIndex="$rc.currentRowAndIncrement" labelFor="$windowMaximized"/>
+				<Label text="Maximize window" GridPane.columnIndex="0" GridPane.rowIndex="$rc.currentRowAndIncrement" labelFor="$windowMaximized"/>
 						
 				<TextField GridPane.columnIndex="1" GridPane.rowIndex="$rc.currentRow" fx:id="introduction" id="introduction"/>
-		        <Label text="introduction" GridPane.columnIndex="0" GridPane.rowIndex="$rc.currentRowAndIncrement" labelFor="$introduction"/>
+		        <Label text="Show introduction" GridPane.columnIndex="0" GridPane.rowIndex="$rc.currentRowAndIncrement" labelFor="$introduction"/>
 		
 			<Separator GridPane.columnIndex="0" GridPane.columnSpan="2" GridPane.rowIndex="$rc.currentRowAndIncrement"/>
 			<Label styleClass="titleLabel" text="Developer options" GridPane.columnIndex="0" GridPane.columnSpan="2" GridPane.rowIndex="$rc.currentRowAndIncrement"/>
-	        
-		 		<TextField GridPane.columnIndex="1" GridPane.rowIndex="$rc.currentRow" fx:id="pathToLogFile" id="pathToLogFile" />
-			    <Label text="pathToLogFile" GridPane.columnIndex="0" GridPane.rowIndex="$rc.currentRowAndIncrement" labelFor="$pathToLogFile"/>
-		
+
 				<TextField GridPane.columnIndex="1" GridPane.rowIndex="$rc.currentRow" fx:id="currentVersion" id="currentVersion"/>
-				<Label text="currentVersion" GridPane.columnIndex="0" GridPane.rowIndex="$rc.currentRowAndIncrement" labelFor="$currentVersion"/>
+				<Label text="Client version" GridPane.columnIndex="0" GridPane.rowIndex="$rc.currentRowAndIncrement" labelFor="$currentVersion"/>
 		
 				<TextField GridPane.columnIndex="1" GridPane.rowIndex="$rc.currentRow" fx:id="getSentCB" id="getSentCB"/>
 				<Label text="getSentCB" GridPane.columnIndex="0" GridPane.rowIndex="$rc.currentRowAndIncrement" labelFor="$getSentCB"/>
@@ -80,8 +78,11 @@
 				<TextField GridPane.columnIndex="1" GridPane.rowIndex="$rc.currentRow" fx:id="getPermissionTimeout" id="getPermissionTimeout"/>
 				<Label text="getPermissionTimeout" GridPane.columnIndex="0" GridPane.rowIndex="$rc.currentRowAndIncrement" labelFor="$getPermissionTimeout"/>
 			
+		 		<TextField GridPane.columnIndex="1" GridPane.rowIndex="$rc.currentRow" fx:id="pathToLogFile" id="pathToLogFile" />
+			    <Label text="Log file path" GridPane.columnIndex="0" GridPane.rowIndex="$rc.currentRowAndIncrement" labelFor="$pathToLogFile"/>
+		
 				<TextField GridPane.columnIndex="1" GridPane.rowIndex="$rc.currentRow" fx:id="MAX_LOG_MSG_COUNT" id="MAX_LOG_MSG_COUNT"/>	
-				<Label text="MAX_LOG_MSG_COUNT" GridPane.columnIndex="0" GridPane.rowIndex="$rc.currentRowAndIncrement" labelFor="$MAX_LOG_MSG_COUNT"/>
+				<Label text="Log message limit" GridPane.columnIndex="0" GridPane.rowIndex="$rc.currentRowAndIncrement" labelFor="$MAX_LOG_MSG_COUNT"/>
 			
 				<TextField GridPane.columnIndex="1" GridPane.rowIndex="$rc.currentRow" fx:id="infoCB" id="infoCB"/>	
 				<Label text="infoCB" GridPane.columnIndex="0" GridPane.rowIndex="$rc.currentRowAndIncrement" labelFor="$infoCB"/>
@@ -90,12 +91,11 @@
 				<Label text="errorCB" GridPane.columnIndex="0" GridPane.rowIndex="$rc.currentRowAndIncrement" labelFor="$errorCB"/>
 			
 				<TextField GridPane.columnIndex="1" GridPane.rowIndex="$rc.currentRow" fx:id="icons" id="icons" />	
-				<Label text="icons" GridPane.columnIndex="0" GridPane.rowIndex="$rc.currentRowAndIncrement" labelFor="$icons"/>
+				<Label text="Enable icons" GridPane.columnIndex="0" GridPane.rowIndex="$rc.currentRowAndIncrement" labelFor="$icons"/>
 		
 				<TextField GridPane.columnIndex="1" GridPane.rowIndex="$rc.currentRow" fx:id="getRecCB" id="getRecCB"/>	
 				<Label text="getRecCB" GridPane.columnIndex="0" GridPane.rowIndex="$rc.currentRowAndIncrement" labelFor="$getRecCB"/>
 		
-
 							
 	      </GridPane>
 	  </ScrollPane>
