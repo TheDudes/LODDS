@@ -11,13 +11,11 @@ import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import javax.inject.Inject;
 import javax.swing.ImageIcon;
 
 import javafx.application.Application;
 import javafx.application.HostServices;
 import javafx.scene.Scene;
-import javafx.scene.image.Image;
 import javafx.stage.Stage;
 import studyproject.API.Errors.ErrorFactory;
 import studyproject.API.Lvl.Mid.Core.UserInfo;
@@ -25,11 +23,9 @@ import studyproject.gui.Core.Utils;
 import studyproject.gui.macDockMenu.MacDockMenuPresenter;
 import studyproject.gui.mainWindow.MainWindowPresenter;
 import studyproject.gui.mainWindow.MainWindowView;
-import studyproject.gui.selectedInterface.SelectedInterfaceModel;
 import studyproject.logging.FileLogHandler;
 import studyproject.logging.LogConsoleHandler;
 import studyproject.logging.LogKey;
-import sun.applet.Main;
 
 public class App extends Application {
 
