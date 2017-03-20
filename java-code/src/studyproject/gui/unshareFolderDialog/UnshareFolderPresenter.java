@@ -40,7 +40,7 @@ public class UnshareFolderPresenter implements Initializable {
 	
 	private void fillList() {
 		unshareFolderModel.getSharedFolderList().clear();
-		for (String folderPath : mainWindowModel.getLodds().getWatchService().watchedInternalDirectories) {
+		for (String folderPath : mainWindowModel.getLodds().getWatchService().getWatchedDirectories()) {
 			unshareFolderModel.getSharedFolderList().add(folderPath);
 		}
 		sharedFolderList.setItems(unshareFolderModel.getSharedFolderList());

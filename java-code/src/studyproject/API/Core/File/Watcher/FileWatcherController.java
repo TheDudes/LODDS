@@ -45,7 +45,7 @@ public class FileWatcherController {
 	// Javas watchService can only watch directories, no single files
 	// In order to watch a file we need to watch the whole directory
 	// and than filter for file updates
-	public Vector<String> watchedInternalDirectories = new Vector<String>();
+	private Vector<String> watchedInternalDirectories = new Vector<String>();
 
 	// Helps to prevent that files are added multiple times
 	// static Semaphore semaphore = new Semaphore(0);
@@ -93,6 +93,10 @@ public class FileWatcherController {
 		}
 
 	}
+	
+	public Vector<String> getWatchedDirectories() {
+		return this.watchedInternalDirectories;
+	}
 
 	public FileWatcherController() {
 		super();
@@ -105,6 +109,10 @@ public class FileWatcherController {
 			e.printStackTrace();
 		}
 	}
+	
+	public Boolean isFolderBeingWatched(String path) {
+		return watchedInternalDirectories.contains(addSlashToFileNameIfNecessary(path));
+	}
 
 	/**
 	 * Removes directory including all sub directories and files from being
@@ -113,7 +121,7 @@ public class FileWatcherController {
 	 * @param fullPath
 	 */
 	public void unwatchDirectory(String fullPath) {
-		fullPath = this.addSlashToFileNameIfNecessary(fullPath);
+		fullPath = addSlashToFileNameIfNecessary(fullPath);
 		watchedInternalDirectories.remove(fullPath);
 		watcher.stopWatching(fullPath);
 
@@ -192,6 +200,7 @@ public class FileWatcherController {
 
 		return header + body;
 	}
+	
 
 	/**
 	 * Folders may not have separatorChar at the end, so fix that
@@ -281,9 +290,8 @@ public class FileWatcherController {
 		absoluteFileName = this.addSlashToFileNameIfNecessary(absoluteFileName);
 		virtualRoot = this.addSlashToFileNameIfNecessary(virtualRoot);
 
-		// Logger.getGlobal().log(ErrorFactory.build(Level.INFO,
-		// LogKey.sharedFiles, "New folder should be added:: " +
-		// absoluteFileName));
+		Logger.getGlobal().log(
+				ErrorFactory.build(Level.INFO, LogKey.sharedFiles, "New folder should be added:: " + absoluteFileName));
 
 		if (this.watchedInternalDirectories.contains(absoluteFileName)) {
 			// Logger.getGlobal().log(ErrorFactory.build(Level.INFO,

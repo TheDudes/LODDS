@@ -41,7 +41,6 @@ public class Lodds {
 	private long loadBalancingMinimum = 4096;
 
 	private Loadbalancer loadbalancer;
-	private Vector<String> sharedFolders;
 	private String interfaceName;
 	private int advertisePort;
 	private int listenPort;
@@ -68,7 +67,6 @@ public class Lodds {
 	public Lodds() {
 		loddsModel = new LoddsModel();
 		loddsModel.init();
-		sharedFolders = new Vector<String>();
 		ipPort = DEFAULT_IP_PORT;
 		advertisePort = DEFAULT_ADVERTISE_PORT;
 		timeInterval = DEFAULT_TIME_INTERVAL;
@@ -89,7 +87,6 @@ public class Lodds {
 	 *            with the network
 	 */
 	public Lodds(String interfaceName) {
-		sharedFolders = new Vector<String>();
 		ipPort = DEFAULT_IP_PORT;
 		advertisePort = DEFAULT_ADVERTISE_PORT;
 		timeInterval = DEFAULT_TIME_INTERVAL;
@@ -315,7 +312,7 @@ public class Lodds {
 	 *            the absolute path to the folder
 	 */
 	public void shareFolder(String absolutePath) {
-		ShareFolderThread shareFolderThread = new ShareFolderThread(absolutePath, watchService, sharedFolders);
+		ShareFolderThread shareFolderThread = new ShareFolderThread(absolutePath, watchService);
 		threadExecutor.execute(shareFolderThread);
 	}
 
@@ -329,8 +326,7 @@ public class Lodds {
 	 * @return 0 or error codes
 	 */
 	public int unshareFolder(String path) {
-		if (sharedFolders.contains(path)) {
-			sharedFolders.remove(path);
+		if (watchService.isFolderBeingWatched(path)) {
 			watchService.unwatchDirectory(path);
 			return 0;
 		}
@@ -343,7 +339,7 @@ public class Lodds {
 	 * @return list of all folders this client shares
 	 */
 	public Vector<String> getSharedFolders() {
-		return sharedFolders;
+		return watchService.getWatchedDirectories();
 	}
 
 	/**

@@ -75,7 +75,7 @@ public class TopMenuPresenter implements Initializable {
 			sendFileToUser.setDisable(false);
 		}
 		
-		if (mainWindowModel.getLodds().getWatchService().watchedInternalDirectories.size() == 0) {
+		if (mainWindowModel.getLodds().getWatchService().getWatchedDirectories().size() == 0) {
 			unshareFolder.setDisable(true);
 		} else {
 			unshareFolder.setDisable(false);

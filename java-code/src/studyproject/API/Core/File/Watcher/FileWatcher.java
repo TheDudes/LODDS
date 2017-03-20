@@ -156,7 +156,7 @@ public class FileWatcher extends Thread {
 									// System.out.println("Folder has no
 									// subfolders - Only remove from internal
 									// dir list");
-									controller.watchedInternalDirectories
+									controller.getWatchedDirectories()
 											.remove(controller.addSlashToFileNameIfNecessary(fullPath));
 								}
 							}
@@ -191,7 +191,7 @@ public class FileWatcher extends Thread {
 
 		// Check if folder is in our list
 		// System.out.println("Check if folder is in our list: " + fullPath);
-		if (controller.watchedInternalDirectories.contains(fullPath)) {
+		if (controller.getWatchedDirectories().contains(fullPath)) {
 
 			File probablyDeletedFolder = new File(fullPath);
 

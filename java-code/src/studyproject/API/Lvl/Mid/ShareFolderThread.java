@@ -18,17 +18,18 @@ public class ShareFolderThread extends Thread {
 	private FileWatcherController watchService;
 	private Vector<String> sharedFolders;
 	
-	public ShareFolderThread(String path, FileWatcherController watchService, Vector<String> sharedFolders) {
-		this.path = path;
+	public ShareFolderThread(String path, FileWatcherController watchService) {
+		this.path = watchService.addSlashToFileNameIfNecessary(path);
 		this.watchService = watchService;
-		this.sharedFolders = sharedFolders;
+		this.sharedFolders = watchService.getWatchedDirectories();
 	}
 	
 	@Override
 	public void run() {
+		
 		if (Files.exists(Paths.get(path)) && Files.isDirectory(Paths.get(path))
 				&& !sharedFolders.contains(path)) {
-			sharedFolders.add(path);
+
 			try {
 				watchService.watchDirectoryRecursively(path);
 			} catch (NoSuchAlgorithmException e) {

@@ -23,9 +23,9 @@ public class FileWatcherControllerTest {
 	public void shouldNotAddChildOfAlreadyWatchedDirToList() throws Exception {
 		FileWatcherController controller = new FileWatcherController();
 		controller.watchDirectoryRecursively(testDirectory);
-		assertEquals(4,controller.watchedInternalDirectories.size());
+		assertEquals(4,controller.getWatchedDirectories().size());
 		controller.watchDirectoryRecursively(testDirectory+"oneFile");
-		assertEquals(4,controller.watchedInternalDirectories.size());	
+		assertEquals(4,controller.getWatchedDirectories().size());	
 	}
 
 	@Test
@@ -264,8 +264,8 @@ public class FileWatcherControllerTest {
 		assertEquals(expectedResponse,actualResponse);
 		
 		// Watched internal directories should only have one entry (root)
-		System.out.println(c.watchedInternalDirectories);
-		assert(c.watchedInternalDirectories.size()==1);
+		System.out.println(c.getWatchedDirectories());
+		assert(c.getWatchedDirectories().size()==1);
 
 	}
 
