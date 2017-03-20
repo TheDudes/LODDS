@@ -27,9 +27,9 @@
   1.2 Checksums
 
     Every file is identified via a checksum. The checksum is
-    calculated by hashing (sha1) the files content. This will allow
-    the recognition of files independent of their origin or path.
-    Files with the same checksum will be 'seen' as equal.
+    calculated by hashing (sha1) the files content. This allows 
+    a path independent recognition of files.
+    Files that share the same checksum are classified as equal.
 
   1.3 Name
 
@@ -40,7 +40,7 @@
   To be seen by other clients the following broadcast message has to be
   sent periodically. Each client who wants to communicate with others
   has to listen for other clients advertisements. The broadcast
-  communication informs other clients that a file was changed
+  communication informs other clients that a file was changed and
   that they have to request an update.
 
   'name@ip-address:port timestamp_lastChange load\n'
@@ -86,7 +86,7 @@
   request (get cmd). The request is then answered with a response. In
   case of an error or something similar the connection is closed.
 
-  Here is a example where Client A will request something from Client
+  Here is an example where Client A requests something from Client
   B:
 
   step | Client A        | Client B
@@ -108,7 +108,7 @@
 
   The only get command which is not following this communication type
   is 'get send-permission'. Instead of a connection close, the Client
-  A will start transferring a file, in case B has responded with a
+  A will start transfering a file, in case B has responded with a
   accept.
 
   3.1 Requests (get cmds)
@@ -149,12 +149,12 @@
           will transfer 2048 bytes total.
 
     'get info timestamp\n'
-      Will request an update about his files from a client. Timestamp
-      is specifying the last known state. So if client A changes his
-      files the timestamp he broadcasts will update. If client B sees
-      the change he will send 'get info timestamp' to A, specifying
-      the last timestamp of A he saw. So A will respond with all his
-      updates since the given timestamp. If timestamp is 0, a complete
+      Requests an update about the files from a client. The timestamp
+      specifies the last known state and can be used for further requests. 
+      If client A changes his files the timestamp he broadcasts will be updated. 
+      If client B sees the change he will send 'get info timestamp' to A, 
+      including the last timestamp of A he is aware of. So A will respond with 
+      all his updates since the given timestamp. If timestamp is 0, a complete
       list of shared files from the specific client is requested.
 
       Arguments:
