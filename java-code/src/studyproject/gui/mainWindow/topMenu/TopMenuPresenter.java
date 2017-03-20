@@ -27,6 +27,7 @@ import studyproject.gui.aboutWindow.AboutWindowView;
 import studyproject.gui.mainWindow.MainWindowModel;
 import studyproject.gui.mainWindow.userList.UserListModel;
 import studyproject.gui.settingsWindow.SettingsWindowView;
+import studyproject.gui.unshareFolderDialog.UnshareFolderView;
 import studyproject.logging.LogKey;
 
 public class TopMenuPresenter implements Initializable {
@@ -36,6 +37,8 @@ public class TopMenuPresenter implements Initializable {
 	Menu fileMenu;
 	@FXML
 	MenuItem shareFolder;
+	@FXML
+	MenuItem unshareFolder;
 	@FXML
 	MenuItem sendFileToUser;
 	@FXML
@@ -56,6 +59,7 @@ public class TopMenuPresenter implements Initializable {
 
 		settingsItem.setOnAction(e -> settingsItemPressed());
 		shareFolder.setOnAction(e -> shareFolderPressed());
+		unshareFolder.setOnAction(e -> unshareFolderPressed());
 		sendFileToUser.setOnAction(e -> sendFileToUser(usersListModel.getSelectedUser().get()));
 		aboutItem.setOnAction(e -> aboutItemPressed());
 
@@ -70,6 +74,12 @@ public class TopMenuPresenter implements Initializable {
 		} else {
 			sendFileToUser.setDisable(false);
 		}
+		
+		if (mainWindowModel.getLodds().getWatchService().watchedInternalDirectories.size() == 0) {
+			unshareFolder.setDisable(true);
+		} else {
+			unshareFolder.setDisable(false);
+		}
 	}
 
 	public void shareFolderPressed() {
@@ -79,6 +89,13 @@ public class TopMenuPresenter implements Initializable {
 		mainWindowModel.getLodds().shareFolder(chosenPath);
 	}
 
+	private void unshareFolderPressed() {
+		Stage stage = new Stage();
+		stage.setScene(new Scene(new UnshareFolderView().getView()));
+		stage.initModality(Modality.APPLICATION_MODAL);
+		stage.show();
+	}
+	
 	private void settingsItemPressed() {
 		Stage stage = new Stage();
 		if (Boolean.valueOf(App.properties.getProperty("icons")))
