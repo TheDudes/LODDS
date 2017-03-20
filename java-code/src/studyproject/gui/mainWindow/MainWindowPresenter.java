@@ -126,7 +126,9 @@ public class MainWindowPresenter implements Initializable {
 
 	public void showFirstTimeIntroduction() {
 		Stage introductionStage = new Stage();
-		Utils.addLoddsImageToStage(introductionStage);
+		if (Boolean.valueOf(App.properties.getProperty("icons"))) {
+			Utils.addLoddsImageToStage(introductionStage);
+		}
 		introductionStage.initModality(Modality.APPLICATION_MODAL);
 		introductionStage.setMinWidth(300);
 		introductionStage.setMinHeight(200);
