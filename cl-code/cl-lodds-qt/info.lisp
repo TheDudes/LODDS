@@ -70,12 +70,7 @@
                           progress)
       (connect cancel "pressed()"
                (lambda ()
-                 (let ((task (lodds.task:get-task-by-id id)))
-                   (when task
-                     (lodds.task:cancel-task task
-                                             ;; resubmit task-get-folder
-                                             (eql 'lodds.task:task-get-folder
-                                                  (type-of task)))))))
+                 (lodds.event-loop:task-cancel id)))
       (q+:set-item-widget info
                           new-entry
                           +info-cancel+
@@ -144,8 +139,8 @@
 
 (define-slot (info tick) ()
   (declare (connected timer (timeout)))
-  (let ((tasks (lodds.task:get-task-progresses
-                (lodds:get-subsystem :tasker)))
+  (let ((tasks (lodds.event-loop:get-task-progresses
+                (lodds:get-event-loop)))
         (time-vanished (lodds.config:get-value :info-update-interval)))
     ;; add all missing, and update all we already have
     (loop :for (id max done type info-text) :in tasks

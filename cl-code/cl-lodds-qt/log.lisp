@@ -193,9 +193,9 @@
            (q+:add-widget info-log-list)))
 
 (define-initializer (info-log setup-callbacks)
-  (lodds.event:add-callback :qt-info-log
+  (lodds.event:add-callback :qt-log
                             (lambda (event)
                               (cb-log-messages info-log event))))
 
 (define-finalizer (info-log cleanup-callbacks)
-  (lodds.event:remove-callback :qt-info-log))
+  (lodds.event:remove-callback :qt-log))

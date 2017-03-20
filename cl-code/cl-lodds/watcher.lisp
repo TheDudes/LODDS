@@ -21,13 +21,9 @@ tracked about the shared files.
 
 (defmethod print-object ((object watcher) stream)
   (print-unreadable-object (object stream :type t :identity t)
-    (with-slots (lodds.subsystem:name
-                 lodds.subsystem:alive-p
-                 dir-watchers
-                 list-of-changes) object
-      (format stream "~a :alive-p ~a :watchers ~a last-change: ~a"
-              lodds.subsystem:name
-              lodds.subsystem:alive-p
+    (with-slots (alive-p dir-watchers list-of-changes) object
+      (format stream "Watcher :alive-p ~a :watchers ~a last-change: ~a"
+              alive-p
               (length dir-watchers)
               (caar list-of-changes)))))
 
@@ -42,13 +38,10 @@ tracked about the shared files.
          (file-length stream)
          0))))
 
-(defmethod lodds.subsystem:start ((subsys watcher))
-  (error "You cannot start the Watcher subsystem like that! use SHARE and ~
-         UNSHARE to start/stop"))
-
-(defmethod lodds.subsystem:stop ((subsys watcher))
-  (dolist (dir-watcher (dir-watchers subsys))
-    (stop-dir-watcher dir-watcher nil)))
+(defun stop ()
+  (let ((watcher (lodds:get-watcher)))
+    (dolist (dir-watcher (dir-watchers watcher))
+      (stop-dir-watcher dir-watcher nil))))
 
 (defun add-file (dir-watcher pathname &optional (checksum nil) (size nil))
   "adds a file to the given dir-watcher, this functions is called by
@@ -146,7 +139,7 @@ tracked about the shared files.
                               (lodds.core:get-timestamp)
                               :del
                               info))))
-  (let ((watcher (lodds:get-subsystem :watcher)))
+  (let ((watcher (lodds:get-watcher)))
     (setf (dir-watchers watcher)
           (remove dir-watcher (dir-watchers watcher)))
     (unless (dir-watchers watcher)
@@ -154,22 +147,21 @@ tracked about the shared files.
         (setf (list-of-changes watcher) nil
               (started-tracking watcher) 0
               (last-change watcher) (lodds.core:get-timestamp)))
-      (setf (lodds.subsystem:alive-p watcher) nil)
-      (lodds.event:push-event (lodds.subsystem:name watcher)
-                              "stopped!"))))
+      (setf (slot-value watcher 'alive-p) nil)
+      (lodds.event:push-event :watcher "stopped!"))))
 
 (defun get-file-info (checksum)
   "returns a list with information about the requested file. if file
   with requested checksum is not found nil will be returned"
   (car
-   (loop :for dir-watcher :in (dir-watchers (lodds:get-subsystem :watcher))
+   (loop :for dir-watcher :in (dir-watchers (lodds:get-watcher))
          :when (gethash checksum
                         (file-table-hash dir-watcher))
          :return it)))
 
 (defun get-shared-folders ()
   "returns a list of all currently shared folders."
-  (mapcar #'cl-fs-watcher:dir (dir-watchers (lodds:get-subsystem :watcher))))
+  (mapcar #'cl-fs-watcher:dir (dir-watchers (lodds:get-watcher))))
 
 (defun folder-already-shared-p (folder-path)
   (if (or (find folder-path (get-shared-folders))
@@ -178,7 +170,7 @@ tracked about the shared files.
                 :test #'equal
                 :key #'lodds.core:escaped-get-folder-name))
       t
-      (loop :for watcher :in (dir-watchers (lodds:get-subsystem :watcher))
+      (loop :for watcher :in (dir-watchers (lodds:get-watcher))
             :do (loop :for dir
                       :being :the :hash-key :of (cl-fs-watcher:directory-handles watcher)
                       :do (when (equal dir folder-path)
@@ -194,14 +186,14 @@ tracked about the shared files.
       ((folder-already-shared-p folder)
        (values nil (format nil "Folder with name ~a already shared"
                            (lodds.core:escaped-get-folder-name folder))))
-      ((> (length (dir-watchers (lodds:get-subsystem :watcher)))
+      ((> (length (dir-watchers (lodds:get-watcher)))
           42)
        (values nil "Cannot share anymore Directories"))
       (t (values t nil)))))
 
 (defparameter *add-lock* (bt:make-recursive-lock "Dir Watchers Push Lock"))
 (defun start-dir-watcher (folder-path)
-  (let* ((watcher (lodds:get-subsystem :watcher))
+  (let* ((watcher (lodds:get-watcher))
          (hook (lambda (change)
                  (bt:with-lock-held ((list-of-changes-lock watcher))
                    (push change (list-of-changes watcher))
@@ -230,7 +222,7 @@ tracked about the shared files.
     (bt:with-recursive-lock-held (*add-lock*)
       (push new-dir-watcher
             (dir-watchers watcher)))
-    (setf (lodds.subsystem:alive-p watcher) t)
+    (setf (slot-value watcher 'alive-p) t)
     (lodds.event:push-event :shared-directory
                             folder-path)))
 
@@ -248,7 +240,7 @@ tracked about the shared files.
 
 (defun unshare-folder (folder-path)
   "unshare the given folder"
-  (let ((watcher (lodds:get-subsystem :watcher)))
+  (let ((watcher (lodds:get-watcher)))
     (let ((rem-watcher (find (lodds.core:get-absolute-path folder-path)
                              (dir-watchers watcher)
                              :key #'cl-fs-watcher:dir
@@ -260,7 +252,7 @@ tracked about the shared files.
 
 (defun folder-busy-p (folder)
   (let ((watcher (find (lodds.core:get-absolute-path folder)
-                       (dir-watchers (lodds:get-subsystem :watcher))
+                       (dir-watchers (lodds:get-watcher))
                        :key #'cl-fs-watcher:dir
                        :test #'equal)))
     (when watcher

@@ -26,6 +26,16 @@ and if he wants to remove the callback he calls:
 Note: The callback will be called from the event thread, and should
 not block too long, since it will block other events
 
+Events and their Arguments:
+
+:send-permission
+- string describing the message
+  Happens on: auto accept/deny, no :send-permission callback
+- task-id filename timeout user size (deny-fn) (accept-fn &optional new-filename)
+
+:folder-download-error
+- task-id folder error-file retry-fn skip-fn abort-fn
+
 |#
 
 (in-package #:lodds.event)
@@ -54,7 +64,7 @@ not block too long, since it will block other events
   out, FN will be called for every occuring event. EVENT-TYPE is, like
   NAME, a keyword. lodds:*server* needs to be bound, else a error will
   thrown."
-  (let ((evt-queue (lodds:get-subsystem :event-queue)))
+  (let ((evt-queue (lodds:get-event-queue)))
     (unless evt-queue
       (error "Could not find event-queue!"))
     (if event-type
@@ -67,7 +77,7 @@ not block too long, since it will block other events
   be specified if it was specified by adding the given callback with
   ADD-CALLBACK. lodds:*server* needs to be bound, else a error will be
   thrown."
-  (let ((evt-queue (lodds:get-subsystem :event-queue)))
+  (let ((evt-queue (lodds:get-event-queue)))
     (unless evt-queue
       (error "Could not find event-queue!"))
     (if event-type
@@ -89,7 +99,7 @@ not block too long, since it will block other events
   event-queue. EVENT-TYPE is a keyword describing the event, EVENT can
   be anything."
   (lparallel.queue:push-queue (cons event-type args)
-                              (queue (lodds:get-subsystem :event-queue))))
+                              (queue (lodds:get-event-queue))))
 
 (defun handle-event (event event-queue)
   "handles a single event and calls it inside a RESTART-CASE. If a
@@ -121,25 +131,40 @@ not block too long, since it will block other events
 (defun cleanup ()
   "If Event-queue gets stopped this function will be called, it will
 handle all left events and then return"
-  (let ((event-queue (lodds:get-subsystem :event-queue)))
+  (let ((event-queue (lodds:get-event-queue)))
     (when event-queue
       (let ((q (queue event-queue)))
         (loop :while (not (lparallel.queue:queue-empty-p q))
               :do (handle-event (lparallel.queue:pop-queue q)
                                 event-queue))))))
 
-(defun run ()
+(defun run (event-queue)
   "init function for Event-Queue subsystem, will run until stopped."
-  (loop :while (lodds.subsystem:alive-p (lodds:get-subsystem :event-queue))
-        :do (let ((event-queue (lodds:get-subsystem :event-queue)))
-              (if event-queue
-                  (handle-event (lparallel.queue:pop-queue (queue event-queue))
-                                event-queue)
-                  (error "Event-Queue is nil!")))
-        :finally (cleanup)))
+  (with-slots (alive-p) event-queue
+    (loop :while alive-p
+          :do (handle-event (lparallel.queue:pop-queue (queue event-queue))
+                            event-queue)
+          :finally (cleanup))))
+
+(defun start ()
+  "init function for Event-Queue subsystem, will run until stopped."
+  (let ((event-queue (lodds:get-event-queue)))
+    (with-slots (thread alive-p) event-queue
+      (unless alive-p
+        (setf thread
+              (bt:make-thread (lambda ()
+                                (setf alive-p t)
+                                (run event-queue)
+                                (setf alive-p nil))
+                              :name "Lodds - Event Queue"))))))
+
+(defun stop ()
+  (let ((event-queue (lodds:get-event-queue)))
+    (setf (slot-value event-queue 'alive-p) nil)
+    (push-event :done)))
 
 (defun callback-exists-p (event-type)
   (if (gethash event-type
-               (typed-callbacks (lodds:get-subsystem :event-queue)))
+               (typed-callbacks (lodds:get-event-queue)))
       t
       nil))

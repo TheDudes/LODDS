@@ -159,8 +159,7 @@ functions.
        (destructuring-bind (,ip ,port) (cl-strings:split ,ip+port #\:)
          (declare (ignorable ,ip ,port))
          ,(if convert-types
-              `(let ((,ip (usocket:dotted-quad-to-vector-quad ,ip))
-                     (,port (parse-integer ,port)))
+              `(let ((,port (parse-integer ,port)))
                  ,@body)
               `(progn
                  ,@body))))))

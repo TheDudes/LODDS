@@ -15,9 +15,9 @@
    (on-timeout :initarg :on-timeout
                :initform nil
                :type function)
-   (task :initarg :task
-         :documentation "Send Permission task, used to check on tick
-         if task was canceled, if so call on-timeout.")))
+   (task-id :initarg :task-id
+            :documentation "Send Permission task, used to check on tick
+            if task was canceled, if so call on-timeout.")))
 
 (define-subwidget (send-permission folder)
     (q+:make-qlineedit send-permission )
@@ -61,7 +61,7 @@
   (declare (connected timer (timeout)))
   (incf time-vanished)
   (if (or (>= time-vanished timeout)
-          (eql :canceled (slot-value task 'lodds.task::state)))
+          (not (lodds.event-loop:get-task-by-id task-id)))
       (when on-timeout
         (funcall on-timeout))
       (q+:set-value time-left (- timeout time-vanished))))
@@ -86,72 +86,63 @@
   (q+:start timer 1000)
   (q+:set-value time-left timeout))
 
-(defun make-sp-dialog (task widget)
-  (with-slots ((size lodds.task::size)
-               (timeout lodds.task::timeout)
-               (filename lodds.task::filename)
-               (socket lodds.task::socket)
-               (user lodds.task::user)) task
-    (flet ((success-fn (widget)
-             (let ((full-filename (get-full-filename widget)))
-               (if full-filename
-                   (progn
-                     (setf filename full-filename)
-                     (lodds.task:submit-task task)
-                     t)
-                   (progn
-                     (make-instance 'dialog
-                                    :title "Error - Invalid input"
-                                    :text "The given input was invalid")
-                     nil))))
-           (cancel-fn (widget)
-             (declare (ignore widget))
-             (lodds.task:cancel-task task)))
-      (make-instance 'dialog
-                     :title
-                     (format nil
-                             "User ~{~a~^or~} wants to send you a File (Size: ~a)"
-                             user
-                             (lodds.core:format-size size))
-                     :text
-                     (format nil
-                             "If you want to accept the File, ~
+(defun make-sp-dialog (widget user size deny-fn accept-fn)
+  (flet ((success-fn (widget)
+           (let ((full-filename (get-full-filename widget)))
+             (if full-filename
+                 (progn
+                   (funcall accept-fn full-filename)
+                   t)
+                 (progn
+                   (make-instance 'dialog
+                                  :title "Error - Invalid input"
+                                  :text "The given input was invalid")
+                   nil))))
+         (cancel-fn (widget)
+           (declare (ignore widget))
+           (funcall deny-fn)))
+    (make-instance 'dialog
+                   :title
+                   (format nil
+                           "User ~{~a~^or~} wants to send you a File (Size: ~a)"
+                           user
+                           (lodds.core:format-size size))
+                   :text
+                   (format nil
+                           "If you want to accept the File, ~
                              select a folder and a filename and ~
                              click 'Accept'")
-                     :widget widget
-                     :ok-text "Accept"
-                     :cancel-text "Deny"
-                     :on-success-fn #'success-fn
-                     :on-cancel-fn #'cancel-fn))))
+                   :widget widget
+                   :ok-text "Accept"
+                   :cancel-text "Deny"
+                   :on-success-fn #'success-fn
+                   :on-cancel-fn #'cancel-fn)))
 
-(defun open-send-permission-dialog (task main-window)
-  (with-slots ((filename lodds.task::filename)
-               (timeout lodds.task::timeout)
-               (user lodds.task::user)) task
-    (with-slots (send-permission-dialogs
-                 last-tray-message
-                 tray-icon) main-window
-      (let* ((widget (make-instance 'send-permission
-                                    :timeout timeout
-                                    :default-filename filename
-                                    :task task))
-             (dialog (make-sp-dialog task widget))
-             (list-entry (cons filename dialog)))
-        (when (and (q+:is-hidden main-window)
-                   (q+:qsystemtrayicon-supports-messages))
-          (q+:hide dialog)
-          (push list-entry send-permission-dialogs)
-          (setf last-tray-message :send-permission)
-          (q+:show-message tray-icon
-                           "Incomming File Request"
-                           (format nil
-                                   "User ~{~a~^or~} wants to send you a File.~%~
+(defun open-send-permission-dialog (main-window task-id filename timeout user &rest args)
+  (with-slots (send-permission-dialogs
+               last-tray-message
+               tray-icon) main-window
+    (let* ((widget (make-instance 'send-permission
+                                  :timeout timeout
+                                  :default-filename filename
+                                  :task-id task-id))
+           (dialog (apply #'make-sp-dialog widget user args))
+           (list-entry (cons filename dialog)))
+      (when (and (q+:is-hidden main-window)
+                 (q+:qsystemtrayicon-supports-messages))
+        (q+:hide dialog)
+        (push list-entry send-permission-dialogs)
+        (setf last-tray-message :send-permission)
+        (q+:show-message tray-icon
+                         "Incomming File Request"
+                         (format nil
+                                 "User ~{~a~^or~} wants to send you a File.~%~
                                    Click Message (or System Tray Icon) to Open up~%~
                                    Pending Send Permission Dialogs.~%~
                                    Time to accept: ~a"
-                                   user
-                                   (lodds.core:format-seconds timeout))))
-        (setf (slot-value widget 'on-timeout)
-              (lambda ()
-                (setf (cdr list-entry) nil)
-                (cancel dialog)))))))
+                                 user
+                                 (lodds.core:format-seconds timeout))))
+      (setf (slot-value widget 'on-timeout)
+            (lambda ()
+              (setf (cdr list-entry) nil)
+              (cancel dialog))))))

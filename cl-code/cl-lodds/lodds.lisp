@@ -36,68 +36,6 @@ start,stop,shutdown, ...).
 (defun event-callback (event)
   (format t "log: ~a~%" event))
 
-(defun on-config-change (server)
-  (with-server server
-    (let ((advertiser (lodds:get-subsystem :advertiser))
-          (incognito (lodds.config:get-value :incognito-mode)))
-      (cond
-        ((and incognito
-              (lodds.subsystem:alive-p advertiser))
-         (lodds.subsystem:stop advertiser))
-        ((and (not incognito)
-              (not (lodds.subsystem:alive-p advertiser)))
-         (lodds.subsystem:start advertiser))))))
-
-(defmethod initialize-instance :after ((server lodds-server) &rest initargs)
-  (declare (ignorable initargs))
-  (with-server server ;; bind *server* for every subsystem of *server*
-    (setf (subsystems server)
-          (list
-           ;; EVENT-QUEUE subsystem, this one is special to the
-           ;; others, since its used by all the other subsystems. it
-           ;; contains a lparallel.queue where messages can be added
-           ;; (PUSH-EVENT). its used to transfer messages between
-           ;; subsystems and the server object (or anything that has
-           ;; attached a callback to the queue (ADD-CALLBACK). see
-           ;; event.lisp for more info
-           (make-instance 'lodds.event:event-queue
-                          :name :event-queue
-                          :init-fn #'lodds.event:run)
-           ;; TASKER subsystem, handles and schedules several
-           ;; tasks on a lparrallel:kernel. Waits on
-           ;; event-queue for :task events and then executes
-           ;; those.
-           (make-instance 'lodds.task:tasker
-                          :name :tasker
-                          :init-fn nil)
-           ;; LISTENER subsystem listens on broadcast address of
-           ;; the set INTERFACE and BROADCAST-PORT member of
-           ;; server for advertisements from other clients
-           (make-instance 'lodds.subsystem:subsystem
-                          :name :listener
-                          :init-fn #'lodds.listener:run)
-           ;; HANDLER subsystem, listens for incomming
-           ;; connections and handles those (starts threads etc).
-           (make-instance 'lodds.subsystem:subsystem
-                          :name :handler
-                          :init-fn #'lodds.handler:run)
-           ;; ADVERTISER subystem, broadcasts information to
-           ;; other clients on broadcast address of INTERFACE and
-           ;; BROADCAST-PORT.
-           (make-instance 'lodds.subsystem:subsystem
-                          :name :advertiser
-                          :init-fn #'lodds.advertiser:run)
-           ;; WATCHER subsystem, handles filesystem changes,
-           ;; updates/handles local list of shared files
-           (make-instance 'lodds.watcher:watcher
-                          :name :watcher
-                          :init-fn nil)))
-    (lodds.event:add-callback :lodds-config-change
-                              (lambda (&rest args)
-                                (declare (ignore args))
-                                (on-config-change server))
-                              :config-changed)))
-
 (defun switch-config (new-config)
   ;; on fail of validate-config just return the error string
   (or (lodds.config:validate-config new-config)
@@ -113,18 +51,14 @@ start,stop,shutdown, ...).
                                         (car value)))
            new-config))
 
-(defun get-subsystem (name)
-  "returns the requested subsystem, if not found nil will returned"
-  (find name (subsystems *server*) :key #'lodds.subsystem:name))
-
 (defun get-load ()
-  (lodds.task:get-load (lodds:get-subsystem :tasker)))
+  (lodds.event-loop:get-load (get-event-loop)))
 
 (defun get-timestamp-last-change ()
   "returns the timestamp of the last change, who would have thought?
   :D"
   (lodds.watcher:last-change
-   (get-subsystem :watcher)))
+   (get-watcher)))
 
 (defun get-user-list ()
   "Returns List of users who advertised themselfs.
@@ -232,7 +166,7 @@ start,stop,shutdown, ...).
 (defun get-file-changes (current-timestamp &optional (timestamp nil))
   "returns a list of all changes since the given timestamp. if
   timestamp is nil a full list of all files will be returnd"
-  (let* ((watcher (get-subsystem :watcher))
+  (let* ((watcher (get-watcher))
          (lock (lodds.watcher::list-of-changes-lock watcher)))
     (bt:with-lock-held (lock)
       (if timestamp
@@ -256,16 +190,13 @@ start,stop,shutdown, ...).
                     (let ((files (lodds.watcher:get-all-tracked-file-infos watcher)))
                       (loop :for info :in files
                             :collect (cons :add info))))
-                  (lodds.watcher:dir-watchers (get-subsystem :watcher))))))))
+                  (lodds.watcher:dir-watchers (get-watcher))))))))
 
 (defun start ()
   "Starts up all subsystem of currently bound *server*"
-  (lodds.subsystem:start (lodds:get-subsystem :event-queue))
-  (lodds.subsystem:start (lodds:get-subsystem :tasker))
-  (lodds.subsystem:start (lodds:get-subsystem :listener))
-  (lodds.subsystem:start (lodds:get-subsystem :handler))
-  (unless (lodds.config:get-value :incognito-mode)
-    (lodds.subsystem:start (lodds:get-subsystem :advertiser))))
+  (lodds.event:start)
+  (lodds.listener:start)
+  (lodds.event-loop:start))
 
 (defun stop ()
   "Stops all subsystems besides event-queue and watcher of currently
@@ -274,32 +205,22 @@ start,stop,shutdown, ...).
   connections. By not shutting down the Event-loop stuff like changing
   the settings will still work. To cleanup and end the lodds-server
   call shutdown"
-  (lodds.subsystem:stop (lodds:get-subsystem :tasker))
-  (lodds.subsystem:stop (lodds:get-subsystem :listener))
-  (lodds.subsystem:stop (lodds:get-subsystem :advertiser))
-  (lodds.subsystem:stop (lodds:get-subsystem :handler)))
+  (lodds.listener:stop)
+  (lodds.event-loop:stop))
 
 (defun shutdown ()
   "shuts down the whole server, removes all handles and joins all
   spawned threads."
   (lodds.event:push-event :shutdown)
-  (let ((event-queue nil))
-    (loop :for subsystem :in (subsystems *server*)
-          :if (eql (lodds.subsystem:name subsystem)
-                   :event-queue)
-            :do (setf event-queue subsystem)
-          :else
-            :do (lodds.subsystem:stop subsystem))
-    ;; stop event-queue after the others, so i can see stopped messages
-    (when event-queue
-      (lodds.subsystem:stop event-queue)
-      (lodds.event:push-event :done))))
+  (lodds.watcher:stop)
+  (lodds.listener:stop)
+  (lodds.event:stop))
 
 (defun generate-info-response (timestamp)
-  (let* ((started-tracking (lodds.watcher:started-tracking (get-subsystem :watcher)))
+  (let* ((started-tracking (lodds.watcher:started-tracking (get-watcher)))
          (type (if (or (eql 0 timestamp)
                        (<= timestamp started-tracking)
-                       (not (lodds.subsystem:alive-p (get-subsystem :watcher))))
+                       (not (lodds.watcher:alive-p (get-watcher))))
                    :all
                    :upd))
          (current-timestamp (lodds.core:get-timestamp))
@@ -311,44 +232,65 @@ start,stop,shutdown, ...).
           current-timestamp
           file-infos)))
 
+(defun find-best-user (checksum)
+  "Returns the best user (in terms of load) who shares the given file,
+nil if no user is found"
+  (let ((best-user nil)
+        (best-load nil))
+    (loop :for (user load . rest) :in (lodds:get-file-info checksum)
+          :do (when (or (not best-user)
+                        (> best-load load))
+                (setf best-user user
+                      best-load load)))
+    (when best-user
+      (lodds.event:push-event :debug
+                              (format nil
+                                      "best user: ~a"
+                                      best-user))
+      best-user)))
+
 (defun get-file (local-file-path checksum &optional user)
-  (lodds.task:submit-task
-   (if user
-       (make-instance 'lodds.task:task-get-file-from-user
-                      :name "get-file-from-user"
-                      :checksum checksum
-                      :user user
-                      :local-file-path local-file-path)
-       (make-instance 'lodds.task:task-get-file-from-users
-                      :name "get-file"
-                      :checksum checksum
-                      :local-file-path local-file-path))))
+  (let ((ev-loop (get-event-loop)))
+    (lodds.event-loop:with-event-loop (ev-loop)
+      (lodds.event-loop:ev-task-run
+       (if user
+           (make-instance 'lodds.event-loop:task-get-file-from-user
+                          :event-loop ev-loop
+                          :checksum checksum
+                          :user user
+                          :local-file-path local-file-path)
+           (make-instance 'lodds.event-loop:task-get-file-from-users
+                          :event-loop ev-loop
+                          :checksum checksum
+                          :local-file-path local-file-path))))))
 
 (defun get-folder (full-folder-path local-path user)
   "gets given folder and saves it to local-path"
   (setf full-folder-path
         (lodds.core:add-missing-slash full-folder-path))
-  (let ((folder (lodds.core:escaped-get-folder-name full-folder-path)))
-    (lodds.task:submit-task
-     (make-instance 'lodds.task:task-get-folder
-                    :name "get-folder"
-                    :user user
-                    :remote-root (subseq full-folder-path
-                                         0
-                                         (- (length full-folder-path)
-                                            (length folder)))
-                    :remote-path full-folder-path
-                    :local-path local-path))))
+  (let ((folder (lodds.core:escaped-get-folder-name full-folder-path))
+        (ev-loop (get-event-loop)))
+    (lodds.event-loop:with-event-loop (ev-loop)
+      (lodds.event-loop:ev-task-run
+       (make-instance 'lodds.event-loop:task-get-folder
+                      :event-loop ev-loop
+                      :user user
+                      :remote-root (subseq full-folder-path
+                                           0
+                                           (- (length full-folder-path)
+                                              (length folder)))
+                      :remote-path full-folder-path
+                      :local-path local-path)))))
 
 (defun send-file (file user timeout)
-  (let ((task (make-instance 'lodds.task:task-send-file
-                              :name "send-file"
-                              :user user
-                              :filepath file
-                              :timeout timeout)))
-    (lodds.task:submit-task task)
-    (slot-value task 'lodds.task::id)))
-
+  (let ((ev-loop (lodds:get-event-loop)))
+    (lodds.event-loop:with-event-loop (ev-loop)
+      (lodds.event-loop:ev-task-run
+       (make-instance 'lodds.event-loop:task-send-file
+                      :timeout timeout
+                      :user user
+                      :filename file
+                      :event-loop ev-loop)))))
 
 (defun get-status (&optional (format nil))
   "Describes Lodds current status.
@@ -358,7 +300,7 @@ Tasks: How many tasks are currently running
 Network Files: Amount of Files in the network (non Unique)
 Shared Folders: Amount of currently shared folders
 Users: Amount of User on the Network"
-  (let ((tasker (get-subsystem :tasker))
+  (let ((ev-loop (get-event-loop))
         (total-load 0)
         (total-shared 0))
     (dolist (user (get-user-list))
@@ -366,8 +308,8 @@ Users: Amount of User on the Network"
         (incf total-load (lodds:c-load info))
         (incf total-shared (hash-table-count
                             (c-file-table-name info)))))
-    (let ((tasks (lodds.task:get-task-count tasker))
-          (load (lodds.task:get-load tasker))
+    (let ((tasks (lodds.event-loop:get-task-count ev-loop))
+          (load (lodds.event-loop:get-load ev-loop))
           (users (length (lodds:get-user-list)))
           (shared-folders (length (lodds.watcher:get-shared-folders))))
       (if format
@@ -425,3 +367,15 @@ Users: Amount of User on the Network"
      :blocked-users
      (append (list user)
              (lodds.config:get-value :blocked-users)))))
+
+(defun get-event-loop ()
+  (slot-value lodds:*server* 'event-loop))
+
+(defun get-watcher ()
+  (slot-value lodds:*server* 'watcher))
+
+(defun get-event-queue ()
+  (slot-value lodds:*server* 'event-queue))
+
+(defun get-listener ()
+  (slot-value lodds:*server* 'listener))

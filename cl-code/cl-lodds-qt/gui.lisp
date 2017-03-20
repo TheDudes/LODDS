@@ -35,7 +35,11 @@ functionality (for example system tray and status-info)
    (last-tray-message :initform nil
                       :documentation "Keyword describing the last
                       displayed tray message. Can be one of :info,
-                      :send-permission or :folder-error")))
+                      :send-permission or :folder-error")
+   (callback-buffer :initform (make-hash-table :test 'equal)
+                    :documentation "Buffer which is filled by the
+                    event thread (when callbacks are called) to
+                    transfer values over to the qt thread")))
 
 (defun run ()
   (if (lodds.config:get-value :interface)
@@ -387,59 +391,58 @@ functionality (for example system tray and status-info)
 
 (define-slot (main-window received-send-permission) ((task-id string))
   (declare (connected main-window (received-send-permission string)))
-  (let ((task (lodds.task:remove-task-from-hold task-id)))
-    (when task
-      (open-send-permission-dialog task main-window))))
+  (apply #'open-send-permission-dialog
+         main-window
+         task-id
+         (gethash task-id callback-buffer))
+  (remhash task-id callback-buffer))
 
 (define-slot (main-window folder-download-error) ((task-id string))
   (declare (connected main-window (folder-download-error string)))
-  (let ((task (lodds.task:get-task-by-id task-id)))
-    (with-slots ((items lodds.task::items)
-                 (items-done lodds.task::items-done)
-                 (remote-path lodds.task::remote-path)) task
-      (destructuring-bind (file checksum size) (car items-done)
-        (declare (ignore checksum))
-        (let ((options (list (list :skip
-                                   "skip current file")
-                             (list :abort
-                                   "abort directory download")
-                             (list :retry
-                                   "retry loading file"))))
-          (flet ((on-close (widget)
-                   (case (get-selected-solution widget)
-                     (:skip (lodds.task:skip-task task))
-                     (:abort (lodds.task:cancel-task task))
-                     (:retry (lodds.task:retry-task task)))
-                   t))
-            (let* ((dialog (make-instance
-                            'dialog
-                            :title "Error - File from directory download failed"
-                            :text (format dil
-                                          "File ~a (~a) which is part of directory download (~a) failed"
-                                          file
-                                          (lodds.core:format-size size)
-                                          remote-path)
-                            :widget (make-instance 'selection
-                                                   :title "Solutions:"
-                                                   :solutions options)
-                            :on-success-fn #'on-close
-                            :on-cancel-fn #'on-close))
-                   (list-entry (cons task-id dialog)))
-              (when (and (q+:is-hidden main-window)
-                         (q+:qsystemtrayicon-supports-messages))
-                (q+:hide dialog)
-                (push list-entry folder-error-dialogs)
-                (setf last-tray-message :folder-error)
-                (q+:show-message tray-icon
-                                 "Error downloading folder"
-                                 (format nil
-                                         "There was a error downloading file~%~
+  (destructuring-bind (folder error-file retry-fn skip-fn abort-fn)
+      (gethash task-id callback-buffer)
+    (remhash task-id callback-buffer)
+    (let ((options (list (list :skip
+                               "skip current file")
+                         (list :abort
+                               "abort directory download")
+                         (list :retry
+                               "retry loading file"))))
+      (flet ((on-close (widget)
+               (funcall
+                (case (get-selected-solution widget)
+                  (:skip skip-fn)
+                  (:abort abort-fn)
+                  (:retry retry-fn)))
+               t))
+        (let* ((dialog (make-instance
+                        'dialog
+                        :title "Error - File from directory download failed"
+                        :text (format nil
+                                      "File ~a which is part of directory download (~a) failed"
+                                      error-file
+                                      folder)
+                        :widget (make-instance 'selection
+                                               :title "Solutions:"
+                                               :solutions options)
+                        :on-success-fn #'on-close
+                        :on-cancel-fn #'on-close))
+               (list-entry (cons task-id dialog)))
+          (when (and (q+:is-hidden main-window)
+                     (q+:qsystemtrayicon-supports-messages))
+            (q+:hide dialog)
+            (push list-entry folder-error-dialogs)
+            (setf last-tray-message :folder-error)
+            (q+:show-message tray-icon
+                             "Error downloading folder"
+                             (format nil
+                                     "There was a error downloading file~%~
                                          ~a~%~
                                          of Folder~%~
                                          ~a~%~
                                          Click message or tray icon to fix."
-                                         file
-                                         remote-path))))))))))
+                                     error-file
+                                     folder))))))))
 
 (define-slot (main-window directory-error) ((error-message string))
   (declare (connected main-window (directory-error string)))
@@ -464,14 +467,17 @@ functionality (for example system tray and status-info)
                               (signal! main-window (config-changed)))
                             :config-changed)
   (lodds.event:add-callback :qt-main
-                            (lambda (task-id task)
-                              (declare (ignore task))
+                            (lambda (task-id &rest args)
+                              (setf (gethash task-id callback-buffer)
+                                    args)
                               (signal! main-window
                                        (received-send-permission string)
                                        task-id))
                             :send-permission)
   (lodds.event:add-callback :qt-main
-                            (lambda (task-id)
+                            (lambda (task-id &rest args)
+                              (setf (gethash task-id callback-buffer)
+                                    args)
                               (signal! main-window
                                        (folder-download-error string)
                                        task-id))

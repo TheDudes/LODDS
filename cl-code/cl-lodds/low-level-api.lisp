@@ -43,12 +43,13 @@ multiple-value-bind.
    "^(add|del) [^\\s]{40} \\d+ [^\\n]+$")
   "used to scan get info body to check if they are correct")
 
-(defun format-to-socket (destination control-string &rest format-arguments)
-  "format for socket-streams of type '(unsigned-byte 8)"
-  (write-sequence
-   (flex:string-to-octets
-    (apply #'format nil control-string format-arguments))
-   destination))
+(defun write-to-stream (stream string &optional (flush-p t))
+  "converts the given strin gto octets and writes it to the given
+stream, will flush the stream with force-output when flusp-p is t"
+  (write-sequence (flex:string-to-octets string)
+                  stream)
+  (when flush-p
+    (force-output stream)))
 
 (defun read-line-from-socket (socket)
   "read-line for socket-stream of type '(unsigned-byte 8)"
@@ -65,33 +66,36 @@ multiple-value-bind.
 
 ;; broadcast family
 
+(defun format-send-advertise (ad-info)
+  (destructuring-bind (ip port timestamp load name) ad-info
+    (format nil "~a@~a:~a ~a ~a~%"
+            name
+            (usocket:vector-quad-to-dotted-quad ip)
+            port
+            (if timestamp
+                timestamp
+                0)
+            load)))
+
 (defun send-advertise (broadcast-host broadcast-port ad-info)
   "will format ad-info and write it to a udp-broadcast socket
    with given broadcast-host and broadcast-port.
    ad-info is a list containing ip, port, timestamp, load and name,
    in that order. for example:
    '(#(192 168 2 255) 12345 87654321 9999 \"username\")"
-  (destructuring-bind (ip port timestamp load name) ad-info
-    (let ((sock (usocket:socket-connect nil nil :protocol :datagram))
-          (data (flexi-streams:string-to-octets
-                 (format nil "~a@~a:~a ~a ~a~%"
-                         name
-                         (usocket:vector-quad-to-dotted-quad ip)
-                         port
-                         (if timestamp
-                             timestamp
-                             0)
-                         load))))
-      (handler-case
-          (progn
-            (setf (usocket:socket-option sock :broadcast) t)
-            (usocket:socket-send sock data (length data)
-                                 :host broadcast-host
-                                 :port broadcast-port)
-            (usocket:socket-close sock)
-            0) ;; everything went fine
-        (usocket:network-unreachable-error ()
-          6))))) ;; network-unreachable-error
+  (let ((sock (usocket:socket-connect nil nil :protocol :datagram))
+        (data (flexi-streams:string-to-octets
+               (format-send-advertise ad-info))))
+    (handler-case
+        (progn
+          (setf (usocket:socket-option sock :broadcast) t)
+          (usocket:socket-send sock data (length data)
+                               :host broadcast-host
+                               :port broadcast-port)
+          (usocket:socket-close sock)
+          0) ;; everything went fine
+      (usocket:network-unreachable-error ()
+        6)))) ;; network-unreachable-error
 
 (defun read-advertise (message)
   "counter-part to send-advertise, will parse the given message (byte
@@ -103,23 +107,26 @@ multiple-value-bind.
           (cl-strings:split message)
         (lodds.core:split-user-identifier (name ip port) user
           (values 0
-                  (list
-                   (usocket:dotted-quad-to-vector-quad ip)
-                   (parse-integer port)
-                   (parse-integer timestamp)
-                   (parse-integer load)
-                   user))))
+                  (list ip
+                        (parse-integer port)
+                        (parse-integer timestamp)
+                        (parse-integer load)
+                        user))))
       2))
 
-(defun parse-request (socket)
+(defun parse-request (input)
   "parses a direct communication request. returns multiple values,
    the first is a number describing the error (or 0 on success) and
    one of the following lists, depending on request:
    (:file checksum start end)
    (:info timestamp)
    (:send-permission size timeout filename)
-   will use *get-scanner* to to check for syntax errors"
-  (let ((line (read-line-from-socket socket)))
+   will use *get-scanner* to to check for syntax errors
+   INPUT can be string, octets or a usocket"
+  (let ((line (ctypecase input
+                (usocket:stream-usocket (read-line-from-socket input))
+                (vector (flex:octets-to-string (subseq input 0 (- (length input) 1))
+                                               :external-format :utf8)))))
     (unless (cl-ppcre:scan *get-scanner* line)
       (return-from parse-request 2))
     (destructuring-bind (get type . args)
@@ -147,21 +154,31 @@ multiple-value-bind.
                                             (cl-strings:join filename :separator " "))))))))))
 
 ;; get family
+(defun format-get-file (checksum start end)
+  (format nil "get file ~a ~a ~a~%" checksum start end))
+
 (defun get-file (socket-stream checksum start end)
   "will format and write a 'get file' request onto socket-stream requesting
    the specified (checksum) file's content from start till end"
-  (format-to-socket socket-stream "get file ~a ~a ~a~%" checksum start end)
-  (force-output socket-stream)
+  (write-to-stream socket-stream (format-get-file checksum start end))
   0)
+
+(defun format-get-info (timestamp)
+  (format nil "get info ~a~%" timestamp))
 
 (defun get-info (socket-stream timestamp)
   "will format and write a 'get info' request onto socket-stream requesting
    information about shared files. timestamp describes the last requested
    information the client currently holds. If timestamp is zero (0) it will
    request a full list of shared files from the client."
-  (format-to-socket socket-stream "get info ~a~%" timestamp)
-  (force-output socket-stream)
+  (write-to-stream socket-stream (format-get-info timestamp))
   0)
+
+(defun format-get-send-permission (size timeout filename)
+  (format nil "get send-permission ~a ~a ~a~%"
+          size
+          timeout
+          filename))
 
 (defun get-send-permission (socket-stream size timeout filename)
   "will format and write a 'get-send-permission' request onto socket-stream
@@ -169,15 +186,30 @@ multiple-value-bind.
    to-be-transfered file. The requested client then has 'timeout' seconds to
    respond with either a OK or a connection close. filename is a string containing
    the filename."
-  (format-to-socket socket-stream
-                    "get send-permission ~a ~a ~a~%"
-                    size
-                    timeout
-                    filename)
-  (force-output socket-stream)
+  (write-to-stream socket-stream
+                   (format-get-send-permission size
+                                               timeout
+                                               filename))
   0)
 
 ;; response family
+
+(defun format-respond-info (type timestamp file-infos)
+  (with-output-to-string (stream)
+    (format stream "~a ~a ~a~%"
+            (if (eql type :all)
+                "all"
+                "upd")
+            timestamp
+            (length file-infos))
+    (loop :for (type checksum size name) :in file-infos
+          :do (format stream "~a ~a ~a ~a~%"
+                      (if (eql type :add)
+                          "add"
+                          "del")
+                      checksum
+                      size
+                      name))))
 
 (defun respond-info (socket-stream type timestamp file-infos)
   "response to a 'get info' request. Will format type timestamp and
@@ -188,27 +220,18 @@ multiple-value-bind.
    file's content. size is, as the name suggests, the file size. name is the
    relative pathname.
    TODO: relative pathname link to spec"
-  (format-to-socket socket-stream "~a ~a ~a~%"
-                    (if (eql type :all)
-                        "all"
-                        "upd")
-                    timestamp
-                    (length file-infos))
-  (loop :for (type checksum size name) :in file-infos
-        :do (format-to-socket socket-stream "~a ~a ~a ~a~%"
-                              (if (eql type :add)
-                                  "add"
-                                  "del")
-                              checksum
-                              size
-                              name))
+  (write-to-stream socket-stream
+                   (format-respond-info type timestamp file-infos))
   0)
+
+(defun format-respond-send-permission ()
+  (format nil "OK~%"))
 
 (defun respond-send-permission (socket-stream)
   "response to a 'get send-permission', will send a OK and copy the
    socket-stream content (max size bytes) to file-stream."
-  (format-to-socket socket-stream "OK~%")
-  (force-output socket-stream)
+  (write-to-stream socket-stream
+                   (format-respond-send-permission))
   0)
 
 ;; handle family

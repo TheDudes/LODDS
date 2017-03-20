@@ -30,17 +30,39 @@ client infos on the lodds-server object once he gets new information.
     (lodds.event:push-event :listener result)
     (let ((current-time (lodds.core:get-timestamp)))
       (remove-old-clients current-time)
-      ;; add client
       (destructuring-bind (ip port timestamp-l-c user-load user) result
-        (lodds.task:submit-task
-         (make-instance 'lodds.task:task-info
-                        :name "update-info"
-                        :user user
-                        :ip ip
-                        :port port
-                        :timestamp current-time
-                        :last-change timestamp-l-c
-                        :user-load user-load))))))
+        (let ((client-info (lodds:get-user-info user)))
+          (unless client-info
+            ;; add client
+            (setf client-info
+                  (make-instance 'lodds:client-info
+                                 :c-name user
+                                 :c-last-message current-time
+                                 :c-ip ip
+                                 :c-port port
+                                 :c-last-change 0
+                                 :c-load user-load)
+                  (gethash user (lodds:clients lodds:*server*))
+                  client-info)
+            (lodds.event:push-event :client-added
+                                    user
+                                    user-load
+                                    timestamp-l-c))
+          (let ((old-load (lodds:c-load client-info)))
+            (setf (lodds:c-last-message client-info) current-time
+                  (lodds:c-load client-info) user-load)
+            (let ((user-has-new-changes-p
+                    (<= (lodds:c-last-change client-info)
+                        timestamp-l-c)))
+              (when user-has-new-changes-p
+                (lodds.event-loop:with-event-loop ((lodds:get-event-loop))
+                  (lodds.event-loop:ev-update-user-info user)))
+              (when (or user-has-new-changes-p
+                        (not (eql old-load user-load)))
+                (lodds.event:push-event :client-updated
+                                        user
+                                        user-load
+                                        timestamp-l-c)))))))))
 
 (defun get-next-message (socket)
   (let* ((buffer-size 2048) ;; TODO: move to config
@@ -57,29 +79,27 @@ client infos on the lodds-server object once he gets new information.
               (error "listener:get-next-message: receive error: ~A" n)))
         (remove-old-clients))))
 
-(defun run ()
+(defun run (listener)
   (let ((socket nil))
-    (labels ((get-socket ()
-               (usocket:socket-connect
-                nil nil
-                :local-host (lodds.core:get-broadcast-address
-                             (lodds.config:get-value :interface))
-                :local-port (lodds.config:get-value :broadcast-port)
-                :protocol :datagram)))
+    (with-slots (alive-p) listener
       (handler-case
           (progn
-            (setf socket (get-socket))
-            (loop :while (lodds.subsystem:alive-p (lodds:get-subsystem :listener))
+            (setf socket (usocket:socket-connect
+                          nil nil
+                          :local-host (lodds.core:get-broadcast-address
+                                       (lodds.config:get-value :interface))
+                          :local-port (lodds.config:get-value :broadcast-port)
+                          :protocol :datagram))
+            (loop :while alive-p
                   :do (let ((msg (get-next-message socket)))
                         (when msg
                           (handle-message msg)))))
         (error (e)
           (lodds.event:push-event :listener
-                                  e)
-          (when socket
-            (usocket:socket-close socket))))
+                                  e)))
       (when socket
-        (usocket:socket-close socket))
+        (usocket:socket-close socket)
+        (setf socket nil))
       (let ((clients (lodds:clients lodds:*server*)))
         (maphash (lambda (key client)
                    (declare (ignore client))
@@ -87,3 +107,17 @@ client infos on the lodds-server object once he gets new information.
                    (lodds.event:push-event :client-removed
                                            key))
                  clients)))))
+
+(defun start ()
+  (let ((listener (lodds:get-listener)))
+    (with-slots (thread alive-p) listener
+      (unless alive-p
+        (setf thread
+              (bt:make-thread (lambda ()
+                                (setf alive-p t)
+                                (run listener)
+                                (setf alive-p nil))
+                              :name "Lodds - Listener"))))))
+
+(defun stop ()
+  (setf (slot-value (lodds:get-listener) 'alive-p) nil))
