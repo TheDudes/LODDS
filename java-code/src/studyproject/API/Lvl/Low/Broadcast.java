@@ -23,7 +23,7 @@ import studyproject.logging.LogKey;
  *
  */
 public class Broadcast {
-	//TODO Where to set the user chosen ports if they are available
+	// TODO Where to set the user chosen ports if they are available
 	private static final int DEFAULT_PORT = 9002;
 	private static final int DEFAULT_PORT_SENDING = 9003;
 	private static final int DEFAULT_BUFFERSIZE = 2048;
@@ -99,10 +99,16 @@ public class Broadcast {
 	}
 
 	/**
-	 * TODO: Document method and return values
+	 * 
+	 * retrieve the ip address of a given interface. The address is returned in
+	 * the passed StringBuilder parameter
+	 * 
 	 * @param interfaceName
+	 *            the name of the interface from which to retrieve the address
 	 * @param broadcastAddress
-	 * @return
+	 *            this parameter gets set as return value, pass as empty
+	 *            StringBuilder
+	 * @return 0 or error code
 	 */
 	private static int getAddress(String interfaceName, StringBuilder broadcastAddress) {
 		try {
@@ -115,11 +121,15 @@ public class Broadcast {
 					while (inetAddresses.hasMoreElements()) {
 						broadcastAddress.delete(0, broadcastAddress.length());
 						broadcastAddress = broadcastAddress.append(inetAddresses.nextElement().getHostAddress());
+						// if the found address is a valid ip address return
+						// this ip address in the return parameter
 						if (Pattern.matches(IP_REGEX, broadcastAddress)) {
 							return 0;
 						}
 					}
 				}
+				// if no suitable ip address was found remove everything in the
+				// return parameter
 				broadcastAddress.delete(0, broadcastAddress.length());
 			}
 		} catch (SocketException e) {
@@ -128,7 +138,8 @@ public class Broadcast {
 			Logger.getGlobal().log(ErrorFactory.build(Level.SEVERE, LogKey.error, f));
 			System.exit(1);
 		}
-		Logger.getGlobal().log(ErrorFactory.build(Level.SEVERE, LogKey.error, "No Suitable Interface found: " + interfaceName));
+		Logger.getGlobal()
+				.log(ErrorFactory.build(Level.SEVERE, LogKey.error, "No Suitable Interface found: " + interfaceName));
 		return 1;
 	}
 
