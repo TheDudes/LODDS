@@ -14,7 +14,7 @@
       <HBox alignment="CENTER_RIGHT" spacing="5.0" VBox.vgrow="NEVER">
          <children>
            <Button fx:id="unshareButton" mnemonicParsing="false" text="Unshare Folder" />
-           <Button fx:id="cancleButton" mnemonicParsing="false" text="Cancel" />
+           <Button fx:id="cancleButton" mnemonicParsing="false" text="Close" />
          </children>
          <padding>
             <Insets bottom="2.0" left="2.0" right="2.0" top="2.0" />
