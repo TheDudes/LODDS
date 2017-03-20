@@ -21,7 +21,7 @@ public class UnshareFolderPresenter implements Initializable {
 	@FXML
 	Button unshareButton;
 	@FXML
-	Button okButton;
+	Button cancleButton;
 	@FXML
 	ListView<String> sharedFolderList;
 	@Inject
@@ -32,7 +32,7 @@ public class UnshareFolderPresenter implements Initializable {
 	@Override
 	public void initialize(URL arg0, ResourceBundle arg1) {
 		unshareButton.setOnAction(e -> unshareButtonPressed());
-		okButton.setOnAction(e -> ((Button) e.getSource()).getScene().getWindow().hide());
+		cancleButton.setOnAction(e -> ((Button) e.getSource()).getScene().getWindow().hide());
 
 		sharedFolderList.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
 		fillList();
