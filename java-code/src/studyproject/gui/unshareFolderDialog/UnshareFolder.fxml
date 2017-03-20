@@ -13,8 +13,8 @@
       <Separator id="seperator" prefWidth="200.0" VBox.vgrow="NEVER" />
       <HBox alignment="CENTER_RIGHT" spacing="5.0" VBox.vgrow="NEVER">
          <children>
-           <Button fx:id="unshareButton" mnemonicParsing="false" text="unshare Folder" />
-           <Button fx:id="cancleButton" mnemonicParsing="false" text="Cancle" />
+           <Button fx:id="unshareButton" mnemonicParsing="false" text="Unshare Folder" />
+           <Button fx:id="cancleButton" mnemonicParsing="false" text="Cancel" />
          </children>
          <padding>
             <Insets bottom="2.0" left="2.0" right="2.0" top="2.0" />
