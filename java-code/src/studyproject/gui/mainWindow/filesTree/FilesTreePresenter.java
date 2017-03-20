@@ -74,7 +74,7 @@ public class FilesTreePresenter implements Initializable {
 
 		// style button
 		if (Boolean.valueOf(App.properties.getProperty("icons"))) {
-			fileImage = new Image(getClass().getResourceAsStream(App.ICON_PATH + "file.png"));
+			fileImage = new Image(getClass().getResourceAsStream(App.ICON_PATH + "file.png"), 16, 16, true, true);
 			refreshImage = new Image(getClass().getResourceAsStream(App.ICON_PATH + "reload.png"), 16, 16, true, true);
 			filesTreeRefresh.setGraphic(new ImageView(refreshImage));
 			filesTreeRefresh.setText(null);
