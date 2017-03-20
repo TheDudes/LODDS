@@ -18,7 +18,7 @@
 
       - dezentral communication (no server)
       - clients can find other clients inside the local network
-      - identify files by their content indepented of their name or
+      - identify files by their content independently of their name or
         path
       - request/transfer a file from multiple clients in parallel
       - load balancing
@@ -28,7 +28,7 @@
 
     Every file is identified via a checksum. The checksum is
     calculated by hashing (sha1) the files content. This will allow
-    the recognition of files independend of their origin or path.
+    the recognition of files independent of their origin or path.
     Files with the same checksum will be 'seen' as equal.
 
   1.3 Name
@@ -38,10 +38,10 @@
 2. Broadcast Communication
 
   To be seen by other clients the following broadcast message has to be
-  sent periotically. Each client who wants to communicate with others
+  sent periodically. Each client who wants to communicate with others
   has to listen for other clients advertisements. The broadcast
-  communication will also serve as a way to tell others that a file has
-  changed and they have to request a update.
+  communication informs other clients that a file was changed
+  that they have to request an update.
 
   'name@ip-address:port timestamp_lastChange load\n'
     Every client who wants to be visible for others will broadcast a
@@ -55,12 +55,12 @@
         list. Allowed are only characters [a-z], [A-Z] and numbers
         [0-9].
         Ip-address is the IPv4 address where the client listens for
-        incomming connections.
-        Port is the Port number where the client listens for incomming
+        incoming connections.
+        Port is the Port number where the client listens for incoming
         connections.
 
-        Name and ip-address are seperated by a @ (at) sign, ip-address
-        and port a seperated by a : (colon) sign.
+        Name and ip-address are separated by a @ (at) sign, ip-address
+        and port a separated by a : (colon) sign.
 
       timestamp_lastChange
         Timestamp of last change. If something changed this timestamp
@@ -68,7 +68,7 @@
 
       load
         Amount of outstanding bytes the broadcasting client still
-        needs to transfer. This information can be used for laod
+        needs to transfer. This information can be used for load
         balancing purposes.
 
     Response:
@@ -76,8 +76,8 @@
 
     Example:
       "192.168.0.15 1050 1464269857 9999 Nintinugga\n"
-      Will tell others the clients ip-address (192.168.0.15), port
-      (1050), my last change timestamp (1464269857), the oustanding
+      Informs other clients about the client's ip-address (192.168.0.15), port
+      (1050), the client's last change timestamp (1464269857), the outstanding
       bytes (9999) and the name (Nintinugga).
 
 3. Direct Communication
@@ -104,11 +104,11 @@
   step 4: Client B either sends a response or closes the connection.
           Closing the connection could be due to an internal error,
           request error or something else.
-  setp 5: Clients A and B close the connection.
+  step 5: Clients A and B close the connection.
 
   The only get command which is not following this communication type
   is 'get send-permission'. Instead of a connection close, the Client
-  A will start transfering a file, in case B has responded with a
+  A will start transferring a file, in case B has responded with a
   accept.
 
   3.1 Requests (get cmds)
@@ -126,14 +126,14 @@
     'get file checksum start end\n'
       Will request a part of a file with 'checksum', starting from
       byte 'start' till 'end'. The 'end' byte is excluded, so 'end' -
-      'start' bytes will be transferd.
+      'start' bytes will be transfered.
 
       Arguments:
         checksum
-          the checksum specifing the file.
+          the checksum specifying the file.
 
         start
-          first byte from file to be transferd.
+          first byte from file to be transfered.
 
         end
           end - 1 is the last byte transfered, so it's transfering from
