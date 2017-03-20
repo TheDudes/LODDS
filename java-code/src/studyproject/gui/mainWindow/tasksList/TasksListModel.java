@@ -25,7 +25,9 @@ public class TasksListModel implements IntroductionInterface {
 
 	@Override
 	public String getViewDiscription() {
-		return "This is the Task List Discription";
+		return "In the TaskList you can see all on-going downloads. "
+				+ "If you need, you can interrupt these downloads by clicking "
+				+ "at the red 'X'.";
 	}
 
 	@Override

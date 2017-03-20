@@ -37,7 +37,14 @@ public class UserListModel implements IntroductionInterface {
 
 	@Override
 	public String getViewDiscription() {
-		return "This is the User List Discription";
+		return "This is a simple list of users which are connected to the "
+				+ "same network. You can simply select one user with a mouse "
+				+ "click to see its shared folders in the FilesTree. "
+				+ "You can also send single files to one specific user, "
+				+ "just click the send icon next to the users name. "
+				+ "There is a number which indicates the network-load of one "
+				+ "user, users with a high number are already sending or "
+				+ "downloading a big amount of bytes.";
 	}
 
 	@Override

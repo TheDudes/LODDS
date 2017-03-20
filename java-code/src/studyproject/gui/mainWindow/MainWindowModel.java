@@ -24,7 +24,11 @@ public class MainWindowModel implements IntroductionInterface {
 
 	@Override
 	public String getViewDiscription() {
-		return "This is the Main Window discription";
+		return "The MainWindow shows all important parts of the program. "
+				+ "These are divided into 5 zones: The MenuBar at the top, "
+				+ "a list of user on the left-hand side, downloadable files "
+				+ "in its centre, on going downloads at the right and a "
+				+ "list of log-messages at the bottom of the MainWindow.";
 	}
 
 	@Override
