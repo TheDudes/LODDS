@@ -22,8 +22,10 @@ public class MacDockMenuPresenter {
 	 */
 	public void createMenus() {
 		topMenuPresenter = (TopMenuPresenter) (new TopMenuView()).getPresenter();
-		MenuItem shareFolder = new MenuItem("Share folder");
+		PopupMenu menu = new PopupMenu();
 		
+		// Share folder
+		MenuItem shareFolder = new MenuItem("Share folder");
 		// Need to be in fx application thread
 		shareFolder.addActionListener(e -> Platform.runLater(new Runnable() {
 			@Override
@@ -31,10 +33,19 @@ public class MacDockMenuPresenter {
 				topMenuPresenter.shareFolderPressed();
 			}
 		}));
-		
-		PopupMenu menu = new PopupMenu();
 		menu.add(shareFolder);
-
+		
+		// Unshare folder
+		MenuItem unshareFolder = new MenuItem("Unshare folder");
+		// Need to be in fx application thread
+		unshareFolder.addActionListener(e -> Platform.runLater(new Runnable() {
+			@Override
+			public void run() {
+				topMenuPresenter.unshareFolderPressed();
+			}
+		}));
+		menu.add(unshareFolder);
+		
 		// set the dock menu
 		com.apple.eawt.Application app = com.apple.eawt.Application.getApplication();
 		app.setDockMenu(menu);

@@ -89,7 +89,7 @@ public class TopMenuPresenter implements Initializable {
 		mainWindowModel.getLodds().shareFolder(chosenPath);
 	}
 
-	private void unshareFolderPressed() {
+	public void unshareFolderPressed() {
 		Stage stage = new Stage();
 		stage.setScene(new Scene(new UnshareFolderView().getView()));
 		stage.initModality(Modality.APPLICATION_MODAL);
