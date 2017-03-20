@@ -144,7 +144,7 @@ public class SettingsWindowPresenter implements Initializable {
 				propertyValue = textField.getText();
 
 				// Show error message if username is invalid
-				if (label.getText().equals("userName") && UserInfo.validateUserName(textField.getText()) == false) {
+				if (inputNode.getId().equals("userName") && UserInfo.validateUserName(textField.getText()) == false) {
 					showInputError("Please make sure to choose a valid username. '" + textField.getText()
 							+ "' is not a valid username.");
 					return false;
