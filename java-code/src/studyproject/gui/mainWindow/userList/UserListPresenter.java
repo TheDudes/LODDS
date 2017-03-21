@@ -68,9 +68,9 @@ public class UserListPresenter implements Initializable {
 		userIconImage = null;
 		filteredUserList = new FilteredList<UserInfo>(usersListModel.getUsers(), s -> true);
 		if (Boolean.valueOf(App.properties.getProperty("icons"))) {
-			sendFileImage = new Image(getClass().getResourceAsStream(App.ICON_PATH + "send-file.png"), 20, 20, true,
+			sendFileImage = new Image(getClass().getResourceAsStream(App.ICON_PATH + "send-file.png"), 19, 19, true,
 					true);
-			userIconImage = new Image(getClass().getResourceAsStream(App.ICON_PATH + "user.png"), 20, 20, true, true);
+			userIconImage = new Image(getClass().getResourceAsStream(App.ICON_PATH + "user.png"), 24, 24, true, true);
 			refreshImage = new Image(getClass().getResourceAsStream(App.ICON_PATH + "reload.png"), 16, 16, true, true);
 			refreshUsers.setGraphic(new ImageView(refreshImage));
 			refreshUsers.setText(null);

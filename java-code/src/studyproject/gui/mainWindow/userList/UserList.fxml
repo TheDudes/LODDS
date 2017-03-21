@@ -15,7 +15,7 @@
             <Button fx:id="refreshUsers" mnemonicParsing="false" text="Button" />
          </children>
       </HBox>
-      <TableView fx:id="userTableView" fixedCellSize="22.0" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" prefHeight="564.0" prefWidth="302.0">
+      <TableView fx:id="userTableView" fixedCellSize="24.0" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" prefHeight="564.0" prefWidth="302.0">
         <columns>
           <TableColumn fx:id="iconCol" maxWidth="24.0" minWidth="24.0" prefWidth="24.0" resizable="false" sortable="false" text="Icon" />
           <TableColumn fx:id="nameCol" maxWidth="1.7976931348623157E308" minWidth="50.0" prefWidth="180.0" text="Name/IP" />

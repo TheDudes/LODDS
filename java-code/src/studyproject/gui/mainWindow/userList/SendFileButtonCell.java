@@ -12,8 +12,8 @@ public class SendFileButtonCell extends TableCell<UserInfo, Boolean> {
 	final Button cellButton = new Button("send-file");
 
 	SendFileButtonCell(Image sendFileImage, TopMenuPresenter topMenuPresenter) {
-		cellButton.setMaxHeight(22.0);
-		cellButton.setMaxWidth(22.0);
+		cellButton.setMaxHeight(24.0);
+		cellButton.setMaxWidth(24.0);
 		cellButton.setPadding(new Insets(0, 0, 0, 0));
 		if (sendFileImage != null) {
 			cellButton.setGraphic(new ImageView(sendFileImage));
