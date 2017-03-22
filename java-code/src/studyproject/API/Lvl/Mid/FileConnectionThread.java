@@ -1,6 +1,7 @@
 package studyproject.API.Lvl.Mid;
 
 import java.io.*;
+import java.net.ConnectException;
 import java.net.Socket;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -191,6 +192,8 @@ public class FileConnectionThread extends Thread implements MonitoredThread {
 				finished.setValue(true);
 		} catch (IOException e) {
 			logger.log(ErrorFactory.build(Level.SEVERE, LogKey.error, "IOException thrown: ", e));
+			if (e instanceof ConnectException)
+				running.setValue(false);
 		}
 		if (finished.get()) {
 			logger.log(ErrorFactory.build(Level.INFO, LogKey.filetransferComplete,
@@ -199,8 +202,7 @@ public class FileConnectionThread extends Thread implements MonitoredThread {
 			logger.log(ErrorFactory.build(Level.INFO, LogKey.info,
 					"Filetransfer of '" + checksum + "' from user '" + user.toString() + "' was interrupted."));
 		}
-		if (running.get() == false && finished.get() == false)
-			finished.setValue(true);
+
 	}
 
 	@Override

@@ -65,6 +65,7 @@ public class SingleTaskPresenter implements Initializable {
 		this.monitoredThread.isRunning().addListener((obs, oldValue, newValue) -> {
 			if (newValue == false) {
 				Platform.runLater(() -> progressLabel.textProperty().setValue("Stopped..."));
+				mainWindowModel.getLodds().getLoddsModel().getTasksList().remove(this.monitoredThread);
 			} else if (newValue == true) {
 				Platform.runLater(() -> progressLabel.textProperty().setValue("Running..."));
 			}

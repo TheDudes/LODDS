@@ -87,15 +87,15 @@ public class MultipleDownloadHelper extends Thread implements MonitoredThread {
 					progress.set((double) doneSize.get() / (double) wholeSize);
 				});
 			});
-			// TODO ninti: thread was setted to daemon, but it's not submitted
-			// to the threadExeccutor from lodds, fix this when testing with
-			// others
 			currentFileConnectionThread.start();
+			currentFileConnectionThread.isRunning().bindBidirectional(running);
 			try {
 				currentFileConnectionThread.join();
+				currentFileConnectionThread.isRunning().unbindBidirectional(running);
 				i++;
 			} catch (InterruptedException e) {
 				logger.log(ErrorFactory.build(Level.SEVERE, LogKey.error, e));
+				currentFileConnectionThread.setRunning(false);
 			}
 		}
 		finished.setValue(true);
