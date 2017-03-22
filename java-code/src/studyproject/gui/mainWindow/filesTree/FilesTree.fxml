@@ -9,7 +9,7 @@
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
 
-<VBox xmlns="http://javafx.com/javafx/8.0.65" xmlns:fx="http://javafx.com/fxml/1" fx:controller="studyproject.gui.mainWindow.filesTree.FilesTreePresenter">
+<VBox spacing="1.0" xmlns="http://javafx.com/javafx/8.0.65" xmlns:fx="http://javafx.com/fxml/1" fx:controller="studyproject.gui.mainWindow.filesTree.FilesTreePresenter">
    <children>
       <HBox VBox.vgrow="NEVER">
          <children>
@@ -27,7 +27,7 @@
          </contextMenu></TreeView>
       <AnchorPane prefHeight="15.0" prefWidth="50.0" VBox.vgrow="NEVER">
          <children>
-            <Button fx:id="downloadButton" mnemonicParsing="false" prefHeight="15.0" prefWidth="130.0" text="Download" AnchorPane.rightAnchor="0.0" />
+            <Button fx:id="downloadButton" mnemonicParsing="false" prefHeight="25.0" prefWidth="205.0" text="Download" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" />
          </children>
       </AnchorPane>
    </children>
