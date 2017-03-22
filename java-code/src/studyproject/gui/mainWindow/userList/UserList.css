@@ -14,31 +14,36 @@
     -fx-table-cell-border-color:white;
     -fx-background-insets: 0, 0 0 0 0;
     -fx-border-width: 0.0em;
-    -fx-padding: 0; 
+    -fx-padding: 0;
+    -fx-text-inner-color: black; 
+}
+
+.table-row-cell .text {
+       -fx-fill: black;
 }
 
 .table-row-cell:selected{
-    -fx-background-color: lightgrey;
-    -fx-border-color: lightgrey;
-    -fx-table-cell-border-color:lightgrey;
+    -fx-background-color: #ededed;
+    -fx-border-color: #ededed;
+    -fx-table-cell-border-color: #ededed;
     -fx-background-insets: 0, 0 0 0 0;
-    -fx-border-width: 0.0em;
     -fx-padding: 0; 
 }
 
 .table-row-cell:odd{
-    -fx-background-color: #F5F5F5;
-    -fx-border-color: #F5F5F5;
-    -fx-table-cell-border-color: #F5F5F5;
+    -fx-text-fill: black;
+    -fx-background-color: #fafafa;
+    -fx-border-color: #fafafa;
+    -fx-table-cell-border-color: #fafafa;
     -fx-background-insets: 0, 0 0 0 0;
     -fx-border-width: 0.0em;
     -fx-padding: 0; 
 }
 
 .table-row-cell:odd:selected{
-    -fx-background-color: lightgrey;
-    -fx-border-color: lightgrey;
-    -fx-table-cell-border-color:lightgrey;
+    -fx-background-color: #ededed;
+    -fx-border-color: #ededed;
+    -fx-table-cell-border-color:#ededed;
     -fx-background-insets: 0, 0 0 0 0;
     -fx-border-width: 0.0em;
     -fx-padding: 0; 

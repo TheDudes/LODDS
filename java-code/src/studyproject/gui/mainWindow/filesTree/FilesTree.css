@@ -1,3 +1,12 @@
+.tree-view {
+    -fx-background-color: white;
+    -fx-border-color: white;
+}
+
+.tree-cell .text {
+       -fx-fill: black;
+}
+
 .tree-cell .tree-disclosure-node .arrow {
     -fx-shape: null;
     -fx-padding: 0.6em, 0em, 0em, 0em;
@@ -12,6 +21,11 @@
 
 .tree-cell {
     -fx-padding: 0em, 0em, 0em, 0em;
+}
+
+.tree-cell:selected {
+    -fx-background-color: #ededed;
+    -fx-border-width: 0.0;
 }
 
 .tree-cell:expanded > .tree-disclosure-node > .arrow,
