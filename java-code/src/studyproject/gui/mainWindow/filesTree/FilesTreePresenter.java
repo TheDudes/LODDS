@@ -9,6 +9,8 @@ import java.util.logging.Logger;
 
 import javax.inject.Inject;
 
+import javafx.beans.binding.Bindings;
+import javafx.beans.binding.BooleanBinding;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
@@ -58,10 +60,16 @@ public class FilesTreePresenter implements Initializable {
 		filesTreeView.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
 		filesTreeView.setShowRoot(false);
 		filesTreeView.setRoot(root);
+		BooleanBinding disableIfNoSelection = Bindings.isNull(filesTreeView.getSelectionModel().selectedItemProperty());
+		downloadButton.disableProperty().bind(disableIfNoSelection);
 		downloadButton.setOnAction(e -> downloadPressed());
 		userListModel.getSelectedUser().addListener(new ChangeListener<UserInfo>() {
 			@Override
 			public void changed(ObservableValue<? extends UserInfo> observable, UserInfo oldValue, UserInfo newValue) {
+				if (observable == null) {
+					root.getChildren().clear();
+					return;
+				}
 				createTree(newValue);
 			}
 		});
@@ -112,7 +120,7 @@ public class FilesTreePresenter implements Initializable {
 		}
 		if (index == subPaths.length - 1) {
 			// ADD THE FILE
-
+			TreeItem<FileCoreInfo> treeItem = new TreeItem<FileCoreInfo>(infoToAdd);
 			// if icons property set style with icon
 			if (Boolean.valueOf(App.properties.getProperty("icons"))) {
 				ImageView imageView = new ImageView();
@@ -120,9 +128,10 @@ public class FilesTreePresenter implements Initializable {
 				imageView.setFitHeight(18);
 				imageView.setFitWidth(18);
 				imageView.setImage(fileImage);
-				parent.getChildren().add(new TreeItem<FileCoreInfo>(infoToAdd, new ImageView(fileImage)));
+				treeItem.setGraphic(new ImageView(fileImage));
+				parent.getChildren().add(treeItem);
 			} else {
-				parent.getChildren().add(new TreeItem<FileCoreInfo>(infoToAdd));
+				parent.getChildren().add(treeItem);
 			}
 			// return child.size();
 		} else
@@ -153,6 +162,8 @@ public class FilesTreePresenter implements Initializable {
 	private void downloadPressed() {
 		ObservableList<TreeItem<FileCoreInfo>> itemsList = filesTreeView.getSelectionModel().getSelectedItems();
 		String absolutePath = Utils.getChoosenDirPath("Choose folder to save files in");
+		if (absolutePath == null)
+			return;
 		absolutePath = absolutePath.replace("\\", "/");
 		if (absolutePath.equals(null)) {
 			Logger.getGlobal().log(ErrorFactory.build(Level.INFO, LogKey.info, "No folder chosen. Download aborted."));
