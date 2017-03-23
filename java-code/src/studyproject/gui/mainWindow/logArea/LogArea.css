@@ -1,0 +1,13 @@
+.table-row-cell .text {
+       -fx-fill: black;
+}
+
+.table-row-cell:selected{
+    -fx-background-color: #ededed;
+    -fx-table-cell-border-color: white;
+}
+
+.table-row-cell:odd:selected{
+    -fx-background-color: #ededed;
+    -fx-table-cell-border-color: white;
+}

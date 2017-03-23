@@ -1,0 +1,7 @@
+.list-cell .text {
+       -fx-fill: black;
+}
+
+.list-cell:selected {
+    -fx-background-color: #ededed;
+}
