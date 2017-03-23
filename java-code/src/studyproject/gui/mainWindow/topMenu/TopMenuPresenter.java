@@ -74,7 +74,7 @@ public class TopMenuPresenter implements Initializable {
 		} else {
 			sendFileToUser.setDisable(false);
 		}
-		
+
 		if (mainWindowModel.getLodds().getWatchService().getWatchedDirectories().size() == 0) {
 			unshareFolder.setDisable(true);
 		} else {
@@ -92,10 +92,12 @@ public class TopMenuPresenter implements Initializable {
 	public void unshareFolderPressed() {
 		Stage stage = new Stage();
 		stage.setScene(new Scene(new UnshareFolderView().getView()));
+		stage.setTitle("Shared Folders");
+		Utils.addLoddsImageToStage(stage);
 		stage.initModality(Modality.APPLICATION_MODAL);
 		stage.show();
 	}
-	
+
 	private void settingsItemPressed() {
 		Stage stage = new Stage();
 		if (Boolean.valueOf(App.properties.getProperty("icons")))
