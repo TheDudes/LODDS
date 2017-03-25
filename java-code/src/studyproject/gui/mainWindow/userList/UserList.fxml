@@ -11,8 +11,8 @@
    <children>
       <HBox>
          <children>
-            <TextField fx:id="usersSearch" promptText="Serach User..." HBox.hgrow="ALWAYS" />
-            <Button fx:id="refreshUsers" mnemonicParsing="false" text="Button" />
+            <TextField fx:id="usersSearch" promptText="Search User..." HBox.hgrow="ALWAYS" />
+            <Button fx:id="refreshUsers" mnemonicParsing="false" text="refresh users" />
          </children>
       </HBox>
       <TableView fx:id="userTableView" fixedCellSize="24.0" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" prefHeight="564.0" prefWidth="302.0">
