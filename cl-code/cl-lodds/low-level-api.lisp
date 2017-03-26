@@ -68,14 +68,15 @@ stream, will flush the stream with force-output when flusp-p is t"
 
 (defun format-send-advertise (ad-info)
   (destructuring-bind (ip port timestamp load name) ad-info
-    (format nil "~a@~a:~a ~a ~a~%"
+    (format nil "~a@~a:~a ~a ~a~C"
             name
             (usocket:vector-quad-to-dotted-quad ip)
             port
             (if timestamp
                 timestamp
                 0)
-            load)))
+            load
+            #\linefeed)))
 
 (defun send-advertise (broadcast-host broadcast-port ad-info)
   "will format ad-info and write it to a udp-broadcast socket
@@ -155,7 +156,7 @@ stream, will flush the stream with force-output when flusp-p is t"
 
 ;; get family
 (defun format-get-file (checksum start end)
-  (format nil "get file ~a ~a ~a~%" checksum start end))
+  (format nil "get file ~a ~a ~a~C" checksum start end #\linefeed))
 
 (defun get-file (socket-stream checksum start end)
   "will format and write a 'get file' request onto socket-stream requesting
@@ -164,7 +165,7 @@ stream, will flush the stream with force-output when flusp-p is t"
   0)
 
 (defun format-get-info (timestamp)
-  (format nil "get info ~a~%" timestamp))
+  (format nil "get info ~a~C" timestamp #\linefeed))
 
 (defun get-info (socket-stream timestamp)
   "will format and write a 'get info' request onto socket-stream requesting
@@ -175,10 +176,11 @@ stream, will flush the stream with force-output when flusp-p is t"
   0)
 
 (defun format-get-send-permission (size timeout filename)
-  (format nil "get send-permission ~a ~a ~a~%"
+  (format nil "get send-permission ~a ~a ~a~C"
           size
           timeout
-          filename))
+          filename
+          #\linefeed))
 
 (defun get-send-permission (socket-stream size timeout filename)
   "will format and write a 'get-send-permission' request onto socket-stream
@@ -196,20 +198,22 @@ stream, will flush the stream with force-output when flusp-p is t"
 
 (defun format-respond-info (type timestamp file-infos)
   (with-output-to-string (stream)
-    (format stream "~a ~a ~a~%"
+    (format stream "~a ~a ~a~C"
             (if (eql type :all)
                 "all"
                 "upd")
             timestamp
-            (length file-infos))
+            (length file-infos)
+            #\linefeed)
     (loop :for (type checksum size name) :in file-infos
-          :do (format stream "~a ~a ~a ~a~%"
+          :do (format stream "~a ~a ~a ~a~C"
                       (if (eql type :add)
                           "add"
                           "del")
                       checksum
                       size
-                      name))))
+                      name
+                      #\linefeed))))
 
 (defun respond-info (socket-stream type timestamp file-infos)
   "response to a 'get info' request. Will format type timestamp and
@@ -225,7 +229,7 @@ stream, will flush the stream with force-output when flusp-p is t"
   0)
 
 (defun format-respond-send-permission ()
-  (format nil "OK~%"))
+  (format nil "OK~C" #\linefeed))
 
 (defun respond-send-permission (socket-stream)
   "response to a 'get send-permission', will send a OK and copy the
