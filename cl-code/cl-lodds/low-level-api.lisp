@@ -120,7 +120,7 @@ stream, will flush the stream with force-output when flusp-p is t"
                         user))))
       2))
 
-(defun parse-request (input)
+(defun parse-request (socket)
   "parses a direct communication request. returns multiple values,
    the first is a number describing the error (or 0 on success) and
    one of the following lists, depending on request:
@@ -129,16 +129,13 @@ stream, will flush the stream with force-output when flusp-p is t"
    (:send-permission size timeout filename)
    will use *get-scanner* to to check for syntax errors
    INPUT can be string, octets or a usocket"
-  (let ((line (ctypecase input
-                (usocket:stream-usocket (read-line-from-socket input))
-                (vector (flex:octets-to-string (subseq input 0 (- (length input) 1))
-                                               :external-format :utf8)))))
+  (let ((line (read-line-from-socket socket)))
     (unless (cl-ppcre:scan *get-scanner* line)
       (return-from parse-request 2))
     (destructuring-bind (get type . args)
         (cl-strings:split line)
       (declare (ignore get))
-      (let ((requ-type (str-case type
+      (let ((requ-type (lodds.core:str-case type
                          ("file" :file)
                          ("info" :info)
                          ("send-permission" :send-permission))))
@@ -212,9 +209,9 @@ stream, will flush the stream with force-output when flusp-p is t"
             #\linefeed)
     (loop :for (type checksum size name) :in file-infos
           :do (format stream "~a ~a ~a ~a~C"
-                      (if (eql type :add)
-                          "add"
-                          "del")
+                      (ecase type
+                        (:add "add")
+                        (:del "del"))
                       checksum
                       size
                       name
