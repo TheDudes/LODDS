@@ -75,7 +75,7 @@
              (q+:set-status-tip +user-list-name+
                                 (format nil "User: ~a" user))
              (q+:set-tool-tip +user-list-name+
-                              (gen-tool-tip user))
+                              (or (gen-tool-tip user) ""))
              (q+:set-text +user-list-load+ (lodds.core:format-size (parse-integer load)))
              (q+:set-text-alignment +user-list-load+
                                     (qt:enum-or (q+:qt.align-center)
@@ -103,7 +103,7 @@
       (qdoto entry
              (q+:set-text +user-list-load+
                           (lodds.core:format-size (parse-integer load)))
-             (q+:set-tool-tip +user-list-name+ (gen-tool-tip user))))))
+             (q+:set-tool-tip +user-list-name+ (or (gen-tool-tip user) ""))))))
 
 (define-slot (user-list prepare-menu) ((pos "const QPoint &"))
   (declare (connected user-list (custom-context-menu-requested "const QPoint &")))
