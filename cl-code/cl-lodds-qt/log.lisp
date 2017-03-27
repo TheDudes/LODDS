@@ -110,6 +110,18 @@
 
 (defun format-log-message (event-type event-msg)
   (case event-type
+    (:send-permission
+     (if (> (length event-msg) 1)
+         (destructuring-bind (task-id filename timeout user size &rest nil)
+             event-msg
+           (format nil "~{~a~^ ~}"
+                   (list task-id filename timeout user size)))
+         event-msg))
+    (:folder-download-error
+     (destructuring-bind (task-id folder error-file &rest nil)
+         event-msg
+       (format nil "~{~a~^ ~}"
+               (list task-id folder error-file))))
     (:list-update
      (destructuring-bind (name type ts changes)
          event-msg
@@ -143,6 +155,18 @@
 
 (defun format-log-tooltip (event-type event-msg)
   (case event-type
+    (:send-permission
+     (if (> (length event-msg) 1)
+         (destructuring-bind (task-id filename timeout user size &rest nil)
+             event-msg
+           (format nil "~{~a~^ ~}"
+                   (list task-id filename timeout user size)))
+         event-msg))
+    (:folder-download-error
+     (destructuring-bind (task-id folder error-file &rest nil)
+         event-msg
+       (format nil "~{~a~^ ~}"
+               (list task-id folder error-file))))
     (:task-failed
      (format nil "~a" (third event-msg)))
     (:list-update
