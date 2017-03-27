@@ -277,7 +277,7 @@ stream, will flush the stream with force-output when flusp-p is t"
   "handles a successfull 'get send-permission' request and waits
    maximum 'timeout' seconds for a OK. On success it returns with 0
    and the socket should be rdy to send the file. If timeout is
-   reached 5 will be returned"
+   reached 3 will be returned"
   (handler-case
       (if (lodds.core:input-rdy-p socket timeout)
           (if (string= "OK"
