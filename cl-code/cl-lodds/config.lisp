@@ -32,8 +32,8 @@ value (to verify the new value on change).
          (car (lodds.core:get-interfaces))
          (format nil
                  "Interface lodds uses to get his own ip and broadcast~%~
-                 address. You have to restart lodds for changes to
-                 take effect~%~
+                 address. You have to restart lodds for changes to~%~
+                 take effect.~%~
                  Default: The first interface with an ip (excluding loopback)")
          :selection
          (lambda ()
