@@ -9,6 +9,13 @@ functions.
 
 ;;; "lodds.core" goes here. Hacks and glory await!
 
+(defmacro with-server (server &body body)
+  `(let* ((lodds:*server* ,server)
+          (bt:*default-special-bindings*
+            (append (list (cons 'lodds:*server* ,server))
+                    bt:*default-special-bindings*)))
+     ,@body))
+
 (defun escape-wildcards (pathname)
   "escapes pathname wildcards to avoid wildcard error"
   (cl-fs-watcher:escape-wildcards pathname))
@@ -159,7 +166,8 @@ functions.
        (destructuring-bind (,ip ,port) (cl-strings:split ,ip+port #\:)
          (declare (ignorable ,ip ,port))
          ,(if convert-types
-              `(let ((,port (parse-integer ,port)))
+              `(let ((,ip (usocket:dotted-quad-to-vector-quad ,ip))
+                     (,port (parse-integer ,port)))
                  ,@body)
               `(progn
                  ,@body))))))
@@ -241,16 +249,6 @@ escape-wildcards to make sure wildcards are escaped."
          (cl-fs-watcher:escape-wildcards pathspec)
          args))
 
-(defun directory-exists (directory)
-  "checks if given directory-exists"
-  (cl-fs-watcher:escaped-directory-exists-p
-   directory))
-
-(defun file-exists (file)
-  "checks if given file exists"
-  (cl-fs-watcher:escaped-file-exists-p
-   file))
-
 (defun escaped-get-folder-name (directory)
   "Returns the folder describted by directory. If given directory is
   root (/) a empty string (\"\") is returned. Given directory _must_
@@ -272,6 +270,16 @@ escape-wildcards to make sure wildcards are escaped."
     (if (> (length folders) 1)
         (lodds.core:add-missing-slash folder)
         "")))
+
+(defun directory-exists (directory)
+  "checks if given directory-exists"
+  (cl-fs-watcher:escaped-directory-exists-p
+   directory))
+
+(defun file-exists (file)
+  "checks if given file exists"
+  (cl-fs-watcher:escaped-file-exists-p
+   file))
 
 (defun get-absolute-path (directory)
   (uiop:native-namestring

@@ -61,7 +61,7 @@
   (declare (connected timer (timeout)))
   (incf time-vanished)
   (if (or (>= time-vanished timeout)
-          (not (lodds.event-loop:get-task-by-id task-id)))
+          (not (lodds.task:tasks-get-task-by-id task-id)))
       (when on-timeout
         (funcall on-timeout))
       (q+:set-value time-left (- timeout time-vanished))))

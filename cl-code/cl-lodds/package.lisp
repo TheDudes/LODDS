@@ -2,7 +2,9 @@
 
 (defpackage #:lodds.core
   (:use #:cl)
-  (:export #:generate-checksum
+  (:export #:with-server
+           #:escape-wildcards
+           #:generate-checksum
            #:input-rdy-p
            #:copy-stream
            #:get-timestamp
@@ -23,13 +25,29 @@
            #:escaped-get-folder-name
            #:directory-exists
            #:file-exists
-           #:escape-wildcards
            #:get-absolute-path
            #:set-socket-timeout))
 
+(defpackage #:lodds.config
+  (:use #:cl)
+  (:export #:*load-path*
+           #:generate-default-config
+           #:save-to-file
+           #:validate-config
+           #:update-entry
+           #:load-from-file
+           #:load-default-config-files
+           #:get-all-keys
+           #:get-value
+           #:get-description
+           #:get-type
+           #:get-selection-options
+           #:get-integer-min
+           #:get-integer-max
+           #:get-suggestions))
+
 (defpackage #:lodds.low-level-api
-  (:use #:cl
-        #:lodds.core)
+  (:use #:cl)
   (:export ;; broadcast
            #:format-send-advertise
            #:send-advertise
@@ -52,69 +70,28 @@
            #:handle-info
            #:handle-send-permission))
 
-(defpackage #:lodds.config
+(defpackage #:lodds.task
   (:use #:cl)
-  (:export #:*load-path*
-           #:generate-default-config
-           #:save-to-file
-           #:validate-config
-           #:update-entry
-           #:load-from-file
-           #:load-default-config-files
-           #:get-all-keys
-           #:get-value
-           #:get-description
-           #:get-type
-           #:get-selection-options
-           #:get-integer-max
-           #:get-integer-min
-           #:get-suggestions))
-
-;; (defpackage #:lodds.subsystem
-;;   (:use #:cl)
-;;   (:export #:shutdown-condition
-;;            #:subsystem
-;;            ;; accessors
-;;            #:name
-;;            #:thread
-;;            #:alive-p
-;;            #:init-fn
-;;            #:cleanup-fn
-;;            #:init-args
-;;            #:event-queue
-;;            ;; function/methos on subsystem + server
-;;            #:start
-;;            #:stop))
-
-;; (defpackage #:lodds.task
-;;   (:use #:cl)
-;;   (:export #:tasker
-;;            #:task
-;;            #:name
-;;            #:on-finish-hook
-;;            #:get-load
-;;            #:get-task-progresses
-;;            #:get-task-count
-;;            #:get-task-by-id
-;;            #:cancel-task
-;;            #:run-task
-;;            #:finish-task
-;;            #:submit-task
-;;            #:put-task-on-hold
-;;            #:submit-task-from-hold
-;;            #:remove-task-from-hold
-;;            #:task-info
-;;            #:task-request
-;;            #:task-request-file
-;;            #:task-request-info
-;;            #:task-request-send-permission
-;;            #:get-local-file-path
-;;            #:task-get-file-from-user
-;;            #:task-get-file-from-users
-;;            #:task-get-folder
-;;            #:task-send-file
-;;            #:retry-task
-;;            #:skip-task))
+  (:export #:tasks
+           #:tasks-get-load
+           #:tasks-get-task-progresses
+           #:tasks-get-task-count
+           #:tasks-get-task-by-id
+           #:task-request
+           #:task-request-info
+           #:task-send-permission
+           #:task-request-file
+           #:task-get-info
+           #:task-send-file
+           #:task-get-file-from-user
+           #:task-get-file-from-users
+           #:task-get-folder
+           #:task-init
+           #:task-id
+           #:task-run
+           #:task-load
+           #:task-cancel
+           #:task-info))
 
 (defpackage #:lodds.watcher
   (:use #:cl)
@@ -145,49 +122,33 @@
            #:stop
            #:callback-exists-p))
 
+(defpackage #:lodds.event-loop
+  (:use #:cl)
+  (:export #:event-loop
+           #:with-event-loop
+           #:ev-delay-interval
+           #:start
+           #:stop))
+
 (defpackage #:lodds.listener
   (:use #:cl)
   (:export #:start
            #:stop
            #:listener
-           #:update-client-list))
+           #:alive-p))
 
-(defpackage #:lodds.advertiser
+(defpackage #:lodds.handler
   (:use #:cl)
-  (:export #:send-advertise))
-
-;; (defpackage #:lodds.handler
-;;   (:use #:cl)
-;;   (:export #:run))
-
-(defpackage #:lodds.event-loop
-  (:use #:cl)
-  (:export #:event-loop
-           #:get-load
-           #:get-task-progresses
-           #:get-task-count
-           #:get-task-by-id
-           #:with-event-loop
-           #:task-get-file-from-user
-           #:task-get-file-from-users
-           #:task-get-folder
-           #:task-send-file
-           #:ev-task-init
-           #:ev-task-run
-           #:ev-update-user-info
-           #:task-load
-           #:task-cancel
-           #:task-info
-           #:task-load
-           #:start
-           #:stop))
+  (:export #:start
+           #:stop
+           #:handler
+           #:alive-p))
 
 (defpackage #:lodds
   (:use #:cl)
   (:export ;; global variables and macros
            #:*server*
            #:*event-queue*
-           #:with-server
            ;; client-info reader/accessor
            #:client-info
            #:c-name
@@ -219,6 +180,7 @@
            #:get-file-info
            #:get-folder-info
            #:get-file-changes
+           #:update-user
            #:get-checksum-from-path
            #:start
            #:stop
@@ -228,7 +190,7 @@
            #:get-file
            #:get-folder
            #:send-file
-           #:send-file-user
+           #:remove-old-clients
            #:settings
            #:switch-config
            #:update-config
@@ -242,4 +204,6 @@
            #:get-event-loop
            #:get-watcher
            #:get-event-queue
-           #:get-listener))
+           #:get-listener
+           #:get-tasks
+           #:get-handler))

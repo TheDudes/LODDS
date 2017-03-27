@@ -14,13 +14,6 @@ start,stop,shutdown, ...).
 
 (defparameter *server* nil)
 
-(defmacro with-server (server &body body)
-  `(let* ((*server* ,server)
-          (bt:*default-special-bindings*
-            (append (list (cons '*server* ,server))
-                    bt:*default-special-bindings*)))
-     ,@body))
-
 (defmethod print-object ((object client-info) stream)
   (print-unreadable-object (object stream :type t :identity t)
     (with-slots (c-name
@@ -52,7 +45,7 @@ start,stop,shutdown, ...).
            new-config))
 
 (defun get-load ()
-  (lodds.event-loop:get-load (get-event-loop)))
+  (lodds.task:tasks-get-load (get-tasks)))
 
 (defun get-timestamp-last-change ()
   "returns the timestamp of the last change, who would have thought?
@@ -192,19 +185,45 @@ start,stop,shutdown, ...).
                             :collect (cons :add info))))
                   (lodds.watcher:dir-watchers (get-watcher))))))))
 
+(defun update-user (user update)
+  (let ((user-info (lodds:get-user-info user)))
+    (when user-info
+      (with-slots (c-name c-last-change c-file-table-hash c-file-table-name)
+          user-info
+        (destructuring-bind (type timestamp changes) update
+          (when (eql type :all)
+            (setf c-file-table-hash (make-hash-table :test 'equal)
+                  c-file-table-name (make-hash-table :test 'equal)))
+          (loop :for (typ cs size name) :in changes
+                :do (ecase typ
+                      (:add (let ((val (gethash cs c-file-table-hash)))
+                              (unless (find name val :test #'string=)
+                                (setf (gethash cs c-file-table-hash)
+                                      (cons name val)))
+                              (setf (gethash name c-file-table-name)
+                                    (list cs size))))
+                      (:del (let ((new-val (remove name (gethash cs c-file-table-hash)
+                                                   :test #'string=)))
+                              (if new-val
+                                  (setf (gethash cs c-file-table-hash)
+                                        new-val)
+                                  (remhash cs c-file-table-hash))
+                              (remhash name c-file-table-name)))))
+          (setf c-last-change timestamp)
+          (lodds.event:push-event :list-update
+                                  c-name
+                                  type
+                                  timestamp
+                                  changes))))))
+
 (defun start ()
-  "Starts up all subsystem of currently bound *server*"
   (lodds.event:start)
   (lodds.listener:start)
+  (lodds.handler:start)
   (lodds.event-loop:start))
 
 (defun stop ()
-  "Stops all subsystems besides event-queue and watcher of currently
-  bound *server*. Calling stop will stop the tasker, advertiser,
-  handler and listener. This can be used by a gui to \"stop\" all
-  connections. By not shutting down the Event-loop stuff like changing
-  the settings will still work. To cleanup and end the lodds-server
-  call shutdown"
+  (lodds.handler:stop)
   (lodds.listener:stop)
   (lodds.event-loop:stop))
 
@@ -212,8 +231,8 @@ start,stop,shutdown, ...).
   "shuts down the whole server, removes all handles and joins all
   spawned threads."
   (lodds.event:push-event :shutdown)
+  (stop)
   (lodds.watcher:stop)
-  (lodds.listener:stop)
   (lodds.event:stop))
 
 (defun generate-info-response (timestamp)
@@ -250,47 +269,53 @@ nil if no user is found"
       best-user)))
 
 (defun get-file (local-file-path checksum &optional user)
-  (let ((ev-loop (get-event-loop)))
-    (lodds.event-loop:with-event-loop (ev-loop)
-      (lodds.event-loop:ev-task-run
-       (if user
-           (make-instance 'lodds.event-loop:task-get-file-from-user
-                          :event-loop ev-loop
-                          :checksum checksum
-                          :user user
-                          :local-file-path local-file-path)
-           (make-instance 'lodds.event-loop:task-get-file-from-users
-                          :event-loop ev-loop
-                          :checksum checksum
-                          :local-file-path local-file-path))))))
+  (lodds.task:task-run
+   (if user
+       (make-instance 'lodds.task:task-get-file-from-user
+                      :tasks (get-tasks)
+                      :checksum checksum
+                      :user user
+                      :local-file-path local-file-path)
+       (make-instance 'lodds.task:task-get-file-from-users
+                      :tasks (get-tasks)
+                      :checksum checksum
+                      :local-file-path local-file-path))))
 
 (defun get-folder (full-folder-path local-path user)
   "gets given folder and saves it to local-path"
   (setf full-folder-path
         (lodds.core:add-missing-slash full-folder-path))
-  (let ((folder (lodds.core:escaped-get-folder-name full-folder-path))
-        (ev-loop (get-event-loop)))
-    (lodds.event-loop:with-event-loop (ev-loop)
-      (lodds.event-loop:ev-task-run
-       (make-instance 'lodds.event-loop:task-get-folder
-                      :event-loop ev-loop
-                      :user user
-                      :remote-root (subseq full-folder-path
-                                           0
-                                           (- (length full-folder-path)
-                                              (length folder)))
-                      :remote-path full-folder-path
-                      :local-path local-path)))))
+  (let ((folder (lodds.core:escaped-get-folder-name full-folder-path)))
+    (lodds.task:task-run
+     (make-instance 'lodds.task:task-get-folder
+                    :tasks (get-tasks)
+                    :user user
+                    :remote-root (subseq full-folder-path
+                                         0
+                                         (- (length full-folder-path)
+                                            (length folder)))
+                    :remote-path full-folder-path
+                    :local-path local-path))))
 
 (defun send-file (file user timeout)
-  (let ((ev-loop (lodds:get-event-loop)))
-    (lodds.event-loop:with-event-loop (ev-loop)
-      (lodds.event-loop:ev-task-run
-       (make-instance 'lodds.event-loop:task-send-file
-                      :timeout timeout
-                      :user user
-                      :filename file
-                      :event-loop ev-loop)))))
+  (lodds.task:task-run
+   (make-instance 'lodds.task:task-send-file
+                  :tasks (get-tasks)
+                  :timeout timeout
+                  :user user
+                  :filename file)))
+
+(defun remove-old-clients (&optional (current-time (lodds.core:get-timestamp)))
+  "removes all clients older than client-timeout"
+  (let ((clients (lodds:clients lodds:*server*))
+        (timeout (lodds.config:get-value :client-timeout)))
+    (maphash (lambda (key client)
+               (when (> (- current-time (lodds:c-last-message client))
+                        timeout)
+                 (remhash key clients)
+                 (lodds.event:push-event :client-removed
+                                         key)))
+             clients)))
 
 (defun get-status (&optional (format nil))
   "Describes Lodds current status.
@@ -300,7 +325,7 @@ Tasks: How many tasks are currently running
 Network Files: Amount of Files in the network (non Unique)
 Shared Folders: Amount of currently shared folders
 Users: Amount of User on the Network"
-  (let ((ev-loop (get-event-loop))
+  (let ((tasks (get-tasks))
         (total-load 0)
         (total-shared 0))
     (dolist (user (get-user-list))
@@ -308,8 +333,8 @@ Users: Amount of User on the Network"
         (incf total-load (lodds:c-load info))
         (incf total-shared (hash-table-count
                             (c-file-table-name info)))))
-    (let ((tasks (lodds.event-loop:get-task-count ev-loop))
-          (load (lodds.event-loop:get-load ev-loop))
+    (let ((tasks (lodds.task:tasks-get-task-count tasks))
+          (load (lodds.task:tasks-get-load tasks))
           (users (length (lodds:get-user-list)))
           (shared-folders (length (lodds.watcher:get-shared-folders))))
       (if format
@@ -371,6 +396,9 @@ Users: Amount of User on the Network"
 (defun get-event-loop ()
   (slot-value lodds:*server* 'event-loop))
 
+(defun get-tasks ()
+  (slot-value lodds:*server* 'tasks))
+
 (defun get-watcher ()
   (slot-value lodds:*server* 'watcher))
 
@@ -379,3 +407,6 @@ Users: Amount of User on the Network"
 
 (defun get-listener ()
   (slot-value lodds:*server* 'listener))
+
+(defun get-handler ()
+  (slot-value lodds:*server* 'handler))

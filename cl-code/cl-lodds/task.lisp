@@ -1,205 +1,224 @@
 #|
 
-This file contains everything task realted. Tasks are objects which
-hold information and a state. They get submitted to the tasker, which
-is basically a threadpool. When a task gets selected by the threadpool
-it calls the run-task method with the given task. Each specific
-run-task is wraped with a :around method which catches and handles
-errors, cancelation, cleanup etc. While a task has :normal as state it
-gets resubmitted to the tasker. When a task exists he gets
-resubmitted multiple times, since every run-task does just a bit of
-work and then returns and when no error occured it will be resubmitted
-to the tasker. This is done to not block the tasker and ensure the
-handling of more tasks than there are threads on the
-threadpool. Because while a task is active, he blocks (or uses) a
-thread from the threadpool, which would block the whole threadpool
-once there are more active tasks then threads.
-
-Most of the tasks get created and submitted to the tasker, which then
-runs them again and again until they are finished, then they get
-cleared up and deleted. But two tasks are special by not following
-this role. These tasks are task-get-folder and task-request.
-Task-get-folder for example wont 'do' anything, it just keeps a list
-of files (two to be honest, one for outstanding files, one for
-finished files) and just runs a task-get-file-from-users for each
-file. task-get-folder does not get resubmitted by default, instead the
-task-get-file-from-users resubmits it, once it finishes the file
-download succesfully. The other 'special' task is task-request, it
-gets created and submitted once a user request something, run-task on
-task-request will then figure out whats requested and submits another
-task with the information (one of task-request-file, task-request-info
-or task-request-send-permission).
+Tasks are wrapper around network transfers. For example if a user
+requests info or a file, a task gets created (task-request-info,
+task-request-file). Each task has a task-init method, to intialize the
+task, it is wrapped with a :around function to catch initialization
+errors. Tasks get cleaned up by the task-cleanup method. The task-run
+method does the actual work after the task is initialized, it is also
+wrapped in a :around method to ensure the task gets cleaned up in case
+of an error. Other methods are task-info to retrieve a string with
+information about a task and task-cancel to cancel a running
+task. Each task-run is run in a new thread, if not stated otherwise
+(:in-thread nil on task creation). All task methods are prefixed
+with task-, all tasks functions with tasks-. The tasks- functions can
+b eused to retrieve info about all tasks, for example tasks-get-load
+can be used to retrieve the load all currently running tasks produce.
 
 |#
 
 (in-package #:lodds.task)
 
-(defmethod get-load ((tasker tasker))
-  (with-slots (tasks tasks-on-hold lock) tasker
+(defun tasks-get-load (&optional (tasks (lodds:get-tasks)))
+  (with-slots (tasks lock) tasks
     (let ((loads nil))
       (bt:with-recursive-lock-held (lock)
         (setf loads
               (loop :for task :being :the :hash-value :of tasks
-                    :unless (gethash (slot-value task 'id) tasks-on-hold)
-                    :collect (slot-value task 'load))))
+                    :collect (task-load task))))
       (if loads
           (reduce #'+ loads)
           0))))
 
-(defmethod get-task-progresses ((tasker tasker))
-  "returns a list containing each tasks id, max-load, progress, type
+(defun tasks-get-task-progresses (&optional (tasks (lodds:get-tasks)))
+  "returns a list containing each tasks id, total-load, progress, type
   and info.
   CL-USER> (get-task-progresses tasker)
   => ((\"id1234\" 5903 1324 :send-file \"blub.txt\")
       (\"id3142\" 141204 4214 :get-file \"somename@123.123.1.2:8282\"))
   Each of the inner lists describe a task, with its id, its maximum
   load, already processed load, type and info."
-  (with-slots (tasks tasks-on-hold lock) tasker
+  (with-slots (tasks lock) tasks
     (bt:with-recursive-lock-held (lock)
       (loop :for task :being :the :hash-value :of tasks
-            :unless (gethash (slot-value task 'id) tasks-on-hold)
-            :collect (with-slots (id max-load load info) task
-                       (list id max-load (- max-load load) (type-of task) info))))))
+            :collect (with-slots (id total-load bytes-transfered) task
+                       (list id
+                             total-load
+                             bytes-transfered
+                             (type-of task)
+                             (task-info task)))))))
 
-(defmethod get-task-count ((tasker tasker))
-  (hash-table-count (slot-value tasker 'tasks)))
+(defun tasks-get-task-count (&optional (tasks (lodds:get-tasks)))
+  (hash-table-count (slot-value tasks 'tasks)))
 
-(defun get-task-by-id (task-id)
+(defun tasks-get-task-by-id (task-id &optional (tasks (lodds:get-tasks)))
   "Returns task with given id, nil if task is not found"
-  (with-slots (tasks lock) (lodds:get-subsystem :tasker)
-    (let ((result nil))
-      (bt:with-recursive-lock-held (lock)
-        (setf result
-              (gethash task-id tasks)))
-      result)))
+  (gethash task-id (slot-value tasks 'tasks)))
 
-(defun cancel-task (task &optional (resubmit-p t))
-  (ctypecase task
-    (string
-     (let ((the-task (get-task-by-id task)))
-       (when the-task
-         (cancel-task the-task resubmit-p))))
-    (task
-     (progn
-       (setf (slot-value task 'state) :canceled)
-       (when resubmit-p
-         (submit-task task))))))
+;; initialize-instance for each task to set the id on init
 
-(defparameter *id-counter* 0)
 (defmethod initialize-instance :after ((task task) &rest initargs)
   (declare (ignorable initargs))
-  (with-slots (tasks lock (alive-p lodds.subsystem:alive-p))
-      (lodds:get-subsystem :tasker)
-    (when alive-p
-      (with-slots (id) task
-        (bt:with-lock-held (lock)
-          (setf id (format nil "id-~a" (incf *id-counter*)))
-          (setf (gethash id tasks) task)
-          id)))))
+  (with-slots (tasks id) task
+    (with-slots (lock tasks id-counter) tasks
+      (bt:with-lock-held (lock)
+        (setf id (format nil "id-~a" (incf id-counter)))
+        (setf (gethash id tasks) task)))))
 
-(defmethod print-object ((object task) stream)
-  (print-unreadable-object (object stream :type t)
+;; print-object functions for all tasks
+
+(defmethod print-object ((task task) stream)
+  (print-unreadable-object (task stream :type t)
     (format stream "~a"
-            (slot-value object 'name))))
+            (task-id task))))
 
-(defmethod print-object ((object task-info) stream)
-  (print-unreadable-object (object stream :type t)
-    (with-slots (name
-                 user) object
-      (format stream "~a :user ~a"
-              name
-              user))))
-
-(defmethod print-object ((object task-request-file) stream)
-  (print-unreadable-object (object stream :type t)
-    (with-slots (name
-                 checksum
-                 start
-                 end) object
-      (format stream "~a :checksum ~a :start ~:d :end ~:d"
-              name
-              (concatenate 'string (subseq checksum 0 7) "...")
-              start
-              end))))
-
-(defmethod print-object ((object task-request-info) stream)
-  (print-unreadable-object (object stream :type t)
-    (with-slots (name
-                 timestamp) object
-      (format stream "~a :timestamp ~a"
-              name
+(defmethod print-object ((task task-request-info) stream)
+  (print-unreadable-object (task stream :type t)
+    (with-slots (timestamp) task
+      (format stream "timestamp ~a"
               timestamp))))
 
-(defmethod print-object ((object task-request-send-permission) stream)
-  (print-unreadable-object (object stream :type t)
-    (with-slots (name
-                 size
-                 timeout
-                 filename) object
+(defmethod print-object ((task task-request-send-permission) stream)
+  (print-unreadable-object (task stream :type t)
+    (with-slots (id total-load timeout filename) task
       (format stream "~a :size ~a :timeout ~a :filename ~a"
-              name
-              (lodds.core:format-size size)
+              id
+              (lodds.core:format-size total-load)
               timeout
               filename))))
 
-(defmethod print-object ((object task-get-file-from-user) stream)
-  (print-unreadable-object (object stream :type t)
-    (with-slots (name
-                 local-file-path
-                 size
-                 user
-                 checksum) object
+(defmethod print-object ((task task-request-file) stream)
+  (print-unreadable-object (task stream :type t)
+    (with-slots (id checksum start end) task
+      (format stream "~a :checksum ~a :start ~:d :end ~:d"
+              id
+              (format nil "~a..." (subseq checksum 0 7))
+              start
+              end))))
+
+(defmethod print-object ((task task-get-info) stream)
+  (print-unreadable-object (task stream :type t)
+    (with-slots (id user) task
+      (format stream "~a :user ~a"
+              id
+              user))))
+
+(defmethod print-object ((task task-send-file) stream)
+  (print-unreadable-object (task stream :type t)
+    (with-slots (id ip filename timeout total-load) task
+      (format stream "~a filename: ~a timeout: ~a size: ~a"
+              id
+              filename
+              timeout
+              (lodds.core:format-size total-load)))))
+
+(defmethod print-object ((task task-get-file-from-user) stream)
+  (print-unreadable-object (task stream :type t)
+    (with-slots (id local-file-path total-load user checksum) task
       (format stream "~a :local-file-path ~a size: ~a :user ~a :checksum ~a"
-              name
+              id
               local-file-path
-              (lodds.core:format-size size)
+              (lodds.core:format-size total-load)
               user
               checksum))))
 
-(defmethod print-object ((object task-get-file-from-users) stream)
-  (print-unreadable-object (object stream :type t)
-    (with-slots (name
-                 local-file-path
-                 part-size
-                 size
-                 checksum) object
+(defmethod print-object ((task task-get-file-from-users) stream)
+  (print-unreadable-object (task stream :type t)
+    (with-slots (id local-file-path part-size total-load checksum) task
       (format stream "~a :local-file-path ~a size: ~a :part-size ~a :checksum ~a"
-              name
+              id
               local-file-path
-              (lodds.core:format-size size)
+              (lodds.core:format-size total-load)
               (lodds.core:format-size part-size)
               checksum))))
 
-(defmethod print-object ((object task-send-file) stream)
-  (print-unreadable-object (object stream :type t)
-    (with-slots (name
-                 ip
-                 port
-                 filepath
-                 timeout
-                 size
-                 written) object
-      (format stream "~a filepath: ~a timeout: ~a size: ~a written: ~a"
-              name
-              filepath
-              timeout
-              (lodds.core:format-size size)
-              (lodds.core:format-size written)))))
-
-(defmethod print-object ((object task-get-folder) stream)
-  (print-unreadable-object (object stream :type t)
-    (with-slots (name
-                 items
-                 items-done
-                 remote-path) object
+(defmethod print-object ((task task-get-folder) stream)
+  (print-unreadable-object (task stream :type t)
+    (with-slots (id items items-done remote-path) task
       (format stream "~a items: ~a items-done: ~a folder: ~a"
-              name
+              id
               (length items)
               (length items-done)
               remote-path))))
 
-(defmethod decf-load ((task task) amount)
-  (decf (slot-value task 'load) amount))
+;; task-cancel methods
+
+(defgeneric task-cancel (task)
+  (:documentation "can be used to cancel a running task"))
+
+(defmethod task-cancel ((task task))
+  (with-slots (canceled tasks) task
+    (setf canceled t)))
+
+(defmethod task-cancel ((id string))
+  (let ((task (tasks-get-task-by-id id)))
+    (when task
+      (task-cancel task))))
+
+(defmethod task-cancel ((task task-get-folder))
+  (with-slots (current-task) task
+    (when current-task
+      (task-cancel current-task)))
+  (call-next-method))
+
+;; task-info methods to retrieve a information string from a given task
+
+(defgeneric task-info (task)
+  (:documentation "Returns a information string about a given task"))
+
+(defmethod task-info ((task task))
+  (format nil "~a" task))
+
+(defmethod task-info ((id string))
+  (let ((task (tasks-get-task-by-id id)))
+    (when task
+      (task-info task))))
+
+(defmethod task-info ((task task-request-send-permission))
+  (with-slots (filename users) task
+    (format nil "[Request] ~a: ~a" users filename)))
+
+(defmethod task-info ((task task-request-file))
+  (with-slots (user total-load filename) task
+    (format nil "[Upload] (~a - ~a): ~a"
+            user
+            (lodds.core:format-size total-load)
+            filename)))
+
+(defmethod task-info ((task task-send-file))
+  (with-slots (filename user time-waited timeout) task
+    (format nil "[Send File] (~a~a): ~a "
+            user
+            (if time-waited
+                (format nil " (~a/~a)"
+                        (lodds.core:format-seconds time-waited)
+                        (lodds.core:format-seconds timeout))
+                "")
+            filename)))
+
+(defmethod task-info ((task task-get-file-from-user))
+  (with-slots (local-file-path user) task
+    (format nil "[Download] (~a): ~a "
+            user
+            local-file-path)))
+
+(defmethod task-info ((task task-get-file-from-users))
+  (with-slots (current-user local-file-path) task
+    (format nil "[Download] (~a): ~a"
+            (or current-user "none")
+            local-file-path)))
+
+(defmethod task-info ((task task-get-folder))
+  (with-slots (items items-done) task
+    (let* ((left (length items))
+           (done (length items-done))
+           (total (+ left done)))
+      (format nil "[Folder Download] (File ~a/~a): ~a"
+              done
+              total
+              (or (car (car items-done)) "none")))))
+
+;; helper functions
 
 (defun secure-close (socket)
   (when socket
@@ -208,763 +227,530 @@ or task-request-send-permission).
       (error (e)
         (declare (ignore e))))))
 
-(defgeneric finish-task (task)
-  (:documentation "Generic Function which will be called if task has
-  finished and will be deleted")
-
-  (:method ((task task))
-    (with-slots (lock tasks)
-        (lodds:get-subsystem :tasker)
-      (bt:with-recursive-lock-held (lock)
-        (remhash (slot-value task 'id) tasks)))
-    (with-slots (socket file-stream) task
-      (secure-close socket)
-      (setf socket nil)
-      (when file-stream
-        (close file-stream)
-        (setf file-stream nil)))))
-
-(defgeneric run-task (task)
-  (:documentation "Generic Function which will be called if task was
-  added to thread-pool")
-
-  (:method :around ((task task))
-    (with-slots (aktive-p
-                 state
-                 id
-                 on-finish-hook
-                 on-cancel-hook
-                 on-error-hook) task
-      (let ((err nil))
-        (when (equal state :normal)
-          (setf aktive-p t)
-          (handler-case
-              (call-next-method)
-            (error (e)
-              (setf err e)
-              (setf state :failed)))
-          (setf aktive-p nil))
-        (case state
-          (:canceled (progn
-                       (finish-task task)
-                       (when on-cancel-hook
-                         (funcall on-cancel-hook task))
-                       (lodds.event:push-event :task-canceled
-                                               id
-                                               task)
-                       (return-from run-task)))
-          (:failed (progn
-                     (finish-task task)
-                     (when on-error-hook
-                       (funcall on-error-hook task))
-                     (lodds.event:push-event :task-failed
-                                             id
-                                             task
-                                             err)))
-          (:finished (progn
-                       (finish-task task)
-                       (when on-finish-hook
-                         (funcall on-finish-hook task))
-                       (lodds.event:push-event :task-finished
-                                               id
-                                               task)))
-          (:normal (submit-task task))
-          (:normal-no-resubmit nil)
-          (t (error "Task state not recognized: ~a (task: ~a)"
-                    state
-                    task))))))
-
-  (:method ((task task))
-    (declare (ignorable task))
-    (error "overwrite run-task with ur task!")))
-
-(defun submit-task (task)
-  "Adds a new task which will be added to the lparallel:channel."
-  (let* ((tasker (lodds:get-subsystem :tasker))
-         (lparallel:*kernel* (kernel tasker)))
-    (when (lodds.subsystem:alive-p tasker)
-      (lparallel:submit-task (channel tasker)
-                             #'run-task
-                             task))))
-
-(defun put-task-on-hold (task)
-  "puts the given task /on-hold/, which just saves it inside a
-  hashtable and returns a /task-id/ (string) which can be used to
-  submit the task with SUBMIT-TASK-FROM-HOLD or remove the task from
-  the table with REMOVE-TASK-FROM-HOLD"
-  (with-slots (tasks-on-hold) (lodds:get-subsystem :tasker)
-    (with-slots (id) task
-      (setf (gethash id tasks-on-hold) task)
-      id)))
-
-(defun submit-task-from-hold (task-id)
-  "Removes task specified by the given task-id from hold and submits
-  it to the tasker. If the given task was found and submittet t is
-  returned, otherwise nil"
-  (with-slots (tasks-on-hold lock) (lodds:get-subsystem :tasker)
-    (bt:with-recursive-lock-held (lock)
-      (let ((task (gethash task-id tasks-on-hold)))
-        (when task
-          (remhash task-id tasks-on-hold)
-          (submit-task task)
-          t)))))
-
-(defun remove-task-from-hold (task-id)
-  "Removes task specified by the given task-id from hold and returns
-  it, if the task is not found nil is returned"
-  (with-slots (tasks-on-hold lock) (lodds:get-subsystem :tasker)
-    (bt:with-recursive-lock-held (lock)
-      (let ((task (gethash task-id tasks-on-hold)))
-        (when task
-          (remhash task-id tasks-on-hold)
-          task)))))
-
-(defmethod lodds.subsystem:start ((subsys tasker))
-  (with-slots (kernel
-               channel
-               (alive-p lodds.subsystem:alive-p)) subsys
-    (if alive-p
-        (lodds.event:push-event :tasker "already running!")
-        (let ((lparallel:*kernel* (lparallel:make-kernel 10
-                                                         :bindings `((lodds:*server* . ,lodds:*server*)))))
-          (setf kernel  lparallel:*kernel*
-                channel (lparallel:make-channel)
-                alive-p t)
-          (lodds.event:push-event :tasker
-                                  "started!")))))
-
-(defmethod lodds.subsystem:stop ((subsys tasker))
-  (with-slots (kernel
-               tasks
-               tasks-on-hold
-               (alive-p lodds.subsystem:alive-p)) subsys
-    (when alive-p
-      (bt:make-thread
-       (lambda ()
-         (let ((tasks-running t)
-               (tries 0)
-               (tries-max 8))
-           (loop :while tasks-running
-                 :do (let ((msg (format nil "shutting down remaining tasks... (try ~a/~a)"
-                                        tries tries-max)))
-                       (when (eql tries tries-max)
-                         (format t "forcing tasker shutdown~%")
-                         (lodds.event:push-event (lodds.subsystem:name subsys)
-                                                 "forcing tasker shutdown")
-                         (return))
-                       (format t "~a~%" msg)
-                       (lodds.event:push-event (lodds.subsystem:name subsys)
-                                               msg)
-                       (setf tasks-running nil)
-                       (maphash (lambda (task-id task)
-                                  (unless (gethash task-id tasks-on-hold)
-                                    (cancel-task task nil)
-                                    (setf tasks-running t)))
-                                tasks)
-                       (incf tries)
-                       (sleep 0.5))
-                 :finally
-                 (progn
-                   (let ((msg "Tasker terminated."))
-                     (format t "~a~%" msg)
-                     (lodds.event:push-event (lodds.subsystem:name subsys)
-                                             msg)))))
-         (let ((lparallel:*kernel* kernel))
-           (lparallel:end-kernel :wait t)
-           (setf tasks (make-hash-table :test #'equal)
-                 tasks-on-hold (make-hash-table :test #'equal)
-                 alive-p nil)
-           (lodds.event:push-event (lodds.subsystem:name subsys)
-                                   "stopped!")))
-       :name "Tasker Shutdown"))))
-
-(defmethod initialize-instance :after ((task task-get-file-from-user) &rest initargs)
-  (declare (ignorable initargs))
-  (with-slots (ip port size load user checksum max-load) task
-    (lodds.core:split-user-identifier (u-name u-ip u-port) user
-      (setf ip u-ip
-            port (parse-integer u-port)))
-    ;; if size was not given, just download the whole file
-    (let ((new-size (car (lodds:get-file-info checksum user))))
-      (setf load new-size
-            max-load new-size
-            size new-size))))
-
-(defmethod initialize-instance :after ((task task-get-file-from-users) &rest initargs)
-  (declare (ignorable initargs))
-  (with-slots (size part-size load checksum max-load) task
-    (let ((n-size (third (first (lodds:get-file-info checksum)))))
-      (setf size n-size
-            load n-size
-            max-load n-size
-            part-size
-            (let ((64mb (ash 1 26))
-                  (32mb (ash 1 25)))
-              (if (> n-size 64mb)
-                  (ash n-size -4) ;; / 16 (split up into 16 parts
-                  (if (> n-size 32mb)
-                      (ash n-size -3) ;; / 8 (split up into 8 parts
-                      ;; if file is smaller than 32 mb just
-                      ;; download it in one go
-                      n-size)))))))
-
-(defmethod initialize-instance :after ((task task-get-folder) &rest initargs)
-  (declare (ignorable initargs))
-  (with-slots (user remote-path items load max-load) task
-    (setf items (lodds:get-folder-info remote-path user))
-    (let ((size (reduce #'+ items :key #'third)))
-      (setf load size
-            max-load size))))
-
-(defmethod initialize-instance :after ((task task-request-send-permission) &rest initargs)
-  (declare (ignorable initargs))
-  (with-slots (info filename id size load max-load) task
-    (setf load size
-          max-load size)
-    (setf info (format nil "[Request] (Incomming Request): ~a" filename))))
-
-(defun load-chunk (stream-from stream-to size &optional digester (chunk-size (ash 1 18)))
-  "Transfers bytes from STREAM-FROM to STREAM-TO. It will never
-  transfer more then (max size chunk-size) bytes. Returns the Amount
-  of transfered Bytes."
-  (lodds.core:copy-stream stream-from
-                          stream-to
-                          (if (> size chunk-size)
-                              chunk-size
-                              size)
-                          digester))
-
-(defun open-file (file-path)
-  (open (lodds.core:escape-wildcards file-path)
-        :direction :output
-        :if-does-not-exist :create
-        :element-type '(unsigned-byte 8)
-        ;; TODO: here we could ask the user, overwrite?
-        :if-exists :supersede))
-
-(defun request-file (ip port checksum start end)
-  (let* ((timeout (lodds.config:get-value :socket-timeout))
-         (socket (usocket:socket-connect ip port
-                                         :element-type '(unsigned-byte 8)
-                                         :timeout timeout)))
+(defun connect (ip port)
+  (let ((socket (usocket:socket-connect ip port
+                                        :element-type '(unsigned-byte 8)
+                                        :timeout 1)))
     (lodds.core:set-socket-timeout socket
-                                   timeout)
-    (lodds.low-level-api:get-file (usocket:socket-stream socket) checksum start end)
+                                   (lodds.config:get-value :socket-timeout))
     socket))
 
-(defmethod run-task ((task task-get-file-from-user))
-  (with-slots (local-file-path
-               user
-               ip
-               port
-               checksum
-               size
-               read-bytes
-               socket
-               file-stream
-               info
-               state) task
-    (unless socket
-      (setf socket (request-file ip port checksum 0 size)))
-    (unless file-stream
-      (setf file-stream (open-file local-file-path))
-      (setf info (format nil "[Download] (~a): ~a "
-                         user
-                         local-file-path)))
-    (let ((transfered (load-chunk (usocket:socket-stream socket)
-                                  file-stream
-                                  (- size read-bytes))))
-      (decf-load task transfered)
-      (incf read-bytes transfered))
-    (finish-output file-stream)
-    (when (eql size read-bytes)
-      (setf state :finished)
-      (lodds.event:push-event :info
-                              (format nil
-                                      "downloaded file ~a"
-                                      local-file-path)))))
+(defun socket-info (socket)
+  (when socket
+    (values (usocket:get-peer-address socket)
+            (usocket:get-peer-port socket))))
 
-(defun find-best-user (checksum)
-  (let ((best-user nil)
-        (best-load nil))
-    (loop :for (user load . rest) :in (lodds:get-file-info checksum)
-          :do (when (or (not best-user)
-                        (> best-load load))
-                (setf best-user user
-                      best-load load)))
-    (if best-user
-      (lodds.core:split-user-identifier (name ip port) best-user
-        (lodds.event:push-event :debug
-                                (format nil
-                                        "best user: ~a, ip: ~a, port: ~a, load: ~a"
-                                        best-user
-                                        ip
-                                        port
-                                        (lodds.core:format-size best-load)))
-        (values name ip port))
-      (error "Could not find a user who shares ~a~%" checksum))))
+(defun open-file (filename direction)
+  (ecase direction
+    (:input
+     (open (lodds.core:escape-wildcards filename)
+           :direction :input
+           :element-type '(unsigned-byte 8)))
+    (:output
+     (open (lodds.core:escape-wildcards filename)
+           :direction :output
+           :if-does-not-exist :create
+           :if-exists :supersede
+           :element-type '(unsigned-byte 8)))))
 
-(defmethod run-task ((task task-get-file-from-users))
-  (with-slots (local-file-path
-               checksum
-               size
-               read-bytes
-               socket
-               file-stream
-               current-part
-               read-bytes-part
-               part-size
-               state
-               info
-               digester) task
-    (unless file-stream
-      (setf file-stream (open-file local-file-path)))
-    (unless socket
-      (multiple-value-bind (user ip port) (find-best-user checksum)
-        (setf socket
-              (request-file
-               ip
-               (parse-integer port)
-               checksum
-               (* current-part part-size)
-               (let ((end-next-part (* (+ 1 current-part)
-                                       part-size)))
-                 (if (> size end-next-part)
-                     end-next-part
-                     (progn
-                       (setf part-size (- size
-                                          (* current-part part-size)))
-                       size)))))
-        (setf info (format nil "[Download] (~a): ~a" user local-file-path))))
-    (let ((written (load-chunk (usocket:socket-stream socket)
-                               file-stream
-                               (- part-size read-bytes-part)
-                               digester)))
-      (decf-load task written)
-      (incf read-bytes written)
-      (incf read-bytes-part written))
-    (finish-output file-stream)
-    (if (eql size read-bytes)
-        (cond
-          ;; if there is no digester (:validate-checksum is false)
-          ;; just finish the task
-          ((not digester)
-           (setf state :finished))
-          ;; if there is a digester, check if the checksum matches
-          ((string= checksum
-                    (ironclad:byte-array-to-hex-string
-                     (ironclad:produce-digest digester)))
-           (setf state :finished))
-          ;; if the checksum did not match, delete the downloaded file
-          ;; and throw a error
-          (t (progn
-               (delete-file (lodds.core:escape-wildcards local-file-path))
-               (error "Checksum validation Failed"))))
-        (when (eql read-bytes-part part-size)
-          (incf current-part)
-          (setf read-bytes-part 0)
-          (secure-close socket)
-          (setf socket nil)))))
+(defun transfer-chunk (stream-from stream-to max &optional digester (chunk-size (ash 1 18)))
+  "Transfers bytes from STREAM-FROM to STREAM-TO. It will never
+  transfer more then (max size chunk-size) bytes. Returns the Amount
+  of transfered Bytes. Updates digester if given"
+  (lodds.core:copy-stream stream-from
+                          stream-to
+                          (if (> max chunk-size)
+                              chunk-size
+                              max)
+                          digester))
 
-(defgeneric retry-task (task)
-  (:method ((task task))
-    (error "not implemented"))
-  (:method ((task task-get-folder))
-    (with-slots (items-done items state) task
-      (when (eql state :normal-no-resubmit)
-        (let ((failed-file (pop items-done)))
-          (destructuring-bind (nil nil size) failed-file
-            (setf items
-                  (append (list failed-file)
-                          items))
-            (decf-load task (- size))
-            (setf state :normal))))
-      (lodds.task:submit-task task))))
+(defun task-transfer (task direction &optional max digester)
+  (with-slots (socket file-stream
+               bytes-transfered total-load
+               canceled)
+      task
+    (let* ((max (or max total-load))
+           (stream-from nil)
+           (stream-to nil))
+      (ecase direction
+        (:socket-to-file
+         (setf stream-from (usocket:socket-stream socket))
+         (setf stream-to file-stream))
+        (:file-to-socket
+         (setf stream-from file-stream)
+         (setf stream-to (usocket:socket-stream socket))))
+      (loop
+        :do (incf bytes-transfered
+                  (transfer-chunk stream-from
+                                  stream-to
+                                  (- max bytes-transfered)
+                                  digester))
+        :if (> bytes-transfered max)
+        :do (error "Too much transfered")
+        :while (and (not (eql bytes-transfered max))
+                    (not canceled))))))
 
-(defgeneric skip-task (task)
-  (:method ((task task))
-    (error "not implemented"))
-  (:method ((task task-get-folder))
-    (with-slots (state) task
-      (when (eql state :normal-no-resubmit)
-        (setf state :normal))
-      (lodds.task:submit-task task))))
-
-(defmethod run-task ((task task-get-folder))
-  (with-slots (local-path
-               remote-path
-               remote-root
-               items
-               items-done
-               user
-               state
-               info
-               id) task
-    (if (not items)
-        (progn
-          (setf state :finished)
-          (lodds.event:push-event :info
-                                  (format nil "folder ~a sucessfully downloaded to ~a"
-                                          remote-path
-                                          local-path)))
-        (destructuring-bind (file checksum size) (pop items)
-          (setf state :normal-no-resubmit)
-          (let* ((left (length items))
-                 (done (length items-done))
-                 (total (+ left done)))
-            (setf info (format nil "[Folder Download] (File ~a/~a): ~a"
-                               done
-                               total
-                               file)))
-          (setf items-done (append (list (list file checksum size))
-                                   items-done))
-          (unless checksum
-            ;; the file might have changed, if so we should be able to
-            ;; get the checksum from remote-path again, if this also
-            ;; fails checksum will just be nil, so the following if
-            ;; will catch that.
-            (setf checksum (lodds:get-checksum-from-path remote-path user)))
-          ;; remove size from load since the new task will add it again
-          (decf-load task size)
-          (let ((on-error-hook
-                  (lambda (file-task)
-                    (declare (ignore file-task))
-                    (if (lodds.event:callback-exists-p :folder-download-error)
-                        (lodds.event:push-event :folder-download-error id)
-                        ;; just skip the file
-                        (submit-task task)))))
-            (if checksum
-                (let ((local-file-path (concatenate 'string
-                                                    local-path
-                                                    (subseq file (length remote-root)))))
-                  (lodds.core:escaped-ensure-directories-exist
-                   local-file-path)
-                  (submit-task (make-instance
-                                'task-get-file-from-users
-                                :name "get-file-from-users (folder)"
-                                :checksum checksum
-                                :local-file-path local-file-path
-                                ;; resubmit current task-get-folder when file
-                                ;; download is complete
-                                :on-finish-hook (lambda (file-task)
-                                                  (declare (ignore file-task))
-                                                  (when (eql state :normal-no-resubmit)
-                                                    (setf state :normal)
-                                                    (submit-task task)))
-                                :on-error-hook on-error-hook
-                                :on-cancel-hook on-error-hook)))
-                (funcall on-error-hook nil)))))))
-
-(defun handle-incomming-send-permission (task request)
-  (with-slots (socket) task
-    (let* ((users (lodds:get-user-by-ip
-                   (usocket:get-peer-address socket)))
+(defun handle-send-permission-request (tasks socket size timeout filename)
+  (let* ((users (lodds:get-user-by-ip (socket-info socket)))
+         (action
            ;; get type of action
-           (action (cond
-                     ((lodds.config:get-value :deny-requests)
-                      :blocked)
-                     ((null users)
-                      (if (lodds.config:get-value :allow-unkown-user-send)
-                          :ask
-                          :unknown))
-                     ((intersection users (lodds.config:get-value :blocked-users)
-                                    :test #'equal)
-                      :deny)
-                     ((subsetp users (lodds.config:get-value :trusted-users)
-                               :test #'equal)
-                      :accept)
-                     (t :ask))))
-      ;; check if there is no callback if action is :ask
-      (when (and (eql action :ask)
-                 (not (lodds.event:callback-exists-p :send-permission)))
-        (setf action :no-callback))
-      (destructuring-bind (size timeout filename) (cdr request)
-        (case action
-          (:blocked
-           (lodds.event:push-event
-            :send-permission
-            "received and denied (deny requests true)"))
-          (:accept
-           (progn
-             (lodds.task:submit-task
-              (make-instance 'task-request-send-permission
-                             :user users
-                             :name "request-send-permission"
-                             :socket socket
-                             :size size
-                             :timeout timeout
-                             :filename (format nil "~a~a"
-                                               (lodds.core:add-missing-slash
-                                                (lodds.config:get-value :upload-folder))
-                                               filename)))
-             (lodds.event:push-event
+           (cond
+             ((lodds.config:get-value :deny-requests)
+              :blocked)
+             ((null users)
+              (if (lodds.config:get-value :allow-unkown-user-send)
+                  :ask
+                  :unknown))
+             ((intersection users (lodds.config:get-value :blocked-users)
+                            :test #'equal)
+              :deny)
+             ((subsetp users (lodds.config:get-value :trusted-users)
+                       :test #'equal)
+              :accept)
+             (t :ask))))
+    (when (and (eql action :ask)
+               (not (lodds.event:callback-exists-p :send-permission)))
+      (setf action :no-callback))
+    (ecase action
+      (:blocked (lodds.event:push-event
+                 :send-permission
+                 "received and denied (deny requests true)"))
+      (:deny (lodds.event:push-event
               :send-permission
-              (format nil "accepted (user ~{~a~^and~} trusted)"
-                      users))
-             ;; set socket nil, so it does not get closed by finishing
-             ;; task-request
-             (setf socket nil)))
-          (:ask
-           (let ((task (make-instance 'task-request-send-permission
-                                      :user (or users (list "unknown"))
-                                      :name "request-send-permission"
-                                      :socket socket
-                                      :size size
-                                      :timeout timeout
-                                      :filename filename)))
-             (lodds.event:push-event :send-permission
-                                     (put-task-on-hold task)
-                                     task)
-             ;; set socket nil, so it does not get closed by finishing
-             ;; task-request
-             (setf socket nil)))
-          (:deny
-           (lodds.event:push-event
-            :send-permission
-            (format nil "received and denied (user ~{~a~^and~} blocked)"
-                    users)))
-          (:no-callback
-           (lodds.event:push-event
-            :send-permission
-            "received and denied (blocking send-permissions)"))
-          (:unknown
-           (lodds.event:push-event
-            :send-permission
-            "received and denied (blocking receiving files from unkown users)"))
-          (t (lodds.event:push-event
-              :send-permission
-              (format nil "Error: unexpected action: ~a" action))))))))
+              (format nil "received and denied (user ~{~a~^and~} blocked)"
+                      users)))
+      (:no-callback (lodds.event:push-event
+                     :send-permission
+                     "received and denied (blocking send-permissions)"))
+      (:unknown (lodds.event:push-event
+                 :send-permission
+                 "received and denied (blocking receiving files from unkown users)"))
+      ((:accept :ask)
+       (let ((task (make-instance 'task-request-send-permission
+                                  :tasks tasks
+                                  :users (or users (list "unknown"))
+                                  :socket socket
+                                  :total-load size
+                                  :timeout timeout
+                                  :filename (format nil "~a~a"
+                                                    (lodds.core:add-missing-slash
+                                                     (lodds.config:get-value :upload-folder))
+                                                    filename))))
+         (case action
+           (:accept (progn
+                      (task-run task)
+                      (lodds.event:push-event
+                       :send-permission
+                       (format nil "accepted (user ~{~a~^and~} trusted)"
+                               users))))
+           (:ask (lodds.event:push-event :send-permission
+                                         (task-id task)
+                                         filename
+                                         timeout
+                                         users
+                                         size
+                                         ;; deny
+                                         (lambda ()
+                                           (task-cleanup task "Denied"))
+                                         ;; accept
+                                         (lambda (&optional new-filename)
+                                           (when new-filename
+                                             (setf (slot-value task 'filename)
+                                                   new-filename))
+                                           (task-run task))))))))))
 
-(defmethod run-task ((task task-request))
-  (with-slots (socket state) task
-    (setf state :finished)
-    (multiple-value-bind (error request)
-        (lodds.low-level-api:parse-request socket)
-      (if (> error 0)
-          (error "low-level-api:parse-request Returned error ~a~%" error)
-          (case (car request)
-            (:file
-             (destructuring-bind (checksum start end) (cdr request)
-               (submit-task
-                (make-instance 'task-request-file
-                               :name "request-file"
-                               :socket socket
-                               :checksum checksum
-                               :start start
-                               :end end))
-               (setf socket nil)))
-            (:info
-             (progn
-               (submit-task
-                (make-instance 'task-request-info
-                               :name "request-info"
-                               :socket socket
-                               :timestamp (cadr request)))
-               (setf socket nil)))
-            (:send-permission
-             (handle-incomming-send-permission task request)))))))
+;; task-load methods
 
-(defmethod run-task ((task task-request-file))
-  (with-slots (socket
-               checksum
-               start
-               end
-               written
-               filename
-               file-stream
-               state
-               load
-               max-load
-               info) task
-    (unless filename
-      (unless (setf filename (lodds.watcher:get-file-info checksum))
-        (lodds.event:push-event :error
-                                "requested file could not be found")
-        (setf state :finished)
-        (return-from run-task))
-      (setf file-stream (open (lodds.core:escape-wildcards filename)
-                              :direction :input
-                              :element-type '(unsigned-byte 8)))
-      (let ((size (- end start)))
-        (setf load size
-              max-load size)
-        (unless (eql start 0)
-          (file-position file-stream start))
-        (lodds.core:split-user-identifier (user ip port)
-            (or (car (lodds:get-user-by-ip
-                      (usocket:get-peer-address socket)))
-                "unknown@ignored:ignored")
-          (setf info (format nil "[Upload] (~a - ~a): ~a"
-                             user
-                             (lodds.core:format-size size)
-                             filename)))))
-    (let ((transfered
-            (load-chunk file-stream
-                        (usocket:socket-stream socket)
-                        (- (- end start)
-                           written))))
-      (incf written transfered)
-      (decf-load task transfered))
-    (when (eql (- end start) written)
-      (setf state :finished))))
+(defgeneric task-load (task)
+  (:documentation "Method returning the load the given task
+  produces"))
 
-(defmethod run-task ((task task-request-info))
-  (with-slots (socket
-               timestamp
-               state) task
-    (setf state :finished)
+(defmethod task-load ((task task))
+  (with-slots (total-load bytes-transfered) task
+    (- total-load bytes-transfered)))
+
+;; task-cleanup methods
+
+(defgeneric task-cleanup (task err)
+  (:documentation "Closes open socket and file streams. Will be called
+  once a task finishes."))
+
+(defmethod task-cleanup ((task task) err)
+  (with-slots (socket file-stream
+               id tasks canceled
+               on-cancel on-finish on-error)
+      task
+    (remhash id (slot-value tasks 'tasks))
+    (secure-close socket)
+    (setf socket nil)
+    (when file-stream
+      (close file-stream)
+      (setf file-stream nil))
+
+    ;; check if the error was raised due to a task-cancel
+    ;; (canceled would be set to t then)
+    (cond
+      (canceled
+       (when on-cancel
+         (funcall on-cancel))
+       (lodds.event:push-event :task-canceled
+                               id task))
+      (err
+       (when on-error
+         (funcall on-error))
+       (lodds.event:push-event :task-failed
+                               id task err))
+      (t
+       (when on-finish
+         (funcall on-finish))
+       (lodds.event:push-event :task-finished
+                               id task)))))
+
+;; task-init methods to initialize the tasks
+
+(defgeneric task-init (task)
+  (:documentation "Method which is run to initialize the task, it will
+  open up file streams, set filenames etc. Returns t on succes and nil
+  on failure."))
+
+(defmethod task-init :around ((task task))
+  (handler-case
+      (progn
+        (call-next-method)
+        (setf (slot-value task 'initialized-p) t))
+    (error (err)
+      (lodds.event:push-event :error
+                              "Could not initialize Task"
+                              err)
+      (task-cleanup task err)
+      nil)))
+
+(defmethod task-init ((task task-request)))
+
+(defmethod task-init ((task task-request-send-permission))
+  (with-slots (file-stream socket filename) task
+    (setf file-stream (open-file filename :output))
+    (lodds.low-level-api:respond-send-permission
+     (usocket:socket-stream socket))))
+
+(defmethod task-init ((task task-request-file))
+  (with-slots (checksum start end filename file-stream total-load
+               bytes-transfered)
+      task
+    ;; set filename
+    (let ((name (lodds.watcher:get-file-info checksum)))
+      (unless name
+        (error "Requested file not found"))
+      (setf filename name))
+    ;; open local file stream
+    (setf file-stream (open-file filename :input))
+    (let ((size (- end start))
+          (file-size (file-length file-stream)))
+      ;; do some checks if request would error
+      (cond
+        ((< size 0) (error "Requested size < 0"))
+        ((> size file-size) (error "Requested size > file-length"))
+        ((> end file-size) (error "Requested end > file-length")))
+      ;; setup load and max-load
+      (setf total-load size)
+      ;; move to right file position
+      (unless (eql start 0)
+        (file-position file-stream start)))))
+
+(defmethod task-init ((task task-get-info))
+  (with-slots (socket user) task
+    (lodds.core:split-user-identifier (name ip port t) user
+      (setf socket (connect ip port)))))
+
+(defmethod task-init ((task task-send-file))
+  (with-slots (total-load filename file-stream socket user) task
+    (setf file-stream (open-file filename :input))
+    (setf total-load
+          (file-length file-stream))
+    (lodds.core:split-user-identifier (name ip port t) user
+      (setf socket (connect ip port)))))
+
+(defmethod task-init ((task task-get-file-from-user))
+  (with-slots (socket user local-file-path checksum file-stream
+               total-load)
+      task
+    (let ((size (car (lodds:get-file-info checksum user))))
+      (if size
+          (setf total-load size)
+          (error "File with given checksum not found"))
+      (setf file-stream (open-file local-file-path :output))
+      (lodds.core:split-user-identifier (name ip port t) user
+        (setf socket (connect ip port))))))
+
+(defmethod task-init ((task task-get-file-from-users))
+  (with-slots (total-load part-size checksum file-stream local-file-path) task
+    (let ((size (third (first (lodds:get-file-info checksum)))))
+      (unless size
+        (error "File with given checksum not found"))
+      (setf file-stream (open-file local-file-path :output))
+      (setf total-load size)
+      (setf part-size
+            (let ((64MiB (ash 1 26))
+                  (32MiB (ash 1 25)))
+              (if (> size 64MiB)
+                  (ash size -4) ;; divide by 16 (split up into 16 parts)
+                  (if (> size 32MiB)
+                      (ash size -3) ;; divide by 8 (split up into 8 parts)
+                      ;; if file is smaller than 32 mb just
+                      ;; download it in one go
+                      size)))))))
+
+(defmethod task-init ((task task-get-folder))
+  (with-slots (user remote-path items total-load) task
+    (setf items (lodds:get-folder-info remote-path user))
+    (let ((size (reduce #'+ items :key #'third)))
+      (setf total-load size))))
+
+;; task-run methods to run a task
+
+(defgeneric task-run (task)
+  (:documentation "Will run the task until it finishes, fails or gets
+  canceled. When socket was initialized with in-thread t (default),
+  then task-run will open a new thread and return, if not, it will
+  block until the task has finished, was canceled or failed"))
+
+(defmethod task-run :around ((task task))
+  ;; run the task when state is normal
+  (with-slots (id canceled initialized-p in-thread thread) task
+    (when (and (not initialized-p)
+               (not (task-init task)))
+      ;; return if the task was not initialized and we where not
+      ;; able to initialize it
+      (return-from task-run))
+    (lodds.core:with-server lodds:*server*
+      (labels ((run ()
+                 (handler-case
+                     (progn
+                       (call-next-method)
+                       (task-cleanup task nil))
+                   (error (err)
+                     (task-cleanup task err)))))
+        (if in-thread
+            (bt:make-thread #'run
+                            :name (format nil "~a" task))
+            (run))))))
+
+(defmethod task-run ((task task-request))
+  (with-slots (socket tasks on-finish) task
+    (multiple-value-bind (err request)
+        (lodds.low-level-api:parse-request
+         socket)
+      (when (> err 0)
+        (error (format nil "low level api returned ~a on parse-request"
+                       err)))
+      (ecase (car request)
+        ((:file :info)
+         (let ((sock socket)) ;; capture socket
+           (setf on-finish
+                 (lambda ()
+                   (task-run
+                    (ecase (car request)
+                      (:file
+                       (destructuring-bind (checksum start end) (cdr request)
+                         (make-instance 'task-request-file
+                                        :user (or (lodds:get-user-by-ip (socket-info sock)) "unknown@0.0.0.0:1234")
+                                        :in-thread nil
+                                        :tasks tasks
+                                        :socket sock
+                                        :checksum checksum
+                                        :start start
+                                        :end end)))
+                      (:info
+                       (make-instance 'task-request-info
+                                      :in-thread nil
+                                      :tasks tasks
+                                      :socket sock
+                                      :timestamp (second request)))))))))
+        (:send-permission (apply 'handle-send-permission-request
+                                 tasks
+                                 socket
+                                 (cdr request))))
+      ;; make sure socket does not get cleared up
+      (setf socket nil))))
+
+(defmethod task-run ((task task-request-info))
+  (with-slots (socket timestamp) task
     (apply #'lodds.low-level-api:respond-info
            (usocket:socket-stream socket)
            (lodds:generate-info-response timestamp))))
 
-(defmethod run-task ((task task-request-send-permission))
-  (with-slots (socket
-               size
-               filename
-               file-stream
-               read-bytes
-               state
-               load
-               max-load
-               info) task
-    ;; open up file-stream if not open yet
-    (unless file-stream
-      (setf file-stream (open (lodds.core:escape-wildcards filename)
-                              :direction :output
-                              :if-exists :supersede
-                              :element-type '(unsigned-byte 8)))
-      (unless (eql 0 (lodds.low-level-api:respond-send-permission
-                      (usocket:socket-stream socket)))
-        (setf state :finished)))
-    ;; transfer the file
-    (let ((transfered
-            (load-chunk (usocket:socket-stream socket)
-                        file-stream
-                        (- size read-bytes))))
-      (incf read-bytes transfered)
-      (decf-load task transfered))
-    (when (eql size read-bytes)
-      (setf state :finished))))
+(defmethod task-run ((task task-request-send-permission))
+  (task-transfer task :socket-to-file))
 
-(defmethod run-task ((task task-info))
-  (with-slots (user
-               ip
-               port
-               timestamp
-               user-load
-               last-change
-               state
-               socket) task
-    (setf state :finished)
-    (let ((client-info (lodds:get-user-info user)))
-      (unless client-info
-        (setf client-info
-              (make-instance 'lodds:client-info
-                             :c-name user
-                             :c-last-message timestamp
-                             :c-ip ip
-                             :c-port port
-                             :c-last-change 0
-                             :c-load user-load)
-              (gethash user (lodds:clients lodds:*server*))
-              client-info)
-        (lodds.event:push-event :client-added
-                                user
-                                user-load
-                                last-change))
-      (let* ((old-load (lodds:c-load client-info))
-             (lock (lodds:c-lock client-info)))
-        (setf (lodds:c-last-message client-info) timestamp
-              (lodds:c-load client-info) user-load)
-        (if (bt:acquire-lock lock nil)
-            ;; only go on if we locked, if not, just drop the update, we
-            ;;will update on the next advertise. unwind-protect to be sure
-            ;;we unlock that lock.
-            (unwind-protect
-                 (let ((user-has-new-changes-p
-                         (<= (lodds:c-last-change client-info)
-                             last-change)))
-                   (when user-has-new-changes-p
-                     (setf socket
-                           (usocket:socket-connect ip port
-                                                   :timeout 1
-                                                   :element-type '(unsigned-byte 8)))
-                     (lodds.core:set-socket-timeout socket 1)
-                     (update-client-list socket client-info))
-                   (when (or user-has-new-changes-p
-                             (not (eql old-load user-load)))
-                     (lodds.event:push-event :client-updated
-                                             user
-                                             user-load
-                                             last-change)))
-              (bt:release-lock lock))
-            (lodds.event:push-event :info :dropped task))))))
+(defmethod task-run ((task task-request-file))
+  (task-transfer task :file-to-socket))
 
-(defmethod run-task ((task task-send-file))
-  (with-slots (user
-               filepath
-               timeout
-               socket
-               file-stream
-               size
-               written
-               state
-               load
-               max-load
-               info
-               time-waited) task
-    ;; open up file-stream if not open yet
-    (unless file-stream
-      (setf file-stream (open (lodds.core:escape-wildcards filepath)
-                              :element-type '(unsigned-byte 8)))
-      (setf size (file-length file-stream))
-      (setf load size
-            max-load size))
-    ;; open up socket
-    (unless socket
-      (lodds.core:split-user-identifier (name ip port t) user
-        (setf socket (usocket:socket-connect ip
-                                             port
-                                             :element-type '(unsigned-byte 8)
-                                             :timeout 1)))
-      (lodds.event:push-event :debug
-                              "Asking for send permission")
-      (let ((ret 0))
-        ;; send a send-permission request
-        (setf ret
-              (lodds.low-level-api:get-send-permission (usocket:socket-stream socket)
-                                                       size
-                                                       timeout
-                                                       (file-namestring filepath)))
-        (unless (eql 0 ret)
-          (error "get-send-permission returned: ~a" ret))))
-    (if (< time-waited timeout)
-        ;; wait timeout seconds for a response from the client, if
-        ;; after 1 second we got nothing, just resubmit the task and
-        ;; try again later. if time is already equal to timeout, we
-        ;; have successfull waited and can start transfer.
-        (lodds.core:split-user-identifier (name ip port) user
-          (case (lodds.low-level-api:handle-send-permission socket 1)
-            (0 (progn ;; success, set time to timeout
-                 (setf time-waited timeout)
-                 (setf info (format nil "[Send File] (~a) (Sending): ~a" name filepath))))
-            (3 (progn ;; on timeout wait another second
-                 (incf time-waited)
-                 (if (>= time-waited timeout)
-                     (error "Timeout. No Response from user, aborting Send File.")
-                     (setf info (format nil "[Send File] (~a) (Waiting for accept ~a/~a): ~a"
-                                        name
-                                        (lodds.core:format-seconds time-waited)
-                                        (lodds.core:format-seconds timeout)
-                                        filepath)))))
-            (t (error "handle-send-permission returned error"))))
-        ;; transfer the file
-        (let ((transfered
-                (load-chunk file-stream
-                            (usocket:socket-stream socket)
-                            (- size written))))
-          (incf written transfered)
-          (decf-load task transfered)
-          (finish-output file-stream)
-          (when (eql size written)
-            (setf state :finished))))))
+(defmethod task-run ((task task-get-info))
+  (with-slots (socket user)
+      task
+    (let* ((user-info (lodds:get-user-info user))
+           (lock (lodds:c-lock user-info)))
+      (if (bt:acquire-lock lock nil)
+          ;; only go on if we locked, if not, just drop the update, we
+          ;; will update on the next advertise. unwind-protect to be sure
+          ;; we unlock that lock.
+          (unwind-protect
+               (progn
+                 (lodds.low-level-api:get-info (usocket:socket-stream socket)
+                                               (lodds:c-last-change user-info))
+                 (multiple-value-bind (err update)
+                     (lodds.low-level-api:handle-info socket)
+                   (if (eql 0 err)
+                       (lodds:update-user user
+                                          update)
+                       (error "low level api returned: ~a" err))))
+            (bt:release-lock lock))
+          (lodds.event:push-event :info :dropped task)))))
+
+(defmethod task-run ((task task-send-file))
+  (with-slots (socket file-stream
+               user timeout filename bytes-transfered
+               total-load canceled time-waited)
+      task
+    (lodds.low-level-api:get-send-permission
+     (usocket:socket-stream socket)
+     total-load
+     timeout
+     (file-namestring filename))
+    (let ((done nil))
+      (loop :while (and (not done)
+                        (not canceled))
+            :if (>= time-waited timeout)
+            :do (error "Timeout. No Response from user, aborting Send File.")
+            :else
+            :do
+            (case (lodds.low-level-api:handle-send-permission socket 1)
+              (0 (progn
+                   (setf time-waited nil)
+                   (task-transfer task :file-to-socket)
+                   (setf done t)))
+              (3 (incf time-waited))
+              (t (error "handle-send-permission returned error")))))))
+
+(defmethod task-run ((task task-get-file-from-user))
+  (with-slots (socket file-stream
+               bytes-transfered total-load
+               checksum)
+      task
+    (lodds.low-level-api:get-file (usocket:socket-stream socket)
+                                  checksum
+                                  0
+                                  total-load)
+    (task-transfer task :socket-to-file)))
+
+(defmethod task-run ((task task-get-file-from-users))
+  (with-slots (socket file-stream
+               bytes-transfered total-load
+               checksum digester current-part part-size
+               local-file-path current-user)
+      task
+    (loop
+      :do (let ((end-next-part (* (+ 1 current-part)
+                                  part-size)))
+            (unless (> total-load end-next-part)
+              (setf part-size
+                    (- total-load bytes-transfered))
+              (setf end-next-part total-load))
+            (if (not (setf current-user (lodds:find-best-user checksum)))
+                (error "Could not find user who shares the given file")
+                (lodds.core:split-user-identifier (name ip port t) current-user
+                  (setf socket (connect ip port))))
+            (lodds.low-level-api:get-file (usocket:socket-stream socket)
+                                          checksum
+                                          bytes-transfered
+                                          end-next-part)
+            (task-transfer task :socket-to-file end-next-part digester)
+            (secure-close socket)
+            (incf current-part)
+            (unless (eql bytes-transfered end-next-part)
+              (error "task-transfer did not transfer all bytes"))
+            (when (> bytes-transfered total-load)
+              (error "Read to much")))
+      :while (not (eql total-load bytes-transfered))
+      :finally (when (and digester
+                          (not (string= checksum
+                                        (ironclad:byte-array-to-hex-string
+                                         (ironclad:produce-digest digester)))))
+                 (delete-file (lodds.core:escape-wildcards local-file-path))
+                 (error  "Checksum validation Failed")))))
+
+(defmethod task-run ((task task-get-folder))
+  (with-slots (local-path remote-path remote-root
+               items items-done user state info id
+               bytes-transfered tasks canceled
+               current-task)
+      task
+    (loop :while (and items (not canceled))
+          :for (file checksum size) = (pop items)
+          :do
+          (progn
+            (setf items-done
+                  (append (list (list file checksum size))
+                          items-done))
+            ;; the file might have changed, if so we should be able to
+            ;; get the checksum from remote-path again, if this also
+            ;; fails checksum will just be nil, then the
+            ;; task-get-file-from-users will fail and push a
+            ;; folder-download-error, exactly what we want
+            (unless checksum
+              (setf checksum (lodds:get-checksum-from-path file user)))
+            ;; remove size from load since the new task will add it again
+            (incf bytes-transfered size)
+            (let ((local-file-path (concatenate 'string
+                                                local-path
+                                                (subseq file (length remote-root)))))
+              (lodds.core:escaped-ensure-directories-exist local-file-path)
+              (task-run
+               (setf current-task
+                     (make-instance
+                      'task-get-file-from-users
+                      :tasks tasks
+                      :checksum checksum
+                      :local-file-path local-file-path
+                      :in-thread nil
+                      :on-error
+                      (lambda ()
+                        ;; if there is no callback, just 'go on' skip
+                        ;; the error, finish the
+                        ;; task-get-file-from-users task and return to
+                        ;; task-get-folders run method. But if there is
+                        ;; a callback, set up a condition, push a event
+                        ;; and wait on the condition
+                        (when (lodds.event:callback-exists-p :folder-download-error)
+                          (let ((condition (bt:make-condition-variable :name "Folder error condition"))
+                                (lock (bt:make-lock "Folder error condition lock")))
+                            (lodds.event:push-event
+                             :folder-download-error
+                             (task-id task)
+                             remote-path
+                             file
+                             ;; retry
+                             (lambda ()
+                               (destructuring-bind (file checksum size)
+                                   (pop items-done)
+                                 ;; add item back onto list
+                                 (setf items
+                                       (append (list (list file checksum size))
+                                               items))
+                                 (decf bytes-transfered size)
+                                 (bt:condition-notify condition)))
+                             ;; skip
+                             (lambda ()
+                               (bt:condition-notify condition))
+                             ;; cancel
+                             (lambda ()
+                               (setf canceled t)
+                               (bt:condition-notify condition)))
+                            (bt:condition-wait condition lock)))))))
+              (setf current-task nil)))
+          :finally
+          (unless canceled
+            (lodds.event:push-event :info
+                                    (format nil "folder ~a sucessfully downloaded to ~a"
+                                            remote-path
+                                            local-path))))))

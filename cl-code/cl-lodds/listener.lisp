@@ -8,17 +8,6 @@ client infos on the lodds-server object once he gets new information.
 
 (in-package lodds.listener)
 
-(defun remove-old-clients (&optional (current-time (lodds.core:get-timestamp)))
-  "removes all clients older than client-timeout"
-  (let ((clients (lodds:clients lodds:*server*)))
-    (maphash (lambda (key client)
-               (when (> (- current-time (lodds:c-last-message client))
-                        (lodds.config:get-value :client-timeout))
-                 (remhash key clients)
-                 (lodds.event:push-event :client-removed
-                                         key)))
-             clients)))
-
 (defun handle-message (message)
   (multiple-value-bind (error result) (lodds.low-level-api:read-advertise message)
     (unless (eql error 0)
@@ -29,7 +18,6 @@ client infos on the lodds-server object once he gets new information.
       (return-from handle-message))
     (lodds.event:push-event :listener result)
     (let ((current-time (lodds.core:get-timestamp)))
-      (remove-old-clients current-time)
       (destructuring-bind (ip port timestamp-l-c user-load user) result
         (let ((client-info (lodds:get-user-info user)))
           (unless client-info
@@ -38,7 +26,7 @@ client infos on the lodds-server object once he gets new information.
                   (make-instance 'lodds:client-info
                                  :c-name user
                                  :c-last-message current-time
-                                 :c-ip ip
+                                 :c-ip (usocket:dotted-quad-to-vector-quad ip)
                                  :c-port port
                                  :c-last-change 0
                                  :c-load user-load)
@@ -55,8 +43,9 @@ client infos on the lodds-server object once he gets new information.
                     (<= (lodds:c-last-change client-info)
                         timestamp-l-c)))
               (when user-has-new-changes-p
-                (lodds.event-loop:with-event-loop ((lodds:get-event-loop))
-                  (lodds.event-loop:ev-update-user-info user)))
+                (lodds.task:task-run (make-instance 'lodds.task:task-get-info
+                                                    :tasks (lodds:get-tasks)
+                                                    :user user)))
               (when (or user-has-new-changes-p
                         (not (eql old-load user-load)))
                 (lodds.event:push-event :client-updated
@@ -76,8 +65,7 @@ client infos on the lodds-server object once he gets new information.
           (if (plusp n)
               (flexi-streams:octets-to-string
                (subseq buffer 0 n))
-              (error "listener:get-next-message: receive error: ~A" n)))
-        (remove-old-clients))))
+              (error "listener:get-next-message: receive error: ~A" n))))))
 
 (defun run (listener)
   (let ((socket nil))
@@ -95,7 +83,7 @@ client infos on the lodds-server object once he gets new information.
                         (when msg
                           (handle-message msg)))))
         (error (e)
-          (lodds.event:push-event :listener
+          (lodds.event:push-event :listener-error
                                   e)))
       (when socket
         (usocket:socket-close socket)

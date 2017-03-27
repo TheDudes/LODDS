@@ -568,7 +568,7 @@ functionality (for example system tray and status-info)
   ;; can be dynamically bound to lodds::*server* with
   ;; lodds:with-server and is available on the main thread.
   (tmt:with-body-in-main-thread ()
-    (lodds:with-server lodds-server
+    (lodds.core:with-server lodds-server
       (with-main-window (window (make-instance 'main-window)
                          :main-thread nil
                          :on-error #'on-error)
