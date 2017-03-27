@@ -312,16 +312,21 @@ functionality (for example system tray and status-info)
                            Total Load: Sum of all Loads accross the Network~%~
                            Load: How much load the client currently has~%~
                            Tasks: How many tasks are currently running~%~
-                           Network Files: Amount of Files in the network (non Unique)~%~
                            Shared Folders: Amount of currently shared folders~%~
-                           Users: Amount of User on the Network")))
+                           Users: Amount of User on the Network~%~
+                           Network Files: Amount of Files in the network (non Unique)~%~
+                           Network Size: Size of all shared Files")))
 
 (define-slot (main-window tick) ()
   (declare (connected status-timer (timeout)))
-  (let ((status (mapcar
-                 (lambda (status)
-                   (format nil "~a: ~a" (car status) (cdr status)))
-                 (lodds:get-status t))))
+  (let ((status (append (mapcar
+                         (lambda (status)
+                           (format nil "~a: ~a" (car status) (cdr status)))
+                         (lodds:get-status t))
+                        (list
+                         (format nil "Network Size: ~a"
+                                 (lodds.core:format-size
+                                  (get-total-shares-size shares-widget)))))))
     (q+:set-text status-label
                  (format nil "~{~a~^ | ~}" status))
     (q+:set-tool-tip tray-icon

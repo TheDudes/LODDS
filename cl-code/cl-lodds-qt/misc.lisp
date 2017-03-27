@@ -37,8 +37,8 @@ throughout the gui code
 ;; the current child to child.
 (defmacro do-childs ((child index parent) &body body)
   `(loop :for ,index :from 0 :below (q+:child-count ,parent)
-         :do (let ((,child (q+:child ,parent ,index)))
-               ,@body)))
+         :collect (let ((,child (q+:child ,parent ,index)))
+                    ,@body)))
 
 (defun set-icon (widget icon-name fallback-text &optional (set-flat t) (supress-warning nil))
   "calls q+:set-icon on given widget, when the icon was found inside

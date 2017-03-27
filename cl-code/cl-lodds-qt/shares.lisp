@@ -316,6 +316,12 @@ QTreeWidget in the middle, which displays all shared files
                   new-entry)
         t)))
 
+(defmethod get-total-shares-size ((shares shares))
+  (reduce #'+
+          (do-childs (element i (q+:invisible-root-item shares))
+            (shares-entry-size (gethash (q+:text element +shares-id+)
+                                        (entries shares))))))
+
 (defmethod cleanup-node ((shares shares) node)
   "calls finalize on node and all its children to cleanup memory."
   (loop :while (> (q+:child-count node) 0)
