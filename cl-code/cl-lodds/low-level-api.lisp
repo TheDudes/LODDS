@@ -248,26 +248,27 @@ stream, will flush the stream with force-output when flusp-p is t"
     (if (cl-ppcre:scan *info-head-scanner* line)
         (destructuring-bind (type timestamp count) (cl-strings:split line)
           (values 0
-                  (cond
-                    ((equal type "all") :all)
-                    ((equal type "upd") :upd)
-                    (t (error "TODO: handle-info all|upd error ~a" type)))
-                  (parse-integer timestamp)
-                  (loop :repeat (parse-integer count)
-                        :collect
-                        (progn
-                          (setf line (read-line-from-socket socket))
-                          (if (cl-ppcre:scan *info-body-scanner* line)
-                              (destructuring-bind (type checksum size . name)
-                                  (cl-strings:split line)
-                                (list (cond
-                                        ((equal type "add") :add)
-                                        ((equal type "del") :del)
-                                        (t (error "TODO: handle-info add|del error")))
-                                      checksum
-                                      (parse-integer size)
-                                      (cl-strings:join name :separator " ")))
-                              (return-from handle-info 2))))))
+                  (list
+                   (cond
+                     ((equal type "all") :all)
+                     ((equal type "upd") :upd)
+                     (t (error "TODO: handle-info all|upd error ~a" type)))
+                   (parse-integer timestamp)
+                   (loop :repeat (parse-integer count)
+                         :collect
+                         (progn
+                           (setf line (read-line-from-socket socket))
+                           (if (cl-ppcre:scan *info-body-scanner* line)
+                               (destructuring-bind (type checksum size . name)
+                                   (cl-strings:split line)
+                                 (list (cond
+                                         ((equal type "add") :add)
+                                         ((equal type "del") :del)
+                                         (t (error "TODO: handle-info add|del error")))
+                                       checksum
+                                       (parse-integer size)
+                                       (cl-strings:join name :separator " ")))
+                               (return-from handle-info 2)))))))
         2)))
 
 (defun handle-send-permission (socket timeout)
