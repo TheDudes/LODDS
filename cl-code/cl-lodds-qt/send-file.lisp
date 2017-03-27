@@ -5,7 +5,11 @@
   ((users-selected :initarg :users-selected
                    :initform (list)
                    :type list
-                   :documentation "All users the user has checked.")))
+                   :documentation "All users the user has checked.")
+   (checkboxes :initform nil
+               :type list
+               :documentation "List of all checkboxes inside the
+               userlist")))
 
 (define-subwidget (send-file file)
     (q+:make-qlineedit send-file)
@@ -58,34 +62,26 @@
          (q+:set-value 30)))
 
 (define-subwidget (send-file users)
-    (q+:make-qtreewidget send-file)
-  (qdoto users
-         (q+:set-column-count 2)
-         (q+:set-header-labels (list "Name" "Send File"))
-         (q+:set-alternating-row-colors t)
-         (q+:hide))
-  (qdoto (q+:header users)
-         (q+:set-stretch-last-section nil)
-         (q+:set-resize-mode 0 (q+:qheaderview.stretch))
-         (q+:set-resize-mode 1 (q+:qheaderview.resize-to-contents)))
-  (loop :for user :in (lodds:get-user-list)
-        :do (let ((new-entry (q+:make-qtreewidgetitem users))
-                  (checkbox (q+:make-qcheckbox send-file)))
-              (q+:set-item-widget users
-                                  new-entry
-                                  1
-                                  checkbox)
-              (when (find user users-selected :test #'equal)
-                (q+:set-checked checkbox t))
-              (q+:set-text new-entry 0 user)
-              (connect checkbox "toggled(bool)"
-                       (lambda (checked)
-                         (let ((user (q+:text new-entry 0)))
-                           (if checked
-                               (push user users-selected)
-                               (setf users-selected
-                                     (remove user users-selected
-                                             :test #'equal)))))))))
+    (q+:make-qscrollarea send-file)
+  (q+:hide users)
+  (let* ((widget (q+:make-qwidget send-file))
+         (layout (q+:make-qvboxlayout widget)))
+    (q+:set-widget users widget)
+    (q+:set-widget-resizable users t)
+    (loop :for user :in (lodds:get-user-list)
+          :do (let ((checkbox (q+:make-qcheckbox user send-file)))
+                (push checkbox checkboxes)
+                (q+:add-widget layout checkbox)
+                (when (find user users-selected :test #'equal)
+                  (q+:set-checked checkbox t))
+                (connect checkbox "toggled(bool)"
+                         (lambda (checked)
+                           (let ((user (q+:text checkbox)))
+                             (if checked
+                                 (push user users-selected)
+                                 (setf users-selected
+                                       (remove user users-selected
+                                               :test #'equal))))))))))
 
 (define-subwidget (send-file sub-layout)
     (q+:make-qwidget send-file)
@@ -94,14 +90,35 @@
            (q+:add-row "File:" file-layout)
            (q+:add-row "Timeout:" timeout))))
 
+(define-subwidget (send-file select-all)
+    (q+:make-qpushbutton "Select All" send-file)
+  (q+:hide select-all)
+  (connect select-all "pressed()"
+           (let ((was-pressed nil))
+             (lambda ()
+               (if was-pressed
+                   (progn
+                     (setf was-pressed nil)
+                     (q+:set-text select-all "Select All")
+                     (dolist (checkbox checkboxes)
+                       (q+:set-checked checkbox nil)))
+                   (progn
+                     (setf was-pressed t)
+                     (q+:set-text select-all "Unselect All")
+                     (dolist (checkbox checkboxes)
+                       (q+:set-checked checkbox t))))))))
+
 (define-subwidget (send-file show-users)
     (q+:make-qpushbutton "User Selection" send-file)
   (connect show-users "toggled(bool)"
            (lambda (checked)
              (if checked
-                 (q+:show users)
+                 (progn
+                   (q+:show users)
+                   (q+:show select-all))
                  (progn
                    (q+:hide users)
+                   (q+:hide select-all)
                    (q+:adjust-size send-file)
                    (when (qobject-alive-p (q+:parent send-file))
                      (q+:adjust-size (q+:parent send-file)))))))
@@ -117,7 +134,8 @@
   (qdoto layout
          (q+:add-widget sub-layout)
          (q+:add-widget show-users)
-         (q+:add-widget users)))
+         (q+:add-widget users)
+         (q+:add-widget select-all)))
 
 (defmethod initialize-instance :after ((send-file send-file) &key selected-file)
   (with-slots-bound (send-file send-file)
