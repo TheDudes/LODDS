@@ -46,14 +46,18 @@ multiple-value-bind.
 (defun write-to-stream (stream string &optional (flush-p t))
   "converts the given strin gto octets and writes it to the given
 stream, will flush the stream with force-output when flusp-p is t"
-  (write-sequence (flex:string-to-octets string)
+  (write-sequence (flex:string-to-octets string
+                                         :external-format :utf-8)
                   stream)
   (when flush-p
     (force-output stream)))
 
 (defun read-line-from-socket (socket)
   "read-line for socket-stream of type '(unsigned-byte 8)"
-  (let ((line (list))
+  (let ((line (make-array 0
+                          :element-type '(unsigned-byte 8)
+                          :adjustable t
+                          :fill-pointer t))
         (byte nil)
         (stream (usocket:socket-stream socket)))
     (loop :until nil
@@ -61,8 +65,9 @@ stream, will flush the stream with force-output when flusp-p is t"
                 (setf byte (read-byte stream))
                 (if (eql 10 byte)
                     (return-from read-line-from-socket
-                      (map 'string #'code-char (reverse line)))
-                    (push byte line))))))
+                      (flex:octets-to-string line
+                                             :external-format :utf-8))
+                    (vector-push-extend byte line))))))
 
 ;; broadcast family
 
