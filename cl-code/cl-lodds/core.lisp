@@ -128,12 +128,12 @@ functions.
   (defun format-size (size)
     "formats given size (number) to a more readable format (string)"
     (cond
-      ((> size xb) (format nil "~axb" (ash size -50)))
-      ((> size tb) (format nil "~atb" (ash size -40)))
-      ((> size gb) (format nil "~agb" (ash size -30)))
-      ((> size mb) (format nil "~amb" (ash size -20)))
-      ((> size kb) (format nil "~akb" (ash size -10)))
-      (t           (format nil "~ab " size)))))
+      ((> size xb) (format nil "~aPiB" (ash size -50)))
+      ((> size tb) (format nil "~aTiB" (ash size -40)))
+      ((> size gb) (format nil "~aGiB" (ash size -30)))
+      ((> size mb) (format nil "~aMiB" (ash size -20)))
+      ((> size kb) (format nil "~aKiB" (ash size -10)))
+      (t           (format nil "~aByt" size)))))
 
 (let ((tb    (ash 1 40))  ;; 1 tb
       (gb8   (ash 1 33))  ;; 8 gb
