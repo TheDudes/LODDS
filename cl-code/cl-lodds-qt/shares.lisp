@@ -457,11 +457,11 @@ QTreeWidget in the middle, which displays all shared files
                                                         size)))
            (q+:add-row "Users who share the given file:" (q+:make-qlabel "")))
     (loop :for (user load size filenames)
-                 :in (lodds:get-file-info checksum)
-                 :do (progn
-                       (q+:add-row layout user (q+:make-qlabel (car filenames)))
-                       (loop :for file :in (cdr filenames)
-                             :do (q+:add-row layout "" (q+:make-qlabel file)))))
+          :in (lodds:get-file-info checksum)
+          :do (progn
+                (q+:add-row layout user (q+:make-qlabel (car filenames)))
+                (loop :for file :in (cdr filenames)
+                      :do (q+:add-row layout "" (q+:make-qlabel file)))))
     widget))
 
 (defun open-info-file-dialog (checksum name size users)
