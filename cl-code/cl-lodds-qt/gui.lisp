@@ -266,7 +266,9 @@ functionality (for example system tray and status-info)
 (define-subwidget (main-window view-menu) (q+:add-menu (q+:menu-bar main-window)
                                                        "View"))
 
-(define-subwidget (main-window shares-widget) (make-instance 'shares))
+(define-subwidget (main-window shares-widget)
+    (make-instance 'shares
+                   :main-window main-window))
 
 (define-subwidget (main-window log-dock)
     (make-instance 'dock :title "Log"

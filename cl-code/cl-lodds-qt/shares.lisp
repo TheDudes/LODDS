@@ -14,7 +14,9 @@ QTreeWidget in the middle, which displays all shared files
 (defvar +shares-id+ 2)
 
 (define-widget shares (QTreeWidget)
-  ((changes :accessor changes
+  ((main-window :initarg :main-window
+                :initform nil)
+   (changes :accessor changes
             :initform (list)
             :type list
             :documentation "contains new changes which need to be
@@ -394,21 +396,31 @@ QTreeWidget in the middle, which displays all shared files
 (define-slot (shares update-entries) ((name string))
   (declare (connected shares (update-entries string)))
   (q+:set-updates-enabled shares nil)
-  (loop :for (type checksum size path) :in (get-change shares)
-        :do (let ((combined-path (concatenate 'string name path)))
-              (if (eql type :add)
-                  (let* ((split-path (lodds.core:split-path combined-path))
-                         (*new-checksum* checksum)
-                         (*new-size* size)
-                         (*new-user* (let ((user (car split-path)))
-                                       (subseq user 0 (- (length user) 1)))))
-                    (add-node shares
-                              ""
-                              split-path
-                              (q+:invisible-root-item shares)))
-                  (remove-node shares
-                               (lodds.core:split-path combined-path)
-                               (q+:invisible-root-item shares)))))
+  (let* ((changes (get-change shares))
+         (amount (length changes))
+         (current 0))
+    (loop :for (type checksum size path) :in changes
+          :do (let ((combined-path (concatenate 'string name path)))
+                (when main-window
+                  (q+:show-message
+                   (q+:status-bar main-window)
+                   (format nil "Updating Shares (~:d/~:d) ~a"
+                           amount
+                           (incf current)
+                           path)))
+                (if (eql type :add)
+                    (let* ((split-path (lodds.core:split-path combined-path))
+                           (*new-checksum* checksum)
+                           (*new-size* size)
+                           (*new-user* (let ((user (car split-path)))
+                                         (subseq user 0 (- (length user) 1)))))
+                      (add-node shares
+                                ""
+                                split-path
+                                (q+:invisible-root-item shares)))
+                    (remove-node shares
+                                 (lodds.core:split-path combined-path)
+                                 (q+:invisible-root-item shares))))))
   (q+:set-updates-enabled shares t))
 
 (define-slot (shares remove-entry) ((path string))
