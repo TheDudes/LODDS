@@ -419,8 +419,10 @@ can be used to retrieve the load all currently running tasks produce.
         (setf (slot-value task 'initialized-p) t))
     (error (err)
       (lodds.event:push-event :error
-                              "Could not initialize Task"
-                              err)
+                              (format nil
+                                      "Could not initialize Task ~a: ~a"
+                                      task
+                                      err))
       (task-cleanup task err)
       nil)))
 
