@@ -24,7 +24,7 @@ functions.
   "generates sha1 sum out of given pathname, will return a string"
   (handler-case
       (ironclad:byte-array-to-hex-string
-       (ironclad:digest-file :sha1 (escape-wildcards pathname)))
+       (ironclad:digest-file :sha1 pathname))
     (error (e)
       (declare (ignore e))
       "0000000000000000000000000000000000000000")))
@@ -184,7 +184,7 @@ functions.
                     (car path)))
               (cl-strings:split path #\/))))
 
-(defun add-missing-slash (string)
+(defun ensure-trailing-slash (string)
   "adds a / (slash) if missing"
   (if (cl-strings:ends-with string "/")
       string

@@ -268,42 +268,36 @@ nil if no user is found"
                                       best-user))
       best-user)))
 
-(defun get-file (local-file-path checksum &optional user)
+(defun get-file (file-pathname checksum &optional user)
   (lodds.task:task-run
    (if user
        (make-instance 'lodds.task:task-get-file-from-user
                       :tasks (get-tasks)
                       :checksum checksum
                       :user user
-                      :local-file-path local-file-path)
+                      :file-pathname file-pathname)
        (make-instance 'lodds.task:task-get-file-from-users
                       :tasks (get-tasks)
                       :checksum checksum
-                      :local-file-path local-file-path))))
+                      :file-pathname file-pathname))))
 
-(defun get-folder (full-folder-path local-path user)
-  "gets given folder and saves it to local-path"
-  (setf full-folder-path
-        (lodds.core:add-missing-slash full-folder-path))
-  (let ((folder (lodds.core:escaped-get-folder-name full-folder-path)))
-    (lodds.task:task-run
-     (make-instance 'lodds.task:task-get-folder
-                    :tasks (get-tasks)
-                    :user user
-                    :remote-root (subseq full-folder-path
-                                         0
-                                         (- (length full-folder-path)
-                                            (length folder)))
-                    :remote-path full-folder-path
-                    :local-path local-path))))
+(defun get-folder (full-folder-path local-pathname user)
+  "gets given folder and saves it to local-path, full-folder-path
+describes the full unix folder path of the wanted folder."
+  (lodds.task:task-run
+   (make-instance 'lodds.task:task-get-folder
+                  :tasks (get-tasks)
+                  :user user
+                  :remote-path (lodds.core:ensure-trailing-slash full-folder-path)
+                  :local-path local-pathname)))
 
-(defun send-file (file user timeout)
+(defun send-file (file-pathname user timeout)
   (lodds.task:task-run
    (make-instance 'lodds.task:task-send-file
                   :tasks (get-tasks)
                   :timeout timeout
                   :user user
-                  :filename file)))
+                  :file-pathname file-pathname)))
 
 (defun remove-old-clients (&optional (current-time (lodds.core:get-timestamp)))
   "removes all clients older than client-timeout"

@@ -80,12 +80,12 @@ can be used to retrieve the load all currently running tasks produce.
 
 (defmethod print-object ((task task-request-send-permission) stream)
   (print-unreadable-object (task stream :type t)
-    (with-slots (id total-load timeout filename) task
-      (format stream "~a :size ~a :timeout ~a :filename ~a"
+    (with-slots (id total-load timeout file-pathname) task
+      (format stream "~a :size ~a :timeout ~a :file-pathname ~a"
               id
               (lodds.core:format-size total-load)
               timeout
-              filename))))
+              file-pathname))))
 
 (defmethod print-object ((task task-request-file) stream)
   (print-unreadable-object (task stream :type t)
@@ -105,29 +105,29 @@ can be used to retrieve the load all currently running tasks produce.
 
 (defmethod print-object ((task task-send-file) stream)
   (print-unreadable-object (task stream :type t)
-    (with-slots (id ip filename timeout total-load) task
-      (format stream "~a filename: ~a timeout: ~a size: ~a"
+    (with-slots (id ip file-pathname timeout total-load) task
+      (format stream "~a file-pathname: ~a timeout: ~a size: ~a"
               id
-              filename
+              file-pathname
               timeout
               (lodds.core:format-size total-load)))))
 
 (defmethod print-object ((task task-get-file-from-user) stream)
   (print-unreadable-object (task stream :type t)
-    (with-slots (id local-file-path total-load user checksum) task
-      (format stream "~a :local-file-path ~a size: ~a :user ~a :checksum ~a"
+    (with-slots (id file-pathname total-load user checksum) task
+      (format stream "~a :file-pathname ~a size: ~a :user ~a :checksum ~a"
               id
-              local-file-path
+              file-pathname
               (lodds.core:format-size total-load)
               user
               checksum))))
 
 (defmethod print-object ((task task-get-file-from-users) stream)
   (print-unreadable-object (task stream :type t)
-    (with-slots (id local-file-path part-size total-load checksum) task
-      (format stream "~a :local-file-path ~a size: ~a :part-size ~a :checksum ~a"
+    (with-slots (id file-pathname part-size total-load checksum) task
+      (format stream "~a :file-pathname ~a size: ~a :part-size ~a :checksum ~a"
               id
-              local-file-path
+              file-pathname
               (lodds.core:format-size total-load)
               (lodds.core:format-size part-size)
               checksum))))
@@ -175,18 +175,18 @@ can be used to retrieve the load all currently running tasks produce.
       (task-info task))))
 
 (defmethod task-info ((task task-request-send-permission))
-  (with-slots (filename users) task
-    (format nil "[Request] ~a: ~a" users filename)))
+  (with-slots (file-pathname users) task
+    (format nil "[Request] ~a: ~a" users file-pathname)))
 
 (defmethod task-info ((task task-request-file))
-  (with-slots (user total-load filename) task
+  (with-slots (user total-load file-pathname) task
     (format nil "[Upload] (~a - ~a): ~a"
             user
             (lodds.core:format-size total-load)
-            filename)))
+            file-pathname)))
 
 (defmethod task-info ((task task-send-file))
-  (with-slots (filename user time-waited timeout) task
+  (with-slots (file-pathname user time-waited timeout) task
     (format nil "[Send File] (~a~a): ~a "
             user
             (if time-waited
@@ -194,19 +194,19 @@ can be used to retrieve the load all currently running tasks produce.
                         (lodds.core:format-seconds time-waited)
                         (lodds.core:format-seconds timeout))
                 "")
-            filename)))
+            file-pathname)))
 
 (defmethod task-info ((task task-get-file-from-user))
-  (with-slots (local-file-path user) task
+  (with-slots (file-pathname user) task
     (format nil "[Download] (~a): ~a "
             user
-            local-file-path)))
+            file-pathname)))
 
 (defmethod task-info ((task task-get-file-from-users))
-  (with-slots (current-user local-file-path) task
+  (with-slots (current-user file-pathname) task
     (format nil "[Download] (~a): ~a"
             (or current-user "none")
-            local-file-path)))
+            file-pathname)))
 
 (defmethod task-info ((task task-get-folder))
   (with-slots (items items-done) task
@@ -240,14 +240,14 @@ can be used to retrieve the load all currently running tasks produce.
     (values (usocket:get-peer-address socket)
             (usocket:get-peer-port socket))))
 
-(defun open-file (filename direction)
+(defun open-file (file-pathname direction)
   (ecase direction
     (:input
-     (open (lodds.core:escape-wildcards filename)
+     (open file-pathname
            :direction :input
            :element-type '(unsigned-byte 8)))
     (:output
-     (open (lodds.core:escape-wildcards filename)
+     (open file-pathname
            :direction :output
            :if-does-not-exist :create
            :if-exists :supersede
@@ -290,7 +290,7 @@ can be used to retrieve the load all currently running tasks produce.
         :while (and (not (eql bytes-transfered max))
                     (not canceled))))))
 
-(defun handle-send-permission-request (tasks socket size timeout filename)
+(defun handle-send-permission-request (tasks socket size timeout file-pathname)
   (let* ((users (lodds:get-user-by-ip (socket-info socket)))
          (action
            ;; get type of action
@@ -332,10 +332,9 @@ can be used to retrieve the load all currently running tasks produce.
                                   :socket socket
                                   :total-load size
                                   :timeout timeout
-                                  :filename (format nil "~a~a"
-                                                    (lodds.core:add-missing-slash
-                                                     (lodds.config:get-value :upload-folder))
-                                                    filename))))
+                                  :file-pathname (merge-pathnames
+                                                  file-pathname
+                                                  (lodds.config:get-value :upload-folder)))))
          (case action
            (:accept (progn
                       (task-run task)
@@ -345,7 +344,7 @@ can be used to retrieve the load all currently running tasks produce.
                                users))))
            (:ask (lodds.event:push-event :send-permission
                                          (task-id task)
-                                         filename
+                                         file-pathname
                                          timeout
                                          users
                                          size
@@ -353,10 +352,10 @@ can be used to retrieve the load all currently running tasks produce.
                                          (lambda ()
                                            (task-cleanup task "Denied"))
                                          ;; accept
-                                         (lambda (&optional new-filename)
-                                           (when new-filename
-                                             (setf (slot-value task 'filename)
-                                                   new-filename))
+                                         (lambda (&optional new-file-pathname)
+                                           (when new-file-pathname
+                                             (setf (slot-value task 'file-pathname)
+                                                   new-file-pathname))
                                            (task-run task))))))))))
 
 ;; task-load methods
@@ -410,7 +409,7 @@ can be used to retrieve the load all currently running tasks produce.
 
 (defgeneric task-init (task)
   (:documentation "Method which is run to initialize the task, it will
-  open up file streams, set filenames etc. Returns t on succes and nil
+  open up file streams, set file-pathnames etc. Returns t on succes and nil
   on failure."))
 
 (defmethod task-init :around ((task task))
@@ -428,22 +427,22 @@ can be used to retrieve the load all currently running tasks produce.
 (defmethod task-init ((task task-request)))
 
 (defmethod task-init ((task task-request-send-permission))
-  (with-slots (file-stream socket filename) task
-    (setf file-stream (open-file filename :output))
+  (with-slots (file-stream socket file-pathname) task
+    (setf file-stream (open-file file-pathname :output))
     (lodds.low-level-api:respond-send-permission
      (usocket:socket-stream socket))))
 
 (defmethod task-init ((task task-request-file))
-  (with-slots (checksum start end filename file-stream total-load
+  (with-slots (checksum start end file-pathname file-stream total-load
                bytes-transfered)
       task
-    ;; set filename
+    ;; set file-pathname
     (let ((name (lodds.watcher:get-file-info checksum)))
       (unless name
         (error "Requested file not found"))
-      (setf filename name))
+      (setf file-pathname name))
     ;; open local file stream
-    (setf file-stream (open-file filename :input))
+    (setf file-stream (open-file file-pathname :input))
     (let ((size (- end start))
           (file-size (file-length file-stream)))
       ;; do some checks if request would error
@@ -463,31 +462,31 @@ can be used to retrieve the load all currently running tasks produce.
       (setf socket (connect ip port)))))
 
 (defmethod task-init ((task task-send-file))
-  (with-slots (total-load filename file-stream socket user) task
-    (setf file-stream (open-file filename :input))
+  (with-slots (total-load file-pathname file-stream socket user) task
+    (setf file-stream (open-file file-pathname :input))
     (setf total-load
           (file-length file-stream))
     (lodds.core:split-user-identifier (name ip port t) user
       (setf socket (connect ip port)))))
 
 (defmethod task-init ((task task-get-file-from-user))
-  (with-slots (socket user local-file-path checksum file-stream
+  (with-slots (socket user file-pathname checksum file-stream
                total-load)
       task
     (let ((size (car (lodds:get-file-info checksum user))))
       (if size
           (setf total-load size)
           (error "File with given checksum not found"))
-      (setf file-stream (open-file local-file-path :output))
+      (setf file-stream (open-file file-pathname :output))
       (lodds.core:split-user-identifier (name ip port t) user
         (setf socket (connect ip port))))))
 
 (defmethod task-init ((task task-get-file-from-users))
-  (with-slots (total-load part-size checksum file-stream local-file-path) task
+  (with-slots (total-load part-size checksum file-stream file-pathname) task
     (let ((size (third (first (lodds:get-file-info checksum)))))
       (unless size
         (error "File with given checksum not found"))
-      (setf file-stream (open-file local-file-path :output))
+      (setf file-stream (open-file file-pathname :output))
       (setf total-load size)
       (setf part-size
             (let ((64MiB (ash 1 26))
@@ -609,14 +608,14 @@ can be used to retrieve the load all currently running tasks produce.
 
 (defmethod task-run ((task task-send-file))
   (with-slots (socket file-stream
-               user timeout filename bytes-transfered
+               user timeout file-pathname bytes-transfered
                total-load canceled time-waited)
       task
     (lodds.low-level-api:get-send-permission
      (usocket:socket-stream socket)
      total-load
      timeout
-     (file-namestring filename))
+     (file-namestring file-pathname))
     (let ((done nil))
       (loop :while (and (not done)
                         (not canceled))
@@ -647,7 +646,7 @@ can be used to retrieve the load all currently running tasks produce.
   (with-slots (socket file-stream
                bytes-transfered total-load
                checksum digester current-part part-size
-               local-file-path current-user)
+               file-pathname current-user)
       task
     (loop
       :do (let ((end-next-part (* (+ 1 current-part)
@@ -676,81 +675,88 @@ can be used to retrieve the load all currently running tasks produce.
                           (not (string= checksum
                                         (ironclad:byte-array-to-hex-string
                                          (ironclad:produce-digest digester)))))
-                 (delete-file (lodds.core:escape-wildcards local-file-path))
+                 (delete-file (lodds.core:escape-wildcards file-pathname))
                  (error  "Checksum validation Failed")))))
 
 (defmethod task-run ((task task-get-folder))
-  (with-slots (local-path remote-path remote-root
+  (with-slots (local-path remote-path
                items items-done user state info id
                bytes-transfered tasks canceled
                current-task)
       task
-    (loop :while (and items (not canceled))
-          :for (file checksum size) = (pop items)
-          :do
-          (progn
-            (setf items-done
-                  (append (list (list file checksum size))
-                          items-done))
-            ;; the file might have changed, if so we should be able to
-            ;; get the checksum from remote-path again, if this also
-            ;; fails checksum will just be nil, then the
-            ;; task-get-file-from-users will fail and push a
-            ;; folder-download-error, exactly what we want
-            (unless checksum
-              (setf checksum (lodds:get-checksum-from-path file user)))
-            ;; remove size from load since the new task will add it again
-            (incf bytes-transfered size)
-            (let ((local-file-path (concatenate 'string
-                                                local-path
-                                                (subseq file (length remote-root)))))
-              (lodds.core:escaped-ensure-directories-exist local-file-path)
-              (task-run
-               (setf current-task
-                     (make-instance
-                      'task-get-file-from-users
-                      :tasks tasks
-                      :checksum checksum
-                      :local-file-path local-file-path
-                      :in-thread nil
-                      :on-error
-                      (lambda ()
-                        ;; if there is no callback, just 'go on' skip
-                        ;; the error, finish the
-                        ;; task-get-file-from-users task and return to
-                        ;; task-get-folders run method. But if there is
-                        ;; a callback, set up a condition, push a event
-                        ;; and wait on the condition
-                        (when (lodds.event:callback-exists-p :folder-download-error)
-                          (let ((condition (bt:make-condition-variable :name "Folder error condition"))
-                                (lock (bt:make-lock "Folder error condition lock")))
-                            (lodds.event:push-event
-                             :folder-download-error
-                             (task-id task)
-                             remote-path
-                             file
-                             ;; retry
-                             (lambda ()
-                               (destructuring-bind (file checksum size)
-                                   (pop items-done)
-                                 ;; add item back onto list
-                                 (setf items
-                                       (append (list (list file checksum size))
-                                               items))
-                                 (decf bytes-transfered size)
+    (let* ((remote-pathname (uiop:parse-unix-namestring remote-path))
+           (remote-directory-pathname
+             (make-pathname :defaults remote-pathname
+                            :directory (butlast (pathname-directory remote-pathname)))))
+      (loop :while (and items (not canceled))
+            :for (file checksum size) = (pop items)
+            :do
+            (progn
+              (setf items-done
+                    (append (list (list file checksum size))
+                            items-done))
+              ;; the file might have changed, if so we should be able to
+              ;; get the checksum from remote-path again, if this also
+              ;; fails checksum will just be nil, then the
+              ;; task-get-file-from-users will fail and push a
+              ;; folder-download-error, exactly what we want
+              (unless checksum
+                (setf checksum (lodds:get-checksum-from-path file user)))
+              ;; remove size from load since the new task will add it again
+              (incf bytes-transfered size)
+              (let* ((file-pathname (enough-namestring
+                                     (uiop:parse-unix-namestring
+                                      (cl-fs-watcher:escape-wildcards file))
+                                     remote-directory-pathname))
+                     (local-pathname (merge-pathnames file-pathname
+                                                      local-path)))
+                (ensure-directories-exist local-pathname)
+                (task-run
+                 (setf current-task
+                       (make-instance
+                        'task-get-file-from-users
+                        :tasks tasks
+                        :checksum checksum
+                        :file-pathname local-pathname
+                        :in-thread nil
+                        :on-error
+                        (lambda ()
+                          ;; if there is no callback, just 'go on' skip
+                          ;; the error, finish the
+                          ;; task-get-file-from-users task and return to
+                          ;; task-get-folders run method. But if there is
+                          ;; a callback, set up a condition, push a event
+                          ;; and wait on the condition
+                          (when (lodds.event:callback-exists-p :folder-download-error)
+                            (let ((condition (bt:make-condition-variable :name "Folder error condition"))
+                                  (lock (bt:make-lock "Folder error condition lock")))
+                              (lodds.event:push-event
+                               :folder-download-error
+                               (task-id task)
+                               remote-path
+                               file
+                               ;; retry
+                               (lambda ()
+                                 (destructuring-bind (file checksum size)
+                                     (pop items-done)
+                                   ;; add item back onto list
+                                   (setf items
+                                         (append (list (list file checksum size))
+                                                 items))
+                                   (decf bytes-transfered size)
+                                   (bt:condition-notify condition)))
+                               ;; skip
+                               (lambda ()
+                                 (bt:condition-notify condition))
+                               ;; cancel
+                               (lambda ()
+                                 (setf canceled t)
                                  (bt:condition-notify condition)))
-                             ;; skip
-                             (lambda ()
-                               (bt:condition-notify condition))
-                             ;; cancel
-                             (lambda ()
-                               (setf canceled t)
-                               (bt:condition-notify condition)))
-                            (bt:condition-wait condition lock)))))))
-              (setf current-task nil)))
-          :finally
-          (unless canceled
-            (lodds.event:push-event :info
-                                    (format nil "folder ~a sucessfully downloaded to ~a"
-                                            remote-path
-                                            local-path))))))
+                              (bt:condition-wait condition lock)))))))
+                (setf current-task nil)))
+            :finally
+            (unless canceled
+              (lodds.event:push-event :info
+                                      (format nil "folder ~a sucessfully downloaded to ~a"
+                                              remote-path
+                                              local-path)))))))

@@ -350,7 +350,9 @@ functionality (for example system tray and status-info)
                                     (format nil "Folder Errors: ~a" folder-errors))))))))))
 
 (define-initializer (main-window setup-widget)
-  (let ((lodds-icon (format nil "~a~a" (lodds.config:get-value :resources-folder)
+  (let ((lodds-icon (format nil "~a~a"
+                            (uiop:native-namestring
+                             (lodds.config:get-value :resources-folder))
                             "lodds.png")))
     (if (lodds.core:file-exists lodds-icon)
         (q+:set-window-icon main-window
@@ -542,7 +544,8 @@ functionality (for example system tray and status-info)
 (define-slot (main-window reload-stylesheet) ()
   (declare (connected main-window (reload-stylesheet)))
   (let ((style-sheet (format nil "~a~a"
-                             (lodds.config:get-value :resources-folder)
+                             (uiop:native-namestring
+                              (lodds.config:get-value :resources-folder))
                              "style-sheet.qss")))
     (if (lodds.core:file-exists style-sheet)
         (q+:set-style-sheet main-window

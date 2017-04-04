@@ -49,7 +49,8 @@ and push a :info event if the icon is not found, set
 supress-warning if you dont want that."
   (let ((icon-path (format nil
                            "~a~a"
-                           (lodds.config:get-value :resources-folder)
+                           (uiop:native-namestring
+                            (lodds.config:get-value :resources-folder))
                            icon-name)))
     (if (lodds.core:file-exists icon-path)
         (with-finalizing* ((pixmap (q+:make-qpixmap icon-path))

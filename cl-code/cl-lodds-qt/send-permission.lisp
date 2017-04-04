@@ -3,7 +3,8 @@
 
 (define-widget send-permission (QWidget)
   ((default-folder :initarg :default-folder
-                   :initform (lodds.config:get-value :upload-folder)
+                   :initform (uiop:native-namestring
+                              (lodds.config:get-value :upload-folder))
                    :type string)
    (default-filename :initarg :default-filename
                      :type string)
@@ -68,16 +69,15 @@
 
 (defmethod get-full-filename ((send-permission send-permission))
   (with-slots-bound (send-permission send-permission)
-    (let ((directory (q+:text folder))
-          (filename-choosen (q+:text filename)))
-      (if (and (> (length directory) 0)
-               (lodds.core:directory-exists directory)
-               (> (length filename-choosen) 0))
-          (concatenate 'string
-                       (if (char= #\/ (char directory (- (length directory) 1)))
-                           directory
-                           (concatenate 'string directory "/"))
-                       filename-choosen)
+    (let* ((dir-pathname (pathname (cl-fs-watcher:escape-wildcards (q+:text folder))))
+           (file-pathname (pathname (cl-fs-watcher:escape-wildcards (q+:text filename))))
+           (full-pathname (merge-pathnames file-pathname
+                                           (uiop:ensure-directory-pathname
+                                            (uiop:ensure-absolute-pathname
+                                             dir-pathname)))))
+      (if (and (lodds.core:directory-exists dir-pathname)
+               (not (lodds.core:file-exists full-pathname)))
+          full-pathname
           nil))))
 
 (define-initializer (send-permission setup-widget)

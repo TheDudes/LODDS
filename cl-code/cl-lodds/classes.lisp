@@ -28,6 +28,7 @@ loading the classes file first.
    (total-load :initform 0 :initarg :total-load :type fixnum)
    (socket :initform nil :initarg :socket)
    (file-stream :initform nil)
+   (file-pathname :initarg :file-pathname)
    (on-finish :initform nil :initarg :on-finish)
    (on-error :initform nil :initarg :on-error)
    (on-cancel :initform nil :initarg :on-cancel)))
@@ -40,12 +41,10 @@ loading the classes file first.
 
 (defclass task-request-send-permission (task-request)
   ((users :initarg :users)
-   (timeout :initarg :timeout)
-   (filename :initarg :filename)))
+   (timeout :initarg :timeout)))
 
 (defclass task-request-file (task-request)
-  ((filename :initform nil)
-   (checksum :initarg :checksum)
+  ((checksum :initarg :checksum)
    (start :initarg :start :initform 0)
    (end :initarg :end :initform 0)
    (user :initarg :user)))
@@ -54,14 +53,12 @@ loading the classes file first.
   ((user :initarg :user)))
 
 (defclass task-send-file (task)
-  ((filename :initarg :filename)
-   (time-waited :initform 0)
+  ((time-waited :initform 0)
    (user :initarg :user)
    (timeout :initarg :timeout)))
 
 (defclass task-get-file (task)
-  ((local-file-path :initarg :local-file-path)
-   (checksum :initarg :checksum)))
+  ((checksum :initarg :checksum)))
 
 (defclass task-get-file-from-user (task-get-file)
   ((user :initarg :user)))
@@ -77,7 +74,6 @@ loading the classes file first.
 (defclass task-get-folder (task)
   ((user :initarg :user)
    (local-path :initarg :local-path)
-   (remote-root :initarg :remote-root)
    (remote-path :initarg :remote-path)
    (items :initform nil)
    (items-done :initform nil)
@@ -87,19 +83,19 @@ loading the classes file first.
 (in-package #:lodds.watcher)
 
 (defclass dir-watcher (cl-fs-watcher:watcher)
-  ((root-dir-name :type string
+  ((root-dir-name :type pathname
                   :reader root-dir-name
                   :documentation "contains the root directory name of
-                  the watched dir (DIR), without the path and starting
-                  with a slash. set after
-                  initialization. ROOT-DIR-PATH concatenated with
+                  the watched dir (DIR), relative to
+                  root-dir-path. set after
+                  initialization. ROOT-DIR-PATH merged with
                   ROOT-DIR-NAME gives DIR. This variable is used to
                   calculate the path for LIST-OF-CHANGE.")
-   (root-dir-path :type string
+   (root-dir-path :type pathname
                   :reader root-dir-path
                   :documentation "contains the directory name where
-                  the root-directory is located. set after
-                  initialization. ROOT-DIR-PATH concatenated with
+                  the root-directory is located. Set after
+                  initialization. ROOT-DIR-PATH merged with
                   ROOT-DIR-NAME gives DIR. This variable is used to
                   calculate the path for LIST-OF-CHANGE.")
    (file-table-name :type hashtable

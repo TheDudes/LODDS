@@ -6,7 +6,8 @@
 
 (define-subwidget (download-multiple folder)
     (q+:make-qlineedit download-multiple)
-  (q+:set-text folder (lodds.config:get-value :download-folder))
+  (q+:set-text folder (uiop:native-namestring
+                       (lodds.config:get-value :download-folder)))
   (let* ((completer (q+:make-qcompleter download-multiple))
          (dir-model (q+:make-qdirmodel completer)))
     (q+:set-tool-tip folder
@@ -78,8 +79,6 @@
 (defmethod download ((download-multiple download-multiple))
   (with-slots-bound (download-multiple download-multiple)
     (let ((directory (q+:text folder)))
-      (when (> (length directory) 0)
-        (setf directory (lodds.core:add-missing-slash directory)))
       (cond
         ((eql 0 (length directory))
          (progn
@@ -93,22 +92,27 @@
                           :title "Error - Directory does not exists"
                           :text "Please select a directory which exists")
            nil))
-        (t (loop :for (type info) :in items
-                 :do (case type
-                       (:dir
-                        (destructuring-bind (fullpath name user size items)
-                            info
-                          (declare (ignore name size items))
-                          (lodds:get-folder fullpath
-                                            directory
-                                            user)))
-                       (:file
-                        (destructuring-bind (checksum name size users)
-                            info
-                          (declare (ignore size users))
-                          (lodds:get-file (concatenate 'string directory name)
-                                          checksum))))
-                 :finally (return t)))))))
+        (t (let ((directory-pathname (uiop:ensure-absolute-pathname
+                                      (uiop:ensure-directory-pathname
+                                       (cl-fs-watcher:escape-wildcards directory)))))
+             (loop :for (type info) :in items
+                   :do (case type
+                         (:dir
+                          (destructuring-bind (fullpath name user size items)
+                              info
+                            (declare (ignore name size items))
+                            (lodds:get-folder fullpath
+                                              directory-pathname
+                                              user)))
+                         (:file
+                          (destructuring-bind (checksum name size users)
+                              info
+                            (declare (ignore size users))
+                            (lodds:get-file (merge-pathnames (uiop:parse-unix-namestring
+                                                              (cl-fs-watcher:escape-wildcards name))
+                                                             directory-pathname)
+                                            checksum))))
+                   :finally (return t))))))))
 
 (defun open-download-multiple-dialog (selected-items-infos)
   (make-instance 'dialog

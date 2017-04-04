@@ -30,7 +30,7 @@ tracked about the shared files.
 (defun get-file-stats (pathname)
   (values
    (lodds.core:generate-checksum pathname)
-   (with-open-file (stream (lodds.core:escape-wildcards pathname)
+   (with-open-file (stream pathname
                            :direction :input
                            :if-does-not-exist nil
                            :element-type '(unsigned-byte 8))
@@ -44,7 +44,7 @@ tracked about the shared files.
       (stop-dir-watcher dir-watcher nil))))
 
 (defun add-file (dir-watcher pathname &optional (checksum nil) (size nil))
-  "adds a file to the given dir-watcher, this functions is called by
+  "adds a file to the given dir-watcher, this function is called by
    HOOK to update the dir-watcher if a file was added or has changed"
   (unless (and checksum size)
     (multiple-value-bind (hash filesize) (get-file-stats pathname)
@@ -55,18 +55,19 @@ tracked about the shared files.
                  :add
                  checksum
                  size
-                 (subseq pathname (length (root-dir-path dir-watcher)))))
+                 (uiop:unix-namestring
+                  (merge-pathnames
+                   (enough-namestring pathname
+                                      (root-dir-path dir-watcher))
+                   (uiop:parse-unix-namestring "/")))))
   (setf (gethash pathname (file-table-name dir-watcher))
         (list checksum size))
-  (let* ((ft-hash (file-table-hash dir-watcher))
-         (val (gethash checksum ft-hash)))
+  (let ((ft-hash (file-table-hash dir-watcher)))
     (setf (gethash checksum ft-hash)
-          (if val
-              (cons pathname val)
-              (list pathname)))))
+          (cons pathname (gethash checksum ft-hash)))))
 
 (defun remove-file (dir-watcher pathname)
-  "removes a file from the dir-watcher, will be called bei
+  "removes a file from the dir-watcher, will be called by
    HOOK if a file was removed or has changed"
   (let* ((ft-name (file-table-name dir-watcher))
          (ft-hash (file-table-hash dir-watcher))
@@ -83,13 +84,15 @@ tracked about the shared files.
                              :del
                              checksum
                              size
-                             (subseq pathname (length (root-dir-path dir-watcher))))))
-            (let ((new-val (remove pathname (gethash checksum ft-hash)
-                                   :test #'equal)))
-              (if new-val
-                  (setf (gethash checksum ft-hash)
-                        new-val)
-                  (remhash checksum ft-hash)))
+                             (uiop:unix-namestring
+                              (merge-pathnames
+                               (enough-namestring pathname
+                                                  (root-dir-path dir-watcher))
+                               (uiop:parse-unix-namestring "/"))))))
+            (unless (setf (gethash checksum ft-hash)
+                          (remove pathname (gethash checksum ft-hash)
+                                  :test #'equal))
+              (remhash checksum ft-hash))
             (remhash pathname ft-name))))))
 
 (defun update-file (dir-watcher pathname)
@@ -112,18 +115,30 @@ tracked about the shared files.
     (:file-changed (update-file dir-watcher pathname))
     (:on-deleted (stop-dir-watcher dir-watcher))))
 
-(defmethod initialize-instance :after ((w dir-watcher) &rest initargs)
+(defmethod initialize-instance :after ((dir-watcher dir-watcher) &rest initargs)
   (declare (ignorable initargs))
-  (multiple-value-bind (path name)
-      (lodds.core:split-directory (cl-fs-watcher:dir w))
-    (setf (slot-value w 'root-dir-name) name
-          (slot-value w 'root-dir-path) path)))
+  (with-slots (root-dir-name root-dir-path) dir-watcher
+    (let ((dir (cl-fs-watcher:dir dir-watcher)))
+      (setf root-dir-name
+            (make-pathname :directory (cons :relative
+                                            (last (pathname-directory dir)))
+                           :device nil
+                           :defaults dir)
+            root-dir-path
+            (make-pathname :directory (butlast (pathname-directory dir))
+                           :defaults dir)))))
 
 (defun get-all-tracked-file-infos (dir-watcher)
   "returns info about all tracked files."
-  (loop :for filename :being :the :hash-keys :of (file-table-name dir-watcher)
+  (loop :for pathname :being :the :hash-keys :of (file-table-name dir-watcher)
         :using (hash-value info)
-        :collect (append info (list (subseq filename (length (root-dir-path dir-watcher)))))))
+        :collect (append info
+                         (list
+                          (uiop:unix-namestring
+                           (merge-pathnames
+                            (enough-namestring pathname
+                                               (root-dir-path dir-watcher))
+                            (uiop:parse-unix-namestring "/")))))))
 
 (defun stop-dir-watcher (dir-watcher &optional (run-change-hook-p t))
   "stops a dir-watcher and its event loop and removes the dir-watcher
@@ -163,52 +178,51 @@ tracked about the shared files.
   "returns a list of all currently shared folders."
   (mapcar #'cl-fs-watcher:dir (dir-watchers (lodds:get-watcher))))
 
-(defun folder-already-shared-p (folder-path)
-  (if (or (find folder-path (get-shared-folders))
-          (find (lodds.core:escaped-get-folder-name folder-path)
-                (get-shared-folders)
-                :test #'equal
-                :key #'lodds.core:escaped-get-folder-name))
+(defun folder-already-shared-p (pathname)
+  (if (find pathname
+            (get-shared-folders)
+            :test #'equal)
       t
       (loop :for watcher :in (dir-watchers (lodds:get-watcher))
-            :do (loop :for dir
+            :do (loop :for shared-pathname
                       :being :the :hash-key :of (cl-fs-watcher:directory-handles watcher)
-                      :do (when (equal dir folder-path)
+                      :do (when (equal shared-pathname pathname)
                             (return-from folder-already-shared-p t))))))
 
 (defun folder-shareable-p (folder-path)
-  (let ((folder (lodds.core:get-absolute-path folder-path)))
+  (let ((pathname (if (pathnamep folder-path)
+                      folder-path
+                      (uiop:ensure-absolute-pathname
+                       (uiop:ensure-directory-pathname
+                        (cl-fs-watcher:escape-wildcards folder-path))))))
     (cond
-      ((lodds.core:file-exists folder)
-       (values nil "Not able to share a File (only Folders possible)"))
-      ((not (lodds.core:directory-exists folder))
+      ((not (lodds.core:directory-exists pathname ))
        (values nil "Folder does not exist"))
-      ((folder-already-shared-p folder)
+      ((folder-already-shared-p pathname)
        (values nil (format nil "Folder with name ~a already shared"
-                           (lodds.core:escaped-get-folder-name folder))))
+                           pathname)))
       ((> (length (dir-watchers (lodds:get-watcher)))
           42)
        (values nil "Cannot share anymore Directories"))
-      (t (values t nil)))))
+      (t (values pathname nil)))))
 
 (defparameter *add-lock* (bt:make-recursive-lock "Dir Watchers Push Lock"))
-(defun start-dir-watcher (folder-path)
+(defun start-dir-watcher (pathname)
   (let* ((watcher (lodds:get-watcher))
-         (hook (lambda (change)
-                 (bt:with-lock-held ((list-of-changes-lock watcher))
-                   (push change (list-of-changes watcher))
-                   (setf (last-change watcher) (car change)))))
+         (change-hook (lambda (change)
+                        (bt:with-lock-held ((list-of-changes-lock watcher))
+                          (push change (list-of-changes watcher))
+                          (setf (last-change watcher) (car change)))))
          (new-dir-watcher
            (make-instance 'dir-watcher
-                          :change-hook hook
-                          :dir folder-path
-                          :recursive-p t
+                          :change-hook change-hook
+                          :dir pathname
                           :hook #'hook)))
     (setf (slot-value new-dir-watcher 'cl-fs-watcher:error-cb)
           (lambda (ev)
             (lodds.event:push-event :directory-error
                                     (format nil "Directory error on ~a~%~a"
-                                            folder-path
+                                            pathname
                                             ev))
             (format t "ERROR: cl-fs-watcher error on ~a:~a"
                     new-dir-watcher
@@ -224,24 +238,25 @@ tracked about the shared files.
             (dir-watchers watcher)))
     (setf (slot-value watcher 'alive-p) t)
     (lodds.event:push-event :shared-directory
-                            folder-path)))
+                            pathname)))
 
 (defun share-folder (folder-path)
   "share a given folder, adds a watcher to handle updates.
   Check with FOLDER-SHAREABLE-P if folder can be shared first."
   ;; check if a folder like the given one exists already
-  (when (folder-shareable-p folder-path)
-    (let ((folder (lodds.core:get-absolute-path folder-path)))
+  (multiple-value-bind (pathname error) (folder-shareable-p folder-path)
+    (unless error
       (bt:make-thread
        (lambda ()
-         (start-dir-watcher folder))
+         (start-dir-watcher pathname))
        :name (format nil "Sharing Directory ~a"
-                     folder)))))
+                     pathname))
+      pathname)))
 
-(defun unshare-folder (folder-path)
+(defun unshare-folder (pathname)
   "unshare the given folder"
   (let ((watcher (lodds:get-watcher)))
-    (let ((rem-watcher (find (lodds.core:get-absolute-path folder-path)
+    (let ((rem-watcher (find pathname
                              (dir-watchers watcher)
                              :key #'cl-fs-watcher:dir
                              :test #'equal)))
@@ -250,8 +265,8 @@ tracked about the shared files.
           (error "TODO: could not find watcher to unshare with given ~
                  folder-path")))))
 
-(defun folder-busy-p (folder)
-  (let ((watcher (find (lodds.core:get-absolute-path folder)
+(defun folder-busy-p (pathname)
+  (let ((watcher (find pathname
                        (dir-watchers (lodds:get-watcher))
                        :key #'cl-fs-watcher:dir
                        :test #'equal)))

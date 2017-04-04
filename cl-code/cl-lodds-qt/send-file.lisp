@@ -161,7 +161,8 @@
                        (if (lodds.core:file-exists file-choosen)
                            (if users
                                (loop :for selected-user :in (slot-value widget 'users-selected)
-                                     :do (lodds:send-file file-choosen
+                                     :do (lodds:send-file (pathname
+                                                           (cl-fs-watcher:escape-wildcards file-choosen))
                                                           selected-user
                                                           (q+:value timeout))
                                      :finally (return t))

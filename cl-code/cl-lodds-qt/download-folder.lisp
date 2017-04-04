@@ -10,7 +10,8 @@
 
 (define-subwidget (download-folder folder)
     (q+:make-qlineedit download-folder)
-  (q+:set-text folder (lodds.config:get-value :download-folder))
+  (q+:set-text folder (uiop:native-namestring
+                       (lodds.config:get-value :download-folder)))
   (let* ((completer (q+:make-qcompleter download-folder))
          (dir-model (q+:make-qdirmodel completer)))
     (q+:set-tool-tip folder
@@ -54,8 +55,6 @@
 (defmethod download ((download-folder download-folder))
   (with-slots-bound (download-folder download-folder)
     (let ((directory (q+:text folder)))
-      (when (> (length directory) 0)
-        (setf directory (lodds.core:add-missing-slash directory)))
       (cond
         ((eql 0 (length directory))
          (progn
@@ -71,7 +70,9 @@
            nil))
         (t (progn
              (lodds:get-folder full-dir
-                               directory
+                               (uiop:ensure-absolute-pathname
+                                (uiop:ensure-directory-pathname
+                                 (cl-fs-watcher:escape-wildcards directory)))
                                user)
              t))))))
 

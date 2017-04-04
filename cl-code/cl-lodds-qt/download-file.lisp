@@ -71,7 +71,8 @@
                              (lodds.core:format-size size)
                              size))
     (q+:set-text filename name)
-    (q+:set-text folder (lodds.config:get-value :download-folder))))
+    (q+:set-text folder (uiop:native-namestring
+                         (lodds.config:get-value :download-folder)))))
 
 (defmethod download ((download-file download-file))
   (with-slots-bound (download-file download-file)
@@ -79,8 +80,6 @@
           (directory (q+:text folder))
           (filename (q+:text filename))
           (checksum checksm))
-      (when (> (length directory) 0)
-        (setf directory (lodds.core:add-missing-slash directory)))
       (cond
         ((eql 0 (length directory))
          (progn
@@ -100,10 +99,13 @@
                           :title "Error - No filename given"
                           :text "Please select a filename")
            nil))
-        (t (progn
-             (lodds:get-file (concatenate 'string
-                                          directory
-                                          filename)
+        (t (let ((directory-pathname (uiop:ensure-absolute-pathname
+                                      (uiop:ensure-directory-pathname
+                                       (cl-fs-watcher:escape-wildcards directory)))))
+             (lodds:get-file (merge-pathnames
+                              (uiop:parse-unix-namestring
+                               (cl-fs-watcher:escape-wildcards filename))
+                              directory-pathname)
                              checksum
                              (unless (string= user "Any")
                                user))

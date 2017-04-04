@@ -53,15 +53,16 @@ others)
       (q+:remove-item-widget directories entry +shared-widget+)
       (finalize old-widget))
     (let ((button (q+:make-qpushbutton directories))
-          (path (q+:text entry +shared-fullpath+)))
+          (pathname (pathname (cl-fs-watcher:escape-wildcards
+                               (q+:text entry +shared-fullpath+)))))
       (q+:set-tool-tip button (format nil
                                       "Click to unshare ~a"
                                       (q+:text entry +shared-path+)))
       (set-icon button "x.png" "Unshare")
       (connect button "pressed()"
                (lambda ()
-                 (when (lodds.watcher:folder-already-shared-p path)
-                   (lodds.watcher:unshare-folder path))))
+                 (when (lodds.watcher:folder-already-shared-p pathname)
+                   (lodds.watcher:unshare-folder pathname))))
       (q+:set-item-widget directories
                           entry
                           +shared-widget+
@@ -78,37 +79,45 @@ others)
                  (set-button directories widget)))
            dirs))
 
-(defmethod add-new-dir-widget ((directories directories) dir)
-  (let ((new-entry (q+:make-qtreewidgetitem directories)))
+(defmethod add-new-dir-widget ((directories directories) pathname)
+  (let ((new-entry (q+:make-qtreewidgetitem directories))
+        (relative-pathname (make-pathname :directory (cons :relative
+                                                           (last (pathname-directory pathname)))
+                                          :device nil
+                                          :defaults pathname)))
     (qdoto new-entry
-           (q+:set-text  +shared-path+
-                         (or (lodds.core:escaped-get-folder-name dir)
-                             ""))
+           (q+:set-text +shared-path+
+                        (format nil "~a"
+                                relative-pathname))
            (q+:set-tool-tip +shared-path+
                             (format nil
                                     "Click the button on the right ~
                                     to unshare ~a"
-                                    dir))
+                                    relative-pathname))
            (q+:set-status-tip +shared-path+
-                              (format nil "Directory: ~a" dir))
+                              (format nil "Directory: ~a" pathname))
            (q+:set-text +shared-fullpath+
-                        (format nil "~a" dir)))
-    (setf (gethash dir (slot-value directories 'dirs)) new-entry)
+                        (uiop:native-namestring pathname)))
+    (setf (gethash pathname (slot-value directories 'dirs)) new-entry)
     (set-spinner directories new-entry)))
 
 (defmethod share-directories ((directories directories) dirs)
-  (let ((dirs-with-slash (mapcar #'lodds.core:add-missing-slash
-                                 dirs))
+  (let ((pathnames (mapcar (lambda (namestring)
+                             (uiop:ensure-absolute-pathname
+                              (uiop:ensure-directory-pathname
+                               (cl-fs-watcher:escape-wildcards
+                                namestring))))
+                           dirs))
         (failed-dirs (list)))
-    (loop :for dir :in dirs-with-slash
+    (loop :for pathname :in pathnames
           :do
           (multiple-value-bind (shareable-p error)
-              (lodds.watcher:folder-shareable-p dir)
+              (lodds.watcher:folder-shareable-p pathname)
             (if shareable-p
-                (with-slots-bound (directories directories)
-                  (lodds.watcher:share-folder dir)
-                  (add-new-dir-widget directories dir))
-                (push (list dir error) failed-dirs))))
+                (progn
+                  (lodds.watcher:share-folder pathname)
+                  (add-new-dir-widget directories pathname))
+                (push (list pathname error) failed-dirs))))
     (when (> (length failed-dirs) 0)
       (make-instance 'dialog
                      :title (format nil "Error - Could not Share directories")
@@ -121,16 +130,17 @@ others)
 
 (define-slot (directories add-directory) ((dir string))
   (declare (connected directories (add-directory string)))
-  (unless (gethash dir dirs)
-    (add-new-dir-widget directories dir)))
+  (let ((pathname (pathname (cl-fs-watcher:escape-wildcards dir))))
+    (unless (gethash pathname dirs)
+      (add-new-dir-widget directories pathname))))
 
 (define-slot (directories remove-directory) ((path string))
   (declare (connected directories (remove-directory string)))
   (loop :for i :from 0 :below (q+:top-level-item-count directories)
         :do (let ((child (q+:top-level-item directories i)))
-              (when (string= path (q+:text child +shared-fullpath+))
+              (when (equal path (q+:text child +shared-fullpath+))
                 (q+:take-top-level-item directories i)
-                (remhash path dirs)
+                (remhash (pathname (cl-fs-watcher:escape-wildcards path)) dirs)
                 (return)))))
 
 (define-override (directories drag-enter-event) (ev)
@@ -175,21 +185,21 @@ others)
                              (q+:qheaderview.resize-to-contents))))
 
 (define-initializer (directories setup-add-directories)
-  (loop :for dir :in (lodds.watcher:get-shared-folders)
-        :do (add-new-dir-widget directories dir)))
+  (loop :for pathname :in (lodds.watcher:get-shared-folders)
+        :do (add-new-dir-widget directories pathname)))
 
 (define-initializer (directories setup-callbacks)
   (lodds.event:add-callback :qt-directories
                             (lambda (dir)
                               (signal! directories
                                        (add-directory string)
-                                       dir))
+                                       (uiop:native-namestring dir)))
                             :shared-directory)
   (lodds.event:add-callback :qt-directories
                             (lambda (dir)
                               (signal! directories
                                        (remove-directory string)
-                                       dir))
+                                       (uiop:native-namestring dir)))
                             :unshared-directory))
 
 (define-finalizer (directories cleanup-callbacks)

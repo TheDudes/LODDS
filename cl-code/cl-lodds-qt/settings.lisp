@@ -189,11 +189,15 @@
 (define-initializer (folder-setting setup-widget)
   (with-slots (key widget config) folder-setting
     (setf widget folder)
-    (q+:set-text folder (lodds.config:get-value key config))))
+    (q+:set-text folder
+                 (uiop:native-namestring
+                  (lodds.config:get-value key config)))))
 
 (defmethod get-value ((folder-setting folder-setting))
-  (lodds.core:add-missing-slash
-   (q+:text (slot-value folder-setting 'folder))))
+  (uiop:ensure-directory-pathname
+   (pathname
+    (cl-fs-watcher:escape-wildcards
+     (q+:text (slot-value folder-setting 'folder))))))
 
 ;; Functions
 

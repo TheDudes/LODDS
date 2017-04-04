@@ -190,15 +190,17 @@ value (to verify the new value on change).
                  Default: false")
          :boolean)
    (list :download-folder
-         (format nil "~adownload/"
-                 (user-homedir-pathname))
+         (uiop:ensure-directory-pathname
+          (merge-pathnames (pathname "download")
+                           (user-homedir-pathname)))
          (format nil
                  "Default download folder, where files get saved.~%~
                  Default: 'download' folder inside home directory.")
          :folder)
    (list :upload-folder
-         (format nil "~aupload/"
-                 (user-homedir-pathname))
+         (uiop:ensure-directory-pathname
+          (merge-pathnames (pathname "upload")
+                           (user-homedir-pathname)))
          (format nil
                  "Default upload folder, incomming files will~%~
                  be saved there. If a 'trused-user' is sending~%~
@@ -206,7 +208,8 @@ value (to verify the new value on change).
                  Default: upload folder inside home directory")
          :folder)
    (list :resources-folder
-         "./res/"
+         (uiop:ensure-directory-pathname
+          (make-pathname :directory '(:relative "res")))
          (format nil
                  "Folder which contains resources for lodds,~%~
                  like icons, stylesheets, ...~%~
@@ -215,7 +218,7 @@ value (to verify the new value on change).
                  stylesheet (Lodds -> Reload Stylesheet) and~%~
                  reshare (unshare/share) all folders for changes~%~
                  to take effect~%~
-                 Default: ./res/ (res folder inside the current directory)")
+                 Default: res/ (res folder inside the current directory)")
          :folder)
    (list :timeout-send-file
          300
@@ -314,7 +317,10 @@ value (to verify the new value on change).
                 (error (e)
                   (declare (ignore e))
                   (values nil (format nil "~a is not a integer" value)))))
-    (:folder (values value nil))
+    (:folder (values (uiop:ensure-directory-pathname
+                      (pathname
+                       (cl-fs-watcher:escape-wildcards value)))
+              nil))
     (:selection (values value nil))
     (t (values nil (format nil "Type ~a not recognised" type)))))
 
@@ -326,7 +332,7 @@ value (to verify the new value on change).
             (:list      (listp value))
             (:string    (stringp value))
             (:integer   (integerp value))
-            (:folder    (stringp value))
+            (:folder    (pathnamep value))
             (:selection (stringp value))
             (t nil))
     (return-from validate-new-entry
