@@ -268,7 +268,7 @@ escape-wildcards to make sure wildcards are escaped."
                    (cl-fs-watcher:escape-wildcards directory)))
          (folder (car (last folders))))
     (if (> (length folders) 1)
-        (lodds.core:add-missing-slash folder)
+        (lodds.core:ensure-trailing-slash folder)
         "")))
 
 (defun directory-exists (directory)
@@ -288,3 +288,13 @@ escape-wildcards to make sure wildcards are escaped."
 (defun set-socket-timeout (socket timeout)
   (setf (usocket:socket-option socket :receive-timeout) timeout
         (usocket:socket-option socket :send-timeout) timeout))
+
+(defun string-to-octets (string)
+  (let ((flex:*default-eol-style* :LF))
+    (flexi-streams:string-to-octets string
+                                    :external-format :utf-8)))
+
+(defun octets-to-string (octets)
+  (let ((flex:*default-eol-style* :LF))
+    (flexi-streams:octets-to-string octets
+                                    :external-format :utf-8)))

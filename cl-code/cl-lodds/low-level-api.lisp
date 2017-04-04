@@ -44,10 +44,9 @@ multiple-value-bind.
   "used to scan get info body to check if they are correct")
 
 (defun write-to-stream (stream string &optional (flush-p t))
-  "converts the given strin gto octets and writes it to the given
+  "converts the given string to octets and writes it to the given
 stream, will flush the stream with force-output when flusp-p is t"
-  (write-sequence (flex:string-to-octets string
-                                         :external-format :utf-8)
+  (write-sequence (lodds.core:string-to-octets string)
                   stream)
   (when flush-p
     (force-output stream)))
@@ -65,8 +64,7 @@ stream, will flush the stream with force-output when flusp-p is t"
                 (setf byte (read-byte stream))
                 (if (eql 10 byte)
                     (return-from read-line-from-socket
-                      (flex:octets-to-string line
-                                             :external-format :utf-8))
+                      (lodds.core:octets-to-string line))
                     (vector-push-extend byte line))))))
 
 ;; broadcast family
@@ -90,7 +88,7 @@ stream, will flush the stream with force-output when flusp-p is t"
    in that order. for example:
    '(#(192 168 2 255) 12345 87654321 9999 \"username\")"
   (let ((sock (usocket:socket-connect nil nil :protocol :datagram))
-        (data (flexi-streams:string-to-octets
+        (data (lodds.core:string-to-octets
                (format-send-advertise ad-info))))
     (handler-case
         (progn

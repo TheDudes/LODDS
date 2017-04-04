@@ -14,7 +14,7 @@
            #:get-size-color
            #:split-user-identifier
            #:split-path
-           #:add-missing-slash
+           #:ensure-trailing-slash
            #:remove-newline
            #:format-seconds
            #:get-interfaces
@@ -26,7 +26,9 @@
            #:directory-exists
            #:file-exists
            #:get-absolute-path
-           #:set-socket-timeout))
+           #:set-socket-timeout
+           #:octets-to-string
+           #:string-to-octets))
 
 (defpackage #:lodds.config
   (:use #:cl)

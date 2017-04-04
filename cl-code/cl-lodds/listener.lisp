@@ -58,14 +58,14 @@ client infos on the lodds-server object once he gets new information.
          (buffer (make-array buffer-size
                              :element-type '(unsigned-byte 8)
                              :initial-element 0)))
-    (if (lodds.core:input-rdy-p socket 1)
-        (multiple-value-bind (recv n remote-host remote-port)
-            (usocket:socket-receive socket buffer buffer-size)
-          (declare (ignore recv remote-host remote-port))
-          (if (plusp n)
-              (flexi-streams:octets-to-string
-               (subseq buffer 0 n))
-              (error "listener:get-next-message: receive error: ~A" n))))))
+    (when (lodds.core:input-rdy-p socket 1)
+      (multiple-value-bind (recv n remote-host remote-port)
+          (usocket:socket-receive socket buffer buffer-size)
+        (declare (ignore recv remote-host remote-port))
+        (if (plusp n)
+            (lodds.core:octets-to-string
+             (subseq buffer 0 n))
+            (error "listener:get-next-message: receive error: ~A" n))))))
 
 (defun run (listener)
   (let ((socket nil))
