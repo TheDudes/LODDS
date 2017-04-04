@@ -115,7 +115,7 @@
              event-msg
            (format nil "~{~a~^ ~}"
                    (list task-id filename timeout user size)))
-         event-msg))
+         (format nil "~a" (car event-msg))))
     (:folder-download-error
      (destructuring-bind (task-id folder error-file &rest nil)
          event-msg
@@ -160,7 +160,7 @@
              event-msg
            (format nil "~{~a~^ ~}"
                    (list task-id filename timeout user size)))
-         event-msg))
+         (format nil "~a" (car event-msg))))
     (:folder-download-error
      (destructuring-bind (task-id folder error-file &rest nil)
          event-msg
