@@ -158,34 +158,25 @@
   (q+:accept-proposed-action ev))
 
 (define-override (user-list drop-event) (ev)
-  (let ((dropped-link (q+:const-data
-                       (q+:data (q+:mime-data ev)
-                                "text/uri-list"))))
-    (loop :for link
-          :in (cl-strings:split dropped-link
-                                (format nil "~C~C"
-                                        #\return #\linefeed))
-          :do
-          (when (cl-strings:starts-with link "file://")
-            (let ((filepath (subseq link 7)))
-              (cond
-                ((lodds.core:directory-exists filepath)
-                 (make-instance
-                  'dialog
-                  :title (format nil "Error - Cannot send directory (~a)"
-                                 filepath)
-                  :text "Its not possible to send a directory, select a file please."))
-                ((lodds.core:file-exists filepath)
-                 (let ((item (q+:item-at user-list (q+:pos ev))))
-                   (open-send-file-dialog
-                    (when (qobject-alive-p item)
-                      (q+:text item +user-list-full-name+))
-                    filepath)))
-                (t
-                 (make-instance
-                  'dialog
-                  :title "Error - Dont know what to do"
-                  :text "Whatever you dropped there is neither a dir nor a file."))))))))
+  (dolist (filepath (format-dropped-links ev))
+    (cond
+      ((lodds.core:directory-exists filepath)
+       (make-instance
+        'dialog
+        :title (format nil "Error - Cannot send directory (~a)"
+                       filepath)
+        :text "Its not possible to send a directory, select a file please."))
+      ((lodds.core:file-exists filepath)
+       (let ((item (q+:item-at user-list (q+:pos ev))))
+         (open-send-file-dialog
+          (when (qobject-alive-p item)
+            (q+:text item +user-list-full-name+))
+          filepath)))
+      (t
+       (make-instance
+        'dialog
+        :title "Error - Dont know what to do"
+        :text "Whatever you dropped there is neither a dir nor a file.")))))
 
 (defmethod update-user-colors ((user-list user-list))
   (maphash (lambda (user widget)

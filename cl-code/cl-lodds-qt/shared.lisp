@@ -151,18 +151,7 @@ others)
   (q+:accept-proposed-action ev))
 
 (define-override (directories drop-event) (ev)
-  (let* ((dropped-link (q+:const-data
-                        (q+:data (q+:mime-data ev)
-                                 "text/uri-list")))
-         (links (cl-strings:split dropped-link
-                                  (format nil "~C~C"
-                                          #\return #\linefeed))))
-    (share-directories directories
-                       (mapcar (lambda (link)
-                                 (subseq link 7))
-                               (remove-if-not (lambda (link)
-                                                (cl-strings:starts-with link "file://"))
-                                              links)))))
+  (share-directories directories (format-dropped-links ev)))
 
 (define-initializer (directories setup-widget)
   (qdoto directories

@@ -65,3 +65,17 @@ supress-warning if you dont want that."
               (lodds.event:push-event :info text)
               (format t "~a~%" text)))
           (q+:set-text widget fallback-text)))))
+
+(defun format-dropped-links (drop-event)
+  (let* ((dropped-link (q+:const-data
+                        (q+:data (q+:mime-data drop-event)
+                                 "text/uri-list")))
+         (links (cl-strings:split dropped-link
+                                  (format nil "~C~C"
+                                          #\return #\linefeed))))
+    (mapcar (lambda (link)
+              #+os-windows (q+:qurl-from-percent-encoding (subseq link 8))
+              #-os-windows (subseq link 7))
+            (remove-if-not (lambda (link)
+                             (cl-strings:starts-with link "file://"))
+                           links))))
