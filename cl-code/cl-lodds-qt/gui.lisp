@@ -477,11 +477,12 @@ functionality (for example system tray and status-info)
                             :config-changed)
   (lodds.event:add-callback :qt-main
                             (lambda (task-id &rest args)
-                              (setf (gethash task-id callback-buffer)
-                                    args)
-                              (signal! main-window
-                                       (received-send-permission string)
-                                       task-id))
+                              (when args
+                                (setf (gethash task-id callback-buffer)
+                                      args)
+                                (signal! main-window
+                                         (received-send-permission string)
+                                         task-id)))
                             :send-permission)
   (lodds.event:add-callback :qt-main
                             (lambda (task-id &rest args)
