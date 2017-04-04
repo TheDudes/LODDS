@@ -110,6 +110,14 @@ tracked about the shared files.
   "will be called if some filesystem events occur inside the watched
    directory"
   (case type
+    ;; on windows we wont get file-removed events for each file inside
+    ;; a directory, which means we have to remove all files from a
+    ;; directory by hand
+    #+os-windows
+    (:directory-removed
+     (loop :for file-pathname :being :the :hash-keys :of (file-table-name dir-watcher)
+           :when (uiop:subpathp file-pathname pathname)
+           :do (remove-file dir-watcher file-pathname)))
     (:file-added (add-file dir-watcher pathname))
     (:file-removed (remove-file dir-watcher pathname))
     (:file-changed (update-file dir-watcher pathname))
