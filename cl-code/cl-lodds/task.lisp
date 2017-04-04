@@ -296,14 +296,14 @@ can be used to retrieve the load all currently running tasks produce.
            ;; get type of action
            (cond
              ((lodds.config:get-value :deny-requests)
-              :blocked)
+              :deny)
              ((null users)
               (if (lodds.config:get-value :allow-unkown-user-send)
                   :ask
                   :unknown))
              ((intersection users (lodds.config:get-value :blocked-users)
                             :test #'equal)
-              :deny)
+              :blocked)
              ((subsetp users (lodds.config:get-value :trusted-users)
                        :test #'equal)
               :accept)
@@ -312,13 +312,13 @@ can be used to retrieve the load all currently running tasks produce.
                (not (lodds.event:callback-exists-p :send-permission)))
       (setf action :no-callback))
     (ecase action
-      (:blocked (lodds.event:push-event
-                 :send-permission
-                 "received and denied (deny requests true)"))
       (:deny (lodds.event:push-event
               :send-permission
-              (format nil "received and denied (user ~{~a~^and~} blocked)"
-                      users)))
+              "received and denied (deny requests true)"))
+      (:blocked (lodds.event:push-event
+                 :send-permission
+                 (format nil "received and denied (user ~{~a~^and~} blocked)"
+                         users)))
       (:no-callback (lodds.event:push-event
                      :send-permission
                      "received and denied (blocking send-permissions)"))
