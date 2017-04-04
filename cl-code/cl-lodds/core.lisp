@@ -237,10 +237,14 @@ functions.
   "returns the broadcast address of the specified interface.
    to get a list of available interfaces use 'get-interfaces'"
   (declare (ignorable interface))
-  #-os-windows (let ((info (get-interface-info interface)))
-                 (when info
-                   (ip-interfaces:ip-interface-broadcast-address info)))
-  #+os-windows #(0 0 0 0))
+  (let ((info (get-interface-info interface)))
+    (when info
+      #-os-windows (ip-interfaces:ip-interface-broadcast-address info)
+      #+os-windows (map 'vector #'logior
+                        (ip-interfaces:ip-interface-address info)
+                        (map 'vector (lambda (bits)
+                                       (logxor bits 255))
+                             (ip-interfaces:ip-interface-netmask info))))))
 
 (defun get-ip-address (interface)
   "returns the ip address of the specified interface.

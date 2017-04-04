@@ -70,9 +70,7 @@ them from any other thread
 (defun ev-init-advertiser ()
   (let* ((interface (lodds.config:get-value :interface))
          (ip (lodds.core:get-ip-address interface))
-         (broadcast-ip #(192 168 2 255)
-                       ;;(lodds.core:get-broadcast-address interface)
-                       ))
+         (broadcast-ip (lodds.core:get-broadcast-address interface)))
     (ev-delay-interval (lodds.config:get-value :advertise-timeout)
       (ev-send-advertise ip broadcast-ip))))
 
