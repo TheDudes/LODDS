@@ -166,6 +166,14 @@ can be used to retrieve the load all currently running tasks produce.
 (defgeneric task-info (task)
   (:documentation "Returns a information string about a given task"))
 
+(defmethod task-info :around ((task task))
+  (with-slots (canceled id) task
+    (if canceled
+        (format nil "[Not Responding... (~a)]" id)
+        (handler-case (call-next-method)
+          (error (e)
+            (format nil "ERROR: ~a" e))))))
+
 (defmethod task-info ((task task))
   (format nil "~a" task))
 
