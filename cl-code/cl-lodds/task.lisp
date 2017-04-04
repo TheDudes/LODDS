@@ -53,6 +53,39 @@ be used to retrieve the load all currently running tasks produce.
   "Returns task with given id, nil if task is not found"
   (gethash task-id (slot-value tasks 'tasks)))
 
+(let ((to-be-killed nil)
+      (to-be-interrupted nil))
+  (defun tasks-cleanup (&optional (tasks (lodds:get-tasks)))
+    (dolist (task to-be-killed)
+      (handler-case
+          (with-slots (thread) task
+            (task-cleanup task "Killed")
+            (when (and thread
+                       (bt:thread-alive-p thread))
+              (bt:destroy-thread thread)))
+        (error (e)
+          (lodds.event:push-event :error
+                                  "Error Killing task" task e))))
+    (setf to-be-killed nil)
+    (dolist (task to-be-interrupted)
+      (handler-case
+          (bt:interrupt-thread (slot-value task 'thread)
+                               (lambda ()
+                                 (error "-- Die --")))
+        (error (e)
+          (lodds.event:push-event :error
+                                  "Error Interrupting task" task e))))
+    (setf to-be-killed to-be-interrupted)
+    (bt:with-recursive-lock-held ((slot-value tasks 'lock))
+      (setf to-be-interrupted
+            (loop :for task :being :the :hash-value :of (slot-value tasks 'tasks)
+                  :when (and (slot-value task 'canceled)
+                             (not (find (task-id task)
+                                        to-be-killed
+                                        :key #'task-id
+                                        :test #'equal)))
+                  :collect task)))))
+
 ;; initialize-instance for each task to set the id on init
 
 (defmethod initialize-instance :after ((task task) &rest initargs)

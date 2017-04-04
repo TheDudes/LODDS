@@ -78,6 +78,10 @@ them from any other thread
   (ev-delay-interval (lodds.config:get-value :client-timeout)
     (lodds:remove-old-clients)))
 
+(defun ev-init-task-cleaner ()
+  (ev-delay-interval (lodds.config:get-value :task-cleanup-timeout)
+    (lodds.task:tasks-cleanup)))
+
 (defun ev-init (event-loop)
   "Initializes the event-loop"
   (with-slots (queue stop-notifier hook-notifier) event-loop
@@ -91,6 +95,7 @@ them from any other thread
            :single-shot nil))
     (ev-init-advertiser)
     (ev-init-client-remover)
+    (ev-init-task-cleaner)
     (setf stop-notifier (as:make-notifier
                          (lambda ()
                            (lodds.event:push-event :info "ev-loop stopped")

@@ -181,6 +181,17 @@ value (to verify the new value on change).
                  validation would be useless~%~
                  Default: true")
          :boolean)
+   (list :task-cleanup-timeout
+         1
+         (format nil "Time in seconds the task cleaner is executed~%~
+                     The task cleaner will look for tasks which are~%~
+                     not responding and save them. If the task still~%~
+                     exists when he gets executed again he will force~%~
+                     quit the task.~%~
+                     Default: 1")
+         :integer
+         1
+         30)
    ;; TODO: QT gui related settings, these should be splitted out to
    ;; lodds-qt package and then be hooked somehow, but i couldn't
    ;; think of any good way to achieve it. Thats why i will just leave

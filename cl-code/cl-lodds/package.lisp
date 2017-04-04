@@ -79,6 +79,7 @@
            #:tasks-get-task-progresses
            #:tasks-get-task-count
            #:tasks-get-task-by-id
+           #:tasks-cleanup
            #:task-request
            #:task-request-info
            #:task-send-permission
