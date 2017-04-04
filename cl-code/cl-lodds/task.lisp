@@ -449,6 +449,12 @@ be used to retrieve the load all currently running tasks produce.
        (lodds.event:push-event :task-finished
                                id task)))))
 
+(defmethod task-cleanup ((task task-get-file) err)
+  (with-slots (file-pathname canceled) task
+    (when (or canceled err)
+      (uiop:delete-file-if-exists file-pathname))
+    (call-next-method)))
+
 ;; task-run methods to run a task
 
 (defgeneric task-run (task)
