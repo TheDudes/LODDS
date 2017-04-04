@@ -199,7 +199,8 @@
                            :info) "#1ED760")
                          ((:task-failed
                            :directory-error
-                           :folder-download-error) "#FF0000")
+                           :folder-download-error
+                           :error) "#FF0000")
                          ((:task-canceled
                            :unshared-directory) "#FF5C14")
                          (t "")))))
