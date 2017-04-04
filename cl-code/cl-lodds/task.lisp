@@ -166,11 +166,11 @@ be used to retrieve the load all currently running tasks produce.
 
 (defmethod task-info :around ((task task))
   (with-slots (canceled id) task
-    (if canceled
-        (format nil "[Not Responding... (~a)]" id)
-        (handler-case (call-next-method)
-          (error (e)
-            (format nil "ERROR: ~a" e))))))
+    (format nil "~a~a"
+            (if canceled "- Canceled - " "")
+            (handler-case (call-next-method)
+              (error (e)
+                (format nil "ERROR: ~a" e))))))
 
 (defmethod task-info ((task task))
   (format nil "~a" task))
