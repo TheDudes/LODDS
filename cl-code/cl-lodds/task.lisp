@@ -746,15 +746,19 @@ can be used to retrieve the load all currently running tasks produce.
                                          (append (list (list file checksum size))
                                                  items))
                                    (decf bytes-transfered size)
-                                   (bt:condition-notify condition)))
+                                   (bt:with-lock-held (lock)
+                                     (bt:condition-notify condition))))
                                ;; skip
                                (lambda ()
-                                 (bt:condition-notify condition))
+                                 (bt:with-lock-held (lock)
+                                   (bt:condition-notify condition)))
                                ;; cancel
                                (lambda ()
                                  (setf canceled t)
-                                 (bt:condition-notify condition)))
-                              (bt:condition-wait condition lock)))))))
+                                 (bt:with-lock-held (lock)
+                                   (bt:condition-notify condition))))
+                              (bt:with-lock-held (lock)
+                                (bt:condition-wait condition lock))))))))
                 (setf current-task nil)))
             :finally
             (unless canceled
