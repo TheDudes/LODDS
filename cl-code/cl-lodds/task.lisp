@@ -58,24 +58,29 @@ be used to retrieve the load all currently running tasks produce.
   (defun tasks-cleanup (&optional (tasks (lodds:get-tasks)))
     (dolist (task to-be-killed)
       (handler-case
-          (with-slots (thread) task
-            (task-cleanup task "Killed")
-            (when (and thread
-                       (bt:thread-alive-p thread))
-              (bt:destroy-thread thread)))
+          (with-slots (thread id) task
+            (when (tasks-get-task-by-id id)
+              (task-cleanup task "Killed")
+              (when (and thread
+                         (bt:thread-alive-p thread))
+                (bt:destroy-thread thread))))
         (error (e)
           (lodds.event:push-event :error
                                   "Error Killing task" task e))))
     (setf to-be-killed nil)
     (dolist (task to-be-interrupted)
       (handler-case
-          (bt:interrupt-thread (slot-value task 'thread)
-                               (lambda ()
-                                 (error "-- Die --")))
+          (with-slots (thread id) task
+            (when (tasks-get-task-by-id id)
+              (when (and thread
+                         (bt:thread-alive-p thread))
+                (bt:interrupt-thread thread
+                                     (lambda ()
+                                       (error "-- Die --"))))
+              (push task to-be-killed)))
         (error (e)
           (lodds.event:push-event :error
                                   "Error Interrupting task" task e))))
-    (setf to-be-killed to-be-interrupted)
     (bt:with-recursive-lock-held ((slot-value tasks 'lock))
       (setf to-be-interrupted
             (loop :for task :being :the :hash-value :of (slot-value tasks 'tasks)
