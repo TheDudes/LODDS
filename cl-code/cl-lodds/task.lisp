@@ -2,18 +2,16 @@
 
 Tasks are wrapper around network transfers. For example if a user
 requests info or a file, a task gets created (task-request-info,
-task-request-file). Each task has a task-init method, to intialize the
-task, it is wrapped with a :around function to catch initialization
-errors. Tasks get cleaned up by the task-cleanup method. The task-run
-method does the actual work after the task is initialized, it is also
-wrapped in a :around method to ensure the task gets cleaned up in case
-of an error. Other methods are task-info to retrieve a string with
+task-request-file). Tasks get cleaned up by the task-cleanup
+method. The task-run method does the actual work it is wrapped in a
+:around method to ensure the task gets cleaned up in case of an
+error. Other methods are task-info to retrieve a string with
 information about a task and task-cancel to cancel a running
 task. Each task-run is run in a new thread, if not stated otherwise
-(:in-thread nil on task creation). All task methods are prefixed
-with task-, all tasks functions with tasks-. The tasks- functions can
-b eused to retrieve info about all tasks, for example tasks-get-load
-can be used to retrieve the load all currently running tasks produce.
+(:in-thread nil on task creation). All task methods are prefixed with
+task-, all tasks functions with tasks-. The tasks- functions can be
+used to retrieve info about all tasks, for example tasks-get-load can
+be used to retrieve the load all currently running tasks produce.
 
 |#
 
@@ -413,108 +411,6 @@ can be used to retrieve the load all currently running tasks produce.
        (lodds.event:push-event :task-finished
                                id task)))))
 
-;; task-init methods to initialize the tasks
-
-(defgeneric task-init (task)
-  (:documentation "Method which is run to initialize the task, it will
-  open up file streams, set file-pathnames etc. Returns t on succes and nil
-  on failure."))
-
-(defmethod task-init :around ((task task))
-  (handler-case
-      (progn
-        (call-next-method)
-        (setf (slot-value task 'initialized-p) t))
-    (error (err)
-      (lodds.event:push-event :error
-                              (format nil
-                                      "Could not initialize Task ~a: ~a"
-                                      task
-                                      err))
-      (task-cleanup task err)
-      nil)))
-
-(defmethod task-init ((task task-request)))
-
-(defmethod task-init ((task task-request-send-permission))
-  (with-slots (file-stream socket file-pathname) task
-    (setf file-stream (open-file file-pathname :output))
-    (lodds.low-level-api:respond-send-permission
-     (usocket:socket-stream socket))))
-
-(defmethod task-init ((task task-request-file))
-  (with-slots (checksum start end file-pathname file-stream total-load
-               bytes-transfered)
-      task
-    ;; set file-pathname
-    (let ((name (lodds.watcher:get-file-info checksum)))
-      (unless name
-        (error "Requested file not found"))
-      (setf file-pathname name))
-    ;; open local file stream
-    (setf file-stream (open-file file-pathname :input))
-    (let ((size (- end start))
-          (file-size (file-length file-stream)))
-      ;; do some checks if request would error
-      (cond
-        ((< size 0) (error "Requested size < 0"))
-        ((> size file-size) (error "Requested size > file-length"))
-        ((> end file-size) (error "Requested end > file-length")))
-      ;; setup load and max-load
-      (setf total-load size)
-      ;; move to right file position
-      (unless (eql start 0)
-        (file-position file-stream start)))))
-
-(defmethod task-init ((task task-get-info))
-  (with-slots (socket user) task
-    (lodds.core:split-user-identifier (name ip port t) user
-      (setf socket (connect ip port)))))
-
-(defmethod task-init ((task task-send-file))
-  (with-slots (total-load file-pathname file-stream socket user) task
-    (setf file-stream (open-file file-pathname :input))
-    (setf total-load
-          (file-length file-stream))
-    (lodds.core:split-user-identifier (name ip port t) user
-      (setf socket (connect ip port)))))
-
-(defmethod task-init ((task task-get-file-from-user))
-  (with-slots (socket user file-pathname checksum file-stream
-               total-load)
-      task
-    (let ((size (car (lodds:get-file-info checksum user))))
-      (if size
-          (setf total-load size)
-          (error "File with given checksum not found"))
-      (setf file-stream (open-file file-pathname :output))
-      (lodds.core:split-user-identifier (name ip port t) user
-        (setf socket (connect ip port))))))
-
-(defmethod task-init ((task task-get-file-from-users))
-  (with-slots (total-load part-size checksum file-stream file-pathname) task
-    (let ((size (third (first (lodds:get-file-info checksum)))))
-      (unless size
-        (error "File with given checksum not found"))
-      (setf file-stream (open-file file-pathname :output))
-      (setf total-load size)
-      (setf part-size
-            (let ((64MiB (ash 1 26))
-                  (32MiB (ash 1 25)))
-              (if (> size 64MiB)
-                  (ash size -4) ;; divide by 16 (split up into 16 parts)
-                  (if (> size 32MiB)
-                      (ash size -3) ;; divide by 8 (split up into 8 parts)
-                      ;; if file is smaller than 32 mb just
-                      ;; download it in one go
-                      size)))))))
-
-(defmethod task-init ((task task-get-folder))
-  (with-slots (user remote-path items total-load) task
-    (setf items (lodds:get-folder-info remote-path user))
-    (let ((size (reduce #'+ items :key #'third)))
-      (setf total-load size))))
-
 ;; task-run methods to run a task
 
 (defgeneric task-run (task)
@@ -525,12 +421,7 @@ can be used to retrieve the load all currently running tasks produce.
 
 (defmethod task-run :around ((task task))
   ;; run the task when state is normal
-  (with-slots (id canceled initialized-p in-thread thread) task
-    (when (and (not initialized-p)
-               (not (task-init task)))
-      ;; return if the task was not initialized and we where not
-      ;; able to initialize it
-      (return-from task-run))
+  (with-slots (in-thread thread) task
     (lodds.core:with-server lodds:*server*
       (labels ((run ()
                  (handler-case
@@ -540,8 +431,9 @@ can be used to retrieve the load all currently running tasks produce.
                    (error (err)
                      (task-cleanup task err)))))
         (if in-thread
-            (bt:make-thread #'run
-                            :name (format nil "~a" task))
+            (setf thread
+                  (bt:make-thread #'run
+                                  :name (format nil "~a" task)))
             (run))))))
 
 (defmethod task-run ((task task-request))
@@ -589,14 +481,42 @@ can be used to retrieve the load all currently running tasks produce.
            (lodds:generate-info-response timestamp))))
 
 (defmethod task-run ((task task-request-send-permission))
-  (task-transfer task :socket-to-file))
+  (with-slots (file-stream socket file-pathname) task
+    (setf file-stream (open-file file-pathname :output))
+    (lodds.low-level-api:respond-send-permission
+     (usocket:socket-stream socket))
+    (task-transfer task :socket-to-file)))
 
 (defmethod task-run ((task task-request-file))
-  (task-transfer task :file-to-socket))
+  (with-slots (checksum start end file-pathname file-stream total-load
+               bytes-transfered)
+      task
+    ;; set file-pathname
+    (let ((name (lodds.watcher:get-file-info checksum)))
+      (unless name
+        (error "Requested file not found"))
+      (setf file-pathname name))
+    ;; open local file stream
+    (setf file-stream (open-file file-pathname :input))
+    (let ((size (- end start))
+          (file-size (file-length file-stream)))
+      ;; do some checks if request would error
+      (cond
+        ((< size 0) (error "Requested size < 0"))
+        ((> size file-size) (error "Requested size > file-length"))
+        ((> end file-size) (error "Requested end > file-length")))
+      ;; setup load and max-load
+      (setf total-load size)
+      ;; move to right file position
+      (unless (eql start 0)
+        (file-position file-stream start)))
+    (task-transfer task :file-to-socket)))
 
 (defmethod task-run ((task task-get-info))
   (with-slots (socket user)
       task
+    (lodds.core:split-user-identifier (name ip port t) user
+      (setf socket (connect ip port)))
     (let* ((user-info (lodds:get-user-info user))
            (lock (lodds:c-lock user-info)))
       (if (bt:acquire-lock lock nil)
@@ -621,6 +541,11 @@ can be used to retrieve the load all currently running tasks produce.
                user timeout file-pathname bytes-transfered
                total-load canceled time-waited)
       task
+    (setf file-stream (open-file file-pathname :input))
+    (setf total-load
+          (file-length file-stream))
+    (lodds.core:split-user-identifier (name ip port t) user
+      (setf socket (connect ip port)))
     (lodds.low-level-api:get-send-permission
      (usocket:socket-stream socket)
      total-load
@@ -643,9 +568,14 @@ can be used to retrieve the load all currently running tasks produce.
 
 (defmethod task-run ((task task-get-file-from-user))
   (with-slots (socket file-stream
-               bytes-transfered total-load
-               checksum)
+               file-pathname bytes-transfered total-load
+               checksum user)
       task
+    (setf total-load (or (car (lodds:get-file-info checksum user))
+                         (error "File with given checksum not found")))
+    (setf file-stream (open-file file-pathname :output))
+    (lodds.core:split-user-identifier (name ip port t) user
+      (setf socket (connect ip port)))
     (lodds.low-level-api:get-file (usocket:socket-stream socket)
                                   checksum
                                   0
@@ -658,6 +588,21 @@ can be used to retrieve the load all currently running tasks produce.
                checksum digester current-part part-size
                file-pathname current-user)
       task
+    (let ((size (third (first (lodds:get-file-info checksum)))))
+      (unless size
+        (error "File with given checksum not found"))
+      (setf file-stream (open-file file-pathname :output))
+      (setf total-load size)
+      (setf part-size
+            (let ((64MiB (ash 1 26))
+                  (32MiB (ash 1 25)))
+              (if (> size 64MiB)
+                  (ash size -4) ;; divide by 16 (split up into 16 parts)
+                  (if (> size 32MiB)
+                      (ash size -3) ;; divide by 8 (split up into 8 parts)
+                      ;; if file is smaller than 32 mb just
+                      ;; download it in one go
+                      size)))))
     (loop
       :do (let ((end-next-part (* (+ 1 current-part)
                                   part-size)))
@@ -692,8 +637,10 @@ can be used to retrieve the load all currently running tasks produce.
   (with-slots (local-path remote-path
                items items-done user state info id
                bytes-transfered tasks canceled
-               current-task)
+               current-task total-load)
       task
+    (setf items (lodds:get-folder-info remote-path user))
+    (setf total-load (reduce #'+ items :key #'third))
     (let* ((remote-pathname (uiop:parse-unix-namestring remote-path))
            (remote-directory-pathname
              (make-pathname :defaults remote-pathname
