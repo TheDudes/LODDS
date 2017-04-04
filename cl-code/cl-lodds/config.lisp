@@ -13,15 +13,20 @@ value (to verify the new value on change).
 
 (in-package #:lodds.config)
 
-;; TODO: should be a better way to do this, but ok for now
 (defparameter *load-path*
-  (list "/etc/lodds.config"
-        (format nil "~a.lodds.config"
-                (user-homedir-pathname))
-        (format nil "~alodds.config"
-                (uiop:xdg-config-home)
-                (user-homedir-pathname))
-        (format nil "./lodds.config")))
+  #-os-windows
+  (list (pathname "/etc/lodds.config")
+        (merge-pathnames
+         (pathname ".lodds.conf")
+         (user-homedir-pathname))
+        (merge-pathnames
+         (pathname "lodds.config")
+         (uiop:xdg-config-home)))
+  #+os-windows
+  (list (merge-pathnames
+         (pathname ".lodds.conf")
+         (user-homedir-pathname))))
+
 
 (defun generate-default-list ()
   "Used to generate the default configuration, each element contains
