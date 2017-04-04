@@ -221,8 +221,10 @@ functions.
    names inside that list can be used to retrieve the broadcast or
    ip-address via 'get-broadcast-address' and 'get-ip-address'"
   (loop :for interface :in (list-of-interfaces)
-        :unless (equalp #(127 0 0 1)
-                        (ip-interfaces:ip-interface-address interface))
+        :unless (equalp #(127 0 0)
+                        (subseq (ip-interfaces:ip-interface-address interface)
+                                0
+                                3))
         :collect (ip-interfaces:ip-interface-name interface)))
 
 (defun get-interface-info (interface)
