@@ -395,16 +395,16 @@ be used to retrieve the load all currently running tasks produce.
     ;; check if the error was raised due to a task-cancel
     ;; (canceled would be set to t then)
     (cond
-      (canceled
-       (when on-cancel
-         (funcall on-cancel))
-       (lodds.event:push-event :task-canceled
-                               id task))
       (err
        (when on-error
          (funcall on-error))
        (lodds.event:push-event :task-failed
                                id task err))
+      (canceled
+       (when on-cancel
+         (funcall on-cancel))
+       (lodds.event:push-event :task-canceled
+                               id task))
       (t
        (when on-finish
          (funcall on-finish))
