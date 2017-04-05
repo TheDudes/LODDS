@@ -121,14 +121,15 @@ be used to retrieve the load all currently running tasks produce.
               id
               (lodds.core:format-size total-load)
               timeout
-              file-pathname))))
+              (lodds.core:format-pathname file-pathname)))))
 
 (defmethod print-object ((task task-request-file) stream)
   (print-unreadable-object (task stream :type t)
-    (with-slots (id checksum start end) task
-      (format stream "~a :checksum ~a :start ~:d :end ~:d"
+    (with-slots (id checksum start end file-pathname) task
+      (format stream "~a :checksum ~a :file-pathname ~a :start ~:d :end ~:d"
               id
-              (format nil "~a..." (subseq checksum 0 7))
+              (lodds.core:format-checksum checksum)
+              (lodds.core:format-pathname file-pathname)
               start
               end))))
 
@@ -144,7 +145,7 @@ be used to retrieve the load all currently running tasks produce.
     (with-slots (id ip file-pathname timeout total-load) task
       (format stream "~a file-pathname: ~a timeout: ~a size: ~a"
               id
-              file-pathname
+              (lodds.core:format-pathname file-pathname)
               timeout
               (lodds.core:format-size total-load)))))
 
@@ -153,20 +154,20 @@ be used to retrieve the load all currently running tasks produce.
     (with-slots (id file-pathname total-load user checksum) task
       (format stream "~a :file-pathname ~a size: ~a :user ~a :checksum ~a"
               id
-              file-pathname
+              (lodds.core:format-pathname file-pathname)
               (lodds.core:format-size total-load)
               user
-              checksum))))
+              (lodds.core:format-checksum checksum)))))
 
 (defmethod print-object ((task task-get-file-from-users) stream)
   (print-unreadable-object (task stream :type t)
     (with-slots (id file-pathname part-size total-load checksum) task
       (format stream "~a :file-pathname ~a size: ~a :part-size ~a :checksum ~a"
               id
-              file-pathname
+              (lodds.core:format-pathname file-pathname)
               (lodds.core:format-size total-load)
               (lodds.core:format-size part-size)
-              checksum))))
+              (lodds.core:format-checksum checksum)))))
 
 (defmethod print-object ((task task-get-folder) stream)
   (print-unreadable-object (task stream :type t)

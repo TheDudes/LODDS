@@ -5,6 +5,8 @@
   (:export #:with-server
            #:escape-wildcards
            #:generate-checksum
+           #:format-checksum
+           #:format-pathname
            #:input-rdy-p
            #:copy-stream
            #:get-timestamp

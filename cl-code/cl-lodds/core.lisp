@@ -29,6 +29,27 @@ functions.
       (declare (ignore e))
       "0000000000000000000000000000000000000000")))
 
+(defun format-checksum (checksum)
+  (when checksum
+    (with-output-to-string (stream)
+      (write-string (subseq checksum 0 7) stream)
+      (write-string "..." stream))))
+
+(defun format-pathname (pathname)
+  (when pathname
+    (with-output-to-string (stream)
+      (write-string
+       (if (> (length (pathname-directory pathname)) 1)
+           (namestring (make-pathname
+                        :directory (list :relative
+                                         "..."
+                                         (car
+                                          (last
+                                           (pathname-directory pathname))))
+                        :defaults pathname))
+           (file-namestring pathname))
+       stream))))
+
 (defun input-rdy-p (socket timeout)
   "returns t if socket has input rdy, nil if it timed out without any
   input"
