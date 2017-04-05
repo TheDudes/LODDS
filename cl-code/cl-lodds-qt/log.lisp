@@ -5,27 +5,15 @@
   (list :listener
         :advertiser))
 
-;; info-log-list columns
-(defvar +log-time+ 0)
-(defvar +log-event+ 1)
-(defvar +log-message+ 2)
-(defvar +log-count+ 3)
-
 (define-widget info-log (QSplitter)
-  ((log-message-max :initform (lodds.config:get-value :log-message-max))))
+  ())
 
-(define-subwidget (info-log info-log-list) (q+:make-qtreewidget info-log)
+(define-subwidget (info-log info-log-list)
+    (q+:make-qplaintextedit info-log)
   (qdoto info-log-list
-         (q+:set-object-name "Log")
-         (q+:set-column-count 4)
-         (q+:set-header-labels (list "Time" "Event" "Message" "")))
-
-  (qdoto (q+:header info-log-list)
-         (q+:set-stretch-last-section nil)
-         (q+:set-resize-mode +log-time+ (q+:qheaderview.resize-to-contents))
-         (q+:set-resize-mode +log-event+ (q+:qheaderview.resize-to-contents))
-         (q+:set-resize-mode +log-message+ (q+:qheaderview.stretch))
-         (q+:set-resize-mode +log-count+ (q+:qheaderview.resize-to-contents))))
+         (q+:set-maximum-block-count (lodds.config:get-value :log-message-max))
+         (q+:set-center-on-scroll t)
+         (q+:set-read-only t)))
 
 (define-subwidget (info-log info-log-settings) (q+:make-qscrollarea info-log)
   (let* ((container (q+:make-qgroupbox "Log Settings" info-log))
@@ -47,65 +35,24 @@
     (q+:set-widget info-log-settings container)
     (q+:set-maximum-width info-log-settings 250)))
 
-(define-signal (info-log add-log-msg) (string string string string))
+(define-signal (info-log add-log-msg) (string string string))
 
 (define-slot (info-log add-log-msg) ((event string)
                                      (color string)
-                                     (msg string)
-                                     (tooltip string))
+                                     (msg string))
   (declare (connected info-log (add-log-msg string
                                             string
-                                            string
                                             string)))
-  (let* ((items (q+:top-level-item-count info-log-list))
-         (last-item (if (> items 0)
-                        (q+:top-level-item info-log-list (- items 1))
-                        nil)))
-    (if (and last-item
-             (string= (q+:text last-item +log-event+)
-                      event)
-             (string= (q+:text last-item +log-message+)
-                      msg))
-        (let* ((current (q+:text last-item +log-count+))
-               (next (if (string= current "")
-                         2
-                         (+ 1 (parse-integer current)))))
-          ;; TODO: this might be very unperformant
-          (with-finalizing* ((color (q+:make-qcolor (format nil "#~2,'0X0000"
-                                                            (if (> next 255)
-                                                                255
-                                                                next))))
-                             (brush (q+:make-qbrush color)))
-            (qdoto last-item
-                   (q+:set-text +log-time+ (generate-timestamp))
-                   (q+:set-text +log-count+ (prin1-to-string next))
-                   (q+:set-foreground +log-count+ brush))))
-        (let ((new-entry (qdoto (q+:make-qtreewidgetitem info-log-list)
-                                (q+:set-tool-tip +log-message+ tooltip)
-                                (q+:set-text +log-time+ (generate-timestamp))
-                                (q+:set-text +log-event+ event)
-                                (q+:set-text +log-message+ msg)
-                                (q+:set-text +log-count+ "")
-                                (q+:set-text-alignment +log-count+ (q+:qt.align-right)))))
-          (unless (eql 0 (length color))
-            (with-finalizing* ((qcolor (q+:make-qcolor color))
-                               (qbrush (q+:make-qbrush qcolor)))
-              (q+:set-background new-entry +log-event+ qbrush)))
-          (let* ((scrollbar (q+:vertical-scroll-bar info-log-list))
-                 (position (q+:value scrollbar)))
-            (loop :while (> (q+:top-level-item-count info-log-list) log-message-max)
-                  :do (progn
-                        (finalize (q+:take-top-level-item info-log-list 0))
-                        (q+:set-value scrollbar (- position 1)))))
-          (unless (q+:is-empty (q+:visible-region info-log))
-            (let ((visual-rect (if last-item
-                                   (q+:visual-item-rect info-log-list last-item)
-                                   nil)))
-              (when (and visual-rect
-                         (< (- (q+:bottom visual-rect)
-                               (q+:height (q+:viewport info-log-list)))
-                            (q+:height visual-rect)))
-                (q+:scroll-to-item info-log-list new-entry))))))))
+  (q+:append-html info-log-list
+                  (format nil "<tt>[~a] <color ~a>~a</color> ~a</tt>"
+                          (generate-timestamp)
+                          (if (eql 0 (length color))
+                              ""
+                              (format nil
+                                      "style=\"background-color: ~a\""
+                                      color))
+                          event
+                          (escape-html msg))))
 
 (defun format-log-message (event-type event-msg)
   (case event-type
@@ -133,12 +80,6 @@
                :do (incf dels))
          (format nil "~a ~a ~a adds: ~a dels: ~a"
                  name type ts adds dels))))
-
-    (:task-failed
-     (destructuring-bind (task-id task err)
-         event-msg
-       (declare (ignore err))
-       (format nil "~a ~a" task-id task)))
     (:client-updated
      (destructuring-bind (name load last-change)
          event-msg
@@ -149,39 +90,8 @@
     (:config-changed
      (if (not event-msg)
          "replaced settings"
-         (format nil "setting ~a changed" (car event-msg))))
-    (t (format nil "~{~a~^ ~}" event-msg))))
-
-(defun format-log-tooltip (event-type event-msg)
-  (case event-type
-    (:send-permission
-     (if (> (length event-msg) 1)
-         (destructuring-bind (task-id filename timeout user size &rest nil)
-             event-msg
-           (format nil "~{~a~^ ~}"
-                   (list task-id filename timeout user size)))
-         (format nil "~a" (car event-msg))))
-    (:folder-download-error
-     (destructuring-bind (task-id folder error-file &rest nil)
-         event-msg
-       (format nil "~{~a~^ ~}"
-               (list task-id folder error-file))))
-    (:task-failed
-     (format nil "~a" (third event-msg)))
-    (:list-update
-     (let* ((changes (fourth event-msg))
-            (len (length changes)))
-       (if (> len 20)
-           (format nil "~{~{~a~^ ~}~^~%~}"
-                   (append (subseq changes 0 10)
-                           (list (list "..."))
-                           (subseq changes (- len 10))))
-           (format nil "~{~{~a~^ ~}~^~%~}" changes))))
-    (:config-changed
-     (if (not event-msg)
-         "replaced settings"
          (destructuring-bind (key old-val new-val) event-msg
-           (format nil "~a: ~a -> ~a"
+           (format nil "Settings changed: ~a: ~a -> ~a"
                    key old-val new-val))))
     (t (format nil "~{~a~^ ~}" event-msg))))
 
@@ -205,11 +115,14 @@
                            :unshared-directory) "#FF5C14")
                          (t "")))))
         (signal! info-log
-                 (add-log-msg string string string string)
+                 (add-log-msg string string string)
                  (format nil "~a" event-type)
                  color
-                 (format-log-message event-type event-msg)
-                 (format-log-tooltip event-type event-msg))))))
+                 (format-log-message event-type event-msg))))))
+
+(defmethod update-log-message-max ((info-log info-log) new-max)
+  (with-slots-bound (info-log info-log)
+    (q+:set-maximum-block-count info-log-list new-max)))
 
 (define-initializer (info-log setup-widget)
     (qdoto info-log

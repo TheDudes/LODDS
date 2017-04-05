@@ -79,3 +79,15 @@ supress-warning if you dont want that."
             (remove-if-not (lambda (link)
                              (cl-strings:starts-with link "file://"))
                            links))))
+
+(defun escape-html (html)
+  "Copied from Lionchat Code (thanks Shinmera)"
+  (with-output-to-string (stream)
+    (loop for c across html
+          do (case c
+               (#\< (write-string "&lt;" stream))
+               (#\> (write-string "&gt;" stream))
+               (#\" (write-string "&quot;" stream))
+               (#\& (write-string "&amp;" stream))
+               (#\Newline (write-string "<br>" stream))
+               (T (write-char c stream))))))
