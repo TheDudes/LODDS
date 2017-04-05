@@ -35,6 +35,7 @@
 (defpackage #:lodds.config
   (:use #:cl)
   (:export #:*load-path*
+           #:*color-scanner*
            #:generate-default-config
            #:save-to-file
            #:validate-config

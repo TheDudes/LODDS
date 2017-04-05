@@ -10,7 +10,6 @@
 (defvar +events+
   '(:advertiser
     :listener
-    :tasker
     :task-finished
     :task-failed
     :task-canceled

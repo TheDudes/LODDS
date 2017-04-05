@@ -199,6 +199,61 @@
     (cl-fs-watcher:escape-wildcards
      (q+:text (slot-value folder-setting 'folder))))))
 
+;; Color widget
+
+(define-widget color-setting (QWidget setting)
+  ())
+
+(define-subwidget (color-setting color)
+    (q+:make-qlineedit color-setting)
+  (q+:set-alignment color (q+:qt.align-center))
+  (setf (q+:size-policy color)
+        (values (q+:qsizepolicy.expanding)
+                (q+:qsizepolicy.fixed))))
+
+(define-subwidget (color-setting open)
+    (q+:make-qpushbutton "..." color-setting)
+  (setf (q+:size-policy open)
+        (values (q+:qsizepolicy.minimum)
+                (q+:qsizepolicy.fixed))))
+
+(define-slot (color-setting open) ()
+  (declare (connected open (pressed)))
+  (with-finalizing ((dialog (make-instance 'qtools-ui:color-picker)))
+    (when (qtools-ui:show dialog)
+      (q+:set-text color (q+:name (qtools-ui:value dialog))))))
+
+(define-slot (color-setting text-changed) ((text string))
+  (declare (connected color (text-changed string)))
+  (let ((pos (q+:cursor-position color)))
+    (q+:set-text color text)
+    (q+:set-cursor-position color pos))
+  (with-finalizing ((qcolor (q+:make-qcolor
+                             (if (cl-ppcre:scan lodds.config:*color-scanner*
+                                                text)
+                                 text
+                                 "#ffffff"))))
+    (let ((palette (q+:palette color)))
+      (q+:set-color palette
+                    (q+:qpalette.base)
+                    qcolor)
+      (q+:set-palette color palette))))
+
+(define-subwidget (color-setting layout)
+    (q+:make-qhboxlayout color-setting)
+  (qdoto layout
+         (q+:add-widget color)
+         (q+:add-widget open)))
+
+(define-initializer (color-setting setup-widget)
+  (with-slots (key widget config) color-setting
+    (setf widget color)
+    (q+:set-text color
+                 (lodds.config:get-value key config))))
+
+(defmethod get-value ((color-setting color-setting))
+  (q+:text (slot-value color-setting 'color)))
+
 ;; Functions
 
 (defun make-setting (key config)
@@ -209,6 +264,7 @@
     (:integer   (make-instance 'integer-setting   :key key :config config))
     (:folder    (make-instance 'folder-setting    :key key :config config))
     (:selection (make-instance 'selection-setting :key key :config config))
+    (:color     (make-instance 'color-setting     :key key :config config))
     (t (error "Type ~a of key ~a not recognised"
               (lodds.config:get-type key config)
               key))))

@@ -101,19 +101,12 @@
     (unless (find event-type *ignored-log-events*)
       (let ((color (if (not (lodds.config:get-value :show-log-type-color))
                        ""
-                       (case event-type
-                         ((:task-finished
-                           :shared-directory
-                           :config-changed
-                           :send-permission
-                           :info) "#1ED760")
-                         ((:task-failed
-                           :directory-error
-                           :folder-download-error
-                           :error) "#FF0000")
-                         ((:task-canceled
-                           :unshared-directory) "#FF5C14")
-                         (t "")))))
+                       (or (lodds.config:get-value
+                            (intern
+                             (string-upcase
+                              (format nil "log-~a-color" event-type))
+                             :keyword))
+                           (lodds.config:get-value :log-default-color)))))
         (signal! info-log
                  (add-log-msg string string string)
                  (format nil "~a" event-type)

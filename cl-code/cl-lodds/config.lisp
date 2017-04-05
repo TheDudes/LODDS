@@ -27,6 +27,22 @@ value (to verify the new value on change).
          (pathname ".lodds.conf")
          (user-homedir-pathname))))
 
+(defvar *color-scanner*
+  (cl-ppcre:create-scanner
+   "^#([a-f]|[A-F]|[0-9]){6}$")
+  "To check if color is correct")
+
+(defun generate-log-color-setting (color key)
+  (list (intern (string-upcase (format nil "log-~a-color" key))
+                :keyword)
+        color
+        (format nil
+                "Background Color of ~a~%~
+                 Event on log widget when show-log-type-colors~%~
+                 is true~%~
+                 Default: ~a"
+                key color)
+        :color))
 
 (defun generate-default-list ()
   "Used to generate the default configuration, each element contains
@@ -285,13 +301,6 @@ value (to verify the new value on change).
          :integer
          10
          10000)
-   (list :show-log-type-color
-         t
-         (format nil
-                 "Set to false to not colorize some log message~%~
-                 event types inside the Log Area.~%~
-                 Default: true")
-         :boolean)
    (list :show-background-color-on-size
          t
          (format nil
@@ -302,7 +311,40 @@ value (to verify the new value on change).
                  Restarting Lodds (Lodds -> Restart) to build a new~%~
                  tree is needed.~%~
                  Default: true")
-         :boolean)))
+         :boolean)
+   (list :show-log-type-color
+         t
+         (format nil
+                 "Set to false to not colorize some log message~%~
+                 event types inside the Log Area.~%~
+                 Default: true")
+         :boolean)
+   (list :log-default-color
+         "#000000"
+         (format nil
+                 "Default Background color of Events which did~%~
+                 not set any other color~%~
+                 Default: #000000")
+         :color)
+   (generate-log-color-setting "#ff79f0" :advertiser)
+   (generate-log-color-setting "#c9ff34" :listener)
+   (generate-log-color-setting "#1ed760" :task-finished)
+   (generate-log-color-setting "#ff0000" :task-failed)
+   (generate-log-color-setting "#ff5c14" :task-canceled)
+   (generate-log-color-setting "#e6dd21" :info)
+   (generate-log-color-setting "#00a102" :client-added)
+   (generate-log-color-setting "#ff6a6a" :client-removed)
+   (generate-log-color-setting "#639cff" :client-updated)
+   (generate-log-color-setting "#888888" :debug)
+   (generate-log-color-setting "#ff23db" :watcher)
+   (generate-log-color-setting "#ff4e4e" :handler)
+   (generate-log-color-setting "#fffd82" :list-update)
+   (generate-log-color-setting "#1ef760" :shared-directory)
+   (generate-log-color-setting "#FFa720" :unshared-directory)
+   (generate-log-color-setting "#ff0000" :directory-error)
+   (generate-log-color-setting "#ff0000" :folder-download-error)
+   (generate-log-color-setting "#a0d84c" :send-permission)
+   (generate-log-color-setting "#35ffeb" :config-changed)))
 
 (defun split-key-value (line)
   (let* ((equal-pos (position #\= line))
@@ -338,6 +380,7 @@ value (to verify the new value on change).
                        (cl-fs-watcher:escape-wildcards value)))
               nil))
     (:selection (values value nil))
+    (:color (values value nil))
     (t (values nil (format nil "Type ~a not recognised" type)))))
 
 (defun validate-new-entry (key value config)
@@ -350,6 +393,7 @@ value (to verify the new value on change).
             (:integer   (integerp value))
             (:folder    (pathnamep value))
             (:selection (stringp value))
+            (:color     (cl-ppcre:scan *color-scanner* value))
             (t nil))
     (return-from validate-new-entry
       (format nil "~a is not of expected key type ~a (key: ~a)"
