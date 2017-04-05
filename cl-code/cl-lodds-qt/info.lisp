@@ -220,16 +220,15 @@
 
 (define-initializer (info setup-callbacks)
   (lodds.event:add-callback :qt-info
-                            (lambda (task-id task)
-                              (declare (ignore task))
+                            (lambda (task)
                               (bt:with-recursive-lock-held ((slot-value info 'lock))
-                                (push task-id canceled-tasks)))
+                                (push (lodds.task:task-id task) canceled-tasks)))
                             :task-canceled)
   (lodds.event:add-callback :qt-info
-                            (lambda (task-id task err)
-                              (declare (ignore task err))
+                            (lambda (task err)
+                              (declare (ignore err))
                               (bt:with-recursive-lock-held ((slot-value info 'lock))
-                                (push task-id failed-tasks)))
+                                (push (lodds.task:task-id task) failed-tasks)))
                             :task-failed))
 
 (define-finalizer (info cleanup-widget)

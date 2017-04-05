@@ -438,17 +438,17 @@ be used to retrieve the load all currently running tasks produce.
        (when on-error
          (funcall on-error))
        (lodds.event:push-event :task-failed
-                               id task err))
+                               task err))
       (canceled
        (when on-cancel
          (funcall on-cancel))
        (lodds.event:push-event :task-canceled
-                               id task))
+                               task))
       (t
        (when on-finish
          (funcall on-finish))
        (lodds.event:push-event :task-finished
-                               id task)))))
+                               task)))))
 
 (defmethod task-cleanup ((task task-get-file) err)
   (with-slots (file-pathname canceled) task
