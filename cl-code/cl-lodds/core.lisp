@@ -146,15 +146,19 @@ functions.
       (gb (ash 1 33)) ;; 8gb
       (mb (ash 1 23)) ;; 8mb
       (kb (ash 1 13)));; 8kb
-  (defun format-size (size)
-    "formats given size (number) to a more readable format (string)"
-    (cond
-      ((> size xb) (format nil "~aPiB" (ash size -50)))
-      ((> size tb) (format nil "~aTiB" (ash size -40)))
-      ((> size gb) (format nil "~aGiB" (ash size -30)))
-      ((> size mb) (format nil "~aMiB" (ash size -20)))
-      ((> size kb) (format nil "~aKiB" (ash size -10)))
-      (t           (format nil "~aByt" size)))))
+  (defun format-size (size &optional (when-zero nil))
+    "formats given size (number) to a more readable format (string),
+    when-zero can be given to return it instead of \"0Byt\""
+    (if (and (eql 0 size)
+             when-zero)
+        when-zero
+        (cond
+          ((> size xb) (format nil "~aPiB" (ash size -50)))
+          ((> size tb) (format nil "~aTiB" (ash size -40)))
+          ((> size gb) (format nil "~aGiB" (ash size -30)))
+          ((> size mb) (format nil "~aMiB" (ash size -20)))
+          ((> size kb) (format nil "~aKiB" (ash size -10)))
+          (t           (format nil "~aByt" size))))))
 
 (let ((tb    (ash 1 40))  ;; 1 tb
       (gb8   (ash 1 33))  ;; 8 gb

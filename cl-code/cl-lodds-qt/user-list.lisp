@@ -76,7 +76,15 @@
                                 (format nil "User: ~a" user))
              (q+:set-tool-tip +user-list-name+
                               (or (gen-tool-tip user) ""))
-             (q+:set-text +user-list-load+ (lodds.core:format-size (parse-integer load)))
+             (q+:set-text +user-list-load+
+                          (lodds.core:format-size (parse-integer load) ""))
+             (q+:set-tool-tip +user-list-load+
+                              (format nil "Load of the User, is used~%~
+                                          to calculate the best user~%~
+                                          on file downloads. The load~%~
+                                          describes the size of~%~
+                                          outstanding bytes the User~%~
+                                          has to transfer."))
              (q+:set-text-alignment +user-list-load+
                                     (qt:enum-or (q+:qt.align-center)
                                                 (q+:qt.align-right)))
@@ -102,7 +110,7 @@
     (when entry
       (qdoto entry
              (q+:set-text +user-list-load+
-                          (lodds.core:format-size (parse-integer load)))
+                          (lodds.core:format-size (parse-integer load) ""))
              (q+:set-tool-tip +user-list-name+ (or (gen-tool-tip user) ""))))))
 
 (define-slot (user-list prepare-menu) ((pos "const QPoint &"))
