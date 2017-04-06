@@ -215,8 +215,9 @@ loading the classes file first.
 (defclass handler ()
   ((alive-p :initform nil)
    (thread :initform nil
-           :type bt:thread)))
-
+           :type bt:thread)
+   #+os-windows
+   (socket :initform nil)))
 
 (in-package #:lodds)
 
