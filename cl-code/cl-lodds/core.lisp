@@ -160,29 +160,33 @@ functions.
           ((> size kb) (format nil "~aKiB" (ash size -10)))
           (t           (format nil "~aByt" size))))))
 
-(let ((tb    (ash 1 40))  ;; 1 tb
-      (gb8   (ash 1 33))  ;; 8 gb
-      (gb    (ash 1 30))  ;; 1 gb
-      (mb512 (ash 1 29))  ;; 512 mb
-      (mb256 (ash 1 28))  ;; 256 mb
-      (mb128 (ash 1 27))  ;; 128 mb
-      (mb64  (ash 1 26))  ;; 36 mb
-      (mb32  (ash 1 25))  ;; 32 mb
-      (mb    (ash 1 20))  ;; 1 mb
-      (kb    (ash 1 10))) ;; 1 kb
+(defun red-yellow-green-gradient-generator (count)
+  (let ((red 255)
+        (green 0)
+        (step-size (/ 255 (/ count 2))))
+    (flet ((fmt (red green)
+             (format nil "#~2,'0X~2,'0X00" (round red) (round green))))
+      (reverse
+       (append
+        (loop :while (< green 255)
+              :do (incf green step-size)
+              :when (> green 255)
+              :do (setf green 255)
+              :collect (fmt red green))
+        (loop :while (> red 0)
+              :do (decf red step-size)
+              :when (< red 0)
+              :do (setf red 0)
+              :collect (fmt red green)))))))
+
+(let ((lookup (make-array '(42)
+                          :initial-contents (red-yellow-green-gradient-generator 42)
+                          :adjustable nil)))
   (defun get-size-color (size)
-    (cond
-      ((> size tb)    "#FF0000")
-      ((> size gb8)   "#FF3300")
-      ((> size gb)    "#ff6600")
-      ((> size mb512) "#ff9900")
-      ((> size mb256) "#FFCC00")
-      ((> size mb128) "#FFFF00")
-      ((> size mb64)  "#ccff00")
-      ((> size mb32)  "#99ff00")
-      ((> size mb)    "#66ff00")
-      ((> size kb)    "#33ff00")
-      (t              "#00FF00"))))
+    (let ((spot (integer-length size)))
+      (if (> spot 41)
+          (aref lookup 41)
+          (aref lookup spot)))))
 
 (defmacro split-user-identifier ((name ip port &optional (convert-types nil)) user &body body)
   (let ((ip+port (gensym "ip+port")))
