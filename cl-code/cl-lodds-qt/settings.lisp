@@ -219,9 +219,9 @@
 
 (define-slot (color-setting open) ()
   (declare (connected open (pressed)))
-  (with-finalizing ((dialog (make-instance 'qtools-ui:color-picker)))
-    (when (qtools-ui:show dialog)
-      (q+:set-text color (q+:name (qtools-ui:value dialog))))))
+  (with-finalizing ((dialog (q+:make-qcolordialog color-setting)))
+    (when (eql 1 (q+:exec dialog))
+      (q+:set-text color (q+:name (q+:current-color dialog))))))
 
 (define-slot (color-setting text-changed) ((text string))
   (declare (connected color (text-changed string)))

@@ -17,9 +17,7 @@
                :qtcore
                :qtgui
                :cl-strings
-               :qtools-ui-debugger
-               :qtools-ui-slider
-               :qtools-ui-color-picker)
+               :qtools-ui-debugger)
   :components ((:file "package")
                (:file "globals")
                (:file "misc")
