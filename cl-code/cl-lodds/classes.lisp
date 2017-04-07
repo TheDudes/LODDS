@@ -269,24 +269,24 @@ loading the classes file first.
            :documentation "Look to access member variables.")))
 
 (defclass lodds-server ()
-  ((event-loop :initform (make-instance 'lodds.event-loop:event-loop)
+  ((event-loop :initform nil
                :documentation "Event loop which does all input/output
                on sockets and filestreams. See event-loop.lisp")
-   (tasks :initform (make-instance 'lodds.task:tasks)
+   (tasks :initform nil
           :documentation "Class which wraps around a hashtable
           containing all running tasks. Can be used to query
           information about load etc. see functions starting with
           'tasks-' inside lodds.task package.")
-   (handler :initform (make-instance 'lodds.handler:handler)
+   (handler :initform nil
             :documentation "Handles incomming connections and creates
             task-request objects.")
-   (watcher :initform (make-instance 'lodds.watcher:watcher)
+   (watcher :initform nil
             :documentation "Watcher which handles changes in shared
             directories.")
-   (event-queue :initform (make-instance 'lodds.event:event-queue)
+   (event-queue :initform nil
                 :documentation "Used to transfer events over multiple
                 threads")
-   (listener :initform (make-instance 'lodds.listener:listener)
+   (listener :initform nil
              :documentation "Listener class which handles broadcast
              messages")
    (clients :accessor clients
@@ -295,12 +295,7 @@ loading the classes file first.
             :documentation "Hashtable containing all clients which
             their broadcast information. This table is updated by
             LISTENER. TODO: implement something to retrieve a copy.")
-   (settings :initform (multiple-value-bind (config error)
-                           (lodds.config:load-default-config-files)
-                         (or config
-                             (progn
-                               (format t "Configuration Error: ~a" error)
-                               (lodds.config:generate-default-config))))
+   (settings :initform nil
              :initarg :settings
              :type hashtable
              :documentation "Settings hashtable which contains all

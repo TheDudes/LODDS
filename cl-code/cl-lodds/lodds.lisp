@@ -26,6 +26,27 @@ start,stop,shutdown, ...).
               c-load
               (hash-table-count c-file-table-name)))))
 
+(defmethod initialize-instance :after ((server lodds-server) &rest initargs)
+  (declare (ignorable initargs))
+  (with-slots (event-loop settings tasks handler watcher event-queue
+               listener)
+      server
+    (lodds.core:with-server server
+      (setf event-loop
+            (make-instance 'lodds.event-loop:event-loop))
+      (setf settings
+            (multiple-value-bind (config error)
+                (lodds.config:load-default-config-files)
+              (or config
+                  (progn
+                    (format t "Configuration Error: ~a~%" error)
+                    (lodds.config:generate-default-config)))))
+      (setf tasks (make-instance 'lodds.task:tasks)
+            handler (make-instance 'lodds.handler:handler)
+            watcher (make-instance 'lodds.watcher:watcher)
+            event-queue (make-instance 'lodds.event:event-queue)
+            listener (make-instance 'lodds.listener:listener)))))
+
 (defun event-callback (event)
   (format t "log: ~a~%" event))
 
