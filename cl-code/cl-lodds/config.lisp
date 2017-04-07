@@ -301,6 +301,15 @@ value (to verify the new value on change).
          :integer
          10
          10000)
+   (list :size-column-width
+         60
+         (format nil
+                 "Width in pixel of the column which displays the folder~%~
+                 and file sizes.~%~
+                 Default: 60")
+         :integer
+         0
+         5000)
    (list :show-background-color-on-size
          t
          (format nil

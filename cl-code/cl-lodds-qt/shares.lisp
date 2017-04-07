@@ -593,7 +593,7 @@ QTreeWidget in the middle, which displays all shared files
          (q+:hide)
          (q+:set-stretch-last-section nil)
          (q+:set-resize-mode +shares-name+ (q+:qheaderview.stretch))
-         (q+:resize-section +shares-size+ 60)))
+         (q+:resize-section +shares-size+ (lodds.config:get-value :size-column-width))))
 
 (define-initializer (shares setup-callbacks)
   ;; move this to list-view later

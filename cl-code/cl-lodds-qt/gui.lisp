@@ -394,6 +394,9 @@ functionality (for example system tray and status-info)
   (set-directory-busy-check-timeout (slot-value shared-dock 'widget)
                                     (lodds.config:get-value :directory-busy-check))
   (update-user-colors (slot-value user-dock 'widget))
+  (q+:resize-section (q+:header shares-widget)
+                     +shares-size+
+                     (lodds.config:get-value :size-column-width))
   (update-log-message-max (slot-value log-dock 'widget)
                           (lodds.config:get-value :log-message-max)))
 
