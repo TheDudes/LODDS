@@ -270,13 +270,6 @@ functionality (for example system tray and status-info)
     (make-instance 'shares
                    :main-window main-window))
 
-(define-subwidget (main-window log-dock)
-    (make-instance 'dock :title "Log"
-                         :widget (make-instance 'info-log)
-                         :main-window main-window
-                         :side nil
-                         :menu view-menu))
-
 (define-subwidget (main-window user-dock)
     (make-instance 'dock :title "User List"
                          :widget (make-instance 'user-list)
@@ -291,6 +284,14 @@ functionality (for example system tray and status-info)
                          :main-window main-window
                          :side :bottom
                          :height 150
+                         :menu view-menu))
+
+(define-subwidget (main-window log-dock)
+    (make-instance 'dock :title "Log"
+                         :widget (make-instance 'info-log)
+                         :main-window main-window
+                         :side (when (lodds.config:get-value :show-log-widget)
+                                 info-dock)
                          :menu view-menu))
 
 (define-subwidget (main-window shared-dock)

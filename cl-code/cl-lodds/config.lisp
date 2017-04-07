@@ -221,6 +221,13 @@ value (to verify the new value on change).
                  is clicked.~%~
                  Default: false")
          :boolean)
+   (list :show-log-widget
+         nil
+         (format nil
+                 "If true the log widget will be tabbed on the info~%~
+                 Widget at the bottom of the main-window on startup~%~
+                 Default: false")
+         :boolean)
    (list :download-folder
          (uiop:ensure-directory-pathname
           (merge-pathnames (pathname "download")
