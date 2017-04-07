@@ -421,7 +421,7 @@ value (to verify the new value on change).
                     (format nil "~a is higher then allowed max (~a)"
                             value
                             (get-integer-max key config))))))
-    (:selection (let ((valid (get-selection-options key)))
+    (:selection (let ((valid (get-selection-options key config)))
                   (unless (find value valid :test #'equal)
                     (return-from validate-new-entry
                       (format nil "Invalid selection (~a), valid are only: ~a"
