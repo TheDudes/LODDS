@@ -288,7 +288,7 @@
                            These files will be loaded from top to bottom. The~%~
                            ones loaded later override settings from the~%~
                            earlier ones."
-                           lodds.config:*load-path*)))
+                           (lodds.config:load-path))))
 
 (define-subwidget (settings-widget load-file)
     (q+:make-qpushbutton "Load from File" settings-widget))

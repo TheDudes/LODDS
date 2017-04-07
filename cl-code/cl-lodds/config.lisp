@@ -13,7 +13,7 @@ value (to verify the new value on change).
 
 (in-package #:lodds.config)
 
-(defparameter *load-path*
+(defun load-path ()
   #-os-windows
   (list (pathname "/etc/lodds.config")
         (merge-pathnames
@@ -542,7 +542,7 @@ value (to verify the new value on change).
   "returns two values, the config and nil on success, or nil and a
   error message on failure"
   (let ((config (generate-default-config)))
-    (loop :for element :in *load-path*
+    (loop :for element :in (load-path)
           :do (when (lodds.core:file-exists element)
                 (multiple-value-bind (result error-msg)
                     (load-from-file element config)
