@@ -439,8 +439,8 @@ value (to verify the new value on change).
                     value))
     config))
 
-(defun save-to-file (filename &optional (config (generate-default-config)))
-  (with-open-file (stream (lodds.core:escape-wildcards filename)
+(defun save-to-file (pathname &optional (config (generate-default-config)))
+  (with-open-file (stream pathname
                           :direction :output
                           :if-exists :supersede
                           :if-does-not-exist :create)
@@ -496,10 +496,10 @@ value (to verify the new value on change).
                                   new-value))
         nil))))
 
-(defun load-from-file (filename &optional (config (generate-default-config)))
+(defun load-from-file (pathname &optional (config (generate-default-config)))
   "returns the config and nil if config file was parsed without errors
   and nil plus a error string describing the error on failure"
-  (with-open-file (stream (lodds.core:escape-wildcards filename)
+  (with-open-file (stream pathname
                           :direction :input)
     (let ((line-number 0))
       (loop :for line = (read-line stream nil nil)
@@ -515,7 +515,7 @@ value (to verify the new value on change).
                   (if (not (gethash key config))
                       (format t "Config file warning (~a:~a): ~
                                  Unrecognized key: ~a~%"
-                              filename
+                              pathname
                               line-number
                               (string-downcase (string key)))
                       (multiple-value-bind (converted-value error)
@@ -526,14 +526,14 @@ value (to verify the new value on change).
                           (return-from load-from-file
                             (values nil
                                     (format nil "Config file error (~a:~a): ~a"
-                                            filename
+                                            pathname
                                             line-number
                                             error))))
                         (let ((err (update-entry key converted-value nil config)))
                           (when err
                             (return-from load-from-file
                               (values nil (format nil "Config file error (~a:~a): ~a"
-                                                  filename
+                                                  pathname
                                                   line-number
                                                   err))))))))))
             :finally (return (values config nil))))))

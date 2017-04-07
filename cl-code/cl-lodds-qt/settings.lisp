@@ -336,7 +336,8 @@
   (let ((file-choosen (q+:qfiledialog-get-save-file-name)))
     (when (> (length file-choosen)
              0)
-      (lodds.config:save-to-file file-choosen
+      (lodds.config:save-to-file (pathname
+                                  (cl-fs-watcher:escape-wildcards file-choosen))
                                  config))))
 
 (defmethod generate-new-settings ((settings-widget settings-widget))
