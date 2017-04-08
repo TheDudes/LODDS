@@ -333,12 +333,17 @@
 
 (define-slot (settings-widget save-pressed) ()
   (declare (connected save (pressed)))
-  (let ((file-choosen (q+:qfiledialog-get-save-file-name)))
-    (when (> (length file-choosen)
-             0)
-      (lodds.config:save-to-file (pathname
-                                  (cl-fs-watcher:escape-wildcards file-choosen))
-                                 config))))
+  (let ((update-inplace-backup update-inplace-p))
+    (setf update-inplace-p nil)
+    (let ((setting (update-setting settings-widget)))
+      (setf update-inplace-p update-inplace-backup)
+      (when setting
+        (let ((file-choosen (q+:qfiledialog-get-save-file-name)))
+          (when (> (length file-choosen)
+                   0)
+            (lodds.config:save-to-file (pathname
+                                        (cl-fs-watcher:escape-wildcards file-choosen))
+                                       setting)))))))
 
 (defmethod generate-new-settings ((settings-widget settings-widget))
   (with-slots-bound (settings-widget settings-widget)
@@ -370,21 +375,24 @@
 
 (defmethod update-setting ((settings-widget settings-widget))
   (with-slots (settings config update-inplace-p) settings-widget
-    (loop :for setting :in settings
-          :do
-          (let* ((key (slot-value setting 'key))
-                 (err (lodds.config:update-entry key
-                                                 (get-value setting)
-                                                 update-inplace-p
-                                                 config)))
-            (when err
-              (make-instance 'dialog
-                             :title "ERROR - Wrong setting"
-                             :text (format nil "Error on setting key: ~a~%~a"
-                                           key
-                                           err))
-              (return nil)))
-          :finally (return config))))
+    (let ((new-config (if update-inplace-p
+                          config
+                          (lodds.config:generate-default-config))))
+      (loop :for setting :in settings
+            :do
+            (let* ((key (slot-value setting 'key))
+                   (err (lodds.config:update-entry key
+                                                   (get-value setting)
+                                                   update-inplace-p
+                                                   new-config)))
+              (when err
+                (make-instance 'dialog
+                               :title "ERROR - Wrong setting"
+                               :text (format nil "Error on setting key: ~a~%~a"
+                                             key
+                                             err))
+                (return nil)))
+            :finally (return new-config)))))
 
 (defmethod validate-config ((settings-widget settings-widget))
   (with-slots (config update-inplace-p) settings-widget
