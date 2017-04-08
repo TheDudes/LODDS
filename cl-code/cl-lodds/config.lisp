@@ -14,18 +14,12 @@ value (to verify the new value on change).
 (in-package #:lodds.config)
 
 (defun load-path ()
-  #-os-windows
-  (list (pathname "/etc/lodds.config")
-        (merge-pathnames
-         (pathname ".lodds.conf")
-         (user-homedir-pathname))
-        (merge-pathnames
-         (pathname "lodds.config")
-         (uiop:xdg-config-home)))
-  #+os-windows
-  (list (merge-pathnames
-         (pathname ".lodds.conf")
-         (user-homedir-pathname))))
+  (list #+os-unix (pathname "/etc/lodds.config")
+        #+linux (merge-pathnames (pathname "lodds.config")
+                                 (uiop:xdg-config-home))
+        (merge-pathnames (pathname ".lodds.config")
+                         (user-homedir-pathname))
+        (pathname "lodds.config")))
 
 (defvar *color-scanner*
   (cl-ppcre:create-scanner
