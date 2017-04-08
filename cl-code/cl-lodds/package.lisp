@@ -5,6 +5,7 @@
   (:export #:with-server
            #:escape-wildcards
            #:generate-checksum
+           #:get-file-size
            #:format-checksum
            #:format-pathname
            #:input-rdy-p

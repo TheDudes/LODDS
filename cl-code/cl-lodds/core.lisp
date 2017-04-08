@@ -21,13 +21,23 @@ functions.
   (cl-fs-watcher:escape-wildcards pathname))
 
 (defun generate-checksum (pathname)
-  "generates sha1 sum out of given pathname, will return a string"
+  "generates sha1 sum out of given pathname, will return a string or
+nil on error"
   (handler-case
       (ironclad:byte-array-to-hex-string
        (ironclad:digest-file :sha1 pathname))
     (error (e)
       (declare (ignore e))
-      "0000000000000000000000000000000000000000")))
+      nil)))
+
+(defun get-file-size (pathname)
+  (with-open-file (stream pathname
+                          :direction :input
+                          :if-does-not-exist nil
+                          :element-type '(unsigned-byte 8))
+    (if stream
+        (file-length stream)
+        0)))
 
 (defun format-checksum (checksum)
   (when checksum

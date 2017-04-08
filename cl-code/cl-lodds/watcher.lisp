@@ -29,14 +29,9 @@ tracked about the shared files.
 
 (defun get-file-stats (pathname)
   (values
-   (lodds.core:generate-checksum pathname)
-   (with-open-file (stream pathname
-                           :direction :input
-                           :if-does-not-exist nil
-                           :element-type '(unsigned-byte 8))
-     (if stream
-         (file-length stream)
-         0))))
+   (or (lodds.core:generate-checksum pathname)
+       "0000000000000000000000000000000000000000")
+   (lodds.core:get-file-size pathname)))
 
 (defun stop ()
   (let ((watcher (lodds:get-watcher)))
