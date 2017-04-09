@@ -80,7 +80,7 @@
                :do (incf dels))
          (format nil "~a ~a ~a adds: ~a dels: ~a"
                  name type ts adds dels))))
-    (:client-updated
+    (:user-updated
      (destructuring-bind (name load last-change)
          event-msg
        (format nil "~a ~a ~a"

@@ -604,7 +604,7 @@ QTreeWidget in the middle, which displays all shared files
                                        (concatenate 'string
                                                     user
                                                     "/")))
-                            :client-removed)
+                            :user-removed)
   (lodds.event:add-callback :qt-shares
                             (lambda (name type timestamp changes)
                               (declare (ignore timestamp))
@@ -625,9 +625,9 @@ QTreeWidget in the middle, which displays all shared files
                 (maphash (lambda (filename file-info)
                            (destructuring-bind (checksum size) file-info
                              (push (list :add checksum size filename) changes)))
-                         (lodds:c-file-table-name user-info))
+                         (lodds:user-file-table-name user-info))
                 (add-change shares changes user)))))
 
 (define-finalizer (shares cleanup-callbacks)
-  (lodds.event:remove-callback :qt-shares :client-removed)
+  (lodds.event:remove-callback :qt-shares :user-removed)
   (lodds.event:remove-callback :qt-shares :list-update))

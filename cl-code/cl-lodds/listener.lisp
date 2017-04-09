@@ -2,7 +2,7 @@
 
 This File contains the Listener, which is the counterpart to the
 Advertiser. His job is to listen for broadcast messages and update the
-client infos on the lodds-server object once he gets new information.
+user infos on the lodds-server object once he gets new information.
 
 |#
 
@@ -19,28 +19,28 @@ client infos on the lodds-server object once he gets new information.
     (lodds.event:push-event :listener result)
     (let ((current-time (lodds.core:get-timestamp)))
       (destructuring-bind (ip port timestamp-l-c user-load user) result
-        (let ((client-info (lodds:get-user-info user)))
-          (unless client-info
-            ;; add client
-            (setf client-info
-                  (make-instance 'lodds:client-info
-                                 :c-name user
-                                 :c-last-message current-time
-                                 :c-ip (usocket:dotted-quad-to-vector-quad ip)
-                                 :c-port port
-                                 :c-last-change 0
-                                 :c-load user-load)
-                  (gethash user (lodds:clients lodds:*server*))
-                  client-info)
-            (lodds.event:push-event :client-added
+        (let ((user-info (lodds:get-user-info user)))
+          (unless user-info
+            ;; add user
+            (setf user-info
+                  (make-instance 'lodds:user-info
+                                 :name user
+                                 :last-message current-time
+                                 :ip (usocket:dotted-quad-to-vector-quad ip)
+                                 :port port
+                                 :last-change 0
+                                 :load user-load)
+                  (gethash user (lodds:users lodds:*server*))
+                  user-info)
+            (lodds.event:push-event :user-added
                                     user
                                     user-load
                                     timestamp-l-c))
-          (let ((old-load (lodds:c-load client-info)))
-            (setf (lodds:c-last-message client-info) current-time
-                  (lodds:c-load client-info) user-load)
+          (let ((old-load (lodds:user-load user-info)))
+            (setf (lodds:user-last-message user-info) current-time
+                  (lodds:user-load user-info) user-load)
             (let ((user-has-new-changes-p
-                    (<= (lodds:c-last-change client-info)
+                    (<= (lodds:user-last-change user-info)
                         timestamp-l-c)))
               (when user-has-new-changes-p
                 (lodds.task:task-run (make-instance 'lodds.task:task-get-info
@@ -48,7 +48,7 @@ client infos on the lodds-server object once he gets new information.
                                                     :user user)))
               (when (or user-has-new-changes-p
                         (not (eql old-load user-load)))
-                (lodds.event:push-event :client-updated
+                (lodds.event:push-event :user-updated
                                         user
                                         user-load
                                         timestamp-l-c)))))))))
@@ -90,13 +90,12 @@ client infos on the lodds-server object once he gets new information.
       (when socket
         (usocket:socket-close socket)
         (setf socket nil))
-      (let ((clients (lodds:clients lodds:*server*)))
-        (maphash (lambda (key client)
-                   (declare (ignore client))
-                   (remhash key clients)
-                   (lodds.event:push-event :client-removed
-                                           key))
-                 clients)))))
+      (let ((users (lodds:users lodds:*server*)))
+        (maphash (lambda (key user)
+                   (declare (ignore user))
+                   (remhash key users)
+                   (lodds.event:push-event :user-removed key))
+                 users)))))
 
 (defun start ()
   (let ((listener (lodds:get-listener)))

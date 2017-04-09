@@ -14,17 +14,17 @@ start,stop,shutdown, ...).
 
 (defparameter *server* nil)
 
-(defmethod print-object ((object client-info) stream)
+(defmethod print-object ((object user-info) stream)
   (print-unreadable-object (object stream :type t :identity t)
-    (with-slots (c-name
-                 c-last-message
-                 c-load
-                 c-file-table-name) object
+    (with-slots (name
+                 last-message
+                 load
+                 file-table-name) object
       (format stream "~a last-message: ~a load: ~a shares: ~a"
-              c-name
-              c-last-message
-              c-load
-              (hash-table-count c-file-table-name)))))
+              name
+              last-message
+              load
+              (hash-table-count file-table-name)))))
 
 (defmethod initialize-instance :after ((server lodds-server) &rest initargs)
   (declare (ignorable initargs))
@@ -84,7 +84,7 @@ start,stop,shutdown, ...).
       \"josh@123.321.2.3:1234\")
 
   Use GET-USER-INFO to get information about a user."
-  (loop :for key :being :the :hash-key :of (clients *server*)
+  (loop :for key :being :the :hash-key :of (users *server*)
         :collect key))
 
 (defun get-user-info (user)
@@ -93,10 +93,10 @@ start,stop,shutdown, ...).
   lodds:*server* needs to be bound.
 
   CL-USER> (get-user-info \"someUser@123.123.123.1:1234\")
-  => #<LODDS:CLIENT-INFO>
+  => #<LODDS:USER-INFO>
 
   Returns nil if user is not found."
-  (gethash user (clients *server*)))
+  (gethash user (users *server*)))
 
 (defun get-user-by-ip (ip)
   "Returns a list with user names (in name@ip:port form) which match
@@ -106,9 +106,9 @@ start,stop,shutdown, ...).
   (let ((ip (if (stringp ip)
                 (usocket:dotted-quad-to-vector-quad ip)
                 ip)))
-    (loop :for user-info :being :the :hash-value :of (clients lodds:*server*)
-          :if (equalp (c-ip user-info) ip)
-          :collect (c-name user-info))))
+    (loop :for user-info :being :the :hash-value :of (users lodds:*server*)
+          :if (equalp (user-ip user-info) ip)
+          :collect (user-name user-info))))
 
 (defun get-file-info (checksum &optional user)
   "Returns information about the given checksum.
@@ -133,10 +133,10 @@ start,stop,shutdown, ...).
       (let ((user-info (get-user-info user)))
         (unless user-info
           (return-from get-file-info nil))
-        (let ((locations (gethash checksum (c-file-table-hash user-info))))
+        (let ((locations (gethash checksum (user-file-table-hash user-info))))
           (unless locations
             (return-from get-file-info nil))
-          (destructuring-bind (checksum size) (gethash (car locations) (c-file-table-name user-info))
+          (destructuring-bind (checksum size) (gethash (car locations) (user-file-table-name user-info))
             (declare (ignore checksum))
             (list size
                   locations))))
@@ -145,7 +145,7 @@ start,stop,shutdown, ...).
        (loop :for user :in (get-user-list)
              :collect (let ((info (get-file-info checksum user)))
                         (when info
-                          (apply #'list user (c-load (get-user-info user)) info)))))))
+                          (apply #'list user (user-load (get-user-info user)) info)))))))
 
 (defun get-checksum-from-path (file-path user)
   "Gets the checksum of the given FILE-PATH from the given USER,
@@ -156,7 +156,7 @@ start,stop,shutdown, ...).
   => \"10fha02fh2093f...\")"
   (let ((user-info (get-user-info user)))
     (when user-info
-      (car (gethash file-path (c-file-table-name user-info))))))
+      (car (gethash file-path (user-file-table-name user-info))))))
 
 (defun get-folder-info (folder user)
   "Returns a list of Files with their Checksums and size which the
@@ -171,8 +171,8 @@ start,stop,shutdown, ...).
       (\"another-folder/b.txt\" \"gh0q09mb...\") 3183)"
   (let ((user-info (get-user-info user)))
     (when user-info
-      (bt:with-lock-held ((c-lock user-info))
-        (loop :for path :being :the :hash-key :of (c-file-table-name user-info)
+      (bt:with-lock-held ((user-lock user-info))
+        (loop :for path :being :the :hash-key :of (user-file-table-name user-info)
               :using (hash-value checksum+size)
               :if (cl-strings:starts-with path folder)
               :collect (cons path checksum+size))))))
@@ -209,30 +209,30 @@ start,stop,shutdown, ...).
 (defun update-user (user update)
   (let ((user-info (lodds:get-user-info user)))
     (when user-info
-      (with-slots (c-name c-last-change c-file-table-hash c-file-table-name)
+      (with-slots (name last-change file-table-hash file-table-name)
           user-info
         (destructuring-bind (type timestamp changes) update
           (when (eql type :all)
-            (setf c-file-table-hash (make-hash-table :test 'equal)
-                  c-file-table-name (make-hash-table :test 'equal)))
-          (loop :for (typ cs size name) :in changes
+            (setf file-table-hash (make-hash-table :test 'equal)
+                  file-table-name (make-hash-table :test 'equal)))
+          (loop :for (typ cs size filename) :in changes
                 :do (ecase typ
-                      (:add (let ((val (gethash cs c-file-table-hash)))
-                              (unless (find name val :test #'string=)
-                                (setf (gethash cs c-file-table-hash)
-                                      (cons name val)))
-                              (setf (gethash name c-file-table-name)
+                      (:add (let ((val (gethash cs file-table-hash)))
+                              (unless (find filename val :test #'string=)
+                                (setf (gethash cs file-table-hash)
+                                      (cons filename val)))
+                              (setf (gethash filename file-table-name)
                                     (list cs size))))
-                      (:del (let ((new-val (remove name (gethash cs c-file-table-hash)
+                      (:del (let ((new-val (remove filename (gethash cs file-table-hash)
                                                    :test #'string=)))
                               (if new-val
-                                  (setf (gethash cs c-file-table-hash)
+                                  (setf (gethash cs file-table-hash)
                                         new-val)
-                                  (remhash cs c-file-table-hash))
-                              (remhash name c-file-table-name)))))
-          (setf c-last-change timestamp)
+                                  (remhash cs file-table-hash))
+                              (remhash filename file-table-name)))))
+          (setf last-change timestamp)
           (lodds.event:push-event :list-update
-                                  c-name
+                                  name
                                   type
                                   timestamp
                                   changes))))))
@@ -320,17 +320,17 @@ describes the full unix folder path of the wanted folder."
                   :user user
                   :file-pathname file-pathname)))
 
-(defun remove-old-clients (&optional (current-time (lodds.core:get-timestamp)))
-  "removes all clients older than client-timeout"
-  (let ((clients (lodds:clients lodds:*server*))
-        (timeout (lodds.config:get-value :client-timeout)))
-    (maphash (lambda (key client)
-               (when (> (- current-time (lodds:c-last-message client))
+(defun remove-old-users (&optional (current-time (lodds.core:get-timestamp)))
+  "removes all users older than user-timeout"
+  (let ((users (lodds:users lodds:*server*))
+        (timeout (lodds.config:get-value :user-timeout)))
+    (maphash (lambda (key user)
+               (when (> (- current-time (lodds:user-last-message user))
                         timeout)
-                 (remhash key clients)
-                 (lodds.event:push-event :client-removed
+                 (remhash key users)
+                 (lodds.event:push-event :user-removed
                                          key)))
-             clients)))
+             users)))
 
 (defun get-status (&optional (format nil))
   "Describes Lodds current status.
@@ -345,9 +345,9 @@ Users: Amount of User on the Network"
         (total-shared 0))
     (dolist (user (get-user-list))
       (let ((info (get-user-info user)))
-        (incf total-load (lodds:c-load info))
+        (incf total-load (user-load info))
         (incf total-shared (hash-table-count
-                            (c-file-table-name info)))))
+                            (user-file-table-name info)))))
     (let ((tasks (lodds.task:tasks-get-task-count tasks))
           (load (lodds.task:tasks-get-load tasks))
           (users (length (lodds:get-user-list)))

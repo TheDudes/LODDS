@@ -563,7 +563,7 @@ be used to retrieve the load all currently running tasks produce.
     (lodds.core:split-user-identifier (name ip port t) user
       (setf socket (connect ip port)))
     (let* ((user-info (lodds:get-user-info user))
-           (lock (lodds:c-lock user-info)))
+           (lock (lodds:user-lock user-info)))
       (if (bt:acquire-lock lock nil)
           ;; only go on if we locked, if not, just drop the update, we
           ;; will update on the next advertise. unwind-protect to be sure
@@ -571,12 +571,11 @@ be used to retrieve the load all currently running tasks produce.
           (unwind-protect
                (progn
                  (lodds.low-level-api:get-info (usocket:socket-stream socket)
-                                               (lodds:c-last-change user-info))
+                                               (lodds:user-last-change user-info))
                  (multiple-value-bind (err update)
                      (lodds.low-level-api:handle-info socket)
                    (if (eql 0 err)
-                       (lodds:update-user user
-                                          update)
+                       (lodds:update-user user update)
                        (error "low level api returned: ~a" err))))
             (bt:release-lock lock))
           (lodds.event:push-event :info :dropped task)))))

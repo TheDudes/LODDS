@@ -156,30 +156,30 @@
   (:export ;; global variables and macros
            #:*server*
            #:*event-queue*
-           ;; client-info reader/accessor
-           #:client-info
-           #:c-name
-           #:c-last-message
-           #:c-ip
-           #:c-port
-           #:c-last-change
-           #:c-load
-           #:c-file-table-name
-           #:c-file-table-hash
-           #:c-lock
+           ;; user-info reader/accessor
+           #:user-info
+           #:user-name
+           #:user-last-message
+           #:user-ip
+           #:user-port
+           #:user-last-change
+           #:user-load
+           #:user-file-table-name
+           #:user-file-table-hash
+           #:user-lock
            ;; lodds-server reader/accessors
            #:lodds-server
            #:name
            #:broadcast-port
            #:handler-port
-           #:client-timeout
+           #:user-timeout
            #:interface
-           #:clients
+           #:users
            #:list-of-changes-lock
            #:list-of-changes
            #:advertise-timeout
            #:get-load
-           #:remove-clients
+           #:remove-users
            #:get-timestamp-last-change
            #:get-user-list
            #:get-user-info
@@ -197,7 +197,7 @@
            #:get-file
            #:get-folder
            #:send-file
-           #:remove-old-clients
+           #:remove-old-users
            #:settings
            #:switch-config
            #:update-config

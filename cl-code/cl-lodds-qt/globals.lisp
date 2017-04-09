@@ -14,9 +14,9 @@
     :task-failed
     :task-canceled
     :info
-    :client-added
-    :client-removed
-    :client-updated
+    :user-added
+    :user-removed
+    :user-updated
     :debug
     :watcher
     :handler

@@ -16,11 +16,11 @@
 (define-signal (user-list update-user) (string string int))
 
 (defun gen-tool-tip (user)
-  (let ((client-info (lodds:get-user-info user)))
-    (when client-info
-      (let ((all-files (hash-table-count (lodds:c-file-table-name client-info)))
-            (unique-files (hash-table-count (lodds:c-file-table-hash client-info)))
-            (last-change (lodds:c-last-change client-info)))
+  (let ((user-info (lodds:get-user-info user)))
+    (when user-info
+      (let ((all-files (hash-table-count (lodds:user-file-table-name user-info)))
+            (unique-files (hash-table-count (lodds:user-file-table-hash user-info)))
+            (last-change (lodds:user-last-change user-info)))
         (lodds.core:split-user-identifier (name ip port) user
           (format nil "Ip: ~a~%Port: ~a~%Last Change: ~a~%Shared: ~a"
                   ip
@@ -199,13 +199,13 @@
                                        name
                                        (prin1-to-string load)
                                        last-change))
-                            :client-added)
+                            :user-added)
   (lodds.event:add-callback :qt-user-list
                             (lambda (user)
                               (signal! user-list
                                        (remove-user string)
                                        user))
-                            :client-removed)
+                            :user-removed)
   (lodds.event:add-callback :qt-user-list
                             (lambda (name load last-change)
                               (signal! user-list
@@ -213,7 +213,7 @@
                                        name
                                        (prin1-to-string load)
                                        last-change))
-                            :client-updated))
+                            :user-updated))
 
 (define-initializer (user-list setup-add-users)
   (loop :for user :in (lodds:get-user-list)
@@ -222,10 +222,10 @@
               (signal! user-list
                        (add-user string string int)
                        user
-                       (prin1-to-string (lodds:c-load user-info))
-                       (lodds:c-last-change user-info)))))
+                       (prin1-to-string (lodds:user-load user-info))
+                       (lodds:user-last-change user-info)))))
 
 (define-finalizer (user-list cleanup-callbacks)
-  (lodds.event:remove-callback :qt-user-list :client-added)
-  (lodds.event:remove-callback :qt-user-list :client-removed)
-  (lodds.event:remove-callback :qt-user-list :client-updated))
+  (lodds.event:remove-callback :qt-user-list :user-added)
+  (lodds.event:remove-callback :qt-user-list :user-removed)
+  (lodds.event:remove-callback :qt-user-list :user-updated))

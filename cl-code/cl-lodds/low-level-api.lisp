@@ -170,8 +170,8 @@ stream, will flush the stream with force-output when flusp-p is t"
 (defun get-info (socket-stream timestamp)
   "will format and write a 'get info' request onto socket-stream requesting
    information about shared files. timestamp describes the last requested
-   information the client currently holds. If timestamp is zero (0) it will
-   request a full list of shared files from the client."
+   information the user currently holds. If timestamp is zero (0) it will
+   request a full list of shared files from the user."
   (write-to-stream socket-stream (format-get-info timestamp))
   0)
 
@@ -185,7 +185,7 @@ stream, will flush the stream with force-output when flusp-p is t"
 (defun get-send-permission (socket-stream size timeout filename)
   "will format and write a 'get-send-permission' request onto socket-stream
    requesting send permission. size is a fixnum describing the file size of the
-   to-be-transfered file. The requested client then has 'timeout' seconds to
+   to-be-transfered file. The requested user then has 'timeout' seconds to
    respond with either a OK or a connection close. filename is a string containing
    the filename."
   (write-to-stream socket-stream

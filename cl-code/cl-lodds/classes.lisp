@@ -221,52 +221,51 @@ loading the classes file first.
 
 (in-package #:lodds)
 
-(defclass client-info ()
-  ((c-name :accessor c-name
-           :initarg :c-name
-           :initform (error "specify client name")
-           :type string
-           :documentation "client name, like d4ryus@192.168.2.102")
-   (c-last-message :accessor c-last-message
-                   :initarg :c-last-message
-                   :initform (error "specivy clients last-message timestamp")
-                   :type integer
-                   :documentation "clients last message timestamp")
-   (c-ip :accessor c-ip
-         :initarg :c-ip
-         :initform (error "specify client ip")
+(defclass user-info ()
+  ((name :accessor user-name
+         :initarg :name
+         :initform (error "specify user name")
          :type string
-         :documentation "client ip")
-   (c-port :accessor c-port
-           :initarg :c-port
-           :initform (error "specify client port")
-           :type integer
-           :documentation "client port")
-   (c-last-change :accessor c-last-change
-                  :initarg :c-last-change
-                  :initform (error "specify client last-change")
-                  :type integer
-                  :documentation "clients last change timestamp")
-   (c-load :accessor c-load
-           :initarg :c-load
-           :initform (error "specify clients load")
-           :type integer
-           :documentation "clients load")
-   (c-file-table-name :accessor c-file-table-name
-                      :type hashtable
-                      :initform (make-hash-table :test 'equal)
-                      :documentation "hashtable of clients shared
-                                    files, with their path as key.
-                                    Value is a list of file checksum
-                                    and its size.")
-   (c-file-table-hash :accessor c-file-table-hash
-                      :initform (make-hash-table :test 'equal)
-                      :type hashtable
-                      :documentation "hashmap of clients shared files, with their checksum as key.
-                                    Value is a list of files with the given checksum.")
-   (c-lock :accessor c-lock
-           :initform (bt:make-lock "c-lock")
-           :documentation "Look to access member variables.")))
+         :documentation "user name, like d4ryus@192.168.2.102")
+   (last-message :accessor user-last-message
+                 :initarg :last-message
+                 :initform (error "specify users last-message timestamp")
+                 :type integer
+                 :documentation "local timestamp which was created
+                 when the last message was received.")
+   (ip :accessor user-ip
+       :initarg :ip
+       :initform (error "specify user ip")
+       :type string)
+   (port :accessor user-port
+         :initarg :port
+         :initform (error "specify user port")
+         :type integer)
+   (last-change :accessor user-last-change
+                :initarg :last-change
+                :initform (error "specify user last-change")
+                :type integer
+                :documentation "Remote timestamp which was received on
+                last info update.")
+   (load :accessor user-load
+         :initarg :load
+         :initform (error "specify users load")
+         :type integer)
+   (file-table-name :accessor user-file-table-name
+                    :type hashtable
+                    :initform (make-hash-table :test 'equal)
+                    :documentation "hashtable of users shared files,
+                    with their unix namestring as key. Value is a list
+                    of file checksum and its size.")
+   (file-table-hash :accessor user-file-table-hash
+                    :initform (make-hash-table :test 'equal)
+                    :type hashtable
+                    :documentation "hashmap of users shared files,
+                    with their checksum as key. Value is a list of
+                    files with share the same checksum.")
+   (lock :accessor user-lock
+         :initform (bt:make-lock "user-lock")
+         :documentation "Look to access member variables.")))
 
 (defclass lodds-server ()
   ((event-loop :initform nil
@@ -289,12 +288,12 @@ loading the classes file first.
    (listener :initform nil
              :documentation "Listener class which handles broadcast
              messages")
-   (clients :accessor clients
-            :initform (make-hash-table :test #'equal)
-            :type hashtable
-            :documentation "Hashtable containing all clients which
-            their broadcast information. This table is updated by
-            LISTENER. TODO: implement something to retrieve a copy.")
+   (users :accessor users
+          :initform (make-hash-table :test #'equal)
+          :type hashtable
+          :documentation "Hashtable containing all users which
+          their broadcast information. This table is updated by
+          LISTENER which initiates a task-get-info.")
    (settings :initform nil
              :initarg :settings
              :type hashtable

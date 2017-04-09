@@ -74,9 +74,9 @@ them from any other thread
     (ev-delay-interval (lodds.config:get-value :advertise-timeout)
       (ev-send-advertise ip broadcast-ip))))
 
-(defun ev-init-client-remover ()
-  (ev-delay-interval (lodds.config:get-value :client-timeout)
-    (lodds:remove-old-clients)))
+(defun ev-init-user-remover ()
+  (ev-delay-interval (lodds.config:get-value :user-timeout)
+    (lodds:remove-old-users)))
 
 (defun ev-init-task-cleaner ()
   (ev-delay-interval (lodds.config:get-value :task-cleanup-timeout)
@@ -94,7 +94,7 @@ them from any other thread
                        :do (funcall (lparallel.queue:pop-queue queue))))))
            :single-shot nil))
     (ev-init-advertiser)
-    (ev-init-client-remover)
+    (ev-init-user-remover)
     (ev-init-task-cleaner)
     (setf stop-notifier (as:make-notifier
                          (lambda ()

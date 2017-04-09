@@ -74,7 +74,7 @@ value (to verify the new value on change).
          9002
          (format nil
                  "The port where lodds will listen for broadcast~%~
-                 messages from other clients. This port is also~%~
+                 messages from other users. This port is also~%~
                  used for advertisements of the client (as expected,~%~
                  i guess). Value between 1024 and 65535.~%~
                  Default: 9002")
@@ -137,10 +137,10 @@ value (to verify the new value on change).
          :list
          (lambda ()
            (lodds:get-user-list)))
-   (list :client-timeout
+   (list :user-timeout
          5
          (format nil
-                 "If a client does not send a advertise message~%~
+                 "If a user does not send a advertise message~%~
                  after the given timeout (seconds), he will be~%~
                  removed. Value between 1 and 3600.~%~
                  Default: 5")
@@ -172,7 +172,7 @@ value (to verify the new value on change).
          nil
          (format nil
                  "When Incognito mode is on lodds the advertiser~%~
-                 will be stopped, this means other clients can not~%~
+                 will be stopped, this means other users can not~%~
                  find you anymore and you cannot share your files~%~
                  them. You are still able to download files from them.~%~
                  Default: false")
@@ -342,9 +342,9 @@ value (to verify the new value on change).
    (generate-log-color-setting "#ff0000" :task-failed)
    (generate-log-color-setting "#ff5c14" :task-canceled)
    (generate-log-color-setting "#e6dd21" :info)
-   (generate-log-color-setting "#00a102" :client-added)
-   (generate-log-color-setting "#ff6a6a" :client-removed)
-   (generate-log-color-setting "#639cff" :client-updated)
+   (generate-log-color-setting "#00a102" :user-added)
+   (generate-log-color-setting "#ff6a6a" :user-removed)
+   (generate-log-color-setting "#639cff" :user-updated)
    (generate-log-color-setting "#888888" :debug)
    (generate-log-color-setting "#ff23db" :watcher)
    (generate-log-color-setting "#ff4e4e" :handler)
