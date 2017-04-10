@@ -30,13 +30,13 @@ value (to verify the new value on change).
   (list (intern (string-upcase (format nil "log-~a-color" key))
                 :keyword)
         color
+        :color
         (format nil
                 "Background Color of ~a~%~
                  Event on log widget when show-log-type-colors~%~
                  is true~%~
                  Default: ~a"
-                key color)
-        :color))
+                key color)))
 
 (defun generate-default-list ()
   "Used to generate the default configuration, each element contains
@@ -45,57 +45,58 @@ value (to verify the new value on change).
   (list
    (list :interface
          (car (lodds.core:get-interfaces))
+         :selection
          (format nil
                  "Interface lodds uses to get his own ip and broadcast~%~
                  address. You have to restart lodds for changes to~%~
                  take effect.~%~
                  Default: The first interface with an ip (excluding loopback)")
-         :selection
          (lambda ()
            (lodds.core:get-interfaces)))
    (list :remember-shares
          nil
+         :boolean
          (format nil
                  "If true: shared directories will be rememberd on restart~%~
                  [Not implemented yet]~%~
-                 Default: false")
-         :boolean)
+                 Default: false"))
    (list :port
          4567
+         :integer
          (format nil
                  "The port where lodds is listning on for incomming~%~
                  requests. Value between 1024 and 65535.~%~
                  Restart is needed for changes to take effect.~%~
                  Default: 4567")
-         :integer
          1024
          65535)
    (list :broadcast-port
          9002
+         :integer
          (format nil
                  "The port where lodds will listen for broadcast~%~
                  messages from other users. This port is also~%~
                  used for advertisements of the client (as expected,~%~
                  i guess). Value between 1024 and 65535.~%~
                  Default: 9002")
-         :integer
          1024
          65535)
    (list :name
          (machine-instance)
+         :string
          (format nil
                  "Displayed/broadcasted name of lodds client.~%~
-                  Default: OS username")
-         :string)
+                  Default: OS username"))
    (list :deny-requests
          nil
+         :boolean
          (format nil
                  "If set to true all incomming send requests will~%~
                  denied.~%~
-                 Default: false")
-         :boolean)
+                 Default: false"))
    (list :allow-unkown-user-send
          t
+         :boolean
          (format nil
                  "If a send request is received lodds tries to~%~
                  figure out which user sent the request (via the~%~
@@ -104,10 +105,10 @@ value (to verify the new value on change).
                  since the user is unkown. If allow-unknown-user-send~%~
                  is false, users which are unknown to lodds wont~%~
                  be able to send files.~%~
-                 Default: true")
-         :boolean)
+                 Default: true"))
    (list :trusted-users
          nil
+         :list
          (format nil
                  "Comma seperated list of users which are trused.~%~
                  This means that if users added to this list send~%~
@@ -119,11 +120,11 @@ value (to verify the new value on change).
                  To get the ip and port of a user hover over the user~%~
                  on the userlist.~%~
                  Default: empty")
-         :list
          (lambda ()
            (lodds:get-user-list)))
    (list :blocked-users
          nil
+         :list
          (format nil
                  "Comma seperated list of users which are not~%~
                  trused. if a user on this list tries to send~%~
@@ -134,30 +135,30 @@ value (to verify the new value on change).
                  To get the ip and port of a user hover over the~%~
                  user on the userlist.~%~
                  Default: empty")
-         :list
          (lambda ()
            (lodds:get-user-list)))
    (list :user-timeout
          5
+         :integer
          (format nil
                  "If a user does not send a advertise message~%~
                  after the given timeout (seconds), he will be~%~
                  removed. Value between 1 and 3600.~%~
                  Default: 5")
-         :integer
          1
          3600)
    (list :advertise-timeout
          1
+         :integer
          (format nil
                  "Timeout between advertisements. Specified~%~
                  in seconds. Value between 1 and 10.~%~
                  Default: 1")
-         :integer
          1
          10)
    (list :socket-timeout
          1
+         :integer
          (format nil
                  "Timeout which will be set on sockets, if any~%~
                  socket does not respond after the given timeout~%~
@@ -165,20 +166,20 @@ value (to verify the new value on change).
                  The timeout is specified in seconds.~%~
                  Value between 1 and 30.~%~
                  Default: 1")
-         :integer
          1
          30)
    (list :incognito-mode
          nil
+         :boolean
          (format nil
                  "When Incognito mode is on lodds the advertiser~%~
                  will be stopped, this means other users can not~%~
                  find you anymore and you cannot share your files~%~
                  them. You are still able to download files from them.~%~
-                 Default: false")
-         :boolean)
+                 Default: false"))
    (list :validate-checksum
          t
+         :boolean
          (format nil
                  "Can be unchecked to not validate the checksum of~%~
                  downloaded files. Even if set to true, the checksum~%~
@@ -189,17 +190,16 @@ value (to verify the new value on change).
                  directly downloaded from a user we dont trust~%~
                  he could just 'fake' the checksum too and the~%~
                  validation would be useless~%~
-                 Default: true")
-         :boolean)
+                 Default: true"))
    (list :task-cleanup-timeout
          1
+         :integer
          (format nil "Time in seconds the task cleaner is executed~%~
                      The task cleaner will look for tasks which are~%~
                      not responding and save them. If the task still~%~
                      exists when he gets executed again he will force~%~
                      quit the task.~%~
                      Default: 1")
-         :integer
          1
          30)
    ;; TODO: QT gui related settings, these should be splitted out to
@@ -208,41 +208,42 @@ value (to verify the new value on change).
    ;; them here for now.
    (list :minimize-to-tray
          nil
+         :boolean
          (format nil
                  "If true lodds will not quit when being closed~%~
                  and rather minimize to tray. Lodds will always~%~
                  quit when 'Quit' on the system tray or menubar~%~
                  is clicked.~%~
-                 Default: false")
-         :boolean)
+                 Default: false"))
    (list :show-log-widget
          nil
+         :boolean
          (format nil
                  "If true the log widget will be tabbed on the info~%~
                  Widget at the bottom of the main-window on startup~%~
-                 Default: false")
-         :boolean)
+                 Default: false"))
    (list :download-folder
          (uiop:ensure-directory-pathname
           (merge-pathnames (pathname "download")
                            (user-homedir-pathname)))
+         :folder
          (format nil
                  "Default download folder, where files get saved.~%~
-                 Default: 'download' folder inside home directory.")
-         :folder)
+                 Default: 'download' folder inside home directory."))
    (list :upload-folder
          (uiop:ensure-directory-pathname
           (merge-pathnames (pathname "upload")
                            (user-homedir-pathname)))
+         :folder
          (format nil
                  "Default upload folder, incomming files will~%~
                  be saved there. If a 'trused-user' is sending~%~
                  a file, its saved there too.~%~
-                 Default: upload folder inside home directory")
-         :folder)
+                 Default: upload folder inside home directory"))
    (list :resources-folder
          (uiop:ensure-directory-pathname
           (make-pathname :directory '(:relative "res")))
+         :folder
          (format nil
                  "Folder which contains resources for lodds,~%~
                  like icons, stylesheets, ...~%~
@@ -251,68 +252,68 @@ value (to verify the new value on change).
                  stylesheet (Lodds -> Reload Stylesheet) and~%~
                  reshare (unshare/share) all folders for changes~%~
                  to take effect~%~
-                 Default: res/ (res folder inside the current directory)")
-         :folder)
+                 Default: res/ (res folder inside the current directory)"))
    (list :timeout-send-file
          300
+         :integer
          (format nil
                  "Default timeout in seconds when sending a~%~
                  file. Value between 1 and 3600~%~
                  Default: 300")
-         :integer
          1
          3600)
    (list :info-update-interval
          100
+         :integer
          (format nil
                  "Timeout (in milliseconds) between updates~%~
                  on 'info' widget. Value between 50 and 100.000~%~
                  Default: 100")
-         :integer
          50
          100000)
    (list :status-update-interval
          1000
+         :integer
          (format nil
                  "Interval (in milliseconds) the statusbar and tray~%~
                  tooltip status message refresh.~%~
                  Value between 50 and 100.000~%~
                  Default: 1000")
-         :integer
          50
          100000)
    (list :directory-busy-check
          1000
+         :integer
          (format nil
                  "Timeout (in milliseconds) between checks~%~
                  if a directory is busy (This is used to~%~
                  display the spinner when a directory is~%~
                  busy). Value between 50 and 100.000~%~
                  Default: 1000")
-         :integer
          50
          100000)
    (list :log-message-max
          500
+         :integer
          (format nil
                  "Maximum of displayed log messages. If a new entry~%~
                  is logged, the oldest (top) will be removed. Value~%~
                  between 10 and 10000.~%~
                  Default: 500")
-         :integer
          10
          10000)
    (list :size-column-width
          60
+         :integer
          (format nil
                  "Width in pixel of the column which displays the folder~%~
                  and file sizes.~%~
                  Default: 60")
-         :integer
          0
          5000)
    (list :show-background-color-on-size
          t
+         :boolean
          (format nil
                  "Show a background color on sizes depending on the given~%~
                  size. For example bigger files/folders will be colored red,~%~
@@ -320,22 +321,21 @@ value (to verify the new value on change).
                  Changing this setting will not have a direct effect,~%~
                  Restarting Lodds (Lodds -> Restart) to build a new~%~
                  tree is needed.~%~
-                 Default: true")
-         :boolean)
+                 Default: true"))
    (list :show-log-type-color
          t
+         :boolean
          (format nil
                  "Set to false to not colorize some log message~%~
                  event types inside the Log Area.~%~
-                 Default: true")
-         :boolean)
+                 Default: true"))
    (list :log-default-color
          "#000000"
+         :color
          (format nil
                  "Default Background color of Events which did~%~
                  not set any other color~%~
-                 Default: #000000")
-         :color)
+                 Default: #000000"))
    (generate-log-color-setting "#ff79f0" :advertiser)
    (generate-log-color-setting "#c9ff34" :listener)
    (generate-log-color-setting "#1ed760" :task-finished)
@@ -446,7 +446,7 @@ value (to verify the new value on change).
                           :if-exists :supersede
                           :if-does-not-exist :create)
     (maphash (lambda (key value)
-               (destructuring-bind (val desc type &rest nil) value
+               (destructuring-bind (val type desc &rest nil) value
                  (format stream "# ~a~%~a=~a~%~%"
                          (cl-strings:replace-all desc
                                                  (format nil "~%")
@@ -484,10 +484,8 @@ value (to verify the new value on change).
       (when err
         (return-from update-entry err))
       (unless (if (eql type :list)
-                  (equalp old-value
-                          new-value)
-                  (equal old-value
-                         new-value))
+                  (equalp old-value new-value)
+                  (equal  old-value new-value))
         (setf (car entry) new-value)
         (setf (gethash key config) entry)
         (when push-event-p
@@ -563,11 +561,11 @@ value (to verify the new value on change).
 
 (defun get-description (key &optional (config (slot-value lodds:*server* 'lodds:settings)))
   "Returns the description of a given configuration key"
-  (second (gethash key config)))
+  (third (gethash key config)))
 
 (defun get-type (key &optional (config (slot-value lodds:*server* 'lodds:settings)))
   "returns the type of a given configuration key"
-  (third (gethash key config)))
+  (second (gethash key config)))
 
 (defun get-selection-options (key &optional (config (slot-value lodds:*server* 'lodds:settings)))
   "returns the selection options of a configuration key of type
