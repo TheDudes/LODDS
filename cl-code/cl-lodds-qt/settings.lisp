@@ -312,19 +312,18 @@
   (with-slots-bound (settings-widget settings-widget)
     (let* ((widget (q+:make-qwidget))
            (layout (q+:make-qformlayout widget)))
-      (loop :for key :in (lodds.config:get-all-keys config)
-            :do (let ((label (q+:make-qlabel
-                              (format nil "~a:"
-                                      (cl-strings:title-case
-                                       (string-downcase (string key))))))
-                      (setting (make-setting key config)))
-                  (q+:set-tool-tip label
-                                   (lodds.config:get-description key config))
-                  (q+:add-row layout
-                              label
-                              setting)
-                  (push setting settings))
-            :finally (return widget)))))
+      (dolist (key (lodds.config:get-all-keys config) widget)
+        (let ((label (q+:make-qlabel
+                      (format nil "~a:"
+                              (cl-strings:title-case
+                               (string-downcase (string key))))))
+              (setting (make-setting key config)))
+          (q+:set-tool-tip label
+                           (lodds.config:get-description key config))
+          (q+:add-row layout
+                      label
+                      setting)
+          (push setting settings))))))
 
 (define-initializer (settings-widget setup-widget)
   (q+:set-widget-resizable scrollarea t)
