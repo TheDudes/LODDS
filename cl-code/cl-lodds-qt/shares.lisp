@@ -219,12 +219,20 @@ QTreeWidget in the middle, which displays all shared files
     (when (string= "/" path)
       (lodds.core:split-user-identifier (user ip port) name
         (q+:set-text widget +shares-name+ user)))
-    (update-entry-display entry)))
+    (update-entry-display entry)
+    (when (lodds.config:get-value :show-filetype-icons)
+      (let ((icon (load-filetype-icon "_folder")))
+        (q+:set-icon widget 0 icon)
+        (finalize icon)))))
 
 (defmethod initialize-instance :after ((entry shares-entry-file) &rest initargs)
   (declare (ignorable initargs))
-  (with-slots (checksum widget) entry
-    (update-entry-display entry)))
+  (with-slots (checksum widget path) entry
+    (update-entry-display entry)
+    (when (lodds.config:get-value :show-filetype-icons)
+      (let ((icon (load-filetype-icon (get-namestring-type path))))
+        (q+:set-icon widget 0 icon)
+        (finalize icon)))))
 
 (define-signal (shares update-entries) (string))
 (define-signal (shares remove-entry) (string))

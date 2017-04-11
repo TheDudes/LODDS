@@ -91,3 +91,22 @@ supress-warning if you dont want that."
                (#\& (write-string "&amp;" stream))
                (#\Newline (write-string "<br>" stream))
                (T (write-char c stream))))))
+
+(defun get-namestring-type (namestring)
+  (let* ((dot-pos (position #\. namestring :from-end t))
+         (icon (when (and dot-pos
+                          (> (length namestring) (+ 1 dot-pos)))
+                 (subseq namestring(+ 1 dot-pos)))))
+    icon))
+
+(defun load-filetype-icon (filetype &optional (on-failure (q+:make-qicon)))
+  (let ((pathname (make-pathname
+                   :name (or filetype "_blank")
+                   :type "png"
+                   :defaults (lodds.config:get-value :filetype-icon-folder))))
+    (unless (uiop:file-exists-p pathname)
+      (setf pathname (make-pathname :name "_blank"
+                                    :defaults pathname)))
+    (if (uiop:file-exists-p pathname)
+        (q+:make-qicon (uiop:native-namestring pathname))
+        on-failure)))

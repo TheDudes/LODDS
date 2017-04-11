@@ -253,6 +253,26 @@ value (to verify the new value on change).
                  reshare (unshare/share) all folders for changes~%~
                  to take effect~%~
                  Default: res/ (res folder inside the current directory)"))
+   (list :filetype-icon-folder
+         (uiop:ensure-directory-pathname
+          (make-pathname :directory '(:relative "res" "filetype-icons")))
+         :folder
+         (format nil
+                 "Folder which contains filetype icons which are~%~
+                 displayed left of the shared files.~%~
+                 Changing this value will have no direct effect,~%~
+                 Restart lodds (Lodds -> Restart) for changes~%~
+                 to take effect.~%~
+                 Default: res/filetype-icons (res/filetype-icons/~%~
+                 folder inside the current directory)"))
+   (list :show-filetype-icons
+         t
+         :boolean
+         (format nil
+                 "Can be unchecked/set to false to not show icons~%~
+                 based on file types. Restarting lodds is needed for~%~
+                 changes to take effekt~%~
+                 Default: true."))
    (list :timeout-send-file
          300
          :integer
