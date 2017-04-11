@@ -552,8 +552,7 @@ QTreeWidget in the middle, which displays all shared files
                         (menu (qdoto (q+:make-qmenu)
                                      (q+:add-action "Download")
                                      (q+:add-action "Info"))))
-        (let ((item (gethash (q+:text widget +shares-id+) entries))
-              (option (q+:exec menu global-pos)))
+        (let ((option (q+:exec menu global-pos)))
           (cond
             ((null-qobject-p option))
             ((string= "Download" (q+:text option))
