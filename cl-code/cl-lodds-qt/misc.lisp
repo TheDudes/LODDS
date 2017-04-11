@@ -47,13 +47,12 @@ fallback-text. If set-flat is true (q+:set-flat widget t) will be
 called, when the icon is found. Will also print a warning on stdout
 and push a :info event if the icon is not found, set
 supress-warning if you dont want that."
-  (let ((icon-path (format nil
-                           "~a~a"
-                           (uiop:native-namestring
-                            (lodds.config:get-value :resources-folder))
-                           icon-name)))
-    (if (lodds.core:file-exists icon-path)
-        (with-finalizing* ((pixmap (q+:make-qpixmap icon-path))
+  (let ((pathname (make-pathname
+                   :name icon-name
+                   :defaults (lodds.config:get-value :resources-folder))))
+    (if (lodds.core:file-exists pathname)
+        (with-finalizing* ((pixmap (q+:make-qpixmap
+                                    (uiop:native-namestring pathname)))
                            (icon (q+:make-qicon pixmap)))
           (q+:set-icon widget icon)
           (when set-flat
@@ -61,7 +60,7 @@ supress-warning if you dont want that."
         (progn
           (unless supress-warning
             (let ((text (format nil "Could not find icon on ~a, falling back to text"
-                                icon-path)))
+                                pathname)))
               (lodds.event:push-event :info text)
               (format t "~a~%" text)))
           (q+:set-text widget fallback-text)))))
