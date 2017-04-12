@@ -398,6 +398,9 @@ functionality (for example system tray and status-info)
   (q+:resize-section (q+:header shares-widget)
                      +shares-size+
                      (lodds.config:get-value :size-column-width))
+  (q+:resize-section (q+:header (slot-value user-dock 'widget))
+                     +user-list-load+
+                     (lodds.config:get-value :size-column-width))
   (update-log-message-max (slot-value log-dock 'widget)
                           (lodds.config:get-value :log-message-max)))
 
