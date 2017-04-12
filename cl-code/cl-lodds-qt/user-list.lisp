@@ -127,16 +127,12 @@
               (q+:add-action menu "Unblock")
               (q+:add-action menu "Block"))
           (let ((option (q+:exec menu global-pos)))
-            (cond
-              ((null-qobject-p option))
-              ((string= "Trust" (q+:text option))
-               (lodds:trust-user user))
-              ((string= "Untrust" (q+:text option))
-               (lodds:untrust-user user))
-              ((string= "Block" (q+:text option))
-               (lodds:block-user user))
-              ((string= "Unblock" (q+:text option))
-               (lodds:unblock-user user)))))))))
+            (unless (null-qobject-p option)
+              (lodds.core:str-case (q+:text option)
+                ("Trust"   (lodds:trust-user   user))
+                ("Untrust" (lodds:untrust-user user))
+                ("Block"   (lodds:block-user   user))
+                ("Unblock" (lodds:unblock-user user))))))))))
 
 (define-initializer (user-list setup-widget)
   (qdoto user-list
