@@ -208,7 +208,9 @@ QTreeWidget in the middle, which displays all shared files
                                        (q+:qt.item-is-enabled)))
              (q+:set-font +shares-name+ font)
              (q+:set-font +shares-size+ font)
-             (q+:set-text-alignment +shares-size+ (q+:qt.align-right))
+             (q+:set-text-alignment +shares-size+
+                                    (qt:enum-or (q+:qt.align-center)
+                                                (q+:qt.align-right)))
              (q+:set-text +shares-name+ name)
              (q+:set-text +shares-size+ (lodds.core:format-size size))
              (q+:set-text +shares-id+ id)))))
