@@ -219,6 +219,13 @@ be used to retrieve the load all currently running tasks produce.
     (when task
       (task-info task))))
 
+(defmethod task-info ((task task-request-info))
+  (with-slots (socket timestamp) task
+    (format nil "[Info Request] ~a: ~a"
+            (or (lodds:get-user-by-ip (usocket:get-peer-address socket))
+                "unknown")
+            (lodds.core:format-timestamp timestamp))))
+
 (defmethod task-info ((task task-request-send-permission))
   (with-slots (file-pathname users) task
     (format nil "[Request] ~a: ~a" users file-pathname)))
@@ -229,6 +236,10 @@ be used to retrieve the load all currently running tasks produce.
             user
             (lodds.core:format-size total-load)
             file-pathname)))
+
+(defmethod task-info ((task task-get-info))
+  (with-slots (user) task
+    (format nil "[Get Info] ~a" user)))
 
 (defmethod task-info ((task task-send-file))
   (with-slots (file-pathname user time-waited timeout) task
