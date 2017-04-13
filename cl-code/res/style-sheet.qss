@@ -7,15 +7,15 @@ QTreeView#Shares::branch {
   background-color: white;
 }
 
-QTreeView::branch:has-siblings:!adjoins-item {
+QTreeView#Shares::branch:has-siblings:!adjoins-item {
     border-image: url(./res/tree-line.png) 0;
 }
 
-QTreeView::branch:has-siblings:adjoins-item {
+QTreeView#Shares::branch:has-siblings:adjoins-item {
     border-image: url(./res/tree-more.png) 0;
 }
 
-QTreeView::branch:!has-children:!has-siblings:adjoins-item {
+QTreeView#Shares::branch:!has-children:!has-siblings:adjoins-item {
     border-image: url(./res/tree-end.png) 0;
 }
 
