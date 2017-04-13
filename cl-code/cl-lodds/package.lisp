@@ -6,6 +6,7 @@
            #:escape-wildcards
            #:generate-checksum
            #:get-file-size
+           #:format-timestamp
            #:format-checksum
            #:format-pathname
            #:input-rdy-p

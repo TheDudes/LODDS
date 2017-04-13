@@ -27,7 +27,7 @@
                   port
                   (if (eql 0 last-change)
                       "-"
-                      (generate-timestamp last-change))
+                      (lodds.core:format-timestamp last-change))
                   (format nil "~:d Files (~:d unique)"
                           (or all-files 0)
                           (or unique-files 0))))))))

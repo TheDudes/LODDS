@@ -39,6 +39,23 @@ nil on error"
         (file-length stream)
         0)))
 
+(defun format-timestamp (&optional unix-timestamp)
+  "Returns current date formatted as a string. if unix-timestamp is
+  given it formats that.
+  CL-USER> (generate-timestamp)
+  => \"2017-02-28 13:02:24\"
+  CL-USER> (lodds.core:format-timestamp (lodds.core:get-timestamp))
+  => \"2017-02-28 13:02:59\""
+  (multiple-value-bind (sec min hr day mon yr dow dst-p tz)
+      (if unix-timestamp
+          (decode-universal-time
+           (+ lodds.core::*unix-epoch-difference*
+              unix-timestamp))
+          (get-decoded-time))
+    (declare (ignore dow dst-p tz))
+    (format nil "~4,'0d-~2,'0d-~2,'0d ~2,'0d:~2,'0d:~2,'0d"
+            yr mon day hr min sec) ))
+
 (defun format-checksum (checksum)
   (when checksum
     (with-output-to-string (stream)

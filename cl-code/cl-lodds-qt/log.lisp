@@ -45,7 +45,7 @@
                                             string)))
   (q+:append-html info-log-list
                   (format nil "<tt>[~a] <color ~a>~a</color> ~a</tt>"
-                          (generate-timestamp)
+                          (lodds.core:format-timestamp)
                           (if (eql 0 (length color))
                               ""
                               (format nil
