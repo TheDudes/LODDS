@@ -56,8 +56,10 @@ supress-warning if you dont want that."
                                   (format nil "~C~C"
                                           #\return #\linefeed))))
     (mapcar (lambda (link)
-              #+os-windows (q+:qurl-from-percent-encoding (subseq link 8))
-              #-os-windows (subseq link 7))
+              (q+:qurl-from-percent-encoding
+               (subseq link
+                       #+os-windows 8
+                       #-os-windows 7)))
             (remove-if-not (lambda (link)
                              (cl-strings:starts-with link "file://"))
                            links))))
