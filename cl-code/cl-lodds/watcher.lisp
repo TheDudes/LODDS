@@ -29,8 +29,10 @@ tracked about the shared files.
 
 (defun get-file-stats (pathname)
   (values
-   (or (lodds.core:generate-checksum pathname)
-       "0000000000000000000000000000000000000000")
+   (if (lodds.config:get-value :fake-checksum)
+       (lodds.core:generate-fake-checksum)
+       (or (lodds.core:generate-checksum pathname)
+           "0000000000000000000000000000000000000000"))
    (lodds.core:get-file-size pathname)))
 
 (defun stop ()

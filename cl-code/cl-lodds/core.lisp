@@ -20,6 +20,14 @@ functions.
   "escapes pathname wildcards to avoid wildcard error"
   (cl-fs-watcher:escape-wildcards pathname))
 
+(defun generate-fake-checksum (&optional (length 40))
+  (declare (optimize (debug 0) (safety 0)))
+  (make-array length
+              :element-type 'character
+              :initial-contents
+              (loop :repeat length
+                    :collect (digit-char (random 16) 16))))
+
 (defun generate-checksum (pathname)
   "generates sha1 sum out of given pathname, will return a string or
 nil on error"

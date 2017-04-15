@@ -4,6 +4,7 @@
   (:use #:cl)
   (:export #:with-server
            #:escape-wildcards
+           #:generate-fake-checksum
            #:generate-checksum
            #:get-file-size
            #:format-timestamp

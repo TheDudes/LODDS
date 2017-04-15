@@ -191,6 +191,18 @@ value (to verify the new value on change).
                  he could just 'fake' the checksum too and the~%~
                  validation would be useless~%~
                  Default: true"))
+   (list :fake-checksum
+         nil
+         :boolean
+         (format nil
+                 "Can be checked to 'fake' checksums and not calculate~%~
+                 them. This can be usefull to share huge files without~%~
+                 having to calculate the checksum, which would take~%~
+                 a long time. The Downside to this is that a file can~%~
+                 not be matched with another file. The downloading user~%~
+                 has to disable :validate-checksum, since the checksum he~%~
+                 calculates wont match.~%~
+                 Default: false"))
    (list :task-cleanup-timeout
          1
          :integer
