@@ -20,7 +20,6 @@
            #:split-user-identifier
            #:split-path
            #:ensure-trailing-slash
-           #:remove-newline
            #:format-seconds
            #:get-interfaces
            #:get-interface-info

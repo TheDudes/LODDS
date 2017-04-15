@@ -254,22 +254,6 @@ nil on error"
       string
       (concatenate 'string string "/")))
 
-(defun remove-newline (string)
-  "removes \r\n or \n from given string and returns the result string,
-  if not \r\n or \n is found the string is returned untouched"
-  (cond
-    ((cl-strings:ends-with string
-                           (format nil "~C~C" #\return #\linefeed))
-     ;; drop \r\n
-     (subseq string 0 (- (length string) 2)))
-    ((cl-strings:ends-with string
-                           (format nil "~C" #\linefeed))
-     ;; drop  \n
-     (subseq string 0 (- (length string) 1)))
-    (t
-     ;; just return it
-     string)))
-
 (defun format-seconds (seconds)
   (format nil "~2,'0d:~2,'0d"
           (floor seconds 60)
