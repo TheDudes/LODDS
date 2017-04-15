@@ -250,7 +250,7 @@ nil on error"
 
 (defun ensure-trailing-slash (string)
   "adds a / (slash) if missing"
-  (if (cl-strings:ends-with string "/")
+  (if (equal #\/ (char string (- (length string) 1)))
       string
       (concatenate 'string string "/")))
 
