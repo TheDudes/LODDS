@@ -234,26 +234,26 @@ QTreeWidget in the middle, which displays all shared files
              (q+:set-text +shares-size+ (lodds.core:format-size size))
              (q+:set-text +shares-id+ id)))))
 
+(defmethod set-mime-icon ((entry shares-entry) mimetype)
+  (when (lodds.config:get-value :show-filetype-icons)
+    (let ((icon (load-filetype-icon mimetype)))
+      (q+:set-icon (shares-entry-widget entry) 0 icon)
+      (finalize icon))))
+
 (defmethod initialize-instance :after ((entry shares-entry-dir) &rest initargs)
   (declare (ignorable initargs))
-  (with-slots (items widget path name) entry
+  (with-slots (widget path name) entry
     (when (string= "/" path)
       (lodds.core:split-user-identifier (user ip port) name
         (q+:set-text widget +shares-name+ user)))
     (update-entry-display entry)
-    (when (lodds.config:get-value :show-filetype-icons)
-      (let ((icon (load-filetype-icon "_folder")))
-        (q+:set-icon widget 0 icon)
-        (finalize icon)))))
+    (set-mime-icon entry "_folder")))
 
 (defmethod initialize-instance :after ((entry shares-entry-file) &rest initargs)
   (declare (ignorable initargs))
-  (with-slots (checksum widget path) entry
+  (with-slots (path) entry
     (update-entry-display entry)
-    (when (lodds.config:get-value :show-filetype-icons)
-      (let ((icon (load-filetype-icon (get-namestring-type path))))
-        (q+:set-icon widget 0 icon)
-        (finalize icon)))))
+    (set-mime-icon entry (get-namestring-type path))))
 
 (define-signal (shares update-entries) (string))
 (define-signal (shares remove-entry) (string))
