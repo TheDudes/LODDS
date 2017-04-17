@@ -109,8 +109,10 @@ tracked about the shared files.
   (case type
     ;; on windows we wont get file-removed events for each file inside
     ;; a directory, which means we have to remove all files from a
-    ;; directory by hand
-    #+os-windows
+    ;; directory by hand. On linux we get a event for each file when
+    ;; the directory was removed, but not when it was renamed. This
+    ;; will add a little overhead on non-windows systems, but should
+    ;; be ok.
     (:directory-removed
      (loop :for file-pathname :being :the :hash-keys :of (file-table-name dir-watcher)
            :when (uiop:subpathp file-pathname pathname)
