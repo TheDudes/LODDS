@@ -114,7 +114,8 @@ functionality (for example system tray and status-info)
                       (append (asdf:system-depends-on
                                (asdf:find-system :cl-lodds-qt))
                               (asdf:system-depends-on
-                               (asdf:find-system :cl-lodds))))
+                               (asdf:find-system :cl-lodds)))
+                      :test #'equal)
                      #'string<)
                 :collect
                 (let ((system (asdf:find-system name)))
