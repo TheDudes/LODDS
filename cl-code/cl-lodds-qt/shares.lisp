@@ -11,7 +11,7 @@ QTreeWidget in the middle, which displays all shared files
 ;; shares columns
 (defvar +shares-name+ 0)
 (defvar +shares-size+ 1)
-(defvar +shares-id+ 2)
+(defvar +shares-path+ 2)
 
 (define-widget shares (QTreeWidget)
   ((main-window :initarg :main-window
@@ -39,10 +39,10 @@ QTreeWidget in the middle, which displays all shared files
    (entries :accessor entries
             :initform (make-hash-table :test 'equal)
             :type hashtable
-            :documentation "hash-table mapping generated widget id's
-            to Information. Each element in shares has a hidden id
+            :documentation "hash-table mapping generated widget path's
+            to Information. Each element in shares has a hidden path
             column. If a item gets klicked you can get Information
-            like the file owner or the filesize by looking up the id
+            like the file owner or the filesize by looking up the path
             inside entries. Entries contains SHARES-ENTRY-DIR
             SHARES-ENTRY-FILE")))
 
@@ -94,13 +94,6 @@ QTreeWidget in the middle, which displays all shared files
                             :in (lodds:get-file-info checksum)
                             :collect user)))))))
 
-(let ((current-id 0)
-      (id-lock (bt:make-lock "id-lock")))
-  (defun gen-id ()
-    "Will return a string with a number which is increased by 1
-    everytime gen-id is called"
-    (bt:with-lock-held (id-lock)
-      (prin1-to-string (incf current-id)))))
 
 (defclass shares-entry ()
   ((shares :reader shares-entry-shares
@@ -109,16 +102,10 @@ QTreeWidget in the middle, which displays all shared files
            :initarg :shares
            :documentation "Contains shares widget this shares-entry
            belongs to.")
-   (id :reader shares-entry-id
-       :initform (gen-id)
-       :type string
-       :documentation "Id which identifies a shares-entry
-       object, Use id to retrieve shares-entry objects from
-       entries hashtable on shares widget.")
    (widget :reader shares-entry-widget
            :initform nil
            :documentation "A qt widget corresponding to
-           the given id.")
+           the given path.")
    (name :accessor shares-entry-name
          :initform (error "Please specify entry name")
          :initarg :name
@@ -201,7 +188,8 @@ QTreeWidget in the middle, which displays all shared files
 
 (defmethod initialize-instance :after ((entry shares-entry) &rest initargs)
   (declare (ignorable initargs))
-  (with-slots (name size widget id shares user parent) entry
+  (with-slots (name size widget path shares user parent) entry
+    (setf (gethash (concatenate 'string user path) (entries shares)) entry)
     (setf widget
           (if parent
               (q+:make-qtreewidgetitem (shares-entry-widget parent))
@@ -211,8 +199,6 @@ QTreeWidget in the middle, which displays all shared files
       (setf (gethash name (shares-entry-childs parent))
             entry)
       (update-entry-display parent))
-
-    (setf (gethash id (entries shares)) entry)
 
     (let ((font (q+:make-qfont "Consolas, Inconsolata, Monospace" 10)))
       (setf (q+:style-hint font) (q+:qfont.type-writer))
@@ -230,7 +216,7 @@ QTreeWidget in the middle, which displays all shared files
                                                 (q+:qt.align-right)))
              (q+:set-text +shares-name+ name)
              (q+:set-text +shares-size+ (lodds.core:format-size size))
-             (q+:set-text +shares-id+ id)))))
+             (q+:set-text +shares-path+ (concatenate 'string user path))))))
 
 (defmethod set-mime-icon ((entry shares-entry) mimetype)
   (when (lodds.config:get-value :show-filetype-icons)
@@ -336,17 +322,17 @@ concatenated on recursive calls."
     total))
 
 (defmethod cleanup-entry ((entry shares-entry))
-  (with-slots (parent id shares name) entry
+  (with-slots (parent path shares name) entry
     (when parent
       (with-slots (childs widget) parent
         (remhash name childs)
         (do-childs (element i widget)
           (when (string= name
                          (shares-entry-name
-                          (gethash (q+:text element +shares-id+)
+                          (gethash (q+:text element +shares-path+)
                                    (entries shares))))
             (finalize (q+:take-child widget i))
-            (remhash id (entries shares))
+            (remhash path (entries shares))
             (update-entry-display parent)
             (return-from cleanup-entry)))))))
 
@@ -357,37 +343,23 @@ concatenated on recursive calls."
            (shares-entry-childs entry))
   (call-next-method))
 
-(defmethod remove-node ((shares shares) path parent)
-  "Remove node described by given path (list) starting by parent"
-  (let ((entry (gethash (car path) (shares-entry-childs parent))))
+(defmethod remove-node ((shares shares) path)
+  "Remove node described by given path (unix namestring) starting by
+parent"
+  (let ((entry (gethash path (entries shares))))
     (when entry
-      ;; check if we have a path left and need to call
-      ;; remove-node recursivly, if not just remove the
-      ;; child and return the size
-      (if (not (cdr path))
-          (let ((size (shares-entry-size entry)))
-            (cleanup-entry entry)
-            (return-from remove-node size))
-          (let ((size (remove-node shares (cdr path) entry)))
-            ;; In case there is no size returned, just return
-            ;; nil (to signal failure)
-            (unless size
-              (return-from remove-node nil))
-            ;; But if we got a size check if remove-node on the
-            ;; current element removed the last remaining
-            ;; child. Because if so, we also have to remove the
-            ;; current node.
-            (if (eql 0 (hash-table-count (shares-entry-childs entry)))
-                (cleanup-entry entry)
-                (progn
-                  ;; If there are childs left, just update the
-                  ;; size (decrement it by the size of the
-                  ;; removed child)
-                  (decf (shares-entry-size entry) size)
-                  (update-entry-display entry)))
-            ;; after doing all work on the current node,
-            ;; return size and go up the recursion stack
-            (return-from remove-node size))))))
+      (let ((size (shares-entry-size entry))
+            (parent (shares-entry-parent entry)))
+        (cleanup-entry entry)
+        (loop :while parent
+              :do
+              (let ((cur parent))
+                (setf parent (shares-entry-parent cur))
+                (if (eql 0 (hash-table-count (shares-entry-childs cur)))
+                    (cleanup-entry cur)
+                    (progn
+                      (decf (shares-entry-size cur) size)
+                      (update-entry-display cur)))))))))
 
 (define-slot (shares update-entries) ((name string))
   (declare (connected shares (update-entries string)))
@@ -414,16 +386,12 @@ concatenated on recursive calls."
                                 ""
                                 split-path
                                 root))
-                    (remove-node shares
-                                 (lodds.core:split-path combined-path)
-                                 root)))))
+                    (remove-node shares combined-path)))))
   (q+:set-updates-enabled shares t))
 
 (define-slot (shares remove-entry) ((path string))
   (declare (connected shares (remove-entry string)))
-  (remove-node shares
-               (lodds.core:split-path path)
-               root))
+  (remove-node shares path))
 
 (defun dump-item (item &optional (depth 0))
   "dumps given item, and all its childs, if it has any. Just for
@@ -577,8 +545,8 @@ concatenated on recursive calls."
          (q+:set-selection-mode (q+:qabstractitemview.extended-selection))
          (q+:set-column-count 3)
          (q+:set-uniform-row-heights t)
-         (q+:set-header-labels (list "Name" "Size" "ID"))
-         (q+:hide-column +shares-id+)
+         (q+:set-header-labels (list "Name" "Size" "Path"))
+         (q+:hide-column +shares-path+)
          (q+:set-alternating-row-colors t)
          (q+:set-animated t)
          (q+:set-items-expandable t)
