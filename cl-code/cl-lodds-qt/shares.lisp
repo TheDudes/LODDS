@@ -187,34 +187,35 @@ QTreeWidget in the middle, which displays all shared files
 (defmethod initialize-instance :after ((entry shares-entry) &rest initargs)
   (declare (ignorable initargs))
   (with-slots (name size widget path shares user parent) entry
-    (setf (gethash (concatenate 'string user path) (entries shares)) entry)
-    (setf widget
-          (if parent
-              (q+:make-qtreewidgetitem (shares-entry-widget parent))
-              (q+:invisible-root-item shares)))
+    (let ((full-path (concatenate 'string "/" user path)))
+      (setf (gethash full-path (entries shares)) entry)
+      (setf widget
+            (if parent
+                (q+:make-qtreewidgetitem (shares-entry-widget parent))
+                (q+:invisible-root-item shares)))
 
-    (when parent
-      (setf (gethash name (shares-entry-childs parent))
-            entry)
-      (update-entry-display parent))
+      (when parent
+        (setf (gethash name (shares-entry-childs parent))
+              entry)
+        (update-entry-display parent))
 
-    (let ((font (q+:make-qfont "Consolas, Inconsolata, Monospace" 10)))
-      (setf (q+:style-hint font) (q+:qfont.type-writer))
-      (when (and (lodds.config:get-value :show-background-color-on-size)
-                 parent)
-        (set-column-background widget +shares-size+
-                               (lodds.core:get-size-color size)))
-      (qdoto widget
-             (q+:set-flags (qt:enum-or (q+:qt.item-is-selectable)
-                                       (q+:qt.item-is-enabled)))
-             (q+:set-font +shares-name+ font)
-             (q+:set-font +shares-size+ font)
-             (q+:set-text-alignment +shares-size+
-                                    (qt:enum-or (q+:qt.align-center)
-                                                (q+:qt.align-right)))
-             (q+:set-text +shares-name+ name)
-             (q+:set-text +shares-size+ (lodds.core:format-size size))
-             (q+:set-text +shares-path+ (concatenate 'string user path))))))
+      (let ((font (q+:make-qfont "Consolas, Inconsolata, Monospace" 10)))
+        (setf (q+:style-hint font) (q+:qfont.type-writer))
+        (when (and (lodds.config:get-value :show-background-color-on-size)
+                   parent)
+          (set-column-background widget +shares-size+
+                                 (lodds.core:get-size-color size)))
+        (qdoto widget
+               (q+:set-flags (qt:enum-or (q+:qt.item-is-selectable)
+                                         (q+:qt.item-is-enabled)))
+               (q+:set-font +shares-name+ font)
+               (q+:set-font +shares-size+ font)
+               (q+:set-text-alignment +shares-size+
+                                      (qt:enum-or (q+:qt.align-center)
+                                                  (q+:qt.align-right)))
+               (q+:set-text +shares-name+ name)
+               (q+:set-text +shares-size+ (lodds.core:format-size size))
+               (q+:set-text +shares-path+ full-path))))))
 
 (defmethod set-mime-icon ((entry shares-entry) mimetype)
   (when (lodds.config:get-value :show-filetype-icons)
@@ -315,7 +316,7 @@ concatenated on recursive calls."
   (shares-entry-size (root shares)))
 
 (defmethod cleanup-entry ((entry shares-entry))
-  (with-slots (parent path shares name) entry
+  (with-slots (parent path shares name user) entry
     (when parent
       (with-slots (childs widget) parent
         (remhash name childs)
@@ -325,7 +326,7 @@ concatenated on recursive calls."
                           (gethash (q+:text element +shares-path+)
                                    (entries shares))))
             (finalize (q+:take-child widget i))
-            (remhash path (entries shares))
+            (remhash (concatenate 'string "/" user path) (entries shares))
             (update-entry-display parent)
             (return-from cleanup-entry)))))))
 
@@ -355,14 +356,14 @@ parent"
                       (decf (shares-entry-size cur) size)
                       (update-entry-display cur)))))))))
 
-(define-slot (shares update-entries) ((name string))
+(define-slot (shares update-entries) ((user string))
   (declare (connected shares (update-entries string)))
   (q+:set-updates-enabled shares nil)
   (let* ((changes (get-change shares))
          (amount (length changes))
          (current 0))
     (loop :for (type checksum size path) :in changes
-          :do (let ((combined-path (concatenate 'string name path)))
+          :do (let ((combined-path (concatenate 'string user path)))
                 (when main-window
                   (q+:show-message
                    (q+:status-bar main-window)
@@ -433,7 +434,8 @@ parent"
                  :widget
                  (let ((widget (q+:make-qwidget)))
                    (qdoto (q+:make-qformlayout widget)
-                          (q+:add-row "Fullpath:" (q+:make-qlabel fullpath))
+                          (q+:add-row "Fullpath:" (q+:make-qlabel
+                                                   (concatenate 'string "/" user fullpath)))
                           (q+:add-row "Dir:" (q+:make-qlabel dir))
                           (q+:add-row "User:" (q+:make-qlabel user))
                           (q+:add-row "Size:" (q+:make-qlabel
@@ -555,18 +557,14 @@ parent"
                             (lambda (user)
                               (signal! shares
                                        (remove-entry string)
-                                       (concatenate 'string
-                                                    user
-                                                    "/")))
+                                       (concatenate 'string "/" user "/")))
                             :user-removed)
   (lodds.event:add-callback :qt-shares
                             (lambda (name type timestamp changes)
                               (declare (ignore timestamp))
                               (when (eql type :all)
                                 (signal! shares (remove-entry string)
-                                         (concatenate 'string
-                                                      name
-                                                      "/")))
+                                         (concatenate 'string "/" name "/")))
                               (add-change shares changes name))
                             :list-update))
 
