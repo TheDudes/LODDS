@@ -312,12 +312,7 @@ concatenated on recursive calls."
                        :user *new-user*))))
 
 (defmethod get-total-shares-size ((shares shares))
-  (let ((total 0))
-    (maphash (lambda (k v)
-               (declare (ignore k))
-               (incf total (shares-entry-size v)))
-             (shares-entry-childs (slot-value shares 'root)))
-    total))
+  (shares-entry-size (root shares)))
 
 (defmethod cleanup-entry ((entry shares-entry))
   (with-slots (parent path shares name) entry
@@ -353,7 +348,8 @@ parent"
               :do
               (let ((cur parent))
                 (setf parent (shares-entry-parent cur))
-                (if (eql 0 (hash-table-count (shares-entry-childs cur)))
+                (if (and (eql 0 (hash-table-count (shares-entry-childs cur)))
+                         parent)
                     (cleanup-entry cur)
                     (progn
                       (decf (shares-entry-size cur) size)
@@ -374,17 +370,14 @@ parent"
                            amount
                            (incf current)
                            path)))
-                (if (eql type :add)
-                    (let* ((split-path (lodds.core:split-path combined-path))
-                           (*new-checksum* checksum)
-                           (*new-size* size)
-                           (*new-user* (let ((user (car split-path)))
-                                         (subseq user 0 (- (length user) 1)))))
-                      (add-node shares
-                                ""
-                                split-path
-                                root))
-                    (remove-node shares combined-path)))))
+                (ecase type
+                  (:add (let* ((split-path (lodds.core:split-path combined-path))
+                               (*new-checksum* checksum)
+                               (*new-size* size)
+                               (*new-user* user ))
+                          (when (add-node shares "" split-path root)
+                            (incf (shares-entry-size root) size))))
+                  (:del (remove-node shares (concatenate 'string "/" combined-path)))))))
   (q+:set-updates-enabled shares t))
 
 (define-slot (shares remove-entry) ((path string))
