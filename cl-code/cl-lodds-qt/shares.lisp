@@ -51,8 +51,7 @@ QTreeWidget in the middle, which displays all shared files
     (if (null (changes shares))
         (setf (changes shares) (list changes))
         (nconc (changes shares) (list changes))))
-  (signal! shares (update-entries string)
-           name))
+  (signal! shares (update-entries string) name))
 
 (defmethod get-change ((shares shares))
   (let ((change nil))
