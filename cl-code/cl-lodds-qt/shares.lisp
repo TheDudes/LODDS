@@ -210,9 +210,7 @@ QTreeWidget in the middle, which displays all shared files
     (when parent
       (setf (gethash name (shares-entry-childs parent))
             entry)
-      (update-entry-display parent)
-      (q+:add-child (shares-entry-widget parent)
-                    widget))
+      (update-entry-display parent))
 
     (setf (gethash id (entries shares)) entry)
 
@@ -242,7 +240,11 @@ QTreeWidget in the middle, which displays all shared files
 
 (defmethod initialize-instance :after ((entry shares-entry-dir) &rest initargs)
   (declare (ignorable initargs))
-  (with-slots (widget path name) entry
+  (with-slots (widget path name parent) entry
+    (when parent
+      (q+:insert-child (shares-entry-widget parent)
+                       0
+                       widget))
     (when (string= "/" path)
       (lodds.core:split-user-identifier (user ip port) name
         (q+:set-text widget +shares-name+ user)))
@@ -251,7 +253,10 @@ QTreeWidget in the middle, which displays all shared files
 
 (defmethod initialize-instance :after ((entry shares-entry-file) &rest initargs)
   (declare (ignorable initargs))
-  (with-slots (path) entry
+  (with-slots (path widget parent) entry
+    (when parent
+      (q+:add-child (shares-entry-widget parent)
+                    widget))
     (update-entry-display entry)
     (set-mime-icon entry (get-namestring-type path))))
 
