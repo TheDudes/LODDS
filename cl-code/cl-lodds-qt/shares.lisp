@@ -74,26 +74,25 @@ QTreeWidget in the middle, which displays all shared files
             \"pete@192.168.2.101:43210\"
             92421312
             17))"
-  (let ((info (gethash (q+:text selected-item +shares-id+) (entries shares))))
-    (if (eql (type-of info)
-             'shares-entry-dir)
-        (with-slots (user name path size items) info
-          (list :dir
-                (list path
-                      name
-                      user
-                      size
-                      items)))
-        ;; file was clicked
-        (with-slots (name checksum size) info
-          (list :file
-                (list checksum
-                      name
-                      size
-                      (loop :for (user . rest)
-                            :in (lodds:get-file-info checksum)
-                            :collect user)))))))
-
+  (let ((info (gethash (q+:text selected-item +shares-path+) (entries shares))))
+    (etypecase info
+      (shares-entry-dir
+       (with-slots (user name path size childs) info
+         (list :dir
+               (list path
+                     name
+                     user
+                     size
+                     (hash-table-count childs)))))
+      (shares-entry-file
+       (with-slots (name checksum size) info
+         (list :file
+               (list checksum
+                     name
+                     size
+                     (loop :for (user . rest)
+                           :in (lodds:get-file-info checksum)
+                           :collect user))))))))
 
 (defclass shares-entry ()
   ((shares :reader shares-entry-shares
