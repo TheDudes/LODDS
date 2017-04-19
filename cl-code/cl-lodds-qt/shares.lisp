@@ -402,8 +402,18 @@ parent"
 
 (defun make-file-info-widget (checksum name size users)
   (declare (ignore users))
-  (let* ((widget (q+:make-qwidget))
-         (layout (q+:make-qformlayout widget)))
+  (let* ((top-widget (q+:make-qwidget))
+         (widget (q+:make-qwidget top-widget))
+         (top-layout (q+:make-qvboxlayout top-widget))
+         (layout (q+:make-qformlayout widget))
+         (tree (qdoto (q+:make-qtreewidget top-widget)
+                      (q+:set-column-count 1))))
+    (q+:hide (q+:header tree))
+    (loop :for (user load size filenames)
+          :in (lodds:get-file-info checksum)
+          :do (let ((item (add-row (q+:invisible-root-item tree) user)))
+                (loop :for file :in filenames
+                      :do (add-row item file))))
     (qdoto layout
            (q+:set-form-alignment (q+:qt.align-top))
            (q+:add-row "Checksum: " (q+:make-qlabel checksum))
@@ -412,13 +422,9 @@ parent"
                                                         (lodds.core:format-size size)
                                                         size)))
            (q+:add-row "Users who share the given file:" (q+:make-qlabel "")))
-    (loop :for (user load size filenames)
-          :in (lodds:get-file-info checksum)
-          :do (progn
-                (q+:add-row layout user (q+:make-qlabel (car filenames)))
-                (loop :for file :in (cdr filenames)
-                      :do (q+:add-row layout "" (q+:make-qlabel file)))))
-    widget))
+    (q+:add-widget top-layout widget)
+    (q+:add-widget top-layout tree)
+    top-widget))
 
 (defun open-info-file-dialog (checksum name size users)
   (make-instance 'dialog

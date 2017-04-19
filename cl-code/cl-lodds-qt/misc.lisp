@@ -94,3 +94,17 @@ supress-warning if you dont want that."
     (if (uiop:file-exists-p pathname)
         (q+:make-qicon (uiop:native-namestring pathname))
         on-failure)))
+
+(defun add-row (parent &rest columns)
+  "adds a new qtreewidget item below the given parent and sets the
+columns content to the given columns (with q+:set-text, so columns has
+to be a list of strings)"
+  (let ((item (q+:make-qtreewidgetitem parent)))
+    (q+:add-child parent item)
+    (q+:set-flags item (q+:qt.item-is-enabled))
+    (let ((i 0))
+      (map nil (lambda (element)
+                 (q+:set-text item i element)
+                 (incf i))
+           columns))
+    item))
