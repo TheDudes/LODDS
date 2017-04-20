@@ -407,8 +407,9 @@ parent"
          (top-layout (q+:make-qvboxlayout top-widget))
          (layout (q+:make-qformlayout widget))
          (tree (qdoto (q+:make-qtreewidget top-widget)
-                      (q+:set-column-count 1))))
-    (q+:hide (q+:header tree))
+                      (q+:set-column-count 1)
+                      (q+:set-header-labels
+                       (list "Users who share the given file:")))))
     (loop :for (user load size filenames)
           :in (lodds:get-file-info checksum)
           :do (let ((item (add-row (q+:invisible-root-item tree) user)))
@@ -420,8 +421,7 @@ parent"
            (q+:add-row "Name: " (q+:make-qlabel name))
            (q+:add-row "Size: " (q+:make-qlabel (format nil "~a (~:d bytes)"
                                                         (lodds.core:format-size size)
-                                                        size)))
-           (q+:add-row "Users who share the given file:" (q+:make-qlabel "")))
+                                                        size))))
     (q+:add-widget top-layout widget)
     (q+:add-widget top-layout tree)
     top-widget))
