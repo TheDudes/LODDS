@@ -12,7 +12,6 @@ convert -background transparent ../res/send-file.svg        -resize  32x32  ../c
 convert -background transparent ../res/send-file-hover.svg  -resize  32x32  ../cl-code/res/send-file-hover.png
 convert -background transparent ../res/shared.svg           -resize  23x32  ../cl-code/res/shared.png
 convert -background transparent ../res/user.svg             -resize  23x32  ../cl-code/res/user.png
-convert -background transparent ../res/user-hover.svg       -resize  23x32  ../cl-code/res/user-hover.png
 convert -background transparent ../res/x.svg                -resize  64x64  ../cl-code/res/x.png
 convert -background transparent ../res/tree-arrow.svg       -resize   8x12  ../cl-code/res/tree-closed.png
 convert -background transparent ../res/tree-arrow.svg       -resize   8x12 -rotate 90 ../cl-code/res/tree-open.png
