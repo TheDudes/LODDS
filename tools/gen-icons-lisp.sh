@@ -3,6 +3,7 @@
 # Generates png icons needed for the cl-lodds-qt client.
 # convert is part of ImageMagick
 
+cp ../res/spinner.svg ../cl-code/res/spinner.svg
 convert -background transparent ../res/lodds.svg            -resize  64x64  ../cl-code/res/lodds.png
 convert -background transparent ../res/file.svg             -resize  64x64  ../cl-code/res/file.png
 convert -background transparent ../res/folder-closed.svg    -resize  64x64  ../cl-code/res/folder-closed.png

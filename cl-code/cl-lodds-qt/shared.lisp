@@ -20,30 +20,35 @@ others)
          :documentation "Shared directories with directory path as key
          and qtreewidgetitem as value")))
 
+(defun load-spinner (parent)
+  (let ((pathname (make-pathname :name "spinner.svg"
+                                 :defaults (lodds.config:get-value :resources-folder))))
+    (if (uiop:file-exists-p pathname)
+        (qdoto (q+:make-qsvgwidget parent)
+               (q+:load (q+:make-qbytearray (uiop:read-file-string pathname))))
+        (qdoto (q+:make-qprogressbar parent)
+               (q+:set-maximum 0)
+               (q+:set-minimum 0)
+               (q+:set-format "...")))))
+
 (defmethod set-spinner ((directories directories) entry)
   (unless (string= (q+:text entry +shared-widget-type+)
                    "spinner")
     (q+:set-text entry +shared-widget-type+ "spinner")
-    (q+:resize-section (q+:header directories) +shared-widget+ 200)
     (let ((old-widget (q+:item-widget directories entry +shared-widget+)))
       (q+:remove-item-widget directories entry +shared-widget+)
       (finalize old-widget))
-    (let ((spinner (q+:make-qprogressbar directories)))
-      (qdoto spinner
-             (q+:set-maximum 0)
-             (q+:set-minimum 0)
-             (q+:set-format "...")
-             (q+:set-tool-tip
-              (format nil
-                      "Directory ~a is currently busy~%~
-                      which means some files where added or removed~%~
-                      and the directory watcher is currently generating~%~
-                      checksums for the new files."
-                      (q+:text entry +shared-path+))))
-      (q+:set-item-widget directories
-                          entry
-                          +shared-widget+
-                          spinner))))
+    (q+:set-item-widget directories
+                        entry
+                        +shared-widget+
+                        (qdoto (load-spinner directories)
+                               (q+:set-tool-tip
+                                (format nil
+                                        "Directory ~a is currently busy~%~
+                                        which means some files where added or removed~%~
+                                        and the directory watcher is currently generating~%~
+                                        checksums for the new files."
+                                        (q+:text entry +shared-path+)))))))
 
 (defmethod set-button ((directories directories) entry)
   (unless (string= (q+:text entry +shared-widget-type+)
@@ -160,6 +165,7 @@ others)
          (q+:set-focus-policy (q+:qt.no-focus))
          (q+:set-selection-mode 0)
          (q+:set-column-count 4)
+         (q+:set-uniform-row-heights t)
          (q+:set-header-labels (list "Path" "" "" ""))
          (q+:set-alternating-row-colors t)
          (q+:set-accept-drops t)
