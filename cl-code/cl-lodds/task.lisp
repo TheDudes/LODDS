@@ -685,7 +685,7 @@ be used to retrieve the load all currently running tasks produce.
                           (not (string= checksum
                                         (ironclad:byte-array-to-hex-string
                                          (ironclad:produce-digest digester)))))
-                 (delete-file (lodds.core:escape-wildcards file-pathname))
+                 (delete-file file-pathname)
                  (error  "Checksum validation Failed")))))
 
 (defmethod task-run ((task task-get-folder))
