@@ -31,6 +31,18 @@ QTreeView#Shares::branch:open:has-children:has-siblings  {
         image: url(./res/tree-open.png);
 }
 
+QTreeView#Shares::branch:has-children:!has-siblings:closed:hover,
+QTreeView#Shares::branch:closed:has-children:has-siblings:hover {
+        border-image: none;
+        image: url(./res/tree-closed-hover.png);
+}
+
+QTreeView#Shares::branch:open:has-children:!has-siblings:hover,
+QTreeView#Shares::branch:open:has-children:has-siblings:hover {
+        border-image: none;
+        image: url(./res/tree-open-hover.png);
+}
+
 QTreeView#UserList::branch {
   border-image: url(./res/user.png) 0;
 }
