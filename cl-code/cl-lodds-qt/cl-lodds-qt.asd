@@ -16,6 +16,7 @@
                :qtools
                :qtcore
                :qtgui
+               :qtsvg
                :cl-strings
                :qtools-ui-debugger)
   :components ((:file "package")

@@ -48,28 +48,41 @@
                          +user-list-name+
                          qbrush))))
 
+(define-widget send-file-button (qpushbutton)
+  ((user :initarg :user)))
+
+(define-override (send-file-button enter-event) (ev)
+  (set-icon send-file-button "send-file-hover.png" "Send File"))
+
+(define-override (send-file-button leave-event) (ev)
+  (set-icon send-file-button "send-file.png" "Send File"))
+
+(define-slot (send-file-button send-file) ()
+  (declare (connected send-file-button (pressed)))
+  (open-send-file-dialog user))
+
+(define-initializer (send-file-button setup-widget)
+  (q+:set-mouse-tracking send-file-button t)
+  (set-icon send-file-button "send-file.png" "Send File")
+  (lodds.core:split-user-identifier (name ip port) user
+    (q+:set-tool-tip send-file-button
+                     (format nil
+                             "Click to select and send a file to user ~a"
+                             user))))
+
 (define-slot (user-list add-user) ((user string)
                                    (load string)
                                    (last-change int))
   (declare (connected user-list (add-user string
                                           string
                                           int)))
-  (let* ((new-entry (q+:make-qtreewidgetitem user-list))
-         (send-file-button (q+:make-qpushbutton user-list)))
-    (set-icon send-file-button "send-file.png" "Send File")
-    (connect send-file-button "pressed()"
-             (lambda ()
-               (open-send-file-dialog user)))
+  (let ((new-entry (q+:make-qtreewidgetitem user-list)))
     (q+:set-item-widget user-list
                         new-entry
                         +user-list-send-file+
-                        send-file-button)
+                        (make-instance 'send-file-button :user user))
     (set-user-color user-list user new-entry)
     (lodds.core:split-user-identifier (name ip port) user
-      (q+:set-tool-tip send-file-button
-                       (format nil
-                               "Click to select and send a file to user ~a"
-                               name))
       (qdoto new-entry
              (q+:set-text +user-list-name+ name)
              (q+:set-status-tip +user-list-name+
