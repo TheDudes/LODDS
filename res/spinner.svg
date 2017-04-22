@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<svg x="0px" y="0px"
+     width="36px" height="28px"
+     viewBox="0 0 67.5 50">
+  <circle cx="33.75" cy="25" r="16"
+          stroke="#1ed760"
+          stroke-width="9"
+          fill="none"/>
+  <circle cx="33.75" cy="25" r="16"
+          stroke="#999999"
+          stroke-width="9"
+          fill="none"
+          stroke-dasharray="76 25">
+    <animateTransform attributeType="xml"
+      attributeName="transform"
+      type="rotate"
+      from="0 33.75 25"
+      to="360 33.75 25"
+      dur="1s"
+      repeatCount="indefinite"/></circle></svg>
