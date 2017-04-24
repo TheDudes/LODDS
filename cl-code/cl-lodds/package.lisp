@@ -11,6 +11,9 @@
            #:format-checksum
            #:format-pathname
            #:input-rdy-p
+           #:could-not-read-error
+           #:out-of-data-error
+           #:read-too-much-error
            #:copy-stream
            #:get-timestamp
            #:str-case

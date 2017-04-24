@@ -94,6 +94,10 @@ nil on error"
         t
         nil)))
 
+(define-condition could-not-read-error (simple-error) ())
+(define-condition out-of-data-error (simple-error) ())
+(define-condition read-too-much-error (simple-error) ())
+
 (defun copy-stream (stream-from stream-to size &optional digester)
   "will read from stream-from and write to stream-to size bytes"
   (when (= size 0)
@@ -110,11 +114,16 @@ nil on error"
             (incf written read)
             (cond
               ((= read 0)
-               (error "Peer closed Socket"))
+               (error 'could-not-read-error
+                      :format-control "Peer closed Socket"))
               ((< read buffer-size)
-               (error "Read less then buffer-size"))
+               (error 'out-of-data-error
+                      :format-control
+                      "Read less then buffer-size"))
               ((> written size)
-               (error "Read more than size on COPY-STREAM (should not be possible)"))
+               (error 'read-too-much-error
+                      :format-control
+                      "Read more than size on COPY-STREAM (should not be possible)"))
               ((= written size)
                (progn
                  (when digester
