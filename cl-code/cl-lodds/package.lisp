@@ -17,7 +17,6 @@
            #:copy-stream
            #:get-timestamp
            #:str-case
-           #:split-directory
            #:format-size
            #:get-size-color
            #:split-user-identifier
