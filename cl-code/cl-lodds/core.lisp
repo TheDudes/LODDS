@@ -168,11 +168,11 @@ nil on error"
       (gb (ash 1 33)) ;; 8gb
       (mb (ash 1 23)) ;; 8mb
       (kb (ash 1 13)));; 8kb
-  (defun format-size (size &optional (when-zero nil))
+  (defun format-size (size &optional (when-zero nil when-zero-given?))
     "formats given size (number) to a more readable format (string),
     when-zero can be given to return it instead of \"0Byt\""
     (if (and (eql 0 size)
-             when-zero)
+             when-zero-given?)
         when-zero
         (cond
           ((> size xb) (format nil "~aPiB" (ash size -50)))
