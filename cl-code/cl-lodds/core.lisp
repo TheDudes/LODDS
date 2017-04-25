@@ -288,28 +288,6 @@ nil on error"
     (when info
       (ip-interfaces:ip-interface-address info))))
 
-(defun escaped-get-folder-name (directory)
-  "Returns the folder describted by directory. If given directory is
-  root (/) a empty string (\"\") is returned. Given directory _must_
-  end with a slash (/), or the last entry will be interpreted as a
-  file.
-
-  CL-USER> (get-folder \"/home/someone/somehwere/folder\")
-  => \"somewhere/\" ;; 'folder' will be seen as file, since / is
-                    ;; missing
-
-  CL-USER> (get-folder \"/home/someone/somehwere/\")
-  => \"somewhere/\"
-
-  CL-USER> (get-folder \"/\")
-  => \"\""
-  (let* ((folders (pathname-directory
-                   (cl-fs-watcher:escape-wildcards directory)))
-         (folder (car (last folders))))
-    (if (> (length folders) 1)
-        (lodds.core:ensure-trailing-slash folder)
-        "")))
-
 (defun directory-exists (directory)
   "checks if given directory-exists"
   (cl-fs-watcher:escaped-directory-exists-p

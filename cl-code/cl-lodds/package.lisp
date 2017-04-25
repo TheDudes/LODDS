@@ -27,7 +27,6 @@
            #:get-interface-info
            #:get-broadcast-address
            #:get-ip-address
-           #:escaped-get-folder-name
            #:directory-exists
            #:file-exists
            #:get-absolute-path
