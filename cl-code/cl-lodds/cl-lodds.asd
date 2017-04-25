@@ -17,7 +17,9 @@
                :cl-fs-watcher
                :lparallel
                :uiop
-               :asdf)
+               :asdf
+               :prove)
+  :defsystem-depends-on (:prove-asdf)
   :components ((:module "src"
                 :serial t
                 :components ((:file "package")
@@ -31,4 +33,9 @@
                              (:file "event-loop")
                              (:file "listener")
                              (:file "handler")
-                             (:file "lodds")))))
+                             (:file "lodds")))
+               (:module "test"
+                :serial t
+                :components ((:test-file "core"))))
+  :perform (test-op :after (op c)
+                    (funcall (intern #.(string :run) :prove) c)))
