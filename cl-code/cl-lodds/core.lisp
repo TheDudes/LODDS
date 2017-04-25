@@ -288,13 +288,6 @@ nil on error"
     (when info
       (ip-interfaces:ip-interface-address info))))
 
-(defun escaped-ensure-directories-exist (pathspec &rest args)
-  "Calls ensure-directories-exists but pathspec is wrapped in a
-escape-wildcards to make sure wildcards are escaped."
-  (apply #'ensure-directories-exist
-         (cl-fs-watcher:escape-wildcards pathspec)
-         args))
-
 (defun escaped-get-folder-name (directory)
   "Returns the folder describted by directory. If given directory is
   root (/) a empty string (\"\") is returned. Given directory _must_
