@@ -29,7 +29,6 @@
            #:get-ip-address
            #:directory-exists
            #:file-exists
-           #:get-absolute-path
            #:set-socket-timeout
            #:octets-to-string
            #:string-to-octets))

@@ -7,7 +7,6 @@
   :license "GPLv2"
   :maintainer "d4ryus <d4ryus@openmailbox.org>"
   :homepage "https://github.com/TheDudes/Lodds"
-  :serial t
   :depends-on (:ironclad
                :usocket
                :ip-interfaces
@@ -19,15 +18,17 @@
                :lparallel
                :uiop
                :asdf)
-  :components ((:file "package")
-               (:file "core")
-               (:file "config")
-               (:file "low-level-api")
-               (:file "classes")
-               (:file "task")
-               (:file "watcher")
-               (:file "event")
-               (:file "event-loop")
-               (:file "listener")
-               (:file "handler")
-               (:file "lodds")))
+  :components ((:module "src"
+                :serial t
+                :components ((:file "package")
+                             (:file "core")
+                             (:file "config")
+                             (:file "low-level-api")
+                             (:file "classes")
+                             (:file "task")
+                             (:file "watcher")
+                             (:file "event")
+                             (:file "event-loop")
+                             (:file "listener")
+                             (:file "handler")
+                             (:file "lodds")))))

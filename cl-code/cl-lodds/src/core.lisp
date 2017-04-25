@@ -298,10 +298,6 @@ nil on error"
   (cl-fs-watcher:escaped-file-exists-p
    file))
 
-(defun get-absolute-path (directory)
-  (uiop:native-namestring
-   (car (directory (cl-fs-watcher:escape-wildcards directory)))))
-
 (defun set-socket-timeout (socket timeout)
   (setf (usocket:socket-option socket :receive-timeout) timeout
         (usocket:socket-option socket :send-timeout) timeout))
