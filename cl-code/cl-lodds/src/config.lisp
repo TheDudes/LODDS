@@ -496,7 +496,8 @@ value (to verify the new value on change).
 (defun validate-config (config)
   "returns nil if given config is valid, error string if not"
   (maphash (lambda (key value)
-             (let ((err (validate-new-entry key (car value) config)))
+             (let ((err (handler-case (validate-new-entry key (car value) config)
+                          (error (e) (format nil "validate error: ~a" e)))))
                (when err
                  (return-from validate-config err))))
            config))
