@@ -459,10 +459,18 @@ value (to verify the new value on change).
                     (return-from validate-new-entry
                       (format nil "Invalid selection (~a), valid are only: ~a"
                               value valid)))))
-    (:folder (unless (lodds.core:directory-exists value)
-               (return-from validate-new-entry
-                 (format nil "Folder ~a does not exist"
-                         value)))))
+    (:folder (cond
+               ((not (uiop:directory-pathname-p value))
+                (format nil "~a is not a directory pathname" value))
+               ((uiop:file-exists-p value)
+                (format nil "~a is a file" value))
+               (t
+                (handler-case
+                    (progn (ensure-directories-exist value)
+                           nil)
+                  (error (e)
+                    (format nil "Could not create directory ~a~%~a"
+                            value e)))))))
   nil)
 
 (defun generate-default-config ()
