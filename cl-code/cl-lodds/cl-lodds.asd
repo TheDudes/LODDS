@@ -36,6 +36,7 @@
                              (:file "lodds")))
                (:module "test"
                 :serial t
-                :components ((:test-file "core"))))
+                :components ((:test-file "core")
+                             (:test-file "config"))))
   :perform (test-op :after (op c)
                     (funcall (intern #.(string :run) :prove) c)))
