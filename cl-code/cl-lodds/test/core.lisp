@@ -8,7 +8,8 @@
 
 (subtest "escape-wildcards"
   (is (escape-wildcards "/test/*/some file [10].txt?")
-      "/test/\\*/some file \\[10].txt\\?"
+      #-os-windows "/test/\\*/some file \\[10].txt\\?"
+      #+os-windows "/test/^*/some file ^[10].txt^?"
       "escape string which contains wildcards")
 
   (let ((data "some string without wildcards"))
