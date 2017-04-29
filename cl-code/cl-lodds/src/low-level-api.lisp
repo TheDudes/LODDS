@@ -28,7 +28,7 @@ multiple-value-bind.
    ;; get file checksum start end
    ;; get info timestamp
    ;; get send-permission size timeout filename
-   "^get ((file [^\\s]{40} \\d+ \\d+)|(info \\d+)|(send-permission \\d+ \\d+ [^\\n]+))$")
+   "^get ((file ([a-f]|[A-F]|[0-9]){40} \\d+ \\d+)|(info \\d+)|(send-permission \\d+ \\d+ [^\\n]+))$")
   "used to scan get requests to check if they are correct")
 
 (defvar *info-head-scanner*
@@ -40,7 +40,7 @@ multiple-value-bind.
 (defvar *info-body-scanner*
   (cl-ppcre:create-scanner
    ;; type checksum size realtive-filename
-   "^(add|del) [^\\s]{40} \\d+ [^\\n]+$")
+   "^(add|del) ([a-f]|[A-F]|[0-9]){40} \\d+ [^\\n]+$")
   "used to scan get info body to check if they are correct")
 
 (defun write-to-stream (stream string &optional (flush-p t))
