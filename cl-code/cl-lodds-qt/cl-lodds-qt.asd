@@ -22,6 +22,7 @@
   :components ((:file "package")
                (:file "globals")
                (:file "misc")
+               (:file "graph")
                (:file "log")
                (:file "user-list")
                (:file "shared")

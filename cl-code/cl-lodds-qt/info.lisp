@@ -75,6 +75,13 @@
                           new-entry
                           +info-cancel+
                           cancel)
+      (q+:set-item-widget info
+                          new-entry
+                          +info-speed+
+                          (make-instance 'graph
+                                         :elements 82
+                                         :color (q+:make-qcolor "#1ed760")
+                                         :alpha 100))
       (qdoto new-entry
              (q+:set-text-alignment +info-speed+
                                     (qt:enum-or (q+:qt.align-center)
@@ -98,33 +105,36 @@
         (setf max new-max))
       (q+:set-value progressbar
                     (normalized-value max done))
-      (qdoto widget
-             (q+:set-text +info-info+ info-text)
-             (q+:set-text +info-speed+
-                          (format nil "~a/s"
-                                  (lodds.core:format-size
-                                   (round
-                                    (* (/ 1000 time-vanished)
-                                       (- done last-load))))))
-             (q+:set-status-tip +info-info+
+      (let ((bytes-per-second (round
+                               (* (/ 1000 time-vanished)
+                                  (- done last-load))))
+            (graph (q+:item-widget info widget +info-speed+)))
+        (add-value graph bytes-per-second)
+        (q+:update graph)
+        (qdoto widget
+               (q+:set-text +info-info+ info-text)
+               (q+:set-text +info-speed+
+                            (format nil "~a/s"
+                                    (lodds.core:format-size bytes-per-second)))
+               (q+:set-status-tip +info-info+
+                                  (format nil
+                                          "Total: ~a (~:d bytes) | Transfered: ~a (~:d bytes) | Average Speed: ~a"
+                                          (lodds.core:format-size max) max
+                                          (lodds.core:format-size done) done
+                                          (let ((total-time-vanished (- (lodds.core:get-timestamp)
+                                                                        started-tracking)))
+                                            (format nil "~a/s"
+                                                    (lodds.core:format-size
+                                                     (round
+                                                      (/ done
+                                                         (if (eql 0 total-time-vanished)
+                                                             1
+                                                             total-time-vanished))))))))
+               (q+:set-tool-tip +info-info+
                                 (format nil
-                                        "Total: ~a (~:d bytes) | Transfered: ~a (~:d bytes) | Average Speed: ~a"
+                                        "Total: ~a (~:d bytes)~%Transfered: ~a (~:d bytes)"
                                         (lodds.core:format-size max) max
-                                        (lodds.core:format-size done) done
-                                        (let ((total-time-vanished (- (lodds.core:get-timestamp)
-                                                                      started-tracking)))
-                                          (format nil "~a/s"
-                                                  (lodds.core:format-size
-                                                   (round
-                                                    (/ done
-                                                       (if (eql 0 total-time-vanished)
-                                                           1
-                                                           total-time-vanished))))))))
-             (q+:set-tool-tip +info-info+
-                              (format nil
-                                      "Total: ~a (~:d bytes)~%Transfered: ~a (~:d bytes)"
-                                      (lodds.core:format-size max) max
-                                      (lodds.core:format-size done) done)))
+                                        (lodds.core:format-size done) done))))
       (setf last-load done))))
 
 (defmethod remove-info ((info info) id)
