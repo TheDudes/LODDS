@@ -295,7 +295,7 @@ value (to verify the new value on change).
          1
          3600)
    (list :info-update-interval
-         100
+         200
          :integer
          (format nil
                  "Timeout (in milliseconds) between updates~%~
