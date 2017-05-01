@@ -155,22 +155,22 @@ The returned string (utf-8) won't contain the newline character"
 (defun format-get-file (checksum start end)
   (format nil "get file ~a ~a ~a~C" checksum start end #\linefeed))
 
-(defun get-file (socket-stream checksum start end)
-  "will format and write a 'get file' request onto socket-stream requesting
+(defun get-file (stream checksum start end)
+  "will format and write a 'get file' request onto stream requesting
    the specified (checksum) file's content from start till end"
-  (write-string-to-stream socket-stream
+  (write-string-to-stream stream
                           (format-get-file checksum start end))
   0)
 
 (defun format-get-info (timestamp)
   (format nil "get info ~a~C" timestamp #\linefeed))
 
-(defun get-info (socket-stream timestamp)
-  "will format and write a 'get info' request onto socket-stream requesting
+(defun get-info (stream timestamp)
+  "will format and write a 'get info' request onto stream requesting
    information about shared files. timestamp describes the last requested
    information the user currently holds. If timestamp is zero (0) it will
    request a full list of shared files from the user."
-  (write-string-to-stream socket-stream
+  (write-string-to-stream stream
                           (format-get-info timestamp))
   0)
 
@@ -181,13 +181,13 @@ The returned string (utf-8) won't contain the newline character"
           filename
           #\linefeed))
 
-(defun get-send-permission (socket-stream size timeout filename)
-  "will format and write a 'get-send-permission' request onto socket-stream
+(defun get-send-permission (stream size timeout filename)
+  "will format and write a 'get-send-permission' request onto stream
    requesting send permission. size is a fixnum describing the file size of the
    to-be-transfered file. The requested user then has 'timeout' seconds to
    respond with either a OK or a connection close. filename is a string containing
    the filename."
-  (write-string-to-stream socket-stream
+  (write-string-to-stream stream
                           (format-get-send-permission size
                                                       timeout
                                                       filename))
@@ -214,26 +214,26 @@ The returned string (utf-8) won't contain the newline character"
                       name
                       #\linefeed))))
 
-(defun respond-info (socket-stream type timestamp file-infos)
+(defun respond-info (stream type timestamp file-infos)
   "response to a 'get info' request. Will format type timestamp and
-   file-infos and write it onto socket-stream. type can be either :all or :upt.
+   file-infos and write it onto stream. type can be either :all or :upt.
    timestamp is a fixnum somewhat like a 'revision', describing the current state.
    file-infos a list containing lists with type, checksum, size and name describing
    all files. type will either be :add or :del and checksum is a sha1 of the
    file's content. size is, as the name suggests, the file size. name is the
    relative pathname.
    TODO: relative pathname link to spec"
-  (write-string-to-stream socket-stream
+  (write-string-to-stream stream
                           (format-respond-info type timestamp file-infos))
   0)
 
 (defun format-respond-send-permission ()
   (format nil "OK~C" #\linefeed))
 
-(defun respond-send-permission (socket-stream)
+(defun respond-send-permission (stream)
   "response to a 'get send-permission', will send a OK and copy the
-   socket-stream content (max size bytes) to file-stream."
-  (write-string-to-stream socket-stream
+   stream content (max size bytes) to file-stream."
+  (write-string-to-stream stream
                           (format-respond-send-permission))
   0)
 
