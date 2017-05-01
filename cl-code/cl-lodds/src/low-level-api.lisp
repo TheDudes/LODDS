@@ -158,8 +158,9 @@ The returned string (utf-8) won't contain the newline character"
 (defun get-file (stream checksum start end)
   "will format and write a 'get file' request onto stream requesting
    the specified (checksum) file's content from start till end"
-  (write-string-to-stream stream
-                          (format-get-file checksum start end))
+  (write-string-to-stream
+   stream
+   (format-get-file checksum start end))
   0)
 
 (defun format-get-info (timestamp)
@@ -170,8 +171,9 @@ The returned string (utf-8) won't contain the newline character"
    information about shared files. timestamp describes the last requested
    information the user currently holds. If timestamp is zero (0) it will
    request a full list of shared files from the user."
-  (write-string-to-stream stream
-                          (format-get-info timestamp))
+  (write-string-to-stream
+   stream
+   (format-get-info timestamp))
   0)
 
 (defun format-get-send-permission (size timeout filename)
@@ -187,10 +189,11 @@ The returned string (utf-8) won't contain the newline character"
    to-be-transfered file. The requested user then has 'timeout' seconds to
    respond with either a OK or a connection close. filename is a string containing
    the filename."
-  (write-string-to-stream stream
-                          (format-get-send-permission size
-                                                      timeout
-                                                      filename))
+  (write-string-to-stream
+   stream
+   (format-get-send-permission size
+                               timeout
+                               filename))
   0)
 
 ;; response family
@@ -223,8 +226,9 @@ The returned string (utf-8) won't contain the newline character"
    file's content. size is, as the name suggests, the file size. name is the
    relative pathname.
    TODO: relative pathname link to spec"
-  (write-string-to-stream stream
-                          (format-respond-info type timestamp file-infos))
+  (write-string-to-stream
+   stream
+   (format-respond-info type timestamp file-infos))
   0)
 
 (defun format-respond-send-permission ()
@@ -233,8 +237,9 @@ The returned string (utf-8) won't contain the newline character"
 (defun respond-send-permission (stream)
   "response to a 'get send-permission', will send a OK and copy the
    stream content (max size bytes) to file-stream."
-  (write-string-to-stream stream
-                          (format-respond-send-permission))
+  (write-string-to-stream
+   stream
+   (format-respond-send-permission))
   0)
 
 ;; handle family
