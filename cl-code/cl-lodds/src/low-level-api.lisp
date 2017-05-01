@@ -51,21 +51,19 @@ stream, will flush the stream with force-output when flusp-p is t"
   (when flush-p
     (force-output stream)))
 
-(defun read-line-from-socket (socket)
-  "read-line for socket-stream of type '(unsigned-byte 8)"
+(defun read-line-from-stream (stream)
+  "read a single line from given stream of type '(unsigned-byte 8).
+The returned string (utf-8) won't contain the newline character"
   (let ((line (make-array 0
                           :element-type '(unsigned-byte 8)
                           :adjustable t
                           :fill-pointer t))
-        (byte nil)
-        (stream (usocket:socket-stream socket)))
-    (loop :until nil
-          :do (progn
-                (setf byte (read-byte stream))
-                (if (eql 10 byte)
-                    (return-from read-line-from-socket
-                      (lodds.core:octets-to-string line))
-                    (vector-push-extend byte line))))))
+        (byte nil))
+    (loop
+      (if (eql 10 (setf byte (read-byte stream)))
+          (return-from read-line-from-stream
+            (lodds.core:octets-to-string line))
+          (vector-push-extend byte line)))))
 
 ;; broadcast family
 
@@ -118,16 +116,15 @@ stream, will flush the stream with force-output when flusp-p is t"
                         user))))
       2))
 
-(defun parse-request (socket)
+(defun parse-request (stream)
   "parses a direct communication request. returns multiple values,
    the first is a number describing the error (or 0 on success) and
    one of the following lists, depending on request:
    (:file checksum start end)
    (:info timestamp)
    (:send-permission size timeout filename)
-   will use *get-scanner* to to check for syntax errors
-   INPUT can be string, octets or a usocket"
-  (let ((line (read-line-from-socket socket)))
+   will use *get-scanner* to to check for syntax errors"
+  (let ((line (read-line-from-stream stream)))
     (unless (cl-ppcre:scan *get-scanner* line)
       (return-from parse-request 2))
     (destructuring-bind (get type . args)
@@ -242,11 +239,11 @@ stream, will flush the stream with force-output when flusp-p is t"
 
 ;; handle family
 
-(defun handle-info (socket)
+(defun handle-info (stream)
   "handles a successfull 'get info' request and returns (as second
    value) a list containing the parsed data. The list has the same format
    as 'file-infos' argument from respond-info function"
-  (let ((line (read-line-from-socket socket)))
+  (let ((line (read-line-from-stream stream)))
     (if (cl-ppcre:scan *info-head-scanner* line)
         (destructuring-bind (type timestamp count) (cl-strings:split line)
           (values 0
@@ -259,7 +256,7 @@ stream, will flush the stream with force-output when flusp-p is t"
                    (loop :repeat (parse-integer count)
                          :collect
                          (progn
-                           (setf line (read-line-from-socket socket))
+                           (setf line (read-line-from-stream stream))
                            (if (cl-ppcre:scan *info-body-scanner* line)
                                (destructuring-bind (type checksum size . name)
                                    (cl-strings:split line)
@@ -281,7 +278,7 @@ stream, will flush the stream with force-output when flusp-p is t"
   (handler-case
       (if (lodds.core:input-rdy-p socket timeout)
           (if (string= "OK"
-                       (read-line-from-socket socket))
+                       (read-line-from-stream (usocket:socket-stream socket)))
               0
               2)
           3)

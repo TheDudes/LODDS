@@ -495,8 +495,7 @@ be used to retrieve the load all currently running tasks produce.
 (defmethod task-run ((task task-request))
   (with-slots (socket tasks on-finish) task
     (multiple-value-bind (err request)
-        (lodds.low-level-api:parse-request
-         socket)
+        (lodds.low-level-api:parse-request (usocket:socket-stream socket))
       (when (> err 0)
         (error (format nil "low level api returned ~a on parse-request"
                        err)))
@@ -584,7 +583,7 @@ be used to retrieve the load all currently running tasks produce.
                  (lodds.low-level-api:get-info (usocket:socket-stream socket)
                                                (lodds:user-last-change user-info))
                  (multiple-value-bind (err update)
-                     (lodds.low-level-api:handle-info socket)
+                     (lodds.low-level-api:handle-info (usocket:socket-stream socket))
                    (if (eql 0 err)
                        (lodds:update-user user update)
                        (error "low level api returned: ~a" err))))
