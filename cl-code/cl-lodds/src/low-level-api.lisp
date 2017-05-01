@@ -43,7 +43,7 @@ multiple-value-bind.
    "^(add|del) ([a-f]|[A-F]|[0-9]){40} \\d+ [^\\n]+$")
   "used to scan get info body to check if they are correct")
 
-(defun write-to-stream (stream string &optional (flush-p t))
+(defun write-string-to-stream (stream string &optional (flush-p t))
   "converts the given string to octets and writes it to the given
 stream, will flush the stream with force-output when flusp-p is t"
   (write-sequence (lodds.core:string-to-octets string)
@@ -161,7 +161,8 @@ stream, will flush the stream with force-output when flusp-p is t"
 (defun get-file (socket-stream checksum start end)
   "will format and write a 'get file' request onto socket-stream requesting
    the specified (checksum) file's content from start till end"
-  (write-to-stream socket-stream (format-get-file checksum start end))
+  (write-string-to-stream socket-stream
+                          (format-get-file checksum start end))
   0)
 
 (defun format-get-info (timestamp)
@@ -172,7 +173,8 @@ stream, will flush the stream with force-output when flusp-p is t"
    information about shared files. timestamp describes the last requested
    information the user currently holds. If timestamp is zero (0) it will
    request a full list of shared files from the user."
-  (write-to-stream socket-stream (format-get-info timestamp))
+  (write-string-to-stream socket-stream
+                          (format-get-info timestamp))
   0)
 
 (defun format-get-send-permission (size timeout filename)
@@ -188,10 +190,10 @@ stream, will flush the stream with force-output when flusp-p is t"
    to-be-transfered file. The requested user then has 'timeout' seconds to
    respond with either a OK or a connection close. filename is a string containing
    the filename."
-  (write-to-stream socket-stream
-                   (format-get-send-permission size
-                                               timeout
-                                               filename))
+  (write-string-to-stream socket-stream
+                          (format-get-send-permission size
+                                                      timeout
+                                                      filename))
   0)
 
 ;; response family
@@ -224,8 +226,8 @@ stream, will flush the stream with force-output when flusp-p is t"
    file's content. size is, as the name suggests, the file size. name is the
    relative pathname.
    TODO: relative pathname link to spec"
-  (write-to-stream socket-stream
-                   (format-respond-info type timestamp file-infos))
+  (write-string-to-stream socket-stream
+                          (format-respond-info type timestamp file-infos))
   0)
 
 (defun format-respond-send-permission ()
@@ -234,8 +236,8 @@ stream, will flush the stream with force-output when flusp-p is t"
 (defun respond-send-permission (socket-stream)
   "response to a 'get send-permission', will send a OK and copy the
    socket-stream content (max size bytes) to file-stream."
-  (write-to-stream socket-stream
-                   (format-respond-send-permission))
+  (write-string-to-stream socket-stream
+                          (format-respond-send-permission))
   0)
 
 ;; handle family
