@@ -37,6 +37,7 @@
                (:module "test"
                 :serial t
                 :components ((:test-file "core")
-                             (:test-file "config"))))
+                             (:test-file "config")
+                             (:test-file "low-level-api"))))
   :perform (test-op :after (op c)
                     (funcall (intern #.(string :run) :prove) c)))
