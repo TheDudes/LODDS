@@ -148,6 +148,19 @@ functionality (for example system tray and status-info)
                    (q+:clear-message (q+:status-bar main-window))
                    (lodds:start)))))))
 
+(defun run-tests ()
+  (let* ((log (make-instance 'text-stream
+                             :center-on-scroll nil
+                             :font (or (q+:make-qfont "monospace"))))
+         (prove:*enable-colors* nil)
+         (prove:*debug-on-error* nil)
+         (prove:*test-result-output* log))
+    (make-instance 'dialog
+                   :widget log
+                   :title "Tests"
+                   :width 800
+                   :height 600)
+    (asdf:test-system :cl-lodds)))
 (define-menu (main-window Help)
   (:item "&Intro"
          (make-instance 'dialog
@@ -180,7 +193,9 @@ functionality (for example system tray and status-info)
                                (q+:move-cursor (q+:qtextcursor.start)))
                         :width 500
                         :height 500
-                        :title "Used Libraries")))
+                        :title "Used Libraries"))
+  (:item "&Run Tests"
+         (run-tests)))
 
 (define-menu (main-window Lodds)
   (:item ("&Run" (ctrl r))
