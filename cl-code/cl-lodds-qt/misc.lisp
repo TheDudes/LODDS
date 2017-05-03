@@ -108,3 +108,8 @@ to be a list of strings)"
                  (incf i))
            columns))
     item))
+
+(defun select-font ()
+  (with-finalizing ((diag (q+:make-qfontdialog)))
+    (when (eql 1 (q+:exec diag))
+      (q+:selected-font diag))))
