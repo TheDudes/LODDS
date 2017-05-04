@@ -161,6 +161,7 @@ functionality (for example system tray and status-info)
                    :width 800
                    :height 600)
     (asdf:test-system :cl-lodds)))
+
 (define-menu (main-window Help)
   (:item "&Intro"
          (make-instance 'dialog
