@@ -420,7 +420,9 @@ functionality (for example system tray and status-info)
                      +user-list-load+
                      (lodds.config:get-value :size-column-width))
   (update-log-message-max (dock-widget log-dock)
-                          (lodds.config:get-value :log-message-max)))
+                          (lodds.config:get-value :log-message-max))
+  (update-html-mode (dock-widget log-dock)
+                    (lodds.config:get-value :show-log-type-color)))
 
 (define-slot (main-window received-send-permission) ((task-id string))
   (declare (connected main-window (received-send-permission string)))

@@ -9,11 +9,10 @@
   ())
 
 (define-subwidget (info-log info-log-list)
-    (q+:make-qplaintextedit info-log)
-  (qdoto info-log-list
-         (q+:set-maximum-block-count (lodds.config:get-value :log-message-max))
-         (q+:set-center-on-scroll t)
-         (q+:set-read-only t)))
+    (make-instance 'text-stream
+                   :html-mode t
+                   :maximum-block-count (lodds.config:get-value :log-message-max)
+                   :font (q+:make-qfont "monospace")))
 
 (define-subwidget (info-log info-log-settings) (q+:make-qscrollarea info-log)
   (let* ((container (q+:make-qgroupbox "Log Settings" info-log))
@@ -35,24 +34,26 @@
     (q+:set-widget info-log-settings container)
     (q+:set-maximum-width info-log-settings 250)))
 
-(define-signal (info-log add-log-msg) (string string string))
+(define-signal (info-log add-log-msg) (string string))
 
 (define-slot (info-log add-log-msg) ((event string)
-                                     (color string)
                                      (msg string))
-  (declare (connected info-log (add-log-msg string
-                                            string
-                                            string)))
-  (q+:append-html info-log-list
-                  (format nil "<tt>[~a] <color ~a>~a</color> ~a</tt>"
-                          (lodds.core:format-timestamp)
-                          (if (eql 0 (length color))
-                              ""
-                              (format nil
-                                      "style=\"background-color: ~a\""
-                                      color))
-                          event
-                          (escape-html msg))))
+  (declare (connected info-log (add-log-msg string string)))
+  (let ((ts (lodds.core:format-timestamp)))
+    (apply #'format info-log-list
+           (if (html-mode info-log-list)
+               (list "[~a] <color ~a>~a</color> ~a~%"
+                     ts
+                     (format nil
+                             "style=\"background-color: ~a\""
+                             (or (lodds.config:get-log-event-color event)
+                                 (lodds.config:get-value :log-default-color)))
+                     event
+                     (escape-html msg))
+               (list "[~a] ~a ~a~%"
+                     ts
+                     event
+                     msg)))))
 
 (defun format-log-message (event-type event-msg)
   (case event-type
@@ -99,19 +100,21 @@
   (let ((event-type (first event))
         (event-msg (cdr event)))
     (unless (find event-type *ignored-log-events*)
-      (let ((color (if (not (lodds.config:get-value :show-log-type-color))
-                       ""
-                       (or (lodds.config:get-log-event-color event-type)
-                           (lodds.config:get-value :log-default-color)))))
-        (signal! info-log
-                 (add-log-msg string string string)
-                 (format nil "~a" event-type)
-                 color
-                 (format-log-message event-type event-msg))))))
+      (signal! info-log (add-log-msg string string)
+               (format nil "~a" event-type)
+               (format-log-message event-type event-msg)))))
 
 (defmethod update-log-message-max ((info-log info-log) new-max)
   (with-slots-bound (info-log info-log)
-    (q+:set-maximum-block-count info-log-list new-max)))
+    (setf (maximum-block-count info-log-list) new-max)))
+
+(defmethod update-font ((info-log info-log) new-font)
+  (with-slots-bound (info-log info-log)
+    (setf (font info-log-list) new-font)))
+
+(defmethod update-html-mode ((info-log info-log) html-mode)
+  (with-slots-bound (info-log info-log)
+    (setf (html-mode info-log-list) html-mode)))
 
 (define-initializer (info-log setup-widget)
     (qdoto info-log
