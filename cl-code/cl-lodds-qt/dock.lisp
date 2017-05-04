@@ -43,8 +43,9 @@ more lispy way
          (q+:set-minimum-width 10)))
 
 (define-initializer (dock setup-widget)
-  (q+:set-window-title dock title)
-  (q+:set-widget dock widget)
+  (qdoto dock
+         (q+:set-window-title title)
+         (q+:set-widget widget))
   (ctypecase side
     (null
      (q+:set-parent dock main-window)
