@@ -173,6 +173,10 @@ functionality (for example system tray and status-info)
                         :width 400
                         :height 600
                         :title "Intro"))
+  (:separator)
+  (:item "&Run Tests"
+         (run-tests))
+  (:separator)
   (:item "&About"
          (finalize
           (qdoto (q+:make-qmessagebox)
@@ -193,9 +197,7 @@ functionality (for example system tray and status-info)
                                (q+:move-cursor (q+:qtextcursor.start)))
                         :width 500
                         :height 500
-                        :title "Used Libraries"))
-  (:item "&Run Tests"
-         (run-tests)))
+                        :title "Used Libraries")))
 
 (define-menu (main-window Lodds)
   (:item ("&Run" (ctrl r))
