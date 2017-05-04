@@ -12,7 +12,8 @@ more lispy way
   ((main-window :initarg :main-window
                 :initform (error "speify dock main-window"))
    (widget :initarg :widget
-           :initform (error "specify dock widget"))
+           :initform (error "specify dock widget")
+           :reader dock-widget)
    (title :initarg :title
           :initform (error "specify dock title"))
    (menu :initarg :menu
