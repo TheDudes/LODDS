@@ -71,7 +71,7 @@ more lispy way
     (qdoto dock
            (q+:set-fixed-width (or width (q+:width dock)))
            (q+:set-fixed-height (or height (q+:height dock))))
-     (q+:qtimer-single-shot 1 dock "1liftMaxSize()"))
+    (q+:qtimer-single-shot 1 dock "1liftMaxSize()"))
 
   (when menu
     (q+:add-action menu (q+:toggle-view-action dock))))
