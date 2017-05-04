@@ -50,7 +50,8 @@
            #:get-selection-options
            #:get-integer-min
            #:get-integer-max
-           #:get-suggestions))
+           #:get-suggestions
+           #:get-log-event-color))
 
 (defpackage #:lodds.low-level-api
   (:use #:cl)

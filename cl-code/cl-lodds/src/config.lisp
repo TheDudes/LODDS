@@ -26,9 +26,12 @@ value (to verify the new value on change).
    "^#([a-f]|[A-F]|[0-9]){6}$")
   "To check if color is correct")
 
+(defun key-to-log-keyword (key)
+  (intern (string-upcase (format nil "log-~a-color" key))
+          :keyword))
+
 (defun generate-log-color-setting (color key)
-  (list (intern (string-upcase (format nil "log-~a-color" key))
-                :keyword)
+  (list (key-to-log-keyword key)
         color
         :color
         (format nil
@@ -625,3 +628,7 @@ value (to verify the new value on change).
   (let ((fn (fourth (gethash key config))))
     (when fn
       (funcall fn))))
+
+(defun get-log-event-color (event &optional (config (slot-value lodds:*server* 'lodds:settings)))
+  (lodds.config:get-value (key-to-log-keyword event)
+                          config))

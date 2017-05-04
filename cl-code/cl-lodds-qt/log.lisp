@@ -101,11 +101,7 @@
     (unless (find event-type *ignored-log-events*)
       (let ((color (if (not (lodds.config:get-value :show-log-type-color))
                        ""
-                       (or (lodds.config:get-value
-                            (intern
-                             (string-upcase
-                              (format nil "log-~a-color" event-type))
-                             :keyword))
+                       (or (lodds.config:get-log-event-color event-type)
                            (lodds.config:get-value :log-default-color)))))
         (signal! info-log
                  (add-log-msg string string string)

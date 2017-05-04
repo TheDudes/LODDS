@@ -10,6 +10,13 @@
 
 (defun test-config (testfile)
 
+  (subtest "key-to-keyword"
+    (is (lodds.config::key-to-log-keyword "test")
+        :log-test-color)
+
+    (is (lodds.config::key-to-log-keyword "something")
+        :log-something-color))
+
   (subtest "generate-log-color-setting"
     (is (lodds.config::generate-log-color-setting "#123123" :test)
         (list :log-test-color
@@ -218,7 +225,15 @@
         (subtest ":color"
           (let ((data (lodds.config::generate-log-color-setting "#123123" :test)))
             (setf (gethash :color-test config) data)
-            (apply #'test-key :color-test (butlast data))))))))
+            (apply #'test-key :color-test (butlast data))))
+
+        (subtest "get-log-event-color"
+          (let ((config (generate-default-config)))
+            (is (get-log-event-color :debug config)
+                "#888888")
+
+            (is (get-log-event-color :task-finished config)
+                "#1ed760")))))))
 
 (let ((testfile (make-pathname :name "___test-config")))
   (if (uiop:file-exists-p testfile)
