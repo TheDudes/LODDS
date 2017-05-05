@@ -70,9 +70,8 @@
            nil))
         (t (progn
              (lodds:get-folder full-dir
-                               (uiop:ensure-absolute-pathname
-                                (uiop:ensure-directory-pathname
-                                 (cl-fs-watcher:escape-wildcards directory)))
+                               (lodds.core:ensure-directory-pathname
+                                (cl-fs-watcher:escape-wildcards directory))
                                user)
              t))))))
 

@@ -92,9 +92,8 @@
                           :title "Error - Directory does not exists"
                           :text "Please select a directory which exists")
            nil))
-        (t (let ((directory-pathname (uiop:ensure-absolute-pathname
-                                      (uiop:ensure-directory-pathname
-                                       (cl-fs-watcher:escape-wildcards directory)))))
+        (t (let ((directory-pathname (lodds.core:ensure-directory-pathname
+                                      (cl-fs-watcher:escape-wildcards directory))))
              (loop :for (type info) :in items
                    :do (case type
                          (:dir

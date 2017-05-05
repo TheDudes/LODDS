@@ -199,9 +199,8 @@ tracked about the shared files.
 (defun folder-shareable-p (folder-path)
   (let ((pathname (if (pathnamep folder-path)
                       folder-path
-                      (uiop:ensure-absolute-pathname
-                       (uiop:ensure-directory-pathname
-                        (cl-fs-watcher:escape-wildcards folder-path))))))
+                      (lodds.core:ensure-directory-pathname
+                       (cl-fs-watcher:escape-wildcards folder-path)))))
     (cond
       ((not (lodds.core:directory-exists pathname ))
        (values nil "Folder does not exist"))

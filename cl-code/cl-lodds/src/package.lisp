@@ -4,6 +4,7 @@
   (:use #:cl)
   (:export #:with-server
            #:escape-wildcards
+           #:ensure-directory-pathname
            #:generate-fake-checksum
            #:generate-checksum
            #:get-file-size

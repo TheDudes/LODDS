@@ -238,7 +238,7 @@ value (to verify the new value on change).
                  Widget at the bottom of the main-window on startup~%~
                  Default: false"))
    (list :download-folder
-         (uiop:ensure-directory-pathname
+         (lodds.core:ensure-directory-pathname
           (merge-pathnames (pathname "download")
                            (user-homedir-pathname)))
          :folder
@@ -246,7 +246,7 @@ value (to verify the new value on change).
                  "Default download folder, where files get saved.~%~
                  Default: 'download' folder inside home directory."))
    (list :upload-folder
-         (uiop:ensure-directory-pathname
+         (lodds.core:ensure-directory-pathname
           (merge-pathnames (pathname "upload")
                            (user-homedir-pathname)))
          :folder
@@ -256,7 +256,7 @@ value (to verify the new value on change).
                  a file, its saved there too.~%~
                  Default: upload folder inside home directory"))
    (list :resources-folder
-         (uiop:ensure-directory-pathname
+         (lodds.core:ensure-directory-pathname
           (make-pathname :directory '(:relative "res")))
          :folder
          (format nil
@@ -269,7 +269,7 @@ value (to verify the new value on change).
                  to take effect~%~
                  Default: res/ (res folder inside the current directory)"))
    (list :filetype-icon-folder
-         (uiop:ensure-directory-pathname
+         (lodds.core:ensure-directory-pathname
           (make-pathname :directory '(:relative "res" "filetype-icons")))
          :folder
          (format nil
@@ -420,10 +420,8 @@ value (to verify the new value on change).
                 (error (e)
                   (declare (ignore e))
                   (values nil (format nil "~a is not a integer" value)))))
-    (:folder (values (uiop:ensure-directory-pathname
-                      (pathname
-                       (cl-fs-watcher:escape-wildcards value)))
-              nil))
+    (:folder (values (lodds.core:ensure-directory-pathname value)
+                     nil))
     (:selection (values value nil))
     (:color (values value nil))
     (t (values nil (format nil "Type ~a not recognised" type)))))

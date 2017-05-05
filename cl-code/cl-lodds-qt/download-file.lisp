@@ -99,17 +99,12 @@
                           :title "Error - No filename given"
                           :text "Please select a filename")
            nil))
-        (t (let ((directory-pathname (uiop:ensure-absolute-pathname
-                                      (uiop:ensure-directory-pathname
-                                       (cl-fs-watcher:escape-wildcards directory)))))
-             (lodds:get-file (merge-pathnames
-                              (uiop:parse-unix-namestring
-                               (cl-fs-watcher:escape-wildcards filename))
-                              directory-pathname)
+        (t (prog1 t
+             (lodds:get-file (merge-pathnames (lodds.core:ensure-directory-pathname directory)
+                                              (lodds.core:escape-wildcards filename))
                              checksum
                              (unless (string= user "Any")
-                               user))
-             t))))))
+                               user))))))))
 
 (defun open-download-file-dialog (checksum name size users)
   (make-instance 'dialog

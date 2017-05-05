@@ -72,9 +72,8 @@
     (let* ((dir-pathname (pathname (cl-fs-watcher:escape-wildcards (q+:text folder))))
            (file-pathname (pathname (cl-fs-watcher:escape-wildcards (q+:text filename))))
            (full-pathname (merge-pathnames file-pathname
-                                           (uiop:ensure-directory-pathname
-                                            (uiop:ensure-absolute-pathname
-                                             dir-pathname)))))
+                                           (lodds.core:ensure-directory-pathname
+                                            dir-pathname))))
       (if (and (lodds.core:directory-exists dir-pathname)
                (not (lodds.core:file-exists full-pathname)))
           full-pathname
