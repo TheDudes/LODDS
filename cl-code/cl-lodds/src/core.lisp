@@ -20,16 +20,19 @@ functions.
   "escapes pathname wildcards to avoid wildcard error"
   (cl-fs-watcher:escape-wildcards pathname))
 
-(defun ensure-directory-pathname (namestring)
+(defun ensure-directory-pathname (directory)
   (uiop:ensure-directory-pathname
-   (escape-wildcards
-    (if (eql (aref namestring (- (length namestring) 1))
-             (uiop:directory-separator-for-host))
-        namestring
-        (concatenate 'string
-                     namestring
-                     (make-string 1 :initial-element
-                                  (uiop:directory-separator-for-host)))))))
+   (etypecase directory
+     (pathname directory)
+     (string
+      (escape-wildcards
+       (if (eql (aref directory (- (length directory) 1))
+                (uiop:directory-separator-for-host))
+           directory
+           (concatenate 'string
+                        directory
+                        (make-string 1 :initial-element
+                                     (uiop:directory-separator-for-host)))))))))
 
 (defun generate-fake-checksum (&optional (length 40))
   (declare (optimize (debug 0) (safety 0)))
