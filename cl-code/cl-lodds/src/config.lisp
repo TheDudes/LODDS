@@ -467,8 +467,8 @@ value (to verify the new value on change).
                 (format nil "~a is a file" value))
                (t
                 (handler-case
-                    (progn (ensure-directories-exist value)
-                           nil)
+                    (prog1 nil
+                      (ensure-directories-exist value))
                   (error (e)
                     (format nil "Could not create directory ~a~%~a"
                             value e)))))))
