@@ -162,7 +162,7 @@
                            (if users
                                (loop :for selected-user :in (slot-value widget 'users-selected)
                                      :do (lodds:send-file (pathname
-                                                           (cl-fs-watcher:escape-wildcards file-choosen))
+                                                           (lodds.core:escape-wildcards file-choosen))
                                                           selected-user
                                                           (q+:value timeout))
                                      :finally (return t))

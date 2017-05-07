@@ -200,7 +200,7 @@ tracked about the shared files.
   (let ((pathname (if (pathnamep folder-path)
                       folder-path
                       (lodds.core:ensure-directory-pathname
-                       (cl-fs-watcher:escape-wildcards folder-path)))))
+                       folder-path))))
     (cond
       ((not (lodds.core:directory-exists pathname ))
        (values nil "Folder does not exist"))

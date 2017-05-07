@@ -93,7 +93,7 @@
                           :text "Please select a directory which exists")
            nil))
         (t (let ((directory-pathname (lodds.core:ensure-directory-pathname
-                                      (cl-fs-watcher:escape-wildcards directory))))
+                                      directory)))
              (loop :for (type info) :in items
                    :do (case type
                          (:dir
@@ -108,7 +108,7 @@
                               info
                             (declare (ignore size users))
                             (lodds:get-file (merge-pathnames (uiop:parse-unix-namestring
-                                                              (cl-fs-watcher:escape-wildcards name))
+                                                              (lodds.core:escape-wildcards name))
                                                              directory-pathname)
                                             checksum))))
                    :finally (return t))))))))

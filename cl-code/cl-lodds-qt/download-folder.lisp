@@ -71,7 +71,7 @@
         (t (progn
              (lodds:get-folder full-dir
                                (lodds.core:ensure-directory-pathname
-                                (cl-fs-watcher:escape-wildcards directory))
+                                directory)
                                user)
              t))))))
 

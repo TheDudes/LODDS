@@ -194,10 +194,8 @@
                   (lodds.config:get-value key config)))))
 
 (defmethod get-value ((folder-setting folder-setting))
-  (uiop:ensure-directory-pathname
-   (pathname
-    (cl-fs-watcher:escape-wildcards
-     (q+:text (slot-value folder-setting 'folder))))))
+  (lodds.core:ensure-directory-pathname
+   (q+:text (slot-value folder-setting 'folder))))
 
 ;; Color widget
 

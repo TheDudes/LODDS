@@ -58,7 +58,7 @@ others)
       (q+:remove-item-widget directories entry +shared-widget+)
       (finalize old-widget))
     (let ((button (q+:make-qpushbutton directories))
-          (pathname (pathname (cl-fs-watcher:escape-wildcards
+          (pathname (pathname (lodds.core:escape-wildcards
                                (q+:text entry +shared-fullpath+)))))
       (q+:set-tool-tip button (format nil
                                       "Click to unshare ~a"
@@ -135,7 +135,7 @@ others)
 
 (define-slot (directories add-directory) ((dir string))
   (declare (connected directories (add-directory string)))
-  (let ((pathname (pathname (cl-fs-watcher:escape-wildcards dir))))
+  (let ((pathname (pathname (lodds.core:escape-wildcards dir))))
     (unless (gethash pathname dirs)
       (add-new-dir-widget directories pathname))))
 
@@ -145,7 +145,7 @@ others)
         :do (let ((child (q+:top-level-item directories i)))
               (when (equal path (q+:text child +shared-fullpath+))
                 (q+:take-top-level-item directories i)
-                (remhash (pathname (cl-fs-watcher:escape-wildcards path)) dirs)
+                (remhash (pathname (lodds.core:escape-wildcards path)) dirs)
                 (return)))))
 
 (define-override (directories drag-enter-event) (ev)

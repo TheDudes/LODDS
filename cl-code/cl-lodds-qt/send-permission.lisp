@@ -69,11 +69,10 @@
 
 (defmethod get-full-filename ((send-permission send-permission))
   (with-slots-bound (send-permission send-permission)
-    (let* ((dir-pathname (pathname (cl-fs-watcher:escape-wildcards (q+:text folder))))
-           (file-pathname (pathname (cl-fs-watcher:escape-wildcards (q+:text filename))))
+    (let* ((dir-pathname (lodds.core:ensure-directory-pathname (q+:text folder)))
+           (file-pathname (pathname (lodds.core:escape-wildcards (q+:text filename))))
            (full-pathname (merge-pathnames file-pathname
-                                           (lodds.core:ensure-directory-pathname
-                                            dir-pathname))))
+                                           dir-pathname)))
       (if (and (lodds.core:directory-exists dir-pathname)
                (not (lodds.core:file-exists full-pathname)))
           full-pathname

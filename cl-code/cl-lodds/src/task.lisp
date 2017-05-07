@@ -717,7 +717,7 @@ be used to retrieve the load all currently running tasks produce.
               (incf bytes-transfered size)
               (let* ((file-pathname (enough-namestring
                                      (uiop:parse-unix-namestring
-                                      (cl-fs-watcher:escape-wildcards file))
+                                      (lodds.core:escape-wildcards file))
                                      remote-directory-pathname))
                      (local-pathname (merge-pathnames file-pathname
                                                       local-path)))
