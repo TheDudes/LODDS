@@ -717,12 +717,10 @@ be used to retrieve the load all currently running tasks produce.
                 (setf checksum (lodds:get-checksum-from-path file user)))
               ;; remove size from load since the new task will add it again
               (incf bytes-transfered size)
-              (let* ((file-pathname (enough-namestring
-                                     (uiop:parse-unix-namestring
-                                      (lodds.core:escape-wildcards file))
-                                     remote-directory-pathname))
-                     (local-pathname (merge-pathnames file-pathname
-                                                      local-path)))
+              (let ((local-pathname (merge-pathnames (enough-namestring
+                                                      (uiop:parse-unix-namestring file)
+                                                      remote-directory-pathname)
+                                                     local-path)))
                 (ensure-directories-exist local-pathname)
                 (task-run
                  (setf current-task
