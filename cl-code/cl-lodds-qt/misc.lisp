@@ -113,3 +113,26 @@ to be a list of strings)"
   (with-finalizing ((diag (q+:make-qfontdialog)))
     (when (eql 1 (q+:exec diag))
       (q+:selected-font diag))))
+
+(defun select-directory (&optional convert-to-pathname)
+  (let ((dir (q+:qfiledialog-get-existing-directory)))
+    (when (> (length dir) 0)
+      (if convert-to-pathname
+          (lodds.core:ensure-directory-pathname dir)
+          dir))))
+
+(defun select-file (&optional convert-to-pathname)
+  (let ((file (q+:qfiledialog-get-open-file-name)))
+    (when (> (length file) 0)
+      (if convert-to-pathname
+          (pathname
+           (lodds.core:escape-wildcards file))
+          file))))
+
+(defun select-save-file (&optional convert-to-pathname)
+  (let ((file (q+:qfiledialog-get-save-file-name)))
+    (when (> (length file) 0)
+      (if convert-to-pathname
+          (uiop:ensure-absolute-pathname
+           (lodds.core:escape-wildcards file))
+          file))))

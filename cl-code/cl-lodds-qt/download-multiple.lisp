@@ -22,9 +22,8 @@
     (q+:make-qpushbutton "Open" download-multiple)
   (connect select-folder-button "pressed()"
            (lambda ()
-             (let ((dir (q+:qfiledialog-get-existing-directory)))
-               (when (> (length dir)
-                        0)
+             (let ((dir (select-directory)))
+               (when dir
                  (q+:set-text folder dir))))))
 
 (define-subwidget (download-multiple layout)

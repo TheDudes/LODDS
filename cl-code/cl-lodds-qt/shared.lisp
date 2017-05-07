@@ -208,9 +208,8 @@ others)
     (q+:make-qpushbutton "Share Directory" shared)
   (connect share-button "pressed()"
            (lambda ()
-             (let ((dir (q+:qfiledialog-get-existing-directory)))
-               (when (> (length dir)
-                        0)
+             (let ((dir (select-directory t)))
+               (when dir
                  (share-directories shared-directories (list dir)))))))
 
 (define-initializer (directories setup-timer)

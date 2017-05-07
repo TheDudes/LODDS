@@ -175,9 +175,8 @@
 
 (define-slot (folder-setting open) ()
   (declare (connected open (pressed)))
-  (let ((dir (q+:qfiledialog-get-existing-directory)))
-    (when (> (length dir)
-             0)
+  (let ((dir (select-directory)))
+    (when dir
       (q+:set-text folder dir))))
 
 (define-subwidget (folder-setting layout)
@@ -335,11 +334,9 @@
     (let ((setting (update-setting settings-widget)))
       (setf update-inplace-p update-inplace-backup)
       (when setting
-        (let ((file-choosen (q+:qfiledialog-get-save-file-name)))
-          (when (> (length file-choosen)
-                   0)
-            (lodds.config:save-to-file (pathname
-                                        (cl-fs-watcher:escape-wildcards file-choosen))
+        (let ((file (select-save-file t)))
+          (when file
+            (lodds.config:save-to-file file
                                        setting)))))))
 
 (defmethod generate-new-settings ((settings-widget settings-widget))
@@ -357,14 +354,14 @@
 
 (define-slot (settings-widget load-file-pressed) ()
   (declare (connected load-file (pressed)))
-  (let ((file-choosen (q+:qfiledialog-get-open-file-name)))
-    (when (> (length file-choosen)
-             0)
+  (let ((file (select-file t)))
+    (when file
       (multiple-value-bind (new-config error)
-          (lodds.config:load-from-file file-choosen config)
+          (lodds.config:load-from-file file config)
         (if error
             (make-instance 'dialog
-                           :title "Error reading config file"
+                           :title (format nil "Error reading config file ~a"
+                                          (uiop:native-namestring file))
                            :text error)
             (progn
               (setf config new-config)

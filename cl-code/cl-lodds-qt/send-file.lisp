@@ -36,9 +36,8 @@
 
 (define-slot (send-file select-file) ()
   (declare (connected button (pressed)))
-  (let ((file-choosen (q+:qfiledialog-get-open-file-name)))
-    (when (> (length file-choosen)
-             0)
+  (let ((file-choosen (select-file)))
+    (when file-choosen
       (q+:set-text file file-choosen))))
 
 (define-subwidget (send-file file-layout)
