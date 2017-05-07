@@ -106,14 +106,8 @@ others)
     (setf (gethash pathname (slot-value directories 'dirs)) new-entry)
     (set-spinner directories new-entry)))
 
-(defmethod share-directories ((directories directories) dirs)
-  (let ((pathnames (mapcar (lambda (namestring)
-                             (uiop:ensure-absolute-pathname
-                              (uiop:ensure-directory-pathname
-                               (cl-fs-watcher:escape-wildcards
-                                namestring))))
-                           dirs))
-        (failed-dirs (list)))
+(defmethod share-directories ((directories directories) pathnames)
+  (let ((failed-dirs (list)))
     (loop :for pathname :in pathnames
           :do
           (multiple-value-bind (shareable-p error)
@@ -156,7 +150,11 @@ others)
   (q+:accept-proposed-action ev))
 
 (define-override (directories drop-event) (ev)
-  (share-directories directories (format-dropped-links ev)))
+  (share-directories directories
+                     (mapcar (lambda (namestring)
+                               (lodds.core:ensure-directory-pathname
+                                namestring))
+                             (format-dropped-links ev))))
 
 (define-initializer (directories setup-widget)
   (qdoto directories
