@@ -99,8 +99,8 @@
                           :text "Please select a filename")
            nil))
         (t (prog1 t
-             (lodds:get-file (merge-pathnames (lodds.core:ensure-directory-pathname directory)
-                                              (lodds.core:escape-wildcards filename))
+             (lodds:get-file (merge-pathnames (lodds.core:escape-wildcards filename)
+                                              (lodds.core:ensure-directory-pathname directory))
                              checksum
                              (unless (string= user "Any")
                                user))))))))
