@@ -106,8 +106,7 @@
                           (destructuring-bind (checksum name size users)
                               info
                             (declare (ignore size users))
-                            (lodds:get-file (merge-pathnames (uiop:parse-unix-namestring
-                                                              (lodds.core:escape-wildcards name))
+                            (lodds:get-file (merge-pathnames (uiop:parse-unix-namestring name)
                                                              directory-pathname)
                                             checksum))))
                    :finally (return t))))))))
