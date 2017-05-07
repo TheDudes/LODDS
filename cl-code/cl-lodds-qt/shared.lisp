@@ -86,21 +86,22 @@ others)
 
 (defmethod add-new-dir-widget ((directories directories) pathname)
   (let ((new-entry (q+:make-qtreewidgetitem directories))
-        (relative-pathname (make-pathname :directory (cons :relative
-                                                           (last (pathname-directory pathname)))
-                                          :device nil
-                                          :defaults pathname)))
+        (relative-namestring (uiop:native-namestring
+                              (make-pathname :directory (cons :relative
+                                                              (last (pathname-directory pathname)))
+                                             :device nil
+                                             :defaults pathname))))
     (qdoto new-entry
            (q+:set-text +shared-path+
-                        (format nil "~a"
-                                relative-pathname))
+                        relative-namestring)
            (q+:set-tool-tip +shared-path+
                             (format nil
                                     "Click the button on the right ~
                                     to unshare ~a"
-                                    relative-pathname))
+                                    relative-namestring))
            (q+:set-status-tip +shared-path+
-                              (format nil "Directory: ~a" pathname))
+                              (format nil "Directory: ~a"
+                                      (uiop:native-namestring pathname)))
            (q+:set-text +shared-fullpath+
                         (uiop:native-namestring pathname)))
     (setf (gethash pathname (slot-value directories 'dirs)) new-entry)
@@ -122,7 +123,8 @@ others)
                      :title (format nil "Error - Could not Share directories")
                      :text (format nil
                                    "Sorry, was not able to share the following directories:~%~:{~%~a (~a)~}"
-                                   failed-dirs)))))
+                                   (mapcar #'uiop:native-namestring
+                                           failed-dirs))))))
 
 (define-signal (directories add-directory) (string))
 (define-signal (directories remove-directory) (string))

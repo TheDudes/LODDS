@@ -228,14 +228,16 @@ be used to retrieve the load all currently running tasks produce.
 
 (defmethod task-info ((task task-request-send-permission))
   (with-slots (file-pathname users) task
-    (format nil "[Request] ~a: ~a" users file-pathname)))
+    (format nil "[Request] ~a: ~a"
+            users
+            (uiop:native-namestring file-pathname))))
 
 (defmethod task-info ((task task-request-file))
   (with-slots (user total-load file-pathname) task
     (format nil "[Upload] (~a - ~a): ~a"
             user
             (lodds.core:format-size total-load)
-            file-pathname)))
+            (uiop:native-namestring file-pathname))))
 
 (defmethod task-info ((task task-get-info))
   (with-slots (user) task
@@ -250,19 +252,19 @@ be used to retrieve the load all currently running tasks produce.
                         (lodds.core:format-seconds time-waited)
                         (lodds.core:format-seconds timeout))
                 "")
-            file-pathname)))
+            (uiop:native-namestring file-pathname))))
 
 (defmethod task-info ((task task-get-file-from-user))
   (with-slots (file-pathname user) task
     (format nil "[Download] (~a): ~a "
             user
-            file-pathname)))
+            (uiop:native-namestring file-pathname))))
 
 (defmethod task-info ((task task-get-file-from-users))
   (with-slots (current-user file-pathname) task
     (format nil "[Download] (~a): ~a"
             (or current-user "none")
-            file-pathname)))
+            (uiop:native-namestring file-pathname))))
 
 (defmethod task-info ((task task-get-folder))
   (with-slots (items items-done) task
