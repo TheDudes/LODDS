@@ -36,6 +36,8 @@
                       :initarg :finalize-widget-p
                       :documentation "If t the given widget will be
                       finalized when the dialog closes")
+   (title :initform "Dialog"
+          :initarg :title)
    (width :initform nil
           :initarg :width)
    (height :initform nil
@@ -93,30 +95,27 @@
                   text))
     (q+:set-text message message-text)))
 
-(defmethod initialize-instance :after ((dialog dialog) &key
-                                                         (title "Dialog"))
-  (with-slots-bound (dialog dialog)
-    (q+:set-window-title dialog title)
-    (q+:set-text ok ok-button-text)
-    (q+:set-text cancel cancel-button-text)
-    (when widget
-      (q+:add-widget layout widget))
-    (q+:add-widget layout button-area)))
-
 (defmethod cancel ((dialog dialog))
   (finish-dialog dialog :cancel))
 
 (define-initializer (dialog setup-widget)
-  (q+:set-attribute dialog (q+:qt.wa_delete-on-close))
+  (q+:set-text ok ok-button-text)
+  (q+:set-text cancel cancel-button-text)
+  (when widget
+    (q+:add-widget layout widget))
+  (q+:add-widget layout button-area)
   (when (or width height)
     (q+:resize dialog
                (or width
                    (q+:width dialog))
                (or height
                    (q+:height dialog))))
-  (q+:show dialog))
+  (qdoto dialog
+         (q+:set-attribute (q+:qt.wa_delete-on-close))
+         (q+:set-window-title title)
+         (q+:set-window-icon (q+:window-icon *main-window*))
+         (q+:show)))
 
 (define-finalizer (dialog cleanup-widget)
-  (when (and widget
-             finalize-widget-p)
+  (when (and widget finalize-widget-p)
     (finalize widget)))
