@@ -2,7 +2,7 @@
 (in-readtable :qtools)
 
 (define-widget text-stream (QPlainTextEdit
-                            sb-gray:fundamental-character-output-stream)
+                            trivial-gray-streams:fundamental-character-output-stream)
   ((buffer-init-size :initform 64
                      :initarg :buffer-init-size)
    (buffer :initform nil)
@@ -56,19 +56,15 @@
   (when font
     (finalize font)))
 
-(defmethod sb-gray:stream-start-line-p ((stream text-stream))
+(defmethod trivial-gray-streams:stream-start-line-p ((stream text-stream))
   (if (slot-value stream 'buffer) nil t))
 
-(defmethod sb-gray:stream-line-length ((stream text-stream))
-  (with-slots (buffer) stream
-    (if buffer (length buffer) 0)))
-
-(defmethod sb-gray:stream-line-column ((stream text-stream))
+(defmethod trivial-gray-streams:stream-line-column ((stream text-stream))
   (with-slots (buffer) stream
     (when buffer
       (length buffer))))
 
-(defmethod sb-gray:stream-write-char ((stream text-stream) character)
+(defmethod trivial-gray-streams:stream-write-char ((stream text-stream) character)
   (with-slots (buffer write-fn buffer-init-size) stream
     (unless buffer
       (setf buffer (make-array buffer-init-size

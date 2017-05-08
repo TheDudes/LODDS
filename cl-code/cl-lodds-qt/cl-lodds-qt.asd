@@ -18,7 +18,8 @@
                :qtgui
                :qtsvg
                :cl-strings
-               :qtools-ui-debugger)
+               :qtools-ui-debugger
+               :trivial-gray-streams)
   :components ((:file "package")
                (:file "globals")
                (:file "misc")
