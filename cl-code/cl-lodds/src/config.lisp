@@ -487,7 +487,8 @@ value (to verify the new value on change).
                           :if-exists :supersede
                           :if-does-not-exist :create)
     (maphash (lambda (key value)
-               (destructuring-bind (val type desc &rest nil) value
+               (destructuring-bind (val type desc &rest ignored) value
+                 (declare (ignore ignored))
                  (format stream "# ~a~%~a=~a~%~%"
                          (cl-strings:replace-all desc
                                                  (format nil "~%")
