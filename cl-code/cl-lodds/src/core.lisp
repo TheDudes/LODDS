@@ -21,18 +21,29 @@ functions.
   (cl-fs-watcher:escape-wildcards pathname))
 
 (defun ensure-directory-pathname (directory)
-  (uiop:ensure-directory-pathname
-   (etypecase directory
-     (pathname directory)
-     (string
-      (escape-wildcards
-       (if (eql (aref directory (- (length directory) 1))
-                (uiop:directory-separator-for-host))
-           directory
-           (concatenate 'string
-                        directory
-                        (make-string 1 :initial-element
-                                     (uiop:directory-separator-for-host)))))))))
+  (let ((pathname
+          (uiop:ensure-directory-pathname
+           (etypecase directory
+             (pathname directory)
+             (string
+              (escape-wildcards
+               (if (eql (aref directory (- (length directory) 1))
+                        (uiop:directory-separator-for-host))
+                   directory
+                   (concatenate 'string
+                                directory
+                                (make-string 1 :initial-element
+                                             (uiop:directory-separator-for-host))))))))))
+    ;; expand :home, we can get the actual path from
+    ;; (user-homedir-pathname)
+    (if (eql (cadr (pathname-directory pathname)) :home)
+        (make-pathname :directory
+                       (append (pathname-directory (user-homedir-pathname))
+                               (cddr (pathname-directory pathname)))
+                       :name nil
+                       :type nil
+                       :defaults pathname)
+        pathname)))
 
 (defun generate-fake-checksum (&optional (length 40))
   (declare (optimize (debug 0) (safety 0)))
