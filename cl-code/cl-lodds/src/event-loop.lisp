@@ -64,7 +64,10 @@ them from any other thread
       (apply #'lodds.event:push-event
              (if err
                  (list :error
-                       (format nil "Could not advertise: ~a" err))
+                       (format nil "Could not advertise on ~a port ~a: ~a"
+                               broadcast-ip
+                               (lodds.config:get-value :port)
+                               err))
                  (list :advertiser :send))))))
 
 (defun ev-init-advertiser ()
