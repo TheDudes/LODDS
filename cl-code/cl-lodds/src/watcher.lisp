@@ -197,10 +197,7 @@ tracked about the shared files.
                             (return-from folder-already-shared-p t))))))
 
 (defun folder-shareable-p (folder-path)
-  (let ((pathname (if (pathnamep folder-path)
-                      folder-path
-                      (lodds.core:ensure-directory-pathname
-                       folder-path))))
+  (let ((pathname (lodds.core:ensure-directory-pathname folder-path)))
     (cond
       ((not (lodds.core:directory-exists pathname ))
        (values nil "Folder does not exist"))
@@ -259,10 +256,10 @@ tracked about the shared files.
                      pathname))
       pathname)))
 
-(defun unshare-folder (pathname)
+(defun unshare-folder (folder-path)
   "unshare the given folder"
   (let ((watcher (lodds:get-watcher)))
-    (let ((rem-watcher (find pathname
+    (let ((rem-watcher (find (lodds.core:ensure-directory-pathname folder-path)
                              (dir-watchers watcher)
                              :key #'cl-fs-watcher:dir
                              :test #'equal)))
