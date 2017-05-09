@@ -26,11 +26,6 @@
     (is-type (generate-fake-checksum 40) 'string
              "type string"))
 
-(subtest "format-timestamp"
-  (is (format-timestamp 0)
-      "1970-01-01 01:00:00"
-      "0 equal to \"1970-01-01 01:00:00\""))
-
 (subtest "copy-stream"
   (flet ((make-random-binary-vector (size)
            (map '(vector (unsigned-byte 8))
