@@ -148,19 +148,28 @@
            (failed 0)
            (config (generate-default-config))
            (key-count (hash-table-count config)))
-      (save-to-file testfile config)
-      (maphash (lambda (k v)
-                 (if (equalp (gethash k config) v)
-                     (incf matching)
-                     (incf failed)))
-               (load-from-file testfile))
-      (if (> failed 0)
-          (fail (format nil "~a out of ~a did not match"
-                        failed key-count))
-          (if (not (eql (+ failed matching) key-count))
-              (fail (format nil "only ~a keys found, ~a expected"
-                            (+ failed matching) key-count))
-              (pass "keys and values match")))))
+      (subtest "save-to"
+        (handler-case (progn
+                        (save-to-file testfile config)
+                        (pass "successfully saved"))
+          (error (err)
+            (fail (format nil "raised error: ~a" err)))))
+      (subtest "load-from"
+        (maphash (lambda (k v)
+                   (if (equalp (gethash k config) v)
+                       (incf matching)
+                       (progn
+                         (incf failed)
+                         (fail (format nil "key: ~a did not match (expected: ~a, got: ~a)"
+                                       k v (gethash k config))))))
+                 (load-from-file testfile))
+        (if (> failed 0)
+            (fail (format nil "~a out of ~a keys did not match"
+                          failed key-count))
+            (if (not (eql (+ failed matching) key-count))
+                (fail (format nil "only ~a keys found, ~a expected"
+                              (+ failed matching) key-count))
+                (pass "keys and values match"))))))
 
 
   (subtest "config accessors"
