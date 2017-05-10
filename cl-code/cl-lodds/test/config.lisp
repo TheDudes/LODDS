@@ -192,9 +192,10 @@
         (subtest ":integer"
           (test-key :port 4567 :integer
                     (format nil
-                            "The port where lodds is listning on for incomming~%~
+                            "The port where lodds is listening on for incomming~%~
                             requests. Value between 1024 and 65535.~%~
-                            Restart is needed for changes to take effect.~%~
+                            Restart is needed for changes to take effect~%~
+                            (Lodds -> Restart).~%~
                             Default: 4567"))
           (is (get-integer-min :port config) 1024 "integer-min")
           (is (get-integer-max :port config) 65535 "integer-max"))
@@ -250,7 +251,7 @@
                 "#1ed760")))
 
         (subtest ":font"
-          (test-key :log-font "monospace" :font
+          (test-key :log-font "Monospace, Inconsolata, Consolas" :font
                     (format nil
                             "Font used on Log widget.~%~
                             Default: monospace")))))))
