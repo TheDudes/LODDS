@@ -216,9 +216,9 @@
 
 (define-slot (color-setting open) ()
   (declare (connected open (pressed)))
-  (with-finalizing ((dialog (q+:make-qcolordialog color-setting)))
-    (when (eql 1 (q+:exec dialog))
-      (q+:set-text color (q+:name (q+:current-color dialog))))))
+  (let ((new-color (select-color)))
+    (when new-color
+      (q+:set-text color new-color))))
 
 (define-slot (color-setting text-changed) ((text string))
   (declare (connected color (text-changed string)))

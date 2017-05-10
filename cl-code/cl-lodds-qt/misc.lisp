@@ -109,6 +109,11 @@ to be a list of strings)"
            columns))
     item))
 
+(defun select-color ()
+  (with-finalizing ((dialog (q+:make-qcolordialog)))
+    (when (eql 1 (q+:exec dialog))
+      (q+:name (q+:current-color dialog)))))
+
 (defun select-font ()
   (with-finalizing ((diag (q+:make-qfontdialog)))
     (when (eql 1 (q+:exec diag))
