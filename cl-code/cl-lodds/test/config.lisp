@@ -233,8 +233,8 @@
           (test-key :deny-requests nil :boolean
                     (format nil
                             "If set to true all incomming send requests will~%~
-                              denied.~%~
-                              Default: false")))
+                            denied.~%~
+                            Default: false")))
 
         (subtest ":color"
           (let ((data (lodds.config::generate-log-color-setting "#123123" :test)))
