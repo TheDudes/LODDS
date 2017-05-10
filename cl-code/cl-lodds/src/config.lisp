@@ -52,7 +52,7 @@ value (to verify the new value on change).
          (format nil
                  "Interface lodds uses to get his own ip and broadcast~%~
                  address. You have to restart lodds for changes to~%~
-                 take effect.~%~
+                 take effect. (Lodds -> Restart)~%~
                  Default: The first interface with an ip (excluding loopback)")
          (lambda ()
            (lodds.core:get-interfaces)))
@@ -67,9 +67,10 @@ value (to verify the new value on change).
          4567
          :integer
          (format nil
-                 "The port where lodds is listning on for incomming~%~
+                 "The port where lodds is listening on for incomming~%~
                  requests. Value between 1024 and 65535.~%~
-                 Restart is needed for changes to take effect.~%~
+                 Restart is needed for changes to take effect~%~
+                 (Lodds -> Restart).~%~
                  Default: 4567")
          1024
          65535)
@@ -263,10 +264,8 @@ value (to verify the new value on change).
                  "Folder which contains resources for lodds,~%~
                  like icons, stylesheets, ...~%~
                  Changing this value will have no direct effect,~%~
-                 Restart lodds (Lodds -> Restart), reload the~%~
-                 stylesheet (Lodds -> Reload Stylesheet) and~%~
-                 reshare (unshare/share) all folders for changes~%~
-                 to take effect~%~
+                 Restart the lodds gui (Lodds -> Restart Gui) for
+                 changes to take effect~%~
                  Default: res/ (res folder inside the current directory)"))
    (list :filetype-icon-folder
          (lodds.core:ensure-directory-pathname
@@ -276,8 +275,8 @@ value (to verify the new value on change).
                  "Folder which contains filetype icons which are~%~
                  displayed left of the shared files.~%~
                  Changing this value will have no direct effect,~%~
-                 Restart lodds (Lodds -> Restart) for changes~%~
-                 to take effect.~%~
+                 Restart the lodds gui (Lodds -> Restart Gui) for~%~
+                 changes to take effect.~%~
                  Default: res/filetype-icons (res/filetype-icons/~%~
                  folder inside the current directory)"))
    (list :show-filetype-icons
@@ -285,8 +284,9 @@ value (to verify the new value on change).
          :boolean
          (format nil
                  "Can be unchecked/set to false to not show icons~%~
-                 based on file types. Restarting lodds is needed for~%~
-                 changes to take effekt~%~
+                 based on file types. Restarting lodds gui~%~
+                 (Lodds -> Restart Gui) is needed for changes to~%~
+                 take effekt~%~
                  Default: true."))
    (list :timeout-send-file
          300
@@ -354,7 +354,7 @@ value (to verify the new value on change).
                  size. For example bigger files/folders will be colored red,~%~
                  while smaller will be colored in a greenish color.~%~
                  Changing this setting will not have a direct effect,~%~
-                 Restarting Lodds (Lodds -> Restart) to build a new~%~
+                 Restarting Lodds (Lodds -> Restart Gui) to build a new~%~
                  tree is needed.~%~
                  Default: true"))
    (list :show-log-type-color

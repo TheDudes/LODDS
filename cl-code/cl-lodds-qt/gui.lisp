@@ -207,6 +207,10 @@ functionality (for example system tray and status-info)
          (lodds:stop))
   (:item ("&Restart" (ctrl e))
          (restart-lodds main-window))
+  (:item ("&Restart Gui" (ctrl w))
+         (progn
+           (setf *restart* t)
+           (signal! main-window (shutdown))))
   (:separator)
   (:item "&Reload Stylesheet"
          (signal! main-window (reload-stylesheet)))
@@ -595,6 +599,8 @@ functionality (for example system tray and status-info)
 (defparameter *main-window* nil
   "Contains the main-window, usefull to debug/inspect gui widgets.")
 
+(defparameter *restart* nil)
+
 (defun main (&optional (lodds-server (make-instance 'lodds:lodds-server) server-given-p))
   ;; so iam calling tmt:with-body-in-main-thread here myself and set
   ;; :main-thread to nil on with-main-window. This way lodds-server
@@ -611,5 +617,8 @@ functionality (for example system tray and status-info)
         (setup-tray-icon window)
         (unless server-given-p
           (lodds:start)))
+      (when *restart*
+        (setf *restart* nil)
+        (main lodds-server))
       (unless server-given-p
         (lodds:shutdown)))))
