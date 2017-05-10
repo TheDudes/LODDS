@@ -251,20 +251,64 @@
 (defmethod get-value ((color-setting color-setting))
   (q+:text (slot-value color-setting 'color)))
 
+;; Font widget
+
+(define-widget font-setting (QWidget setting)
+  ())
+
+(define-subwidget (font-setting font)
+    (q+:make-qlineedit font-setting)
+  (q+:set-alignment font (q+:qt.align-center))
+  (setf (q+:size-policy font)
+        (values (q+:qsizepolicy.expanding)
+                (q+:qsizepolicy.fixed))))
+
+(define-subwidget (font-setting open)
+    (q+:make-qpushbutton "..." font-setting)
+  (setf (q+:size-policy open)
+        (values (q+:qsizepolicy.minimum)
+                (q+:qsizepolicy.fixed))))
+
+(define-slot (font-setting open) ()
+  (declare (connected open (pressed)))
+  (let ((new-font (select-font)))
+    (when new-font
+      (q+:set-text font (concatenate 'string "_"
+                                     (q+:to-string new-font)))
+      (finalize new-font))))
+
+(define-subwidget (font-setting layout)
+    (q+:make-qhboxlayout font-setting)
+  (qdoto layout
+         (q+:add-widget font)
+         (q+:add-widget open)))
+
+(define-initializer (font-setting setup-widget)
+  (with-slots (key widget config) font-setting
+    (setf widget font)
+    (q+:set-text font
+                 (lodds.config:get-value key config))))
+
+(defmethod get-value ((font-setting font-setting))
+  (q+:text (slot-value font-setting 'font)))
+
 ;; Functions
 
 (defun make-setting (key config)
-  (case (lodds.config:get-type key config)
-    (:boolean   (make-instance 'boolean-setting   :key key :config config))
-    (:list      (make-instance 'list-setting      :key key :config config))
-    (:string    (make-instance 'string-setting    :key key :config config))
-    (:integer   (make-instance 'integer-setting   :key key :config config))
-    (:folder    (make-instance 'folder-setting    :key key :config config))
-    (:selection (make-instance 'selection-setting :key key :config config))
-    (:color     (make-instance 'color-setting     :key key :config config))
-    (t (error "Type ~a of key ~a not recognised"
-              (lodds.config:get-type key config)
-              key))))
+  (make-instance (case (lodds.config:get-type key config)
+                   (:boolean   'boolean-setting)
+                   (:list      'list-setting)
+                   (:string    'string-setting)
+                   (:integer   'integer-setting)
+                   (:folder    'folder-setting)
+                   (:selection 'selection-setting)
+                   (:color     'color-setting)
+                   (:font      'font-setting)
+                   (t (error "Type ~a of key ~a not recognised"
+                             (lodds.config:get-type key config)
+                             key)))
+                 :key key
+                 :config config))
 
 (define-widget settings-widget (QScrollArea)
   ((config :initform nil

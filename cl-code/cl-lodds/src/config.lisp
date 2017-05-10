@@ -357,6 +357,26 @@ value (to verify the new value on change).
                  Restarting Lodds (Lodds -> Restart Gui) to build a new~%~
                  tree is needed.~%~
                  Default: true"))
+   (list :application-font
+         ""
+         :font
+         (format nil
+                 "Font used on every window besides log and shares.~%~
+                 Leave it empty to use system font. Restart the gui~%~
+                 for changes to take effect (Lodds -> Restart Gui)~%~
+                 Default: "))
+   (list :log-font
+         "Monospace, Inconsolata, Consolas"
+         :font
+         (format nil
+                 "Font used on Log widget.~%~
+                 Default: monospace"))
+   (list :shares-font
+         "Monospace, Inconsolata, Consolas"
+         :font
+         (format nil
+                 "Font used on Shares widget.~%~
+                 Default: monospace"))
    (list :show-log-type-color
          t
          :boolean
@@ -424,6 +444,7 @@ value (to verify the new value on change).
                      nil))
     (:selection (values value nil))
     (:color (values value nil))
+    (:font (values value nil))
     (t (values nil (format nil "Type ~a not recognised" type)))))
 
 (defun validate-new-entry (key value config)
@@ -437,6 +458,7 @@ value (to verify the new value on change).
             (:folder    (pathnamep value))
             (:selection (stringp value))
             (:color     (cl-ppcre:scan *color-scanner* value))
+            (:font      (stringp value))
             (t nil))
     (return-from validate-new-entry
       (format nil "~a is not of expected key type ~a (key: ~a)"

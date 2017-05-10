@@ -12,7 +12,7 @@
     (make-instance 'text-stream
                    :html-mode t
                    :maximum-block-count (lodds.config:get-value :log-message-max)
-                   :font (q+:make-qfont "monospace")))
+                   :font (get-font (lodds.config:get-value :log-font))))
 
 (define-subwidget (info-log info-log-settings) (q+:make-qscrollarea info-log)
   (let* ((container (q+:make-qgroupbox "Log Settings" info-log))
@@ -110,7 +110,8 @@
 
 (defmethod update-font ((info-log info-log) new-font)
   (with-slots-bound (info-log info-log)
-    (setf (font info-log-list) new-font)))
+    (setf (font info-log-list)
+          (get-font new-font))))
 
 (defmethod update-html-mode ((info-log info-log) html-mode)
   (with-slots-bound (info-log info-log)

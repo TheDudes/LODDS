@@ -42,7 +42,9 @@
 
 (defmethod (setf font) :after (font (stream text-stream))
   (q+:set-font stream
-               (or font (q+:qapplication-font))))
+               (if (stringp font)
+                   (get-font font)
+                   font)))
 
 (define-initializer (text-stream setup-widget)
   (setf (html-mode text-stream) html-mode)

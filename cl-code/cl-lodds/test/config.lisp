@@ -132,7 +132,12 @@
     (subtest ":color"
       (is-values (lodds.config::string-to-type "#123123" :color)
                  '("#123123" nil)
-                 "basic color")))
+                 "basic color"))
+
+    (subtest ":font"
+      (is-values (lodds.config::string-to-type "monospace" :font)
+                 '("monospace" nil)
+                 "basic font")))
 
   (subtest "validate-config"
     (ok (not (validate-config (generate-default-config)))
@@ -242,7 +247,13 @@
                 "#888888")
 
             (is (get-log-event-color :task-finished config)
-                "#1ed760")))))))
+                "#1ed760")))
+
+        (subtest ":font"
+          (test-key :log-font "monospace" :font
+                    (format nil
+                            "Font used on Log widget.~%~
+                            Default: monospace")))))))
 
 (let ((testfile (make-pathname :name "___test-config")))
   (if (uiop:file-exists-p testfile)

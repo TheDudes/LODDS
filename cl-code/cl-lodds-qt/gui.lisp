@@ -8,6 +8,10 @@ functionality (for example system tray and status-info)
 (in-package #:lodds-qt)
 (in-readtable :qtools)
 
+(defparameter *system-default-font* nil
+  "string which is set to the system default font on the first call to
+  set-fonts. Can be used to recover default font.")
+
 (define-widget main-window (QMainWindow)
   ((directory-error-dialog :initform nil
                            :documentation "If a directory-error-dialog
@@ -151,7 +155,7 @@ functionality (for example system tray and status-info)
 (defun run-tests ()
   (let* ((log (make-instance 'text-stream
                              :center-on-scroll nil
-                             :font (or (q+:make-qfont "monospace"))))
+                             :font (get-font "monospace")))
          (prove:*enable-colors* nil)
          (prove:*debug-on-error* nil)
          (prove:*test-result-output* log))
@@ -387,10 +391,12 @@ functionality (for example system tray and status-info)
           (lodds.event:push-event :info text))))
   (q+:add-permanent-widget (q+:status-bar main-window)
                            status-label)
+
   (qdoto main-window
          (q+:set-window-title (format nil "LODDS - ~a" (lodds.config:get-value :name)))
          (q+:set-central-widget shares-widget)
          (q+:resize 1280 720))
+  (set-fonts main-window)
   (signal! main-window (reload-stylesheet)))
 
 (define-signal (main-window reload-stylesheet) ())
@@ -404,6 +410,19 @@ functionality (for example system tray and status-info)
   (declare (connected main-window (shutdown)))
   (q+:close main-window)
   (q+:qcoreapplication-quit))
+
+(defmethod set-fonts ((main-window main-window))
+  "sets application, shares and log font, in that order"
+  (unless *system-default-font*
+    (with-finalizing ((font (q+:make-qfont)))
+      (setf *system-default-font* (q+:to-string font))))
+  (with-slots-bound (main-window main-window)
+    ;; backup default font
+    (q+:set-font *qapplication* (get-font (lodds.config:get-value :application-font)))
+
+    (update-font shares-widget (lodds.config:get-value :shares-font))
+    (update-font (dock-widget (slot-value main-window 'log-dock))
+                 (lodds.config:get-value :log-font))))
 
 (define-slot (main-window config-changed) ()
   (declare (connected main-window (config-changed)))
@@ -427,7 +446,9 @@ functionality (for example system tray and status-info)
   (update-log-message-max (dock-widget log-dock)
                           (lodds.config:get-value :log-message-max))
   (update-html-mode (dock-widget log-dock)
-                    (lodds.config:get-value :show-log-type-color)))
+                    (lodds.config:get-value :show-log-type-color))
+
+  (set-fonts main-window))
 
 (define-slot (main-window received-send-permission) ((task-id string))
   (declare (connected main-window (received-send-permission string)))

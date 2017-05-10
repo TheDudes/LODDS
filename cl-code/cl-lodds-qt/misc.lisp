@@ -141,3 +141,16 @@ to be a list of strings)"
           (uiop:ensure-absolute-pathname
            (lodds.core:escape-wildcards file))
           file))))
+
+(defun get-font (description)
+  (if (or (null description) (eql 0 (length description)))
+      (let ((font (q+:make-qfont)))
+        (q+:from-string font
+                        (or *system-default-font*
+                            (error "Cannot retrieve default font, *defualt-font* not yet set")))
+        font)
+      (if (char= #\_ (char description 0))
+          (let ((font (q+:make-qfont)))
+            (q+:from-string font (subseq description 1))
+            font)
+          (q+:make-qfont description))))

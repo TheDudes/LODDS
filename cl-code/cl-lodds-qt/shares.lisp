@@ -199,23 +199,19 @@ QTreeWidget in the middle, which displays all shared files
               entry)
         (update-entry-display parent))
 
-      (let ((font (q+:make-qfont "Consolas, Inconsolata, Monospace" 10)))
-        (setf (q+:style-hint font) (q+:qfont.type-writer))
-        (when (and (lodds.config:get-value :show-background-color-on-size)
-                   parent)
-          (set-column-background widget +shares-size+
-                                 (lodds.core:get-size-color size)))
-        (qdoto widget
-               (q+:set-flags (qt:enum-or (q+:qt.item-is-selectable)
-                                         (q+:qt.item-is-enabled)))
-               (q+:set-font +shares-name+ font)
-               (q+:set-font +shares-size+ font)
-               (q+:set-text-alignment +shares-size+
-                                      (qt:enum-or (q+:qt.align-center)
-                                                  (q+:qt.align-right)))
-               (q+:set-text +shares-name+ name)
-               (q+:set-text +shares-size+ (lodds.core:format-size size))
-               (q+:set-text +shares-path+ full-path))))))
+      (when (and (lodds.config:get-value :show-background-color-on-size)
+                 parent)
+        (set-column-background widget +shares-size+
+                               (lodds.core:get-size-color size)))
+      (qdoto widget
+             (q+:set-flags (qt:enum-or (q+:qt.item-is-selectable)
+                                       (q+:qt.item-is-enabled)))
+             (q+:set-text-alignment +shares-size+
+                                    (qt:enum-or (q+:qt.align-center)
+                                                (q+:qt.align-right)))
+             (q+:set-text +shares-name+ name)
+             (q+:set-text +shares-size+ (lodds.core:format-size size))
+             (q+:set-text +shares-path+ full-path)))))
 
 (defmethod set-mime-icon ((entry shares-entry) mimetype)
   (when (lodds.config:get-value :show-filetype-icons)
@@ -523,6 +519,9 @@ parent"
             ((string= "Info" (q+:text option))
              (info shares))))))))
 
+(defmethod update-font ((shares shares) new-font)
+  (q+:set-font shares (get-font new-font)))
+
 (define-initializer (shares setup-widget)
   (connect shares
            "itemDoubleClicked(QTreeWidgetItem *, int)"
@@ -537,6 +536,7 @@ parent"
                        :path ""
                        :size 0
                        :user ""))
+  (update-font shares (lodds.config:get-value :shares-font))
   (qdoto shares
          (q+:set-mouse-tracking t)
          (q+:set-object-name "Shares")
