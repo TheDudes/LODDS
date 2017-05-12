@@ -73,9 +73,7 @@ The returned string (utf-8) won't contain the newline character"
             name
             (usocket:vector-quad-to-dotted-quad ip)
             port
-            (if timestamp
-                timestamp
-                0)
+            (or timestamp 0)
             load
             #\linefeed)))
 
