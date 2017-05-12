@@ -638,6 +638,7 @@ functionality (for example system tray and status-info)
         (setup-tray-icon window)
         (unless server-given-p
           (lodds:start)))
+      (setf *main-window* nil)
       (when *restart*
         (setf *restart* nil)
         (main lodds-server))

@@ -110,10 +110,11 @@
                    (q+:width dialog))
                (or height
                    (q+:height dialog))))
+  (when *main-window*
+    (q+:set-window-icon dialog (q+:window-icon *main-window*)))
   (qdoto dialog
          (q+:set-attribute (q+:qt.wa_delete-on-close))
          (q+:set-window-title title)
-         (q+:set-window-icon (q+:window-icon *main-window*))
          (q+:show)))
 
 (define-finalizer (dialog cleanup-widget)
