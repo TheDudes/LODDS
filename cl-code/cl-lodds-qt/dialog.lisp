@@ -2,7 +2,8 @@
 (in-readtable :qtools)
 
 (define-widget dialog (QDialog)
-  ((ok-button-text :initform "Ok"
+  ((id :initform (new-id))
+   (ok-button-text :initform "Ok"
                    :initarg :ok-text
                    :documentation "Text which will be displayed on the
                    right \"Ok\" Button which confirms the dialog")
@@ -111,6 +112,7 @@
                (or height
                    (q+:height dialog))))
   (when *main-window*
+    (setf (gethash id (dialogs *main-window*)) dialog)
     (q+:set-window-icon dialog (q+:window-icon *main-window*)))
   (qdoto dialog
          (q+:set-attribute (q+:qt.wa_delete-on-close))
@@ -118,5 +120,7 @@
          (q+:show)))
 
 (define-finalizer (dialog cleanup-widget)
+  (when *main-window*
+    (remhash id (dialogs *main-window*)))
   (when (and widget finalize-widget-p)
     (finalize widget)))

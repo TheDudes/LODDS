@@ -19,7 +19,8 @@
                :qtsvg
                :cl-strings
                :qtools-ui-debugger
-               :trivial-gray-streams)
+               :trivial-gray-streams
+               :alexandria)
   :components ((:file "package")
                (:file "globals")
                (:file "misc")

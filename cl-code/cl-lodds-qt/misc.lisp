@@ -154,3 +154,10 @@ to be a list of strings)"
             (q+:from-string font (subseq description 1))
             font)
           (q+:make-qfont description))))
+
+(let ((id 0)
+      (lock (bt:make-lock "id lock")))
+  (defun new-id ()
+    "returns a new unique integer"
+    (bt:with-lock-held (lock)
+      (incf id))))

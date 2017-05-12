@@ -43,7 +43,10 @@ functionality (for example system tray and status-info)
    (callback-buffer :initform (make-hash-table :test 'equal)
                     :documentation "Buffer which is filled by the
                     event thread (when callbacks are called) to
-                    transfer values over to the qt thread")))
+                    transfer values over to the qt thread")
+   (dialogs :initform (make-hash-table)
+            :reader dialogs
+            :documentation "Hashtable of all dialog instances")))
 
 (defun run ()
   (if (lodds.config:get-value :interface)
@@ -408,6 +411,8 @@ functionality (for example system tray and status-info)
 
 (define-slot (main-window shutdown) ()
   (declare (connected main-window (shutdown)))
+  (map nil #'cancel
+       (alexandria:hash-table-values dialogs))
   (q+:close main-window)
   (q+:qcoreapplication-quit))
 
