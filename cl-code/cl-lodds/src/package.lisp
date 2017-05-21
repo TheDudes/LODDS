@@ -56,7 +56,14 @@
 
 (defpackage #:lodds.low-level-api
   (:use #:cl)
-  (:export ;; broadcast
+  (:export ;; conditions
+           #:malformed-data
+           #:malformed-advertise
+           #:malformed-get
+           #:malformed-info-head
+           #:malformed-info-body
+           #:timeout-reached
+           ;; broadcast
            #:format-send-advertise
            #:send-advertise
            #:read-advertise

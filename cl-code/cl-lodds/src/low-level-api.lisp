@@ -6,12 +6,6 @@ LODDS based communication by requesting data. The 'respond' family functions
 will be the counter-part to them, responding with information. The information
 is then read by the 'handle' family functions.
 
-All functions will return a number. If zero no error occured and
-everything went fine, on error a error code will be returned.
-TODO: Where to lookup error codes?
-Some functions return multiple values which can be handle with a
-multiple-value-bind.
-
 |#
 
 (in-package #:lodds.low-level-api)
@@ -42,6 +36,15 @@ multiple-value-bind.
    ;; type checksum size realtive-filename
    "^(add|del) ([a-f]|[A-F]|[0-9]){40} \\d+ [^\\n]+$")
   "used to scan get info body to check if they are correct")
+
+(define-condition malformed-data (error) ())
+
+(define-condition malformed-advertise (malformed-data) ())
+(define-condition malformed-get (malformed-data) ())
+(define-condition malformed-info-head (malformed-data) ())
+(define-condition malformed-info-body (malformed-data) ())
+
+(define-condition timeout-reached (error) ())
 
 (defun write-string-to-stream (stream string &optional (flush-p t))
   "converts the given string to octets and writes it to the given
@@ -96,68 +99,58 @@ if eof occured on first read-byte"
   (let ((sock (usocket:socket-connect nil nil :protocol :datagram))
         (data (lodds.core:string-to-octets
                (format-send-advertise ad-info))))
-    (handler-case
-        (progn
-          (setf (usocket:socket-option sock :broadcast) t)
-          (usocket:socket-send sock data (length data)
-                               :host broadcast-host
-                               :port broadcast-port)
-          (usocket:socket-close sock)
-          0) ;; everything went fine
-      (usocket:network-unreachable-error ()
-        6)))) ;; network-unreachable-error
+    (setf (usocket:socket-option sock :broadcast) t)
+    (usocket:socket-send sock data (length data)
+                         :host broadcast-host
+                         :port broadcast-port)
+    (usocket:socket-close sock)))
 
 (defun read-advertise (message)
   "counter-part to send-advertise, will parse the given message (byte
    vector) and return a list out of ip, port, timestamp, load and name.
    for example: '(#(192 168 2 255) 12345 9999 87654321 \"username\")
-   will use *advertise-scanner* to check for syntax errors."
-  (if (cl-ppcre:scan *advertise-scanner* message)
-      (destructuring-bind (user timestamp load)
-          (cl-strings:split message)
-        (lodds.core:split-user-identifier (name ip port) user
-          (values 0
-                  (list ip
-                        (parse-integer port)
-                        (parse-integer timestamp)
-                        (parse-integer load)
-                        user))))
-      2))
+   will use *advertise-scanner* to check for syntax errors and signal
+   a 'malformed-advertise error on mismatch"
+  (unless (cl-ppcre:scan *advertise-scanner* message)
+    (error 'malformed-advertise))
+  (destructuring-bind (user timestamp load)
+      (cl-strings:split message)
+    (lodds.core:split-user-identifier (name ip port) user
+      (list ip
+            (parse-integer port)
+            (parse-integer timestamp)
+            (parse-integer load)
+            user))))
 
 (defun parse-request (stream)
-  "parses a direct communication request. returns multiple values,
-   the first is a number describing the error (or 0 on success) and
-   one of the following lists, depending on request:
+  "parses a direct communication request. returns one of the following
+  lists, depending on request:
    (:file checksum start end)
    (:info timestamp)
    (:send-permission size timeout filename)
-   will use *get-scanner* to to check for syntax errors"
+   will use *get-scanner* to to check for syntax errors and might
+   signal 'malformed-get error in case the scanner does not match"
   (let ((line (read-line-from-stream stream)))
     (unless (cl-ppcre:scan *get-scanner* line)
-      (return-from parse-request 2))
+      (error 'malformed-get))
     (destructuring-bind (get type . args)
         (cl-strings:split line)
       (declare (ignore get))
-      (let ((requ-type (lodds.core:str-case type
+      (let ((req-type (lodds.core:str-case type
                          ("file" :file)
                          ("info" :info)
                          ("send-permission" :send-permission))))
-        (case requ-type
-          (:file (values 0
-                         (list :file
-                               (car args)
-                               (parse-integer (nth 1 args))
-                               (parse-integer (nth 2 args)))))
-          (:info (values 0
-                         (list :info
-                               (parse-integer (car args)))))
-          (:send-permission (values 0
-                                    (destructuring-bind (size timeout . filename)
-                                        args
-                                      (list :send-permission
-                                            (parse-integer size)
-                                            (parse-integer timeout)
-                                            (cl-strings:join filename :separator " "))))))))))
+        (cons req-type
+              (case req-type
+                (:file (list (car args)
+                             (parse-integer (nth 1 args))
+                             (parse-integer (nth 2 args))))
+                (:info (list (parse-integer (car args))))
+                (:send-permission (destructuring-bind (size timeout . filename)
+                                      args
+                                    (list (parse-integer size)
+                                          (parse-integer timeout)
+                                          (cl-strings:join filename :separator " "))))))))))
 
 ;; get family
 (defun format-get-file (checksum start end)
@@ -168,8 +161,7 @@ if eof occured on first read-byte"
    the specified (checksum) file's content from start till end"
   (write-string-to-stream
    stream
-   (format-get-file checksum start end))
-  0)
+   (format-get-file checksum start end)))
 
 (defun format-get-info (timestamp)
   (format nil "get info ~a~C" timestamp #\linefeed))
@@ -181,8 +173,7 @@ if eof occured on first read-byte"
    request a full list of shared files from the user."
   (write-string-to-stream
    stream
-   (format-get-info timestamp))
-  0)
+   (format-get-info timestamp)))
 
 (defun format-get-send-permission (size timeout filename)
   (format nil "get send-permission ~a ~a ~a~C"
@@ -201,10 +192,12 @@ if eof occured on first read-byte"
    stream
    (format-get-send-permission size
                                timeout
-                               filename))
-  0)
+                               filename)))
 
 ;; response family
+
+(defparameter *head-fail* nil)
+(defparameter *body-fail* nil)
 
 (defun format-respond-info (type timestamp file-infos)
   (with-output-to-string (stream)
@@ -236,8 +229,7 @@ if eof occured on first read-byte"
    TODO: relative pathname link to spec"
   (write-string-to-stream
    stream
-   (format-respond-info type timestamp file-infos))
-  0)
+   (format-respond-info type timestamp file-infos)))
 
 (defun format-respond-send-permission ()
   (format nil "OK~C" #\linefeed))
@@ -247,54 +239,42 @@ if eof occured on first read-byte"
    stream content (max size bytes) to file-stream."
   (write-string-to-stream
    stream
-   (format-respond-send-permission))
-  0)
+   (format-respond-send-permission)))
 
 ;; handle family
 
 (defun handle-info (stream)
-  "handles a successfull 'get info' request and returns (as second
-   value) a list containing the parsed data. The list has the same format
-   as 'file-infos' argument from respond-info function"
+  "handles a successfull 'get info' request and returns a list
+  containing the parsed data. The list has the same format as
+  'file-infos' argument from respond-info function"
   (let ((line (read-line-from-stream stream)))
-    (if (cl-ppcre:scan *info-head-scanner* line)
-        (destructuring-bind (type timestamp count) (cl-strings:split line)
-          (values 0
-                  (list
-                   (cond
-                     ((equal type "all") :all)
-                     ((equal type "upd") :upd)
-                     (t (error "TODO: handle-info all|upd error ~a" type)))
-                   (parse-integer timestamp)
-                   (loop :repeat (parse-integer count)
-                         :collect
-                         (progn
-                           (setf line (read-line-from-stream stream))
-                           (if (cl-ppcre:scan *info-body-scanner* line)
-                               (destructuring-bind (type checksum size . name)
-                                   (cl-strings:split line)
-                                 (list (cond
-                                         ((equal type "add") :add)
-                                         ((equal type "del") :del)
-                                         (t (error "TODO: handle-info add|del error")))
-                                       checksum
-                                       (parse-integer size)
-                                       (cl-strings:join name :separator " ")))
-                               (return-from handle-info 2)))))))
-        2)))
+    (unless (cl-ppcre:scan *info-head-scanner* line)
+      (error 'malformed-info-head))
+    (destructuring-bind (type timestamp count) (cl-strings:split line)
+      (list (cond
+              ((equal type "all") :all)
+              ((equal type "upd") :upd))
+            (parse-integer timestamp)
+            (loop :repeat (parse-integer count)
+                  :collect
+                  (progn
+                    (unless (cl-ppcre:scan *info-body-scanner*
+                                           (setf line (read-line-from-stream stream)))
+                      (error 'malformed-info-body))
+                    (destructuring-bind (type checksum size . name)
+                        (cl-strings:split line)
+                      (list (cond
+                              ((equal type "add") :add)
+                              ((equal type "del") :del))
+                            checksum
+                            (parse-integer size)
+                            (cl-strings:join name :separator " ")))))))))
 
 (defun handle-send-permission (socket timeout)
   "handles a successfull 'get send-permission' request and waits
-   maximum 'timeout' seconds for a OK. On success it returns with 0
-   and the socket should be rdy to send the file. If timeout is
-   reached 3 will be returned"
-  (handler-case
-      (if (lodds.core:input-rdy-p socket timeout)
-          (if (string= "OK"
-                       (read-line-from-stream (usocket:socket-stream socket)))
-              0
-              2)
-          3)
-    (end-of-file (e)
-      (declare (ignore e))
-      1)))
+   maximum 'timeout' seconds for a OK. On error a 'malformed-data or a
+   'timeout-reached error will be signaled"
+  (if (lodds.core:input-rdy-p socket timeout)
+      (unless (string= "OK" (read-line-from-stream (usocket:socket-stream socket)))
+        (error 'malformed-data))
+      (error 'timeout-reached)))

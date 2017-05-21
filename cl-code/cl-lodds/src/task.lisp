@@ -496,20 +496,17 @@ be used to retrieve the load all currently running tasks produce.
 
 (defmethod task-run ((task task-request))
   (with-slots (socket tasks on-finish) task
-    (multiple-value-bind (err request)
+    (destructuring-bind (req-type &rest args)
         (lodds.low-level-api:parse-request (usocket:socket-stream socket))
-      (when (> err 0)
-        (error (format nil "low level api returned ~a on parse-request"
-                       err)))
-      (ecase (car request)
+      (ecase req-type
         ((:file :info)
          (let ((sock socket)) ;; capture socket
            (setf on-finish
                  (lambda ()
                    (task-run
-                    (ecase (car request)
+                    (ecase req-type
                       (:file
-                       (destructuring-bind (checksum start end) (cdr request)
+                       (destructuring-bind (checksum start end) args
                          (make-instance 'task-request-file
                                         :user (or (lodds:get-user-by-ip (socket-info sock)) "unknown@0.0.0.0:1234")
                                         :in-thread nil
@@ -523,13 +520,13 @@ be used to retrieve the load all currently running tasks produce.
                                       :in-thread nil
                                       :tasks tasks
                                       :socket sock
-                                      :timestamp (second request)))))))))
+                                      :timestamp (car args)))))))))
         (:send-permission (apply 'handle-send-permission-request
                                  tasks
                                  socket
-                                 (cdr request))))
-      ;; make sure socket does not get cleared up
-      (setf socket nil))))
+                                 args))))
+    ;; make sure socket does not get cleared up
+    (setf socket nil)))
 
 (defmethod task-run ((task task-request-info))
   (with-slots (socket timestamp) task
@@ -584,11 +581,9 @@ be used to retrieve the load all currently running tasks produce.
                (progn
                  (lodds.low-level-api:get-info (usocket:socket-stream socket)
                                                (lodds:user-last-change user-info))
-                 (multiple-value-bind (err update)
-                     (lodds.low-level-api:handle-info (usocket:socket-stream socket))
-                   (if (eql 0 err)
-                       (lodds:update-user user update)
-                       (error "low level api returned: ~a" err))))
+                 (lodds:update-user user
+                                    (lodds.low-level-api:handle-info
+                                     (usocket:socket-stream socket))))
             (bt:release-lock lock))
           (lodds.event:push-event :info :dropped task)))))
 
@@ -614,13 +609,15 @@ be used to retrieve the load all currently running tasks produce.
             :do (error "Timeout. No Response from user, aborting Send File.")
             :else
             :do
-            (case (lodds.low-level-api:handle-send-permission socket 1)
-              (0 (progn
-                   (setf time-waited nil)
-                   (task-transfer task :file-to-socket)
-                   (setf done t)))
-              (3 (incf time-waited))
-              (t (error "handle-send-permission returned error")))))))
+            (handler-case
+                (progn
+                  (lodds.low-level-api:handle-send-permission socket 1)
+                  (setf time-waited nil)
+                  (task-transfer task :file-to-socket)
+                  (setf done t))
+              (lodds.low-level-api:timeout-reached (err)
+                (declare (ignore err))
+                (incf time-waited)))))))
 
 (defmethod task-run ((task task-get-file-from-user))
   (with-slots (socket file-stream

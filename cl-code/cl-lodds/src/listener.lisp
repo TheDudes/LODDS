@@ -9,49 +9,42 @@ user infos on the lodds-server object once he gets new information.
 (in-package lodds.listener)
 
 (defun handle-message (message)
-  (multiple-value-bind (error result) (lodds.low-level-api:read-advertise message)
-    (unless (eql error 0)
-      (lodds.event:push-event :error
-                              (format nil
-                                      "low-level-api:read-advertise returned ~a"
-                                      error))
-      (return-from handle-message))
-    (lodds.event:push-event :listener result)
-    (let ((current-time (lodds.core:get-timestamp)))
-      (destructuring-bind (ip port timestamp-l-c user-load user) result
-        (let ((user-info (lodds:get-user-info user)))
-          (unless user-info
-            ;; add user
-            (setf user-info
-                  (make-instance 'lodds:user-info
-                                 :name user
-                                 :last-message current-time
-                                 :ip (usocket:dotted-quad-to-vector-quad ip)
-                                 :port port
-                                 :last-change 0
-                                 :load user-load)
-                  (gethash user (lodds:users lodds:*server*))
-                  user-info)
-            (lodds.event:push-event :user-added
-                                    user
-                                    user-load
-                                    timestamp-l-c))
-          (let ((old-load (lodds:user-load user-info)))
-            (setf (lodds:user-last-message user-info) current-time
-                  (lodds:user-load user-info) user-load)
-            (let ((user-has-new-changes-p
-                    (<= (lodds:user-last-change user-info)
-                        timestamp-l-c)))
-              (when user-has-new-changes-p
-                (lodds.task:task-run (make-instance 'lodds.task:task-get-info
-                                                    :tasks (lodds:get-tasks)
-                                                    :user user)))
-              (when (or user-has-new-changes-p
-                        (not (eql old-load user-load)))
-                (lodds.event:push-event :user-updated
-                                        user
-                                        user-load
-                                        timestamp-l-c)))))))))
+  (let ((current-time (lodds.core:get-timestamp)))
+    (destructuring-bind (ip port timestamp-l-c user-load user)
+        (lodds.low-level-api:read-advertise message)
+      (let ((user-info (lodds:get-user-info user)))
+        (unless user-info
+          ;; add user
+          (setf user-info
+                (make-instance 'lodds:user-info
+                               :name user
+                               :last-message current-time
+                               :ip (usocket:dotted-quad-to-vector-quad ip)
+                               :port port
+                               :last-change 0
+                               :load user-load)
+                (gethash user (lodds:users lodds:*server*))
+                user-info)
+          (lodds.event:push-event :user-added
+                                  user
+                                  user-load
+                                  timestamp-l-c))
+        (let ((old-load (lodds:user-load user-info)))
+          (setf (lodds:user-last-message user-info) current-time
+                (lodds:user-load user-info) user-load)
+          (let ((user-has-new-changes-p
+                  (<= (lodds:user-last-change user-info)
+                      timestamp-l-c)))
+            (when user-has-new-changes-p
+              (lodds.task:task-run (make-instance 'lodds.task:task-get-info
+                                                  :tasks (lodds:get-tasks)
+                                                  :user user)))
+            (when (or user-has-new-changes-p
+                      (not (eql old-load user-load)))
+              (lodds.event:push-event :user-updated
+                                      user
+                                      user-load
+                                      timestamp-l-c))))))))
 
 (defun get-next-message (socket)
   (let* ((buffer-size 2048) ;; TODO: move to config
@@ -83,7 +76,11 @@ user infos on the lodds-server object once he gets new information.
             (loop :while alive-p
                   :do (let ((msg (get-next-message socket)))
                         (when msg
-                          (handle-message msg)))))
+                          (handler-case
+                              (handle-message msg)
+                            (error (err)
+                              (lodds.event:push-event
+                               :error (format nil "listener: ~a" err))))))))
         (error (e)
           (lodds.event:push-event :listener-error
                                   e)))

@@ -42,33 +42,30 @@ them from any other thread
     (error "Could not get ip"))
   (unless broadcast-ip
     (error "Could not get broadcast-ip"))
-  (case (lodds.low-level-api:send-advertise
-         broadcast-ip
-         (lodds.config:get-value :broadcast-port)
-         (list ip
-               (lodds.config:get-value :port)
-               (lodds:get-timestamp-last-change)
-               (lodds:get-load)
-               (lodds.config:get-value :name)))
-    (6 (error "Network unreachable"))
-    (0 nil)))
+  (lodds.low-level-api:send-advertise
+   broadcast-ip
+   (lodds.config:get-value :broadcast-port)
+   (list ip
+         (lodds.config:get-value :port)
+         (lodds:get-timestamp-last-change)
+         (lodds:get-load)
+         (lodds.config:get-value :name))))
 
 (defun ev-send-advertise (ip broadcast-ip)
   "handles advertisements, will adversite server on broadcast
   network. This function is getting called by START-ADVERTISING. Will
   run inside seperate Thread (spawned by START-ADVERTISING)."
   (unless (lodds.config:get-value :incognito-mode)
-    (let ((err (handler-case (ev-send ip broadcast-ip)
-                 (error (e)
-                   e))))
-      (apply #'lodds.event:push-event
-             (if err
-                 (list :error
-                       (format nil "Could not advertise on ~a port ~a: ~a"
-                               broadcast-ip
-                               (lodds.config:get-value :port)
-                               err))
-                 (list :advertiser :send))))))
+    (apply #'lodds.event:push-event
+           (handler-case
+               (prog1 (list :advertiser :send)
+                 (ev-send ip broadcast-ip))
+             (error (err)
+               (list :error
+                     (format nil "Could not advertise on ~a port ~a: ~a"
+                             broadcast-ip
+                             (lodds.config:get-value :port)
+                             err)))))))
 
 (defun ev-init-advertiser ()
   (let* ((interface (lodds.config:get-value :interface))
