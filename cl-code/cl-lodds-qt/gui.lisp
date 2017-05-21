@@ -156,18 +156,20 @@ functionality (for example system tray and status-info)
                    (lodds:start)))))))
 
 (defun run-tests ()
-  (let* ((log (make-instance 'text-stream
-                             :center-on-scroll nil
-                             :font (get-font "monospace")))
-         (prove:*enable-colors* nil)
-         (prove:*debug-on-error* nil)
-         (prove:*test-result-output* log))
+  (let ((log (make-instance 'text-stream
+                            :center-on-scroll nil
+                            :font (get-font "monospace"))))
     (make-instance 'dialog
                    :widget log
                    :title "Tests"
                    :width 800
                    :height 600)
-    (asdf:test-system :cl-lodds)))
+    (bt:make-thread (lambda ()
+                      (let ((prove:*enable-colors* nil)
+                            (prove:*debug-on-error* nil)
+                            (prove:*test-result-output* log))
+                        (asdf:test-system :cl-lodds)))
+                    :name "-- Running Tests --")))
 
 (define-menu (main-window Help)
   (:item "&Intro"
