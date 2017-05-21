@@ -54,7 +54,8 @@
                                   user(s) have to accept the file.~%~
                                   If they do not accept withing the~%~
                                   the given timeout, the transfer~%~
-                                  will be aborted."))
+                                  will be aborted. Value between~%~
+                                  10 and 3600 seconds."))
          (q+:set-suffix " seconds")
          (q+:set-minimum 10)
          (q+:set-maximum 3600)
