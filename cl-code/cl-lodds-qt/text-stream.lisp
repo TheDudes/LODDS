@@ -21,7 +21,13 @@
    (font :initform nil
          :initarg :font
          :accessor font)
+   (gui-thread :initform (bt:current-thread))
    (write-fn)))
+
+(define-signal (text-stream write) (string))
+(define-slot (text-stream write) ((text string))
+  (declare (connected text-stream (write string)))
+  (funcall write-fn text))
 
 (defmethod (setf maximum-block-count) :after (maximum-block-count (stream text-stream))
   (q+:set-maximum-block-count stream maximum-block-count))
@@ -67,7 +73,7 @@
       (length buffer))))
 
 (defmethod trivial-gray-streams:stream-write-char ((stream text-stream) character)
-  (with-slots (buffer write-fn buffer-init-size) stream
+  (with-slots (buffer write-fn buffer-init-size gui-thread) stream
     (unless buffer
       (setf buffer (make-array buffer-init-size
                                :element-type 'character
@@ -76,6 +82,8 @@
     (prog1 character
       (case character
         (#\newline (progn
-                     (funcall write-fn (or buffer ""))
+                     (if (eql (bt:current-thread) gui-thread)
+                         (funcall write-fn (or buffer ""))
+                         (signal! stream (write string) (or buffer "")))
                      (setf buffer nil)))
         (t (vector-push-extend character buffer))))))
