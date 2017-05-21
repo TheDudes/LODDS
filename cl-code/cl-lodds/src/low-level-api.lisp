@@ -51,19 +51,29 @@ stream, will flush the stream with force-output when flusp-p is t"
   (when flush-p
     (force-output stream)))
 
-(defun read-line-from-stream (stream)
+(defun read-line-from-stream (stream &optional (eof-error-p t) eof-value)
   "read a single line from given stream of type '(unsigned-byte 8).
-The returned string (utf-8) won't contain the newline character"
-  (let ((line (make-array 0
-                          :element-type '(unsigned-byte 8)
-                          :adjustable t
-                          :fill-pointer t))
+The returned string (utf-8) won't contain the newline character. If
+eof-error-p is nil, the line until eof will be returned, or eof-value
+if eof occured on first read-byte"
+  (let ((line nil)
         (byte nil))
     (loop
-      (if (eql 10 (setf byte (read-byte stream)))
+      (setf byte (read-byte stream eof-error-p eof-value))
+      (if (or (and (not eof-error-p)
+                   (eql eof-value byte))
+              (eql 10 byte))
           (return-from read-line-from-stream
-            (lodds.core:octets-to-string line))
-          (vector-push-extend byte line)))))
+            (if line
+                (lodds.core:octets-to-string line)
+                eof-value))
+          (vector-push-extend byte
+                              (or line
+                                  (setf line
+                                        (make-array 0
+                                                    :element-type '(unsigned-byte 8)
+                                                    :adjustable t
+                                                    :fill-pointer t))))))))
 
 ;; broadcast family
 
