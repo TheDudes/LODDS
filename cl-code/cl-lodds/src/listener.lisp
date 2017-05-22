@@ -12,6 +12,10 @@ user infos on the lodds-server object once he gets new information.
   (let ((current-time (lodds.core:get-timestamp)))
     (destructuring-bind (ip port timestamp-l-c user-load user)
         (lodds.low-level-api:read-advertise message)
+      (lodds.event:push-event :listener
+                              user
+                              (lodds.core:format-size user-load)
+                              (lodds.core:format-timestamp timestamp-l-c))
       (let ((user-info (lodds:get-user-info user)))
         (unless user-info
           ;; add user
