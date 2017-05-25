@@ -239,14 +239,18 @@ start,stop,shutdown, ...).
 
 (defun start ()
   (lodds.event:start)
+  (lodds.event:push-event :info "starting up lodds...")
   (lodds.listener:start)
   (lodds.handler:start)
-  (lodds.event-loop:start))
+  (lodds.event-loop:start)
+  (lodds.event:push-event :info "lodds started."))
 
 (defun stop ()
+  (lodds.event:push-event :info "stopping lodds...")
   (lodds.handler:stop)
   (lodds.listener:stop)
-  (lodds.event-loop:stop))
+  (lodds.event-loop:stop)
+  (lodds.event:push-event :info "lodds stopped."))
 
 (defun shutdown ()
   "shuts down the whole server, removes all handles and joins all
