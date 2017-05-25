@@ -403,10 +403,10 @@
       (multiple-value-bind (new-config error)
           (lodds.config:load-from-file file config)
         (if error
-            (make-instance 'dialog
-                           :title (format nil "Error reading config file ~a"
-                                          (uiop:native-namestring file))
-                           :text error)
+            (show-dialog settings-widget :critical
+                         (format nil "Error reading config file ~a"
+                                 (uiop:native-namestring file))
+                         error)
             (progn
               (setf config new-config)
               (generate-new-settings settings-widget)))))))

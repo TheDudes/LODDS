@@ -80,17 +80,15 @@
     (let ((directory (q+:text folder)))
       (cond
         ((eql 0 (length directory))
-         (progn
-           (make-instance 'dialog
-                          :title "Error - No directory selected"
-                          :text "Please select a directory")
-           nil))
+         (prog1 nil
+           (show-dialog download-multiple :critical
+                        "Error - No directory selected"
+                        "Please select a directory")))
         ((not (lodds.core:directory-exists directory))
-         (progn
-           (make-instance 'dialog
-                          :title "Error - Directory does not exists"
-                          :text "Please select a directory which exists")
-           nil))
+         (prog1 nil
+           (show-dialog download-multiple :critical
+                        "Error - Directory does not exists"
+                        "Please select a directory which exists")))
         (t (let ((directory-pathname (lodds.core:ensure-directory-pathname
                                       directory)))
              (loop :for (type info) :in items

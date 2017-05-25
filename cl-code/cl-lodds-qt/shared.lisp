@@ -119,12 +119,11 @@ others)
                   (add-new-dir-widget directories pathname))
                 (push (list pathname error) failed-dirs))))
     (when (> (length failed-dirs) 0)
-      (make-instance 'dialog
-                     :title (format nil "Error - Could not Share directories")
-                     :text (format nil
-                                   "Sorry, was not able to share the following directories:~%~:{~%~a (~a)~}"
-                                   (mapcar #'uiop:native-namestring
-                                           failed-dirs))))))
+      (show-dialog directories :critical
+                   "Error - Could not Share directories"
+                   (format nil "Sorry, was not able to share the following directories:~%~:{~%~a (~a)~}"
+                           (mapcar #'uiop:native-namestring
+                                   failed-dirs))))))
 
 (define-signal (directories add-directory) (string))
 (define-signal (directories remove-directory) (string))

@@ -81,23 +81,20 @@
           (checksum checksm))
       (cond
         ((eql 0 (length directory))
-         (progn
-           (make-instance 'dialog
-                          :title "Error - No Directory selected"
-                          :text "Please select a directory")
-           nil))
+         (prog1 nil
+           (show-dialog download-file :critical
+                        "Error - No Directory selected"
+                        "Please select a directory")))
         ((not (lodds.core:directory-exists directory))
-         (progn
-           (make-instance 'dialog
-                          :title "Error - Directory does not exists"
-                          :text "Please select a directory which exists")
-           nil))
+         (prog1 nil
+           (show-dialog download-file :critical
+                        "Error - Directory does not exists"
+                        "Please select a directory which exists")))
         ((eql 0 (length filename))
-         (progn
-           (make-instance 'dialog
-                          :title "Error - No filename given"
-                          :text "Please select a filename")
-           nil))
+         (prog1 nil
+           (show-dialog download-file :critical
+                        "Error - No filename given"
+                        "Please select a filename")))
         (t (prog1 t
              (lodds:get-file (merge-pathnames (lodds.core:escape-wildcards filename)
                                               (lodds.core:ensure-directory-pathname directory))

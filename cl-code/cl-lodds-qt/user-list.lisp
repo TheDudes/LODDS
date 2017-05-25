@@ -178,11 +178,9 @@
   (dolist (filepath (format-dropped-links ev))
     (cond
       ((lodds.core:directory-exists filepath)
-       (make-instance
-        'dialog
-        :title (format nil "Error - Cannot send directory (~a)"
-                       filepath)
-        :text "Its not possible to send a directory, select a file please."))
+       (show-dialog user-list :critical
+                    (format nil "Error - Cannot send directory (~a)" filepath)
+                    "Its not possible to send a directory, select a file please."))
       ((lodds.core:file-exists filepath)
        (let ((item (q+:item-at user-list (q+:pos ev))))
          (open-send-file-dialog
@@ -190,10 +188,9 @@
             (q+:text item +user-list-full-name+))
           filepath)))
       (t
-       (make-instance
-        'dialog
-        :title "Error - Dont know what to do"
-        :text "Whatever you dropped there is neither a dir nor a file.")))))
+       (show-dialog user-list :critical
+                    "Error - Dont know what to do"
+                    "Whatever you dropped there is neither a dir nor a file.")))))
 
 (defmethod update-user-colors ((user-list user-list))
   (maphash (lambda (user widget)

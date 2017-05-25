@@ -166,13 +166,12 @@
                                                           selected-user
                                                           (q+:value timeout))
                                      :finally (return t))
-                               (progn
-                                 (make-instance 'dialog
-                                                :title "Error - No users selected"
-                                                :text "Please select at least one user")
+                               (prog1 nil
+                                 (show-dialog *main-window* :critical
+                                              "Error - No users selected"
+                                              "Please select at least one user")
                                  nil))
-                           (progn
-                             (make-instance 'dialog
-                                            :title "Error - File does not exist"
-                                            :text "Selected file does not exist")
-                             nil)))))))
+                           (prog1 nil
+                             (show-dialog *main-window* :critical
+                                          "Error - File does not exist"
+                                          "Selected file does not exist"))))))))

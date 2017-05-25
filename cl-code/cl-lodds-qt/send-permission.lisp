@@ -91,11 +91,10 @@
                  (progn
                    (funcall accept-fn full-filename)
                    t)
-                 (progn
-                   (make-instance 'dialog
-                                  :title "Error - Invalid input"
-                                  :text "The given input was invalid")
-                   nil))))
+                 (prog1 nil
+                   (show-dialog widget :critical
+                                "Error - Invalid input"
+                                "The given input was invalid")))))
          (cancel-fn (widget)
            (declare (ignore widget))
            (funcall deny-fn)))

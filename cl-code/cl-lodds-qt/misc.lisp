@@ -161,3 +161,12 @@ to be a list of strings)"
     "returns a new unique integer"
     (bt:with-lock-held (lock)
       (incf id))))
+
+(defun show-dialog (parent type title text)
+  "Blocks gui and shows a dialog of given type.
+Type can be one of :critical, :information or :warning
+Make shure to not close parent while the Dialog is active."
+  (ecase type
+    (:critical (q+:qmessagebox-critical parent title text))
+    (:information (q+:qmessagebox-information parent title text))
+    (:warning (q+:qmessagebox-warning parent title text))))
