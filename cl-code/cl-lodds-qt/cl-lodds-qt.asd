@@ -7,8 +7,8 @@
   :license "GPLv2"
   :maintainer "d4ryus <d4ryus@openmailbox.org>"
   :homepage "https://github.com/TheDudes/Lodds"
-  :defsystem-depends-on (:qtools)
-  :build-operation "qt-program-op"
+  :defsystem-depends-on (:deploy)
+  :build-operation "deploy-op"
   :build-pathname "lodds-qt"
   :entry-point "lodds-qt:main"
   :serial t
