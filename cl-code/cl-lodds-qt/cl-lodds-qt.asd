@@ -20,7 +20,9 @@
                :cl-strings
                :qtools-ui-debugger
                :trivial-gray-streams
-               :alexandria)
+               :alexandria
+               :prove
+               :deploy)
   :components ((:file "package")
                (:file "globals")
                (:file "misc")
