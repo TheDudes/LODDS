@@ -5,7 +5,7 @@ LODDS=../
 FOLDER=./lodds/
 TARGET=./lodds.tar.gz
 
-sbcl --eval "(asdf:operate :build-op :cl-lodds-qt :force T)"
+sbcl --eval "(asdf:make :cl-lodds-qt)"
 
 ${LODDS}tools/gen-icons-lisp.sh
 
