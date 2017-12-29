@@ -14,6 +14,7 @@
 (define-signal (user-list add-user) (string string int))
 (define-signal (user-list remove-user) (string))
 (define-signal (user-list update-user) (string string int))
+(define-signal (user-list update-user-tooltip) (string))
 
 (defun gen-tool-tip (user)
   (let ((user-info (lodds:get-user-info user)))
@@ -126,6 +127,12 @@
                           (lodds.core:format-size (parse-integer load) ""))
              (q+:set-tool-tip +user-list-name+ (or (gen-tool-tip user) ""))))))
 
+(define-slot (user-list update-user-tooltip) ((user string))
+  (declare (connected user-list (update-user-tooltip string)))
+  (let ((entry (gethash user (users user-list))))
+    (when entry
+      (q+:set-tool-tip entry +user-list-name+ (or (gen-tool-tip user) "")))))
+
 (define-slot (user-list prepare-menu) ((pos "const QPoint &"))
   (declare (connected user-list (custom-context-menu-requested "const QPoint &")))
   (let ((widget (q+:item-at user-list pos)))
@@ -219,7 +226,14 @@
                                        name
                                        (prin1-to-string load)
                                        last-change))
-                            :user-updated))
+                            :user-updated)
+  (lodds.event:add-callback :qt-user-list
+                            (lambda (name type timestamp changes)
+                              (declare (ignore type timestamp changes))
+                              (signal! user-list
+                                       (update-user-tooltip string)
+                                       name))
+                            :list-update))
 
 (define-initializer (user-list setup-add-users)
   (loop :for user :in (lodds:get-user-list)
@@ -234,4 +248,5 @@
 (define-finalizer (user-list cleanup-callbacks)
   (lodds.event:remove-callback :qt-user-list :user-added)
   (lodds.event:remove-callback :qt-user-list :user-removed)
-  (lodds.event:remove-callback :qt-user-list :user-updated))
+  (lodds.event:remove-callback :qt-user-list :user-updated)
+  (lodds.event:remove-callback :qt-user-list :list-update))
