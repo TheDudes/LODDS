@@ -299,12 +299,11 @@ nil on error"
   (declare (ignorable interface))
   (let ((info (get-interface-info interface)))
     (when info
-      #-os-windows (ip-interfaces:ip-interface-broadcast-address info)
-      #+os-windows (map 'vector #'logior
-                        (ip-interfaces:ip-interface-address info)
-                        (map 'vector (lambda (bits)
-                                       (logxor bits 255))
-                             (ip-interfaces:ip-interface-netmask info))))))
+      (map 'vector #'logior
+           (ip-interfaces:ip-interface-address info)
+           (map 'vector (lambda (bits)
+                          (logxor bits 255))
+                (ip-interfaces:ip-interface-netmask info))))))
 
 (defun get-ip-address (interface)
   "returns the ip address of the specified interface.
