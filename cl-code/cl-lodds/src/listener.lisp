@@ -71,10 +71,7 @@ user infos on the lodds-server object once he gets new information.
           (progn
             (setf socket (usocket:socket-connect
                           nil nil
-                          :local-host
-                          #-os-windows (lodds.core:get-broadcast-address
-                                        (lodds.config:get-value :interface))
-                          #+os-windows #(0 0 0 0)
+                          :local-host #(0 0 0 0)
                           :local-port (lodds.config:get-value :broadcast-port)
                           :protocol :datagram))
             (loop :while alive-p
