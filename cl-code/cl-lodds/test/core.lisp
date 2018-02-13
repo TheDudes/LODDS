@@ -26,6 +26,22 @@
     (is-type (generate-fake-checksum 40) 'string
              "type string"))
 
+(subtest "generate-checksum"
+  (let ((file "test.txt"))
+    (with-open-file (stream file
+                            :direction :output
+                            :if-exists :supersede
+                            :if-does-not-exist :create)
+      (write-line "this is a test" stream))
+    (is (generate-checksum file)
+        "6476df3aac780622368173fe6e768a2edc3932c8"
+        "checksum correct"
+        :test #'equal)
+    (is (length (generate-checksum file))
+        40
+        "length equal to 40")
+    (delete-file file)))
+
 (subtest "copy-stream"
   (flet ((make-random-binary-vector (size)
            (map '(vector (unsigned-byte 8))
