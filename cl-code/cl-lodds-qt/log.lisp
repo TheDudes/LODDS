@@ -58,7 +58,7 @@
 (defun format-log-message (event-type event-msg)
   (case event-type
     (:send-permission
-     (if (> (length event-msg) 1)
+     (if (>= (length event-msg) 5)
          (destructuring-bind (task-id filename timeout user size &rest ignored)
              event-msg
            (declare (ignore ignored))
