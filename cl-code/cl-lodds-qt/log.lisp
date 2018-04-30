@@ -59,14 +59,16 @@
   (case event-type
     (:send-permission
      (if (> (length event-msg) 1)
-         (destructuring-bind (task-id filename timeout user size &rest nil)
+         (destructuring-bind (task-id filename timeout user size &rest ignored)
              event-msg
+           (declare (ignore ignored))
            (format nil "~{~a~^ ~}"
                    (list task-id filename timeout user size)))
          (format nil "~a" (car event-msg))))
     (:folder-download-error
-     (destructuring-bind (task-id folder error-file &rest nil)
+     (destructuring-bind (task-id folder error-file &rest ignored)
          event-msg
+       (declare (ignore ignored))
        (format nil "~{~a~^ ~}"
                (list task-id folder error-file))))
     (:list-update
